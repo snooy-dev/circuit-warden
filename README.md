@@ -1,6 +1,6 @@
 # Circuit Warden
 
-현재는 도구·문서 체계 구성 단계이며 게임 구현은 시작하지 않았습니다.
+기본 실행 기반의 명세·계획은 사용자 승인을 받았으며 기본 실행 기반 구현·검증을 완료했습니다. [진행 상태](docs/progress.md)를 참조하세요.
 작업을 시작할 때 [프로젝트 문서](docs/README.md), [진행 상태](docs/progress.md), [작업 규칙](AGENTS.md)을 읽습니다.
 Spec Kit 개발 흐름과 설치된 에셋 도구의 사용 방법은 [워크플로우](docs/workflow.md)와 [도구 구성](docs/tooling.md)에 기록합니다.
 
@@ -18,3 +18,12 @@ Spec Kit 개발 흐름과 설치된 에셋 도구의 사용 방법은 [워크플
 py -3.14 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
+
+## 실행과 자동 검사
+
+```powershell
+.\.venv\Scripts\python.exe main.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Space로 두 검사 장면을 전환하고 마우스로 표시를 이동합니다. Escape 또는 창 닫기로 종료합니다. 이 화면은 엔진 검사 전용입니다.
