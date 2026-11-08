@@ -1,0 +1,22 @@
+# 프로젝트 문서
+
+이 폴더는 Circuit Warden의 장기 유지 문서다. 현재는 도구와 문서 체계를 구성했으며 게임 설계 확정·구현은 시작하지 않았다.
+
+## 읽는 순서
+
+1. [진행 상태](progress.md): 목표, 구현 허가 여부, 다음 작업.
+2. [게임 설계](game-design.md), [시스템 설계](systems/README.md): 의도와 규칙.
+3. [기술 구조](architecture.md), [아트 기준](art-direction.md): 필요한 부분만.
+4. 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`.
+
+## 운영 원칙
+
+- docs는 현재 기준, specs는 진행 중인 변경의 작업 문서다. 변경 이력은 Git 로그·diff로 확인한다.
+- 제안·가정·미정·확정·대체·폐기와 미구현·구현 중·검증 완료를 구분한다.
+- 승인된 규칙은 한 문서에서 소유하고 다른 곳은 참조한다.
+- 결정 직후 기록 → 계획에 문서 영향 포함 → 구현 후 docs 갱신 → 증거와 함께 완료 판정한다.
+- PPTX는 제안 자료다. 이번 설정은 원본 내용의 승인이나 재작성 작업이 아니다.
+- 이전 내용을 수정·대체하고 폐기된 규칙과 해결된 질문은 제거한다. 현재 선택의 이유는 짧게 남기되 별도 결정 연표·변경일지를 쌓지 않는다.
+- 완료 specs의 정리 조건과 미커밋 근거 보호는 [작업 규칙](../AGENTS.md)을 따른다.
+
+[워크플로우](workflow.md), [도구 구성](tooling.md), [AGENTS.md](../AGENTS.md), [Constitution](../.specify/memory/constitution.md)를 함께 따른다.
