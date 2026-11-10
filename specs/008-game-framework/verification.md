@@ -3,9 +3,9 @@
 **현재 실행 근거**: 2026-11-10 사용자가 P1~P5의 새 채팅 구현과 독립 계획의 별도 워크트리 병렬 작업을 지시했다. 이전 구현 보류는 해제됐다. 상세 기술 선택과 사용자 게임 정책 확정은 구분한다.
 
 **상태**: P1 구현·자동 검증 완료. 전체 프레임워크 완료 아님.
-**P1 브랜치**: `feature/framework-p1`
+**P1 브랜치**: `feature/gameplay-core`
 **기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
-**P1 구현 커밋**: `d3c4ed06f2efa199c41a15f525b161d9e894f7b3` (코드·검사·docs·명세·검증 포함). 후속 인계 문서 커밋까지 포함한 `feature/framework-p1` 브랜치를 통합하면 된다.
+**P1 구현 커밋**: `d3c4ed06f2efa199c41a15f525b161d9e894f7b3` (코드·검사·docs·명세·검증 포함). 후속 인계 문서 커밋까지 포함한 `feature/gameplay-core` 브랜치를 통합하면 된다.
 
 ## 계획별 상태
 
@@ -13,7 +13,7 @@
 |---|---|---|
 | P1 객체·규칙 | 구현·자동 검증 완료 | 새 core 검사 16개 + 기존 16개 통과. FR-001~004의 월드 소유·규칙·전달 수명 담당 범위 충족 |
 | P2 창·출력 | 별도 워크트리 담당 / 여기서 미검증 | P1과 독립. 기존 001 검사는 가변 출력 성공 근거가 아님 |
-| P3 월드 렌더링 | 선행 검증 커밋 대기 | P1/P2 통합 후 구현 |
+| P3 월드 렌더링 | P1 통합·검사 준비 / P2 커밋 대기 | `feature/world-rendering`에서 P1 최종 커밋 merge. P2는 커밋 거부로 아직 통합 불가 |
 | P4 Canvas UI | 선행 결과 대기 | P3 후 구현 |
 | P5 통합 | 선행 결과 대기 | P1~P4 후 SC-001/002/DOC 전체 판정 |
 
@@ -24,7 +24,7 @@
 | 명령 | 결과 |
 |---|---|
 | `git status --short`, `git cat-file -t 1940dd423daf423a84637b9ccec7d23eb92d722f` | 시작 시 깨끗한 작업트리·기준 commit 확인 |
-| `git switch -c feature/framework-p1 1940dd423daf423a84637b9ccec7d23eb92d722f` | 전용 브랜치 생성. 최초 제한된 Git 관리 경로 쓰기는 거부됐고 승인된 확장 실행으로 성공 |
+| `git switch -c feature/gameplay-core 1940dd423daf423a84637b9ccec7d23eb92d722f` | 전용 브랜치 생성. 최초 제한된 Git 관리 경로 쓰기는 거부됐고 승인된 확장 실행으로 성공 |
 | `$env:SPECIFY_FEATURE_DIRECTORY=(Resolve-Path specs/008-game-framework).Path; ./.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks` | 성공. 최초 SPECIFY_FEATURE만 지정한 시도는 디렉터리 미해결로 실패했고 명시 디렉터리로 해결 |
 | `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v` | 32개 통과: P1 16개, 기존 엔진·데모 16개 |
 | `git diff --check` | 통과 |
@@ -53,3 +53,11 @@ P1은 창 없는 core 계획이므로 새 실제 창·UI 자동 조작·사용�
 ## 다음 단계
 
 P3 담당은 P1 구현 커밋과 별도 P2 검증 커밋을 통합한 뒤 월드 렌더링을 진행한다. 이 문서의 P2~P5 상태는 이 작업트리에서 확인한 범위이며 다른 워크트리의 최신 결과는 해당 검증 커밋에서 가져온다.
+
+## P3 준비와 선행 차단 조건
+
+전용 작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`, 브랜치 `feature/world-rendering`에서 기준 커밋을 확인하고 P1 최종 커밋 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`를 Git merge했다. P2 채팅 `01a1c41a-3137-7f90-9330-4a9370e0b7ce`는 자동 27개·실제 SDL 검사 통과를 보고했으나 자동 승인 검토가 로컬 커밋을 두 번 거부해 사용자 승인을 요청한 채 종료했다. P2 브랜치는 아직 기준 커밋이며 P3 선행 조건을 충족하지 않는다. P2 미커밋 작업을 복사하거나 다른 워크트리를 수정하지 않았다.
+
+`drafts/test_world_rendering.py.txt`에 P3 좌표·안정 정렬·이미지별 범위·렌더 중 변경 금지·오류 참조 해제·실제 SDL 소프트웨어 렌더러의 픽셀/알파 상태 복원 검사를 준비했다. 최초 `tests/test_world_rendering.py`에서 게임 Python의 `-m py_compile tests/test_world_rendering.py`를 통과한 뒤 자동 검사에 미구현 API 오류가 섞이지 않도록 초안 경로로 옮겼다. 이 초안에 대응하는 P3 런타임은 아직 작성하지 않았고 P3 검사는 실행하지 않았다. 현재 작업트리에서 `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v`는 기존·P1 전체 32개 통과, `git diff --check`는 통과했다. 명시 `SPECIFY_FEATURE_DIRECTORY`를 사용한 `check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks`도 통과했다. 독립 읽기 전용 계약 검토는 Luna/high로 수행했으며 실행 성공 근거와 구분한다.
+
+P2 커밋 승인·완료 후 `wait_threads`로 최종 SHA를 확인하고 merge·회귀 검증·P3 구현을 이어간다. 준비만으로 T010~T013 완료나 P3 검증 성공을 표시하지 않는다.
