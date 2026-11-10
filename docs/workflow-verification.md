@@ -6,7 +6,7 @@
 
 | 요구사항 | 반영 위치·결과 |
 |---|---|
-| 기능별 feature 브랜치·동시 작업의 워크트리 권장 | AGENTS·workflow·constitution. `feature/incremental-workflow` 생성 완료 |
+| 독립 기능 개발만 feature 브랜치 사용·소규모 작업은 현재 브랜치 사용 | AGENTS·workflow·constitution 2.1.0·plan/checklist 템플릿·overlay에 일치시킴. 기존 브랜치는 유지 |
 | 기본 틀부터 확장하며 작은 단위로 검증·커밋 | workflow·plan/tasks 템플릿·overlay. 관련 코드·문서·검증을 증분마다 함께 관리 |
 | PR 외 승인 요청 없이 계속 개발 | AGENTS·constitution·workflow·spec/plan/tasks/checklist 템플릿·overlay. 요청 범위와 실제 사용자 승인을 구분하며 Ready 사용 가능 |
 | 난도·지시 구체성에 따른 모델과 추론 수준 선택 | workflow의 작업별 시작값·상향 기준·현재 호출 제약. AGENTS에서 참조 |
@@ -41,3 +41,12 @@ constitution은 기존 승인·커밋 원칙의 비호환 변경으로 1.0.0에�
 ## 분리 커밋 검증
 
 HEAD를 기준으로 정책 변경만 10개 파일의 Git index에 구성했다. 커밋 대상의 상대 링크 7개가 index에 존재하며 YAML 파싱과 `git diff --cached --check`를 통과했다. 준비 시점 파일 해시와 비교하여 동시 수정된 specs/007-warden-sprint-hibit 파일을 제외한 기존 파일의 내용이 동일함을 확인했다. 해당 기능의 동시 변경은 덮어쓰거나 커밋하지 않았다. 이전 문서 정리·아트·도구 변경은 커밋에서 제외했다.
+
+## 소규모 작업의 브랜치 예외 검증
+
+2026-11-10 최신 사용자 지시에 따라 단순 문서·지침 갱신과 색상 점검·명암 복원 같은 소규모 보정은 현재 브랜치에서 처리하도록 수정했다. constitution 2.1.0은 이 예외를 추가한다. 새 브랜치 생성이나 기존 브랜치 삭제·병합은 수행하지 않았다.
+
+- `git diff --check`: 종료 코드 0, 공백 오류 없음.
+- Python `re.findall`·`Path.exists`: 변경 대상 8개 파일의 상대 링크 대상 36개 존재 확인.
+- `rg -n`으로 AGENTS·constitution·workflow·progress·plan/checklist 템플릿·overlay의 브랜치 기준 일치 확인.
+- 문서·정책만 수정했으므로 게임 테스트·실제 창 검사는 실행하지 않았다. 기존 미커밋 변경은 이번 커밋에서 제외한다.

@@ -11,7 +11,8 @@ edits:
     prompt: Read AGENTS.md, docs/README.md, docs/progress.md and the constitution.
       Follow the user's requested scope and explicit holds. The development request
       authorizes work within scope; do not add approval gates outside PR actions.
-      Read the relevant current docs and use a feature/ branch for feature work.
+      Read the relevant current docs and use a feature/ branch for independent feature development.
+      For simple documentation/policy updates and small art corrections, stay on the current branch without creating a new one.
       Record only provided decisions and explicit unknowns in docs; do not invent
       game rules. Do not write game code or create game assets in this step.
 - insert_after: specify
