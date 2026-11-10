@@ -1,5 +1,7 @@
 # Tasks: 게임프레임워크 — 계획별 작업
 
+2026-11-10 최신 인계: 독립 P1/P2만 별도 브랜치·워크트리에서 병렬 진행한다. P2 브랜치는 feature/display-management다. P3는 P1/P2 검증 커밋을 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden의 feature/world-rendering에 통합한다. 이후 P4와 P5는 별도 브랜치를 만들지 않고 같은 워크트리/브랜치를 P3 → P4 → P5 순서로 재사용한다. 선행 종료 전에 다음 쓰기를 시작하지 않으며 기존 브랜치·워크트리는 보존한다.
+
 **현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
 **Input**: spec.md, plan.md, plans/01-core.md~05-integration.md, docs/architecture.md
@@ -18,10 +20,10 @@
 - [ ] T005 P1 자동 검사·기존 엔진 회귀를 실행하고 docs/architecture.md·docs/progress.md·verification.md의 P1 상태/근거를 갱신한 검증 증분을 커밋한다.
 
 ## Phase 3: P2 - 창·출력 기반
-- [ ] T006 [US3] tests/test_engine.py에 window/output/viewport·DPI 비율·휠 구분·0 크기·모드 전환 실패·창/렌더 리셋 이벤트 보존 검사를 작성한다 (FR-006/010).
-- [ ] T007 [US3] engine.py의 출력 조회·화면 모드·필요 SDL 이벤트·리셋 전달과 좌표 경계를 구현한다. 필요 최소 범위로 main.py와 tests/test_demo.py를 맞추고 기존 Scene API/기본 실행 호출을 보존한다.
-- [ ] T008 기존 도형 검사 장면으로 창 크기/전체화면/복귀/최소화·입력 일치를 확인하고 실제/모의 DPI 증거를 구분한다.
-- [ ] T009 P2 검사와 README·quickstart.md·docs/architecture.md·docs/progress.md·verification.md의 P2 결과를 갱신한 검증 증분을 커밋한다.
+- [X] T006 [US3] tests/test_engine.py에 window/output/viewport·DPI 비율·휠 구분·0 크기·모드 전환 실패·창/렌더 리셋 이벤트 보존 검사를 작성한다 (FR-006/010).
+- [X] T007 [US3] engine.py의 출력 조회·화면 모드·필요 SDL 이벤트·리셋 전달과 좌표 경계를 구현한다. 필요 최소 범위로 main.py와 tests/test_demo.py를 맞추고 기존 Scene API/기본 실행 호출을 보존한다.
+- [X] T008 기존 도형 검사 장면으로 창 크기/전체화면/복귀/최소화·입력 일치를 확인하고 실제/모의 DPI 증거를 구분한다.
+- [X] T009 P2 검사와 README·quickstart.md·docs/architecture.md·docs/progress.md·verification.md의 P2 결과를 갱신한 검증 증분을 커밋한다.
 
 ## Phase 4: P3 - 월드 렌더링
 - [ ] T010 [US3] tests/test_game_framework.py에 월드 투영/역변환·뎁스/동률·범위/부분 겹침·알파/공유 상태 복원·자원 리셋/실패 검사를 작성한다 (FR-004/005/007~010).

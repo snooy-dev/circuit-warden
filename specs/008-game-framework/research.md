@@ -180,6 +180,6 @@ SDL2의 표준 BLEND는 앞 RGB와 알파를 뒤 색에 합성하며, TextureAlp
 
 SDL_GetRendererOutputSize는 실제 출력 픽셀 크기를 반환하며 고DPI에서 SDL_GetWindowSize와 다를 수 있다. 창 마우스 좌표를 출력 픽셀로 바꾸고 그리기 변환을 역으로 적용해야 한다. SDL_FULLSCREEN_DESKTOP은 데스크톱 크기 전체화면이며 일부 렌더러는 전환 시 자원 리셋을 알릴 수 있다. [출력 크기](https://wiki.libsdl.org/SDL2/SDL_GetRendererOutputSize), [창 크기](https://wiki.libsdl.org/SDL2/SDL_GetWindowSize), [전체화면](https://wiki.libsdl.org/SDL2/SDL_SetWindowFullscreen)
 
-현재 engine.py는 WIDTH/HEIGHT=800/600을 open_canvas에 전달한다. Pico2D open_canvas(full=True)는 독점 전체화면 플래그를 사용하고, resize_canvas는 SDL_SetWindowSize까지 호출한다. get_events는 창/렌더 리셋 이벤트를 호출자에게 전달하지 않으며 그리기 y 변환은 canvas_height를 사용한다. 따라서 화면 크기만 바꾸면 기존 코드가 완전 대응한다고 주장할 수 없다. Engine의 출력 조회·이벤트·화면 모드 처리와 프로젝트 그리기 경계의 출력 높이/좌표 변환을 연결해야 한다. 의존성 소스는 수정하지 않았다.
+P2 이전 engine.py는 WIDTH/HEIGHT=800/600을 open_canvas에 전달했다. Pico2D open_canvas(full=True)는 독점 전체화면 플래그를 사용하고, resize_canvas는 SDL_SetWindowSize까지 호출한다. get_events는 창/렌더 리셋 이벤트를 호출자에게 전달하지 않으며 그리기 y 변환은 canvas_height를 사용한다. 따라서 화면 크기만 바꾸면 기존 코드가 완전 대응한다고 주장할 수 없다. Engine의 출력 조회·이벤트·화면 모드 처리와 프로젝트 그리기 경계의 출력 높이/좌표 변환을 연결해야 한다. 의존성 소스는 수정하지 않았다.
 
 문서 수식의 읽기 전용 검토에서 출력 y 방향을 Pico2D 경계에서 한 번만 변환할 것, 0 크기 때 입력 역변환까지 생략할 것을 확인했다. 실행 테스트·실제 DPI/전체화면 검증은 하지 않았다.
