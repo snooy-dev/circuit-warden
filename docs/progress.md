@@ -37,7 +37,7 @@ P4 최종 인계 `0f4bc9f6151e1fac705499d737da01901c6b28f8`와 깨끗한 상태�
 
 P5 공동 스냅샷·복합 수명 증분 `b11e7a5`와 통합 FrameworkDemo를 구현했다. 전체 자동 검사 85개와 실제 SDL 통합/월드/UI 회귀가 통과했다. 통합 검사는 크기·전체화면·최소화·마우스 좌표·반투명 UI/월드·생성/삭제·카메라·레벨 왕복·종료를 확인했고 출력 PNG도 직접 관찰했다. 사용자 직접 확인·실물 DPI·물리 키 조작은 미확인이다. 게임 규칙·아트·성능 예산은 여전히 미정이며 장치/누락 리셋은 명시 오류·정리다.
 
-008 범위의 필수 미완료는 없다. FR 10개·SC 3개·수용 조건 15개·작업 22개의 코드/검사/문서 대응을 대조했고 converge에서 추가 잔여 작업은 없었다. 검증 근거는 관련 증분 커밋과 verification에 보존한다. 새 게임 기능은 사용자가 정할 범위에서 진행하며 PR 생성·게시·병합은 하지 않는다. 기본 통합/월드 전용/독립 UI 실행은 [quickstart](../specs/008-game-framework/quickstart.md), 근거·한계는 [verification](../specs/008-game-framework/verification.md)을 참조한다.
+008 범위의 필수 미완료는 없다. FR 10개·SC 3개·수용 조건 15개·작업 22개의 코드/검사/문서 대응을 대조했고 converge에서 추가 잔여 작업은 없었다. 최종 구현·검증 커밋은 `7bd9299305717f12243617db8f04e6ac6154e13b`이며 이 커밋과 후속 SHA 인계 문서 커밋을 포함한 같은 브랜치를 유지한다. 검증 근거는 verification에 보존한다. 새 게임 기능은 사용자가 정할 범위에서 진행하며 PR 생성·게시·병합은 하지 않는다. 기본 통합/월드 전용/독립 UI 실행은 [quickstart](../specs/008-game-framework/quickstart.md), 근거·한계는 [verification](../specs/008-game-framework/verification.md)을 참조한다.
 
 ## 개발 방식 조정
 
