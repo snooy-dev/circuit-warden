@@ -53,3 +53,7 @@ P2는 출력/리셋 정보를 제공하고 P3가 자신의 그리기 자원을 �
 
 ## Verification & Risks
 계획 분리 문서의 링크·요구사항 분담·의존 관계·보류 상태를 검사한다. 런타임 테스트는 아직 실행하지 않는다. 기존 합성 컨테이너 실험은 전체 구현 성능 근거가 아니다. 월드 화면비 정책은 P3, UI 기준 크기는 P4, 전체화면/검증 환경은 P2 검토 사항이며 P1을 막지 않는다. 실제 게임 규모·성능 예산은 미정이다. 모든 필수 미완료를 해결해야 P5에서 전체 완료를 판정한다.
+
+## Branch & Worktree Execution
+
+사용자 수정 지시: 계획 번호를 브랜치명에 쓰지 않고 기능명으로 표현한다. P1 feature/gameplay-core와 P2 feature/display-management만 별도 워크트리에서 병렬 실행한다. P3는 feature/world-rendering의 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden에 두 결과를 통합한다. P4와 P5는 이 같은 브랜치/워크트리를 순차 인계받으며 별도 분기·중복 병합을 하지 않는다. 선행 완료·깨끗한 커밋 확인 전 공유 쓰기는 금지한다. 기존 feature/canvas-ui와 feature/game-screen-integration의 준비 커밋/미커밋 변경은 보존하고 필요한 부분만 인계한다. 현재 해당 워크트리 삭제·아카이브는 하지 않았다.
