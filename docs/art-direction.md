@@ -20,4 +20,4 @@
 
 ## 명암·비율 복원 검토
 
-[009 복원](../specs/009-warden-shading-restore/spec.md)은 원화의 청색 중간 명암 복원과 추가 발·몸/머리 방향 수정이다. 기존 잠정 승인본은 유지한다. 최신 proportion-fix-v1은 가까운 귀·팔을 줄인 정지 검토 후보로 [비율 검사](../specs/009-warden-shading-restore/proportion-verification.md)를 마쳤으며 아직 동작에 적용하지 않았다.
+[009 복원](../specs/009-warden-shading-restore/spec.md)은 원화 청색 명암과 귀·팔 비율을 복원한 사용자의 지정 이미지를 현재 Run에 적용했다. [수정본 Run](../art/warden/shading-restore/run-review-v1/review.html)은 좌우16프레임/480ms·직립·방향성 전류·천의 펄럭임·귀/꼬리 관성을 포함한다. 새 부위 좌표와 발 하단 형태 보존 변환을 사용하며 [검증](../specs/009-warden-shading-restore/verification.md)을 완료했다. 기존 잠정 승인본을 보존한 별도 검토 후보로, 게임 통합·최종 사용 승인은 아니다. 걷기/공격 최신 자세 적용은 이번 범위에 포함하지 않는다.

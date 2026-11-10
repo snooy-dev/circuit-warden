@@ -1,7 +1,11 @@
-# 검토 안내
+# 수정본 Run 검토
 
-1. [원화 대비 최신 후보](../../art/warden/shading-restore/proportion-fix-v1/comparison.png)에서 동일 높이의 귀·머리·팔·발을 비교한다.
-2. [비율 검사 결과](proportion-verification.md)를 읽는다. 최신 정지 후보는 귀·팔을 원화 비율에 가깝게 줄였으며 아직 동작 적용 전이다.
-3. [이전 색감만 복원한 Run](../../art/warden/shading-restore/review-v1/run-comparison.gif)은 색감 효과 확인용이며 최신 방향 후보의 동작이 아니다.
+1. [검토 페이지](../../art/warden/shading-restore/run-review-v1/review.html)에서 정상/느린재생,1배/3배,배경전환과프레임을확인한다.
+2. [idle·기존Run·수정Run 비교](../../art/warden/shading-restore/run-review-v1/comparison.gif)에서색감·입체감·비율을본다.
+3. [좌우GIF](../../art/warden/shading-restore/run-review-v1/both.gif)에서전류방향·천의펄럭임·귀/꼬리관성·발교대를본다.
+4. [묶음](../../art/warden/shading-restore/run-review-v1/warden-restored-run.zip)과[검증](verification.md)을확인한다.
 
-색감만 복원한 초기 결과의 재현 명령은 `./.local-tools/python/Scripts/python.exe specs/009-warden-shading-restore/build_review.py`다. 기존 출력이 있으면 덮어쓰기를 거부한다. 최신 후보 리그 적용은 아직 없다.
+재현: `./.local-tools/python/Scripts/python.exe specs/009-warden-shading-restore/build_restored_run.py 새출력폴더명` (기존출력보존).
+현재결과검사: `./.local-tools/python/Scripts/python.exe specs/009-warden-shading-restore/check_restored_run.py`.
+
+검토후사용자가채택을판단한다. 기존잠정승인Run은그대로며게임통합은없다. 걷기/공격은이번수정본적용범위밖이다.

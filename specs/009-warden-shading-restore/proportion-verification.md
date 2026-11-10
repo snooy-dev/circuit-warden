@@ -4,7 +4,7 @@
 
 ## 현재 판정
 
-**귀·팔 과대를 개선한 검토용 정지 후보를 준비했다.** 현재 몸통·머리 방향과 복원한 청색 명암을 시각적으로 유지했다. 검토본은 [warden-proportion-restored.png](../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png), [동일 높이 비교](../../art/warden/shading-restore/proportion-fix-v1/comparison.png)다. 기존 잠정 승인본을 대체하지 않으며 최신 자세의 애니메이션 적용은 아직 하지 않았다.
+**귀·팔 과대를 개선한 검토용 정지 후보를 준비했다.** 현재 몸통·머리 방향과 복원한 청색 명암을 시각적으로 유지했다. 검토본은 [warden-proportion-restored.png](../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png), [동일 높이 비교](../../art/warden/shading-restore/proportion-fix-v1/comparison.png)다. 기존 잠정 승인본을 대체하지 않으며 사용자후속지시로최신자세의Run적용을완료했다. [Run검증](verification.md)참조.
 
 | 수동 경계·전체 피사체 높이 대비 | idle 원화 | 수정 전 | 수정 후 |
 |---|---:|---:|---:|
@@ -23,4 +23,4 @@
 
 현재 잠정 승인 idle48·걷기48·Run32, 총128PNG의 SHA-256이 각 approval.json과 일치했다. 원화·이전 후보는 보존했고 새 파일로 저장했다. [측정 자료](../../art/warden/shading-restore/proportion-fix-v1/measurements.json)에 주피사체 경계와 잡음 제거 수를 기록했다. 원본과 처리 결과의 해시는 provenance.json에 보존한다.
 
-T008의 정지 비율 수정을 완료했다. T009 최신 자세 리그·전류 경로·발 형태 보존 동작 검증은 남는다. 현재 작업은 사용자가 지정한 귀·팔 수정이며 게임 통합과 최종 사용 승인은 포함하지 않는다.
+T008의 정지 비율 수정을 완료했다. T009최신자세Run리그·전류경로·발형태보존동작검증을완료했다. 현재 작업은 사용자가 지정한 귀·팔 수정이며 게임 통합과 최종 사용 승인은 포함하지 않는다.

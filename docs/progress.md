@@ -1,6 +1,6 @@
 # 진행 상태
 
-- 2026-11-10 [009 명암·비율 복원](../specs/009-warden-shading-restore/spec.md) 진행 중. 사용자 요청으로 가까운 귀·팔을 원화 비율에 가깝게 줄인 정지 후보 proportion-fix-v1을 준비하고 [비율 검증](../specs/009-warden-shading-restore/proportion-verification.md)을 마쳤다. 최신 자세의 동작 적용은 남는다. 기존 승인128PNG·원화는 보존하며 잠정 승인 분류·게임 미통합을 유지한다.
+- 2026-11-10 [009 수정본 Run](../specs/009-warden-shading-restore/spec.md) 제작·검증 완료, 사용자 검토 대기. 귀·팔 비율과 청색 명암을 복원한 지정 이미지로 좌우16프레임/480ms Run을 만들고 방향성 전류·천의 펄럭임·귀/꼬리 관성을 적용했다. [검토 페이지](../art/warden/shading-restore/run-review-v1/review.html), [검증](../specs/009-warden-shading-restore/verification.md) 참조. 기존 승인128PNG와 원화는 보존했고 새 Run은 별도 검토 후보이며 게임에 통합하지 않았다. 걷기·공격 최신 자세 적용은 이번 범위 밖이다.
 
 갱신일: 2026-11-10
 
