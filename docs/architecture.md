@@ -1,12 +1,12 @@
 # 기술 구조
 
-상태: **기본 실행 기반 완료 / P2 출력 기반 구현·자동/실제 SDL 검사 통과 / 나머지는 계획별 진행**
+상태: **기본 실행 기반 완료 / P1/P2 통합·P3 월드 렌더링 검증 완료 / P4 UI·P5 통합 후속**
 
 2026-11-08 사용자가 명세·계획 시각화 검토 후 계획을 승인했다. 아래 기술 계약은 이번 기본 실행 기반에 적용한다. 실제 키 조작은 사용자가 정상 확인했고 자동 검사 및 창 검사도 통과했다.
 
 ## 범위와 환경
 
-사용자가 승인한 창·게임 루프·입력 전달·장면 전환만 구현한다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현 중이다. P4/P5는 후속 계획이다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
+사용자가 승인한 창·게임 루프·입력 전달·장면 전환만 구현한다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4/P5는 후속 계획이다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
 
 ## 실행과 장면 계약
 
@@ -48,13 +48,13 @@
 
 ### 계획별 도입 범위
 
-[분리 계획](../specs/008-game-framework/plan.md)은 P1 게임 객체·규칙 → P2 창·출력 → P3 월드 렌더링 → P4 Canvas UI → P5 통합으로 구성한다. P1/P2는 논리적으로 독립이며 P3 이후는 선행 계약을 사용한다. 아래는 최종 목표 설계의 제안으로, P1에서 Canvas/Renderer/가변 출력을 함께 구현하라는 뜻이 아니다. 모든 계획의 구현 지시는 받았으며 이 작업트리에 P1/P2 검증 커밋을 통합했다. P3는 구현 중이고 P4/P5 계약은 목표 설계다. P3 완료 뒤 P4, P4 완료 뒤 P5가 같은 feature/world-rendering 브랜치와 작업트리를 순차 재사용한다. 각 계획의 완료 상태와 전체 완료 상태는 구분한다.
+[분리 계획](../specs/008-game-framework/plan.md)은 P1 게임 객체·규칙 → P2 창·출력 → P3 월드 렌더링 → P4 Canvas UI → P5 통합으로 구성한다. P1/P2는 논리적으로 독립이며 P3 이후는 선행 계약을 사용한다. 아래는 최종 목표 설계의 제안으로, P1에서 Canvas/Renderer/가변 출력을 함께 구현하라는 뜻이 아니다. 모든 계획의 구현 지시는 받았으며 이 작업트리에 P1/P2 검증 커밋을 통합했다. P3 월드 경로도 구현·검증했고 P4/P5 계약은 목표 설계다. P3 완료 뒤 P4, P4 완료 뒤 P5가 같은 feature/world-rendering 브랜치와 작업트리를 순차 재사용한다. 각 계획의 완료 상태와 전체 완료 상태는 구분한다.
 
 ### 책임과 소유
 
 P3 월드 기본 경로는 구현·자동 검증했다. `WorldTransform(viewport, center=(0,0), view_height=10)`은 좌상단 출력 점·길이와 월드 역변환을 제공하며 0 크기에서 점 변환은 None이다. `RenderItem(drawable, draw_order=0, bounds=None, visible=True, opacity=1)`은 불변 값이며 drawable은 `(transform, opacity)`로 호출한다. `Renderer.draw(level, transform)`은 매번 등록순에서 수집해 안정 정렬하고 마지막에 참조를 비운다. 컬링은 실제 bounds에 출력 1픽셀의 여유를 두고 Level update는 유지한다. 렌더 중 Level 수명·등록·삭제·전달 및 렌더 재진입은 거부한다.
 
-`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, camera_center=(0,0), view_height=10)`은 Canvas 없이 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 두 종류 SDL 렌더 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. 실제 월드 데모 검증은 아직 남아 있다.
+`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, camera_center=(0,0), view_height=10)`은 Canvas 없이 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 렌더 타깃 리셋은 도형·일반 이미지를 재그리며 세대를 갱신한다. 장치 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. draw_image는 내용 복구가 필요한 TARGET texture를 명시 오류로 거부한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. UI 없는 framework_demo.py와 실제 SDL 월드 검사를 통과했으며 결과·한계는 verification에 있다.
 
 | 개념 | 제안 책임 | 경계 |
 |---|---|---|

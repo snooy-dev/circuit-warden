@@ -7,7 +7,7 @@
 1. [진행 상태](progress.md): 목표, 구현 허가 여부, 다음 작업.
 2. [게임 설계](game-design.md), [시스템 설계](systems/README.md): 의도와 규칙.
 3. [기술 구조](architecture.md), [아트 기준](art-direction.md): 필요한 부분만.
-4. 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`. 008의 plan.md는 다섯 하위 계획의 범위·의존 관계 안내이며 P1/P2는 검증 커밋을 통합했고 P3는 구현 중이며 P4/P5는 같은 작업트리에서 순차 진행한다.
+4. 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`. 008의 plan.md는 다섯 하위 계획의 범위·의존 관계 안내이며 P1/P2는 검증 커밋을 통합했고 P3 월드 렌더링도 검증했으며 P4/P5는 같은 작업트리에서 순차 진행한다.
 
 ## 운영 원칙
 

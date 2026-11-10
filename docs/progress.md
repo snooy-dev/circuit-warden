@@ -6,7 +6,7 @@
 
 - **게임프레임워크 계획별 구현 승인 / 새 채팅 인계**: 사용자가 2026-11-10 각 계획 구현 시작과 독립 계획의 별도 워크트리 병렬 진행을 지시했다. 이전 구현 보류는 해제됐다.
 - P1 객체·규칙과 P2 창·출력은 독립 워크트리에서 구현·검증했고 이 작업트리에 통합했다. P3 월드 렌더링 → P4 Canvas → P5 통합은 같은 feature/world-rendering 브랜치와 작업트리에서 순차 진행한다. 선행 종료 전 다음 쓰기는 금지하며 기존 브랜치·워크트리는 보존한다.
-- [전체 계획](../specs/008-game-framework/plan.md)의 범위·제외·완료 조건과 Spec Kit 흐름을 따른다. P1 객체·규칙은 전용 브랜치 feature/gameplay-core에서 구현·검증했다. P2 검증 커밋도 통합했고 P3 구현을 진행하며 계획별 상태는 verification에서 확인한다.
+- [전체 계획](../specs/008-game-framework/plan.md)의 범위·제외·완료 조건과 Spec Kit 흐름을 따른다. P1 객체·규칙은 전용 브랜치 feature/gameplay-core에서 구현·검증했다. P2 검증 커밋도 통합했고 P3 월드 렌더링을 구현·검증했으며 계획별 상태는 verification에서 확인한다.
 - 기준 브랜치는 feature/game-framework이며 엔진·정책 기반과 계획 문서를 보존한다. 새 채팅은 전용 워크트리/feature 브랜치만 수정하고 원본 D:/GitHub/circuit-warden의 미커밋 작업을 건드리지 않는다.
 - 구현 승인과 상세 게임 정책 확정은 구분한다. 현재 기술 제안 기본값으로 진행하며 PR 생성·게시·병합은 별도 승인 대상이다.
 
@@ -33,7 +33,7 @@
 
 ## 다음 작업
 
-P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`와 P2 최종 `c3eef90`의 검증 커밋을 통합했다. 이전 P2 커밋 차단은 해결됐다. P3 월드 기본 경로와 좌표·정렬·범위·알파·리셋·정리 자동 검사를 구현했고 전체 55개를 통과했다. UI 없는 월드 검사 화면과 실제 창 검증을 이어간다. P3 종료 후 P4, 이후 P5가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering` 브랜치를 순차 인계받는다. 전체 완료는 P5에서 판정한다. [계획별 검증](../specs/008-game-framework/verification.md)을 참조한다.
+P3 월드 경로·UI 없는 데모를 구현했고 전체 자동 검사 60개와 실제 SDL 월드 검사를 통과했다. P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`, P2 최종 `c3eef90`을 통합했으며 이전 커밋 차단은 해결됐다. 타깃 리셋은 일반 그림 재그리기, 장치/누락 리셋은 명시 오류·정리로 처리한다. P4가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering` 브랜치를 인계받아 Canvas를 구현한다. P4 종료 뒤 P5가 순차 재사용하며 동시 쓰기는 하지 않는다. 기존 별도 브랜치·워크트리는 삭제/아카이브하지 않는다. 전체 프레임워크 완료는 P5에서 판정한다. [계획별 검증](../specs/008-game-framework/verification.md)을 참조한다.
 
 ## 개발 방식 조정
 

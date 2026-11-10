@@ -2,7 +2,7 @@
 
 **현재 실행 근거**: 2026-11-10 사용자가 P1~P5의 새 채팅 구현과 독립 계획의 별도 워크트리 병렬 작업을 지시했다. 이전 구현 보류는 해제됐다. 상세 기술 선택과 사용자 게임 정책 확정은 구분한다.
 
-**상태**: P1/P2 검증 커밋 통합, P3 구현 진행. 전체 프레임워크 완료 아님.
+**상태**: P1/P2 검증 커밋 통합·P3 구현 및 자동/실제 SDL 검증 완료. 전체 프레임워크 완료 아님.
 **P1 브랜치**: `feature/gameplay-core`
 **기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
 **P1 구현 커밋**: `d3c4ed06f2efa199c41a15f525b161d9e894f7b3` (코드·검사·docs·명세·검증 포함). 후속 인계 문서 커밋까지 포함한 `feature/gameplay-core` 브랜치를 통합하면 된다.
@@ -13,7 +13,7 @@
 |---|---|---|
 | P1 객체·규칙 | 구현·자동 검증 완료 | 새 core 검사 16개 + 기존 16개 통과. FR-001~004의 월드 소유·규칙·전달 수명 담당 범위 충족 |
 | P2 창·출력 | 검증 커밋 통합 | 별도 27개 자동·실제 SDL 검증 근거 보존 |
-| P3 월드 렌더링 | 구현 진행 | P1/P2 검증 커밋 통합 완료 |
+| P3 월드 렌더링 | 구현·자동/실제 SDL 검증 완료 | 전체 60개와 아래 실제 창 검사 통과 |
 | P4 Canvas UI | 선행 결과 대기 | P3 후 구현 |
 | P5 통합 | 선행 결과 대기 | P1~P4 후 SC-001/002/DOC 전체 판정 |
 
@@ -66,8 +66,22 @@ P1은 창 없는 core 계획이므로 새 실제 창·UI 자동 조작·사용�
 
 P2 구현 커밋 `6c92565bfe726d50458f1e6eeca64494258073f4`, 최종 인계 커밋 `c3eef90`을 Git merge했다. 이전 커밋 차단은 해결됐다. P1 최종 인계 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`도 포함한다.
 
-## P3 현재 검증
+## P3 검증과 인계
 
-브랜치 `feature/world-rendering`, 작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`. P1/P2 통합 후 기존 43개 회귀를 통과했다. 월드 기본 경로·LevelScene·SDL 그리기 헬퍼를 구현한 뒤 `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v` 전체 **55개 통과**(P3 12개 포함). 모의 draw 순서·수명 검사와 실제 SDL 소프트웨어 렌더러 픽셀 읽기를 구분한다. 후자는 source-over RGB, 이미지 픽셀 alpha×opacity, 서로 다른 opacity의 공유 texture 상태, 도형/이미지 draw 실패 뒤 color/blend/alpha 복원을 검증했다. 좌표 왕복·화면비·0크기·뎁스 동률 복원·등록순 불변·부분/경계/1픽셀 여유/미확인 bounds·화면 밖 update·렌더 중 소유 변경/전달 재진입 거부·오류 후 참조 해제·리셋 명시 실패·장면 정리도 통과했다.
+- 작업트리: `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`, 브랜치: `feature/world-rendering`.
+- P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`, P2 최종 `c3eef90`을 Git merge했다. 통합 커밋 `e229bf2`에서 전체 43개 회귀를 통과했다. P3 월드 기본 경로 증분 `4a4426a`는 전체 55개를 통과했다. 최종 구현 커밋은 인계 기록에서 확인한다.
+- 자동 명령: `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q` → **60개 통과**. 기존·P1/P2 43개와 P3 17개다. `tests/test_world_rendering.py`는 좌표 왕복/길이/화면비/0크기, 등록순/이미지별 안정 정렬/동률 복원, 부분·경계·1픽셀 여유·미확인 bounds와 update 유지, 렌더 중 수명/전달 재진입 거부, 실패 뒤 참조 해제, 리셋 명시 실패와 정리를 검사한다. `tests/test_framework_demo.py`는 클릭→update 단일 이동→draw 상태 불변, 레벨 왕복·규칙 격리, 카메라·뎁스·출력 요청을 검사한다.
+- 실제 SDL 소프트웨어 렌더러 검사: 메모리 surface/texture와 `SDL_RenderReadPixels`로 source-over RGB, 이미지 자체 alpha×opacity, 공유 texture의 다른 opacity, texture/도형 draw 및 상태 설정 실패 뒤 원래 color/blend/alpha 복원을 확인했다. TARGET texture는 내용 복구 경로가 없어 명시 오류로 거부한다.
+- 실제 창 명령: `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/world_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c41a-a29f-77a0-905b-a7e7ea69059f` → 종료 0, `PASS: world/alpha/image/culling/input/camera/resize/fullscreen/roundtrip`. 실제 640×480 → 960×540 → 5120×1440 보더리스 → 960×540 복귀를 확인했다. SDL 입력 큐로 생성·삭제·카메라·A→B→A를 실행하고 레벨별 새 초기 배치·이전 소유 해제·마지막 장면/renderer 참조 정리를 assert했다. 2×2 RGBA 검사용 texture를 메모리에서 만들어 실제 이미지 합성 픽셀을 확인하고 각 레벨 종료 때 해제했다. 외부 에셋 생성은 없다.
+- 실제 출력 `p3-initial.png`, `p3-boundary-entry.png`, `p3-resized.png`, `p3-level-B.png`를 위 출력 폴더에서 직접 열어 보았다. 중심이 밖인 보라색 도형의 부분 표시, 빨간 몸/파란 반투명/노란 무기 교차 순서, 화면 밖 초록 도형의 경계 진입, 카메라 이동 후 저장 좌표 유지와 크기/화면비 투영을 확인했다. 이미지 합성 기대값은 Pico2D의 실제 기본 배경색(200,200,210)을 기준으로 한다.
+- 일반 `framework_demo.py` 창에서도 도형·움직임을 관찰했다. 자동 UI Space 입력은 전환을 확인하지 못했고 이후 마우스 자동 조작은 사용자 입력 감지로 중단됐다. 원인을 앱/도구 문제로 단정하지 않는다. 별도 실제 SDL 입력 큐 검사를 이 자동 UI 입력 성공이나 사용자 직접 확인으로 표시하지 않는다. 일반 관찰 창은 실행 세션 중단으로 닫았고 실제 smoke는 자체 종료·정리를 검사했다. 사용자 직접 확인·실물 DPI 변경·물리 키 조작은 미확인이다.
 
-T010은 완료했고 T011의 월드 데모와 T012 실제 창 검증은 남아 있다. Canvas·UI·자동 자원 재업로드·추적 카메라는 구현하지 않았다. 게임/아트/의존성 변경은 없다. architecture와 P3 계획·계약·tasks·progress를 실제 API와 이 부분 상태로 갱신했다. P3 종료 후 P4, P4 종료 후 P5가 동일 작업트리/브랜치를 순차 재사용한다. PR은 별도 승인 대상이다.
+### 리셋 처리·검토·converge
+
+실제 resize에서 TARGETS_RESET이 발생해 모든 리셋 오류 정책이 크기 변경을 막는 것을 확인했다. [SDL2 이벤트 정의](https://wiki.libsdl.org/SDL2/SDL_EventType)에 따라 타깃 리셋은 일반 도형/정적 이미지 재그리기를 허용하고 장치 리셋은 명시 오류로 종료한다. 원래 계획의 ‘복구 또는 명시 오류’ 안에서 처리하며 실패를 성공으로 바꾸지 않았다. TARGET texture는 그리기 전에 명시 오류로 거부한다. 전달받은 타깃 이벤트마다 세대를 하나만 올려 누락 device 후 후속 target이 누락을 덮지 못하도록 했다. 해당 재현 회귀를 추가해 전체 60개와 실제 창 검사를 다시 통과했다.
+
+Luna/high 계약 준비 검토와 Sol/high 읽기 전용 코드 검토를 수행했다. Sol 검토에서 제시한 누락 세대 경계를 보완했고 SDL 설정 실패 4개 경계도 지속 자동 검사에 포함했다. analyze/converge에서 FR-004/005/007~010의 월드 담당 범위·실제 API·검사·docs를 대조했다. T010~T013의 필수 미완료는 없다. 전체 UI/통합 SC 판정은 P4/P5에 남아 있으며 이번 완료는 P3 범위다.
+
+architecture/progress/README와 spec/plan/P3 plan/tasks/data-model/contracts/quickstart를 현재 API·실행·한계로 갱신했다. 게임 정책·아트·의존성을 바꾸지 않아 game-design/systems/art-direction과 requirements에는 영향이 없다. Pico2D 설치본·원본 D:/GitHub 작업·다른 워크트리는 변경하지 않았다. P4는 이 작업트리·브랜치를 순차 인계받고 P4 종료 후 P5가 이어간다. 빈 Canvas/추적 카메라/공간 인덱스/정렬 캐시/자원 자동 재업로드는 추가하지 않았다. 장치 리셋 때 새 자원 복구가 필요한 것은 명시된 제한이다. PR 생성·게시·병합은 하지 않았다.
+
+정적 검증: 명시 SPECIFY_FEATURE_DIRECTORY로 check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks 성공. 변경 Markdown 15개의 로컬 링크·줄 끝 공백·충돌 표식 검사와 git diff --check 통과. P1/P4/P5 계획 헤더의 브랜치명도 최신 이름과 공유 인계 방식으로 맞췄다.

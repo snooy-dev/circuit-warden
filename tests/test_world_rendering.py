@@ -187,9 +187,11 @@ class LevelSceneTests(unittest.TestCase):
 
     def test_reset_event_or_missed_generation_fails_explicitly(self):
         obj = self.level.spawn(GameObject())
-        for event_type in (pico.SDL_RENDER_TARGETS_RESET, pico.SDL_RENDER_DEVICE_RESET):
-            with self.assertRaisesRegex(RuntimeError, '리셋'):
-                self.scene.handle_event(SimpleNamespace(type=event_type))
+        self.app.reset_generation += 1
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_RENDER_TARGETS_RESET))
+        self.scene.draw()
+        with self.assertRaisesRegex(RuntimeError, '리셋'):
+            self.scene.handle_event(SimpleNamespace(type=pico.SDL_RENDER_DEVICE_RESET))
         self.app.reset_generation += 1
         with self.assertRaisesRegex(RuntimeError, '리셋'):
             self.scene.draw()
@@ -207,6 +209,12 @@ class LevelSceneTests(unittest.TestCase):
         self.assertEqual(self.level.objects, ())
         self.assertIsNone(self.scene.engine)
         self.assertEqual(self.scene.renderer.world_items, [])
+
+    def test_later_target_event_cannot_hide_a_missed_device_reset(self):
+        self.app.reset_generation += 2
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_RENDER_TARGETS_RESET))
+        with self.assertRaisesRegex(RuntimeError, '리셋'):
+            self.scene.draw()
 
 
 class DrawingStateTests(unittest.TestCase):
@@ -263,6 +271,15 @@ class DrawingStateTests(unittest.TestCase):
         self.assertEqual(self.state(), initial)
         draw_rect(self.transform, (-10, -10, 10, 10), (255, 0, 0), 1)
         self.assertEqual(self.pixel()[:3], (255, 0, 0))
+        for setter in ('SDL_SetRenderDrawBlendMode', 'SDL_SetRenderDrawColor'):
+            original, calls = getattr(pico, setter), []
+            def fail_first(*args):
+                calls.append(None)
+                return -1 if len(calls) == 1 else original(*args)
+            with patch.object(pico, setter, side_effect=fail_first):
+                with self.assertRaises(RuntimeError):
+                    draw_rect(self.transform, (-1, -1, 1, 1), (0, 255, 0), .2)
+            self.assertEqual(self.state(), initial)
 
     def test_shared_texture_alpha_restore_pixel_alpha_and_failure(self):
         source = pico.SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 32, pico.SDL_PIXELFORMAT_RGBA32)
@@ -281,6 +298,7 @@ class DrawingStateTests(unittest.TestCase):
         draw_image(image, self.transform, (-10, -10, 10, 10), .5)
         self.assertLessEqual(abs(self.pixel()[0] - 64), 2)
         self.assertEqual(self.texture_state(texture), initial)
+
         draw_rect(self.transform, (-10, -10, 10, 10), (0, 0, 0), 1)
         draw_image(image, self.transform, (-10, -10, 10, 10), 1)
         self.assertLessEqual(abs(self.pixel()[0] - 128), 1)
@@ -289,6 +307,23 @@ class DrawingStateTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 draw_image(image, self.transform, (-10, -10, 10, 10), .2)
         self.assertEqual(self.texture_state(texture), initial)
+        for setter in ('SDL_SetTextureBlendMode', 'SDL_SetTextureAlphaMod'):
+            original, calls = getattr(pico, setter), []
+            def fail_first(*args):
+                calls.append(None)
+                return -1 if len(calls) == 1 else original(*args)
+            with patch.object(pico, setter, side_effect=fail_first):
+                with self.assertRaises(RuntimeError):
+                    draw_image(image, self.transform, (-1, -1, 1, 1), .2)
+            self.assertEqual(self.texture_state(texture), initial)
+
+    def test_target_texture_has_explicit_unsupported_error(self):
+        texture = pico.SDL_CreateTexture(self.backend, pico.SDL_PIXELFORMAT_RGBA8888,
+                                         pico.SDL_TEXTUREACCESS_TARGET, 2, 2)
+        self.assertTrue(texture)
+        self.addCleanup(pico.SDL_DestroyTexture, texture)
+        with self.assertRaisesRegex(RuntimeError, '렌더 타깃'):
+            draw_image(SimpleNamespace(texture=texture), self.transform, (-1, -1, 1, 1))
 
 
 if __name__ == '__main__':

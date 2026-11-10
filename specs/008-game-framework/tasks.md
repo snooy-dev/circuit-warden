@@ -27,9 +27,9 @@
 
 ## Phase 4: P3 - 월드 렌더링
 - [X] T010 [US3] tests/test_world_rendering.py에 월드 투영/역변환·뎁스/동률·범위/부분 겹침·알파/공유 상태 복원·자원 리셋/실패 검사를 작성한다 (FR-004/005/007~010).
-- [ ] T011 [US3] game_framework.py에 카메라 변환·RenderItem·Renderer 월드 경로·월드 전용 LevelScene을 구현하고 framework_demo.py/tests/test_framework_demo.py에 UI 없는 월드 검사를 만든다.
-- [ ] T012 월드 자동 검사와 실제 도형/검사용 이미지로 배치·생성/삭제·경계 진입·반투명·레벨 왕복·실패 정리를 확인한다.
-- [ ] T013 P3의 docs/architecture.md·docs/progress.md·quickstart.md·verification.md와 필요 계약을 갱신한 검증 증분을 커밋한다.
+- [X] T011 [US3] game_framework.py에 카메라 변환·RenderItem·Renderer 월드 경로·월드 전용 LevelScene을 구현하고 framework_demo.py/tests/test_framework_demo.py에 UI 없는 월드 검사를 만든다.
+- [X] T012 월드 자동 검사와 실제 도형/검사용 이미지로 배치·생성/삭제·경계 진입·반투명·레벨 왕복·실패 정리를 확인한다.
+- [X] T013 P3의 docs/architecture.md·docs/progress.md·quickstart.md·verification.md와 필요 계약을 갱신한 검증 증분을 커밋한다.
 
 ## Phase 5: P4 - Canvas UI
 - [ ] T014 [US3] tests/test_game_framework.py에 Canvas 트리 수명·전체 DFS 스냅샷·형제 순서/하위 트리 연속성·논리 배율/anchor·bounds/숨김·알파 검사를 작성한다 (FR-004/006~010).

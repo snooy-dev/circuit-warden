@@ -364,6 +364,10 @@ def draw_image(image, transform, bounds, opacity=1):
     if not transform.valid:
         return
     rect = _output_rect(transform, bounds)
+    access = c_int()
+    _sdl(pico.SDL_QueryTexture(image.texture, None, byref(access), None, None))
+    if access.value == pico.SDL_TEXTUREACCESS_TARGET:
+        raise RuntimeError('렌더 타깃 이미지는 내용 복구 경로가 필요합니다.')
     alpha, blend = c_ubyte(), c_int()
     _sdl(pico.SDL_GetTextureAlphaMod(image.texture, byref(alpha)))
     _sdl(pico.SDL_GetTextureBlendMode(image.texture, byref(blend)))
@@ -402,15 +406,17 @@ class LevelScene(Scene):
         return None if point is None else self.transform.inverse(*point)
 
     def handle_event(self, event):
-        if event.type in (pico.SDL_RENDER_TARGETS_RESET, pico.SDL_RENDER_DEVICE_RESET):
+        if event.type == pico.SDL_RENDER_DEVICE_RESET:
             raise RuntimeError('렌더 리셋으로 그리기 자원을 다시 만들어야 합니다.')
+        if event.type == pico.SDL_RENDER_TARGETS_RESET:
+            self._reset_generation += 1
         self.level.handle_event(event)
 
     def update(self, dt):
         self.level.update(dt)
 
     def draw(self):
-        # shortcut: 리셋은 명시 오류로 종료, 자원 로더 도입 때 재업로드로 확장한다.
+        # shortcut: 장치/누락 리셋은 오류로 종료, 자원 로더 도입 때 재업로드로 확장한다.
         if self.engine.reset_generation != self._reset_generation:
             raise RuntimeError('렌더 리셋으로 그리기 자원을 다시 만들어야 합니다.')
         self.renderer.draw(self.level, self.transform)

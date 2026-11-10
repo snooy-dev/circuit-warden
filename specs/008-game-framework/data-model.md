@@ -2,7 +2,7 @@
 
 이 문서는 최종 결합 모델의 제안이다. [분리 계획](plan.md)의 각 범위가 해당 데이터/API를 도입한다. P1부터 모든 형식이나 빈 연결점을 구현하지 않는다.
 
-**상태**: P1 객체·레벨·규칙과 P2 출력 상태 검증 커밋 통합 / 나머지는 후속 구현의 목표 모델. 동작·비용의 기준은 [기술 구조](../../docs/architecture.md#게임프레임워크-계약-제안-미구현)다. 아래 내부 필드명과 UIElement 이름은 제안이다.
+**상태**: P1 객체·레벨·규칙과 P2 출력 상태 검증 커밋 통합 / P3 월드 경로 구현·검증 / UI는 후속 구현의 목표 모델. 동작·비용의 기준은 [기술 구조](../../docs/architecture.md#게임프레임워크-계약-제안-미구현)다. 아래 내부 필드명과 UIElement 이름은 제안이다.
 
 | 형식 | 저장 데이터 | 소유/참조 |
 |---|---|---|
@@ -10,9 +10,10 @@
 | GameObject | 등록 ID, level 참조, NEW/등록/제거 수명, 위치·게임 상태 | 같은 인스턴스는 한 번만 등록. render_items()로 독립 월드 이미지 제공 |
 | Canvas | _roots: list[UIElement], reference_size, logical_size, scale, 열기/닫기·전달 상태 | 화면 크기와 독립인 UI 논리 좌표·트리 소유 |
 | UIElement | parent, _children: list[UIElement], canvas, 수명, 로컬 x/y, 루트 anchor, visible, 정수 draw_order, 로컬 bounds 또는 None, opacity | 한 번만 부착. 형제 draw_order, 등록순 children. 그리기는 논리 원점·UI→출력 변환·opacity를 받아 자신의 UI만 표현 |
-| RenderItem | drawable 참조, 정수 draw_order, 월드 bounds 또는 None, visible, opacity | 월드 이미지의 정렬 단위. 이미지 픽셀·게임 상태 복제 없음 |
-| Renderer | world_items: list[RenderItem], ui_items: list[tuple[UIElement, x, y, opacity]] | 렌더 호출 동안의 임시 참조. 종료·실패 시 비움 |
-| LevelScene(engine.Scene) | Level, Canvas, Renderer, camera_center, view_height | 월드 카메라 상태와 장면 콜백 연결 |
+| RenderItem | 호출 가능한 drawable, 정수 draw_order, 월드 bounds 또는 None, visible, opacity | P3 불변 dataclass. drawable(transform, opacity), 이미지 픽셀·게임 상태 복제 없음 |
+| WorldTransform | viewport, center, view_height | P3 불변 카메라 투영·역변환·길이·bounds |
+| Renderer | P3 world_items: list[RenderItem], P4 목표 ui_items: list[tuple[UIElement, x, y, opacity]] | 렌더 호출 동안의 임시 참조. 종료·실패 시 비움 |
+| LevelScene(engine.Scene) | Level, Renderer, camera_center, view_height, engine 참조·reset_generation | P3 월드 장면 구현. Canvas 결합은 P5 |
 | Engine 출력 상태 | window_size, output_size, viewport, 창/전체화면 모드 | 입력 단위·실제 출력 픽셀 분리. Scene 콜백 API 유지 |
 
 Level의 tuple 스냅샷은 등록순이고 Canvas의 tuple 스냅샷은 원본 형제 등록순의 전위 DFS다. LevelScene.update 시작에 둘 다 얻은 뒤 모드→월드 객체→UI를 갱신한다. 같은 전달에서 생성된 대상은 다음 전달부터 참여한다. 제거 대상은 호출 직전 소속 확인으로 제외한다.
