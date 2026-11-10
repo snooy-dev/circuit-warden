@@ -2,7 +2,7 @@
 
 이 문서는 최종 결합 모델의 제안이다. [분리 계획](plan.md)의 각 범위가 해당 데이터/API를 도입한다. P1부터 모든 형식이나 빈 연결점을 구현하지 않는다.
 
-**상태**: P1 객체·레벨·규칙과 P2 출력 상태 검증 커밋 통합 / P3 월드 경로 구현·검증 / P4 독립 UI 구현·검증 / P5 결합은 목표 모델. 동작·비용의 기준은 [기술 구조](../../docs/architecture.md#게임프레임워크-계약-제안-미구현)다. 아래 P1~P4 필드는 현재 구현이며 LevelScene 결합은 P5에서 확장한다.
+**상태**: P1 객체·레벨·규칙과 P2 출력 상태 검증 커밋 통합 / P3 월드 경로 구현·검증 / P4 독립 UI 구현·검증 / P5 공동 수명·스냅샷·렌더 결합 구현·검증. 동작·비용의 기준은 [기술 구조](../../docs/architecture.md#게임프레임워크-계약-제안-미구현)다. 아래는 P1~P5 현재 구현의 저장 데이터와 소유 경계다.
 
 | 형식 | 저장 데이터 | 소유/참조 |
 |---|---|---|
@@ -14,10 +14,10 @@
 | RenderItem | 호출 가능한 drawable, 정수 draw_order, 월드 bounds 또는 None, visible, opacity | P3 불변 dataclass. drawable(transform, opacity), 이미지 픽셀·게임 상태 복제 없음 |
 | WorldTransform | viewport, center, view_height | P3 불변 카메라 투영·역변환·길이·bounds |
 | Renderer | P3 world_items: list[RenderItem], P4 ui_items: list[tuple[UIElement, (x,y), opacity]] | 렌더 호출 동안의 임시 참조. 종료·실패 시 비움 |
-| LevelScene(engine.Scene) | Level, Renderer, camera_center, view_height, engine 참조·reset_generation | P3 월드 장면 구현. Canvas 결합은 P5 |
+| LevelScene(engine.Scene) | Level, 선택적 Canvas, Renderer, camera_center, view_height, engine 참조·reset_generation | 화면별 월드·UI 소유. canvas=None은 월드 전용. 종료/부분 실패 때 양쪽 정리 |
 | Engine 출력 상태 | window_size, output_size, viewport, 창/전체화면 모드 | 입력 단위·실제 출력 픽셀 분리. Scene 콜백 API 유지 |
 
-Level의 tuple 스냅샷은 등록순이고 Canvas의 tuple 스냅샷은 원본 형제 등록순의 전위 DFS다. P5 결합 목표는 LevelScene.update 시작에 둘 다 얻은 뒤 모드→월드 객체→UI를 갱신하는 것이다. 현재 두 장면의 update는 각 소유 스냅샷만 취득한다. 같은 전달에서 생성된 대상은 다음 전달부터 참여한다. 제거 대상은 호출 직전 소속 확인으로 제외한다.
+Level의 tuple 스냅샷은 등록순이고 Canvas의 tuple 스냅샷은 원본 형제 등록순의 전위 DFS다. LevelScene.update는 시작에 둘 다 얻은 뒤 모드→월드 객체→UI를 갱신한다. 양쪽 전달 가드는 이 전체 구간에 유지되고 내부 헬퍼에 스냅샷을 전달한다. 단독 Level/Canvas update는 자기 소유 스냅샷만 취득한다. 같은 전달에서 생성된 대상은 다음 전달부터 참여한다. 제거 대상은 호출 직전 소속 확인으로 제외한다.
 
 월드 렌더 목록은 매 프레임 원본을 검사해 화면 밖/숨김/알파 0을 제외한 뒤 draw_order 안정 정렬한다. 월드는 x 오른쪽/y 위의 게임 단위이며 camera_center·view_height와 실제 viewport로 출력 좌표에 투영한다. Canvas는 좌상단 원점/y 아래인 UI 논리 단위를 쓰고 reference_size로 균등 배율과 현재 논리 크기를 계산한다. 루트 anchor와 자식 로컬 위치를 더하며 위치/크기/폰트에 같은 배율을 적용한다. UI 목록은 형제 복사본을 안정 정렬한 전위 DFS 결과이며 전역 재정렬하지 않는다. 부모 위치를 합산한 UI 논리 좌표를 같이 보관한다. 출력 변환과 입력 역변환은 같은 프레임 출력 상태를 사용한다. 큰 draw_order가 앞이며 UI는 월드와 별도 패스다. 형제 하위 트리는 서로 섞이지 않는다.
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 from engine import Engine
-from framework_demo import WorldDemo, UIDemo
+from framework_demo import WorldDemo, UIDemo, FrameworkDemo
 
 
 class FrameworkDemoTests(unittest.TestCase):
@@ -160,6 +160,59 @@ class UIDemoTests(unittest.TestCase):
         self.assertEqual(self.scene.canvas.roots, ())
         self.assertEqual(self.scene.renderer.ui_items, [])
         self.assertIsNone(self.scene.engine)
+
+
+class IntegratedDemoTests(unittest.TestCase):
+    def setUp(self):
+        self.app = Engine()
+        self.app.output_valid = True
+        self.app.output_size = (800, 600)
+        self.app.viewport = (0, 0, 800, 600)
+        patch.object(pico, 'window', object(), create=True).start()
+        patch.object(pico, 'SDL_SetWindowTitle').start()
+        self.draw = patch('framework_demo.draw_rect').start()
+        self.addCleanup(patch.stopall)
+        self.scene = FrameworkDemo()
+        self.scene.enter(self.app)
+        self.addCleanup(self.scene.exit)
+
+    def test_integrated_roundtrip_cleans_both_and_recreates_ui(self):
+        for key in (pico.SDLK_SPACE, pico.SDLK_SPACE):
+            old_world, old_roots = self.scene.level.objects, self.scene.canvas.roots
+            self.scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
+            successor = self.app._pending
+            self.assertIsInstance(successor, FrameworkDemo)
+            self.scene.exit()
+            self.assertTrue(all(obj.level is None for obj in old_world))
+            self.assertTrue(all(node.canvas is None for node in old_roots))
+            self.assertEqual(self.scene.canvas.roots, ())
+            successor.enter(self.app)
+            self.scene = successor
+            self.addCleanup(successor.exit)
+            self.assertEqual(len(successor.level.objects), 4)
+            self.assertEqual(len(successor.canvas.roots), 4)
+        self.assertEqual(self.scene.variant, 0)
+
+    def test_ui_fixed_while_camera_moves_pointer_matches_input_and_subtree_deletes(self):
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEMOTION, x=460, y=240))
+        self.assertEqual((self.scene.pointer.x, self.scene.pointer.y), (460, 240))
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
+                                               button=pico.SDL_BUTTON_LEFT, x=460, y=240))
+        self.assertEqual((self.scene.level.objects[-1].x, self.scene.level.objects[-1].y), (1, 1))
+        self.scene.level.objects[0].draw_order = 1000000
+        self.scene.draw()
+        panel_bounds = self.draw.call_args_list[-5].args[1]
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_RIGHT))
+        self.draw.reset_mock()
+        self.scene.draw()
+        self.assertEqual(self.draw.call_args_list[-5].args[1], panel_bounds)
+        self.assertEqual((self.scene.panel.x, self.scene.panel.y), (280, 220))
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_h))
+        self.assertFalse(self.scene.panel.visible)
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_DELETE))
+        self.assertIsNone(self.scene.panel.canvas)
+        self.assertIsNone(self.scene.child.canvas)
+        self.assertEqual(self.scene.panel.children, ())
 
 
 if __name__ == '__main__':

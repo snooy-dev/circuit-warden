@@ -38,11 +38,11 @@
 - [X] T017 P4의 docs/architecture.md·docs/progress.md·quickstart.md·verification.md와 필요 계약을 갱신한 검증 증분을 커밋한다.
 
 ## Phase 6: P5 - 통합 및 Completion
-- [ ] T018 [US2] tests/test_framework_demo.py와 필요한 기존 검사에 Level/Canvas 공동 스냅샷·상호 생성/삭제·복합 초기화/정리 오류·출력 변경 통합 검사를 작성한다 (FR-001~010).
-- [ ] T019 [US3] game_framework.py의 LevelScene에 복합 수명/두 스냅샷/두 렌더 패스를 연결하고 framework_demo.py의 통합 화면을 완성한다. 새 기능은 추가하지 않는다.
-- [ ] T020 전체 자동 회귀와 실제 통합 화면에서 레벨 왕복·생성/삭제·좌표/입력·UI/월드 겹침·반투명·창/전체화면 전환을 확인하고 필수 실패/미실행을 해결한다 (SC-001/002).
-- [ ] T021 README.md·docs/README.md·docs/workflow.md·docs/architecture.md·docs/progress.md와 spec/plan/data-model/contracts/quickstart/verification을 실제 상태에 맞춰 갱신한다 (SC-DOC).
-- [ ] T022 문서 링크·git diff --check와 converge 대조로 완료 근거를 확인하고 검증된 통합 증분을 커밋한다. PR은 구체 변경 준비 후 별도 승인 대상으로 둔다.
+- [X] T018 [US2] tests/test_framework_demo.py·tests/test_scene_integration.py와 필요한 기존 검사에 Level/Canvas 공동 스냅샷·상호 생성/삭제·복합 초기화/정리 오류·출력 변경 통합 검사를 작성한다 (FR-001~010).
+- [X] T019 [US3] game_framework.py의 LevelScene에 복합 수명/두 스냅샷/두 렌더 패스를 연결하고 framework_demo.py의 통합 화면을 완성한다. 새 기능은 추가하지 않는다.
+- [X] T020 전체 자동 회귀와 실제 통합 화면에서 레벨 왕복·생성/삭제·좌표/입력·UI/월드 겹침·반투명·창/전체화면 전환을 확인하고 필수 실패/미실행을 해결한다 (SC-001/002).
+- [X] T021 README.md·docs/README.md·docs/workflow.md·docs/architecture.md·docs/progress.md와 spec/plan/data-model/contracts/quickstart/verification을 실제 상태에 맞춰 갱신한다 (SC-DOC).
+- [X] T022 문서 링크·git diff --check와 converge 대조로 완료 근거를 확인하고 검증된 통합 증분을 커밋한다. PR은 구체 변경 준비 후 별도 승인 대상으로 둔다.
 
 ## Dependencies & Execution Order
 권장 P1(T003~005) → P2(T006~009) → P3(T010~013) → P4(T014~017) → P5(T018~022). P1과 P2는 논리적으로 독립이며 P3 이후는 선행 계약을 소비한다. 현재 모든 계획의 구현은 승인됐으며 선행 결과가 필요한 작업만 대기한다. 계획 하나의 범위 승인을 전체 승인으로 확대하지 않는다.

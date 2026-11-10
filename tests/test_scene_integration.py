@@ -195,7 +195,6 @@ class SceneIntegrationTests(unittest.TestCase):
                 backend = Mock()
                 backend.SDL_WINDOW_FULLSCREEN = engine.pico.SDL_WINDOW_FULLSCREEN
                 backend.SDL_WINDOW_MINIMIZED = engine.pico.SDL_WINDOW_MINIMIZED
-                backend.open_canvas.side_effect = lambda *a: None
                 def opened(*args):
                     backend.window = backend.renderer = object()
                 backend.open_canvas.side_effect = opened

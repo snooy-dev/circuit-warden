@@ -1,12 +1,12 @@
 # 기술 구조
 
-상태: **기본 실행 기반 완료 / P1/P2 통합·P3 월드 렌더링 검증 완료 / P4 독립 UI 검증 완료 / P5 통합 후속**
+상태: **기본 실행 기반·P1~P5 게임프레임워크 구현·자동/실제 SDL 검증 완료**
 
 2026-11-08 사용자가 명세·계획 시각화 검토 후 계획을 승인했다. 아래 기술 계약은 이번 기본 실행 기반에 적용한다. 실제 키 조작은 사용자가 정상 확인했고 자동 검사 및 창 검사도 통과했다.
 
 ## 범위와 환경
 
-현재 구현은 창·게임 루프·입력 전달·장면 전환과 요청된 P1~P4 게임프레임워크 범위다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI도 구현·검증했고 P5 통합은 후속이다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
+현재 구현은 창·게임 루프·입력 전달·장면 전환과 요청된 P1~P5 게임프레임워크 범위다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI와 P5 공동 수명·갱신·렌더·통합 화면도 구현·검증했다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
 
 ## 실행과 장면 계약
 
@@ -48,21 +48,21 @@
 
 ### 계획별 도입 범위
 
-[분리 계획](../specs/008-game-framework/plan.md)은 P1 게임 객체·규칙 → P2 창·출력 → P3 월드 렌더링 → P4 Canvas UI → P5 통합으로 구성한다. P1/P2는 논리적으로 독립이며 P3 이후는 선행 계약을 사용한다. 아래는 최종 목표 설계의 제안으로, P1에서 Canvas/Renderer/가변 출력을 함께 구현하라는 뜻이 아니다. 모든 계획의 구현 지시는 받았으며 이 작업트리에 P1/P2 검증 커밋을 통합했다. P3 월드와 P4 독립 UI를 구현·검증했고 P5 결합 계약은 목표 설계다. P3 완료 뒤 P4, P4 완료 뒤 P5가 같은 feature/world-rendering 브랜치와 작업트리를 순차 재사용한다. 각 계획의 완료 상태와 전체 완료 상태는 구분한다.
+[분리 계획](../specs/008-game-framework/plan.md)은 P1 게임 객체·규칙 → P2 창·출력 → P3 월드 렌더링 → P4 Canvas UI → P5 통합으로 구성한다. P1/P2는 논리적으로 독립이며 P3 이후는 선행 계약을 사용한다. 아래는 최종 목표 설계의 제안으로, P1에서 Canvas/Renderer/가변 출력을 함께 구현하라는 뜻이 아니다. 모든 계획의 구현 지시는 받았으며 이 작업트리에 P1/P2 검증 커밋을 통합했다. P3 월드·P4 독립 UI·P5 결합을 구현·자동/실제 SDL 검증했다. P3 완료 뒤 P4, P4 완료 뒤 P5가 같은 feature/world-rendering 브랜치와 작업트리를 순차 재사용한다. 각 계획의 완료 상태와 전체 완료 상태는 구분한다.
 
 ### 책임과 소유
 
 P5 공동 수명·갱신 연결을 구현하고 자동 검사했다. `LevelScene(level, canvas=None, camera_center=(0,0), view_height=10)`은 Canvas를 선택적으로 소유하며 기존 월드 전용 호출을 유지한다. 진입 시 Level 열기와 UI 변환 준비를 수행하고 어느 쪽 실패에도 양쪽 정리를 시도한다. exit는 Level→Canvas 순으로 모든 정리를 시도하고 복수 오류를 BaseExceptionGroup으로 보존하며 렌더 목록·engine 참조를 해제한다. 닫힌 Canvas를 재사용하는 대신 다음 화면에서 새 Canvas를 만든다.
 
-통합 update는 Level 등록순 tuple과 Canvas 전체 등록순 DFS tuple을 모든 콜백 전에 취득하고 모드→월드 객체→UI 순으로 전달한다. 양쪽 전달 가드를 전체 구간에 유지해 상대 영역으로 update/입력 재진입하는 것도 거부하며 생성·제거는 허용한다. 호출 직전 소속을 검사하므로 신규 대상은 다음 update부터, 제거 대상은 이후 호출부터 제외된다. `Renderer.draw(level, world_transform, canvas=None)`은 같은 viewport의 UI 변환으로 월드→UI를 연결하며 각 패스 동안 상대 소유 영역의 변경도 막는다. `event_to_ui`와 `ui_transform`을 제공하고 Canvas 없는 장면의 UI 입력 변환은 None이다. 통합 화면·실제 창 최종 검증은 진행 중이다.
+통합 update는 Level 등록순 tuple과 Canvas 전체 등록순 DFS tuple을 모든 콜백 전에 취득하고 모드→월드 객체→UI 순으로 전달한다. 양쪽 전달 가드를 전체 구간에 유지해 상대 영역으로 update/입력 재진입하는 것도 거부하며 생성·제거는 허용한다. 호출 직전 소속을 검사하므로 신규 대상은 다음 update부터, 제거 대상은 이후 호출부터 제외된다. `Renderer.draw(level, world_transform, canvas=None)`은 같은 viewport의 UI 변환으로 월드→UI를 연결하며 각 패스 동안 상대 소유 영역의 변경도 막는다. `event_to_ui`와 `ui_transform`을 제공하고 Canvas 없는 장면의 UI 입력 변환은 None이다. 기본 FrameworkDemo와 --world/--ui 독립 모드를 제공한다. 전체 자동 검사 85개와 실제 통합·월드·UI SDL 창 검사를 통과했다. 실물 DPI·물리 키 조작·사용자 직접 확인은 이번 008의 성공 근거가 아니다.
 
 P4 경로는 `Canvas(reference_size)`, `UIElement(x=0, y=0, anchor=(0,0), visible=True, draw_order=0, bounds=None, opacity=1)`, `UITransform(viewport, reference_size)`, `Renderer.draw_ui(canvas, transform)`으로 구현했다. Canvas는 생성 직후 부착 가능하고 close 뒤 재사용하지 않는다. roots/children/parent/canvas는 읽기 전용 조회이며 새 노드만 한 번 부착한다. remove는 하위 트리 소속·연결을 먼저 모두 해제한 뒤 자식부터 on_destroy를 한 번씩 시도한다. close는 전체 목록을 한 번 분리한다. 복수 정리 오류는 BaseExceptionGroup으로 보존한다. update는 숨김과 무관한 등록순 전위 DFS 전체 스냅샷을 사용한다.
 
-`canvas.transform(viewport)`는 매 출력 상태의 UITransform을 만들며 scale/logical_size/bounds/point/inverse/length를 제공한다. reference_size는 필수 양수 제작 단위이고 게임의 최종 해상도를 고정하지 않는다. 루트 anchor는 0~1, 자식 anchor는 (0,0)만 허용한다. ui_items는 `(element, (x,y), opacity)` 목록이며 `element.draw(origin, transform, opacity)`로 자기 표현만 그린다. 형제 복사본 안정 정렬과 전위 DFS로 패널 하위 트리를 연속 표시한다. 부모 opacity/bounds 제외는 자식에 상속하지 않고 visible=false만 하위 트리를 숨긴다. 렌더 중 소유 API·뎁스 변경·update/렌더 재진입은 거부하고 실패 시에도 목록을 비운다. `framework_demo.py --ui`의 UIDemo는 Level/GameMode 없이 Canvas만 소유하며 마우스는 Engine.event_to_output→UITransform.inverse로 해석한다. 저장 좌표를 바꾸지 않고 매 출력 상태에서 기준점·배율을 다시 계산한다. 도형은 기존 draw_rect를 사용해 backend 알파/색 상태 복원을 재사용한다. 자동 검사와 실제 SDL 창·픽셀·이동/숨김/삭제·화면비/전체화면/최소화 검사를 통과했다. 장치/누락 리셋은 P3와 같이 명시 오류, 전달된 타깃 리셋은 한 세대씩 수용한다. LevelScene 공동 스냅샷·두 패스 연결은 P5 담당이다.
+`canvas.transform(viewport)`는 매 출력 상태의 UITransform을 만들며 scale/logical_size/bounds/point/inverse/length를 제공한다. reference_size는 필수 양수 제작 단위이고 게임의 최종 해상도를 고정하지 않는다. 루트 anchor는 0~1, 자식 anchor는 (0,0)만 허용한다. ui_items는 `(element, (x,y), opacity)` 목록이며 `element.draw(origin, transform, opacity)`로 자기 표현만 그린다. 형제 복사본 안정 정렬과 전위 DFS로 패널 하위 트리를 연속 표시한다. 부모 opacity/bounds 제외는 자식에 상속하지 않고 visible=false만 하위 트리를 숨긴다. 렌더 중 소유 API·뎁스 변경·update/렌더 재진입은 거부하고 실패 시에도 목록을 비운다. `framework_demo.py --ui`의 UIDemo는 Level/GameMode 없이 Canvas만 소유하며 마우스는 Engine.event_to_output→UITransform.inverse로 해석한다. 저장 좌표를 바꾸지 않고 매 출력 상태에서 기준점·배율을 다시 계산한다. 도형은 기존 draw_rect를 사용해 backend 알파/색 상태 복원을 재사용한다. 자동 검사와 실제 SDL 창·픽셀·이동/숨김/삭제·화면비/전체화면/최소화 검사를 통과했다. 장치/누락 리셋은 P3와 같이 명시 오류, 전달된 타깃 리셋은 한 세대씩 수용한다. LevelScene 공동 스냅샷·두 패스는 P5 연결을 사용한다.
 
 P3 월드 기본 경로는 구현·자동 검증했다. `WorldTransform(viewport, center=(0,0), view_height=10)`은 좌상단 출력 점·길이와 월드 역변환을 제공하며 0 크기에서 점 변환은 None이다. `RenderItem(drawable, draw_order=0, bounds=None, visible=True, opacity=1)`은 불변 값이며 drawable은 `(transform, opacity)`로 호출한다. `Renderer.draw(level, transform)`은 매번 등록순에서 수집해 안정 정렬하고 마지막에 참조를 비운다. 컬링은 실제 bounds에 출력 1픽셀의 여유를 두고 Level update는 유지한다. 렌더 중 Level 수명·등록·삭제·전달 및 렌더 재진입은 거부한다.
 
-`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, camera_center=(0,0), view_height=10)`은 Canvas 없이 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 렌더 타깃 리셋은 도형·일반 이미지를 재그리며 세대를 갱신한다. 장치 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. draw_image는 내용 복구가 필요한 TARGET texture를 명시 오류로 거부한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. UI 없는 framework_demo.py와 실제 SDL 월드 검사를 통과했으며 결과·한계는 verification에 있다.
+`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, canvas=None, camera_center=(0,0), view_height=10)`은 Canvas 생략 시 월드 전용 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 렌더 타깃 리셋은 도형·일반 이미지를 재그리며 세대를 갱신한다. 장치 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. draw_image는 내용 복구가 필요한 TARGET texture를 명시 오류로 거부한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. framework_demo.py --world와 실제 SDL 월드 검사를 통과했으며 결과·한계는 verification에 있다.
 
 | 개념 | 제안 책임 | 경계 |
 |---|---|---|
@@ -112,7 +112,7 @@ P1 구현: `game_framework.py`의 GameObject·Level·GameMode. `Level(mode=None)
 - 최소 UI 계층을 이번 검토안에 포함한다. 새 UIElement를 roots 또는 부모 children 끝에 추가한다. 한 번만 부착 가능한 새 노드만 받아 다중 부모·다중 Canvas·순환을 막는다. 실행 중 reparent나 제거된 노드 재부착 API는 두지 않는다.
 - 부모 삭제는 하위 트리 삭제다. 먼저 하위 노드 참조를 모으고, 부모/roots 목록에서 대상 루트를 동일성으로 찾아 분리한다. 모든 대상의 소속을 해제한 다음 자식부터 정리를 시도하고 참조를 끊는다. 중복 삭제는 무해하며 일부 정리 실패에도 나머지를 시도한다. 삭제 중 새 부착은 거부한다.
 - 자식 추가는 분할상환 O(1), 하위 트리 제거는 O(S + K)다. S는 제거 노드 수, K는 대상 루트의 형제 수다. 형제 목록에서 검색·이동하는 비용을 인정한다. 많은 UI를 한꺼번에 닫을 때는 각 형제에 remove를 반복하지 않고 전체 목록을 분리해 O(U)에 정리한다.
-- update 대상은 등록순 전위 DFS(부모→자식)로 평탄화한 tuple이다. P5 결합 목표는 LevelScene이 Level과 Canvas 두 스냅샷을 모두 GameMode/객체 콜백 전에 취득하는 것이다. 이후 Level 갱신, Canvas 갱신 순으로 호출하며 Canvas도 호출 직전 소속을 확인한다. 따라서 Level 갱신 중 만든 UI도 같은 update에는 참여하지 않는다.
+- update 대상은 등록순 전위 DFS(부모→자식)로 평탄화한 tuple이다. LevelScene은 Level과 Canvas 두 스냅샷을 모두 GameMode/객체 콜백 전에 취득한다. 이후 Level 갱신, Canvas 갱신 순으로 호출하며 Canvas도 호출 직전 소속을 확인한다. 따라서 Level 갱신 중 만든 UI도 같은 update에는 참여하지 않는다.
 - visible=false는 해당 노드와 하위 트리의 그리기만 생략한다. 숨겨진 노드의 update는 유지한다. 순회는 명시적 스택으로 구현하는 안이며, 깊은 트리의 Python 재귀 제한에 의존하지 않는다.
 - UI는 좌상단 원점·아래 방향 y의 Canvas 논리 단위를 사용한다. 루트는 정규화 anchor와 논리 offset으로 배치하고 자식은 부모 로컬 위치를 더한다. Canvas 전체의 균등 배율만 적용한다. 루트 기준점 외 자동 레이아웃·노드별 회전/스케일·클리핑·UI 입력 소비/포커스는 포함하지 않는다. 화면을 닫을 때 전체 정리한다.
 
@@ -209,13 +209,13 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ### 프레임 단계
 
-아래는 P5 결합 목표다. 현재 LevelScene은 월드, UIDemo는 UI를 독립 실행한다.
+아래는 P5에 구현된 결합 단계다. LevelScene은 선택적 Canvas를 연결하고 UIDemo는 Level 없이 UI를 독립 실행한다.
 
 1. 입력: 엔진이 이벤트마다 Level.handle_event를 호출한다. 이벤트 전달 시작 전에 대상 스냅샷을 만들고 모드→객체 순으로 처리한다. UI 입력 시스템은 별도 범위다.
 2. 업데이트: LevelScene이 Level·Canvas 스냅샷을 모두 취득한다. 모드→월드 객체→UI 노드 순으로 상태와 dt에 따른 이동을 갱신한다.
 3. 렌더링: 출력 viewport와 월드/UI 변환을 확정하고 현재 Level·Canvas에서 항목을 검사해 화면 밖/숨김/알파 0인 자기 그림을 제외한다. 월드 전역 정렬·UI 형제 정렬을 적용해 월드→UI를 뒤에서 앞으로 알파 합성한다.
 
-기존 Engine/Scene의 외부 API는 유지한다. 내부 갱신 헬퍼에 미리 취득한 스냅샷을 전달하는 구체 API는 구현 시 최소로 구성한다. 물리·빈 simulate 단계는 없다. 기존 main.py는 유지하고, 승인 후 framework_demo.py로 생성/삭제·월드 이미지 교차·UI 하위 트리 순서·화면 왕복을 검사한다.
+기존 Engine/Scene의 외부 API는 유지한다. 내부 Level._dispatch_snapshot과 Canvas._update_snapshot에 공동 취득한 스냅샷을 전달한다. 단독 Level/Canvas update도 같은 헬퍼를 사용한다. 물리·빈 simulate 단계는 없다. 기존 main.py를 유지하고 framework_demo.py의 통합/월드/독립 UI 화면으로 생성/삭제·이미지 교차·UI 하위 트리 순서·레벨 왕복을 검사했다.
 
 ### P2 실행 계약
 

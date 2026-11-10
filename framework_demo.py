@@ -1,4 +1,4 @@
-"""월드 또는 독립 UI의 좌표·수명·뎁스·알파를 검사하는 화면."""
+"""통합·월드 전용·독립 UI의 좌표·수명·뎁스·알파 검사 화면."""
 
 import argparse
 
@@ -79,7 +79,7 @@ class WorldDemo(LevelScene):
     def handle_event(self, event):
         if ((event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_SPACE) or
                 (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_MIDDLE)):
-            self.engine.change_scene(WorldDemo(1 - self.variant))
+            self.engine.change_scene(type(self)(1 - self.variant))
             return
         if event.type == pico.SDL_MOUSEBUTTONDOWN:
             point = self.event_to_world(event)
@@ -201,8 +201,48 @@ class UIDemo(Scene):
             self.engine = None
 
 
+class FrameworkDemo(WorldDemo):
+    """기존 월드 검사와 화면 고정 UI를 같은 LevelScene에 연결한다."""
+
+    def __init__(self, variant=0):
+        super().__init__(variant)
+        self.canvas = Canvas((800, 600))
+        self.panel = self.canvas.add(UIBlock((20, 140, 80), 180, 130,
+                                            x=280, y=220, opacity=.5))
+        self.child = self.canvas.add(UIBlock((255, 215, 50), 100, 45,
+                                            x=20, y=20, draw_order=999), self.panel)
+        self.front = self.canvas.add(UIBlock((100, 70, 210), 170, 110,
+                                            x=370, y=280, draw_order=1, opacity=.5))
+        self.corner = self.canvas.add(UIBlock((170, 80, 200), 60, 30,
+                                             x=-80, y=20, anchor=(1, 0), draw_order=2))
+        self.pointer = self.canvas.add(UIBlock((255, 255, 255), 8, 8,
+                                              visible=False, draw_order=10))
+
+    def enter(self, engine):
+        super().enter(engine)
+        title = (f'Integrated {"A" if self.variant == 0 else "B"} | '
+                 'LMB/RMB world add/remove, Space/MMB level, arrows camera, D depth, '
+                 'H hide UI, Delete UI subtree, F6 size, F11 fullscreen, Esc quit')
+        pico.SDL_SetWindowTitle(pico.window, title.encode('utf-8'))
+
+    def handle_event(self, event):
+        if event.type == pico.SDL_MOUSEMOTION:
+            point = self.event_to_ui(event)
+            if point is not None:
+                self.pointer.x, self.pointer.y = point
+                self.pointer.visible = True
+        elif event.type == pico.SDL_KEYDOWN:
+            if event.key == pico.SDLK_h and self.panel.canvas is self.canvas:
+                self.panel.visible = not self.panel.visible
+            elif event.key == pico.SDLK_DELETE:
+                self.canvas.remove(self.panel)
+        super().handle_event(event)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--ui', action='store_true', help='Level 없는 UI 단독 검사')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--ui', action='store_true', help='Level 없는 UI 단독 검사')
+    modes.add_argument('--world', action='store_true', help='Canvas 없는 월드 전용 검사')
     args = parser.parse_args()
-    Engine().run(UIDemo() if args.ui else WorldDemo())
+    Engine().run(UIDemo() if args.ui else WorldDemo() if args.world else FrameworkDemo())
