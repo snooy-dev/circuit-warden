@@ -32,10 +32,10 @@
 - [X] T013 P3의 docs/architecture.md·docs/progress.md·quickstart.md·verification.md와 필요 계약을 갱신한 검증 증분을 커밋한다.
 
 ## Phase 5: P4 - Canvas UI
-- [ ] T014 [US3] tests/test_game_framework.py에 Canvas 트리 수명·전체 DFS 스냅샷·형제 순서/하위 트리 연속성·논리 배율/anchor·bounds/숨김·알파 검사를 작성한다 (FR-004/006~010).
-- [ ] T015 [US3] game_framework.py의 Canvas·UIElement·Renderer UI 경로와 framework_demo.py/tests/test_framework_demo.py의 게임 규칙 없는 UI 검사 모드를 구현한다.
-- [ ] T016 UI 자동 검사와 실제 화면에서 패널/자식 겹침·부모 이동/숨김/삭제·크기/화면비별 기준점/배율·반투명을 확인한다.
-- [ ] T017 P4의 docs/architecture.md·docs/progress.md·quickstart.md·verification.md와 필요 계약을 갱신한 검증 증분을 커밋한다.
+- [X] T014 [US3] tests/test_game_framework.py에 Canvas 트리 수명·전체 DFS 스냅샷·형제 순서/하위 트리 연속성·논리 배율/anchor·bounds/숨김·알파 검사를 작성한다 (FR-004/006~010).
+- [X] T015 [US3] game_framework.py의 Canvas·UIElement·Renderer UI 경로와 framework_demo.py/tests/test_framework_demo.py의 게임 규칙 없는 UI 검사 모드를 구현한다.
+- [X] T016 UI 자동 검사와 실제 화면에서 패널/자식 겹침·부모 이동/숨김/삭제·크기/화면비별 기준점/배율·반투명을 확인한다.
+- [X] T017 P4의 docs/architecture.md·docs/progress.md·quickstart.md·verification.md와 필요 계약을 갱신한 검증 증분을 커밋한다.
 
 ## Phase 6: P5 - 통합 및 Completion
 - [ ] T018 [US2] tests/test_framework_demo.py와 필요한 기존 검사에 Level/Canvas 공동 스냅샷·상호 생성/삭제·복합 초기화/정리 오류·출력 변경 통합 검사를 작성한다 (FR-001~010).

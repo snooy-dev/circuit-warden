@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 from engine import Engine
-from framework_demo import WorldDemo
+from framework_demo import WorldDemo, UIDemo
 
 
 class FrameworkDemoTests(unittest.TestCase):
@@ -79,6 +79,87 @@ class FrameworkDemoTests(unittest.TestCase):
         self.assertEqual(self.app._windowed_size, (960, 540))
         self.key(pico.SDLK_F11)
         self.assertTrue(self.app._requested_fullscreen)
+
+
+
+class UIDemoTests(unittest.TestCase):
+    def setUp(self):
+        self.app = Engine()
+        self.app.output_valid = True
+        self.app.output_size = (1600, 1200)
+        self.app.viewport = (0, 0, 1600, 1200)
+        patch.object(pico, 'window', object(), create=True).start()
+        patch.object(pico, 'SDL_SetWindowTitle').start()
+        self.draw = patch('framework_demo.draw_rect').start()
+        self.addCleanup(patch.stopall)
+        self.scene = UIDemo()
+        self.scene.enter(self.app)
+        self.addCleanup(self.scene.exit)
+
+    def key(self, key):
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
+
+    def test_ui_only_movement_hidden_updates_and_subtree_removal(self):
+        self.assertFalse(hasattr(self.scene, 'level'))
+        initial = self.scene.back.x
+        self.key(pico.SDLK_RIGHT)
+        self.scene.draw()
+        self.assertEqual(self.scene.back.x, initial + 20)
+        child_bounds = (210, 140, 440, 270)
+        self.assertTrue(any(call.args[1] == child_bounds for call in self.draw.call_args_list))
+        self.key(pico.SDLK_h)
+        self.draw.reset_mock()
+        with patch.object(self.scene.child, 'update') as update:
+            self.scene.update(.1)
+            update.assert_called_once_with(.1)
+        self.scene.draw()
+        self.assertFalse(any(call.args[1] == child_bounds for call in self.draw.call_args_list))
+        self.key(pico.SDLK_DELETE)
+        self.assertIsNone(self.scene.back.canvas)
+        self.assertIsNone(self.scene.child.canvas)
+        self.assertEqual(self.scene.back.children, ())
+
+    def test_dpi_input_inverse_wheel_zero_and_anchor_resize(self):
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEMOTION, x=320, y=240))
+        self.assertEqual((self.scene.pointer.x, self.scene.pointer.y), (320, 240))
+        self.assertIsNone(self.scene.event_to_ui(SimpleNamespace(type=pico.SDL_MOUSEWHEEL)))
+        self.app.output_size = (1200, 600)
+        self.app.viewport = (0, 0, 1200, 600)
+        self.scene.draw()
+        self.assertTrue(any(call.args[1] == (1120, 20, 1180, 50)
+                            for call in self.draw.call_args_list))
+        self.assertEqual((self.scene.corner.x, self.scene.corner.y), (-80, 20))
+        self.app.output_valid = False
+        self.draw.reset_mock()
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEMOTION, x=10, y=10))
+        self.scene.draw()
+        self.draw.assert_not_called()
+        self.assertEqual((self.scene.pointer.x, self.scene.pointer.y), (320, 240))
+
+    def test_order_display_reset_and_cleanup_failure(self):
+        self.key(pico.SDLK_d)
+        self.assertEqual(self.scene.back.draw_order, 2)
+        self.key(pico.SDLK_F6)
+        self.assertEqual(self.app._windowed_size, (960, 540))
+        self.key(pico.SDLK_F11)
+        self.assertTrue(self.app._requested_fullscreen)
+        self.key(pico.SDLK_r)
+        self.assertIsInstance(self.app._pending, UIDemo)
+        self.app.reset_generation += 1
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_RENDER_TARGETS_RESET))
+        self.scene.draw()
+        self.app.reset_generation += 2
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_RENDER_TARGETS_RESET))
+        with self.assertRaisesRegex(RuntimeError, '리셋'):
+            self.scene.draw()
+        with self.assertRaisesRegex(RuntimeError, '리셋'):
+            self.scene.handle_event(SimpleNamespace(type=pico.SDL_RENDER_DEVICE_RESET))
+        with patch.object(self.scene.child, 'on_destroy', side_effect=ValueError('cleanup')):
+            with self.assertRaisesRegex(ValueError, 'cleanup'):
+                self.scene.exit()
+        self.assertEqual(self.scene.canvas.roots, ())
+        self.assertEqual(self.scene.renderer.ui_items, [])
+        self.assertIsNone(self.scene.engine)
 
 
 if __name__ == '__main__':

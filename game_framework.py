@@ -1,4 +1,4 @@
-"""레벨 소유·객체 수명·규칙 전달과 월드 렌더링."""
+"""레벨·Canvas 소유와 월드·독립 UI 렌더링."""
 
 from ctypes import byref, c_int, c_ubyte
 from dataclasses import dataclass

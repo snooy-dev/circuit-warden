@@ -1,9 +1,11 @@
-"""에셋·Canvas 없이 월드 좌표·수명·뎁스·알파를 검사하는 화면."""
+"""월드 또는 독립 UI의 좌표·수명·뎁스·알파를 검사하는 화면."""
+
+import argparse
 
 import pico2d.pico2d as pico
 
-from engine import Engine
-from game_framework import GameMode, GameObject, Level, LevelScene, RenderItem, draw_rect
+from engine import Engine, Scene
+from game_framework import GameMode, GameObject, Level, LevelScene, RenderItem, draw_rect, Canvas, UIElement, Renderer
 
 
 class Block(GameObject):
@@ -104,5 +106,103 @@ class WorldDemo(LevelScene):
         super().handle_event(event)
 
 
+
+class UIBlock(UIElement):
+    def __init__(self, color, width, height, **kwargs):
+        super().__init__(bounds=(0, 0, width, height), **kwargs)
+        self.color = color
+
+    def draw(self, origin, transform, opacity):
+        x, y = origin
+        left, top, right, bottom = self.bounds
+        draw_rect(transform, (x + left, y + top, x + right, y + bottom), self.color, opacity)
+
+
+class UIDemo(Scene):
+    """Level·GameMode 없이 Canvas만 검사하는 장면."""
+
+    def __init__(self):
+        self.engine = self.canvas = None
+        self.renderer = Renderer()
+        self._reset_generation = None
+
+    @property
+    def transform(self):
+        viewport = self.engine.viewport if self.engine.output_valid else (0, 0, 0, 0)
+        return self.canvas.transform(viewport)
+
+    def enter(self, engine):
+        self.engine, self._reset_generation = engine, engine.reset_generation
+        self.canvas = Canvas((800, 600))
+        self.back = self.canvas.add(UIBlock((220, 60, 50), 280, 220, x=50, y=90))
+        self.child = self.canvas.add(UIBlock((255, 215, 50), 230, 130,
+                                           x=140, y=50, draw_order=999), self.back)
+        self.front = self.canvas.add(UIBlock((50, 100, 230), 280, 220,
+                                            x=250, y=190, draw_order=1, opacity=.5))
+        self.front_child = self.canvas.add(UIBlock((50, 210, 100), 90, 60,
+                                                   x=30, y=100), self.front)
+        self.corner = self.canvas.add(UIBlock((170, 80, 200), 60, 30,
+                                             x=-80, y=20, anchor=(1, 0), draw_order=2))
+        outside = self.canvas.add(UIBlock((220, 60, 50), 30, 30, x=-200, y=450))
+        self.canvas.add(UIBlock((50, 210, 100), 50, 50, x=220), outside)
+        self.pointer = self.canvas.add(UIBlock((255, 255, 255), 8, 8,
+                                              visible=False, draw_order=10))
+        title = ('UI | arrows move parent, H hide, Delete subtree, D order, R reset, '
+                 'mouse position, F6 size, F11 fullscreen, Esc quit')
+        pico.SDL_SetWindowTitle(pico.window, title.encode('utf-8'))
+
+    def event_to_ui(self, event):
+        point = self.engine.event_to_output(event)
+        return None if point is None else self.transform.inverse(*point)
+
+    def handle_event(self, event):
+        if event.type == pico.SDL_RENDER_DEVICE_RESET:
+            raise RuntimeError('렌더 리셋으로 그리기 자원을 다시 만들어야 합니다.')
+        if event.type == pico.SDL_RENDER_TARGETS_RESET:
+            self._reset_generation += 1
+        elif event.type == pico.SDL_MOUSEMOTION:
+            point = self.event_to_ui(event)
+            if point is not None:
+                self.pointer.x, self.pointer.y = point
+                self.pointer.visible = True
+        elif event.type == pico.SDL_KEYDOWN:
+            if event.key == pico.SDLK_F11:
+                self.engine.set_display(fullscreen=not self.engine.fullscreen)
+            elif event.key == pico.SDLK_F6:
+                size = (960, 540) if self.engine.window_size != (960, 540) else (800, 600)
+                self.engine.set_display(window_size=size)
+            elif event.key == pico.SDLK_r:
+                self.engine.change_scene(UIDemo())
+            elif self.back.canvas is self.canvas:
+                if event.key == pico.SDLK_h:
+                    self.back.visible = not self.back.visible
+                elif event.key == pico.SDLK_DELETE:
+                    self.canvas.remove(self.back)
+                elif event.key == pico.SDLK_d:
+                    self.back.draw_order = 2 if self.back.draw_order == 0 else 0
+                elif event.key in (pico.SDLK_LEFT, pico.SDLK_RIGHT, pico.SDLK_UP, pico.SDLK_DOWN):
+                    self.back.x += 20 * ((event.key == pico.SDLK_RIGHT) - (event.key == pico.SDLK_LEFT))
+                    self.back.y += 20 * ((event.key == pico.SDLK_DOWN) - (event.key == pico.SDLK_UP))
+
+    def update(self, dt):
+        self.canvas.update(dt)
+
+    def draw(self):
+        if self.engine.reset_generation != self._reset_generation:
+            raise RuntimeError('렌더 리셋으로 그리기 자원을 다시 만들어야 합니다.')
+        self.renderer.draw_ui(self.canvas, self.transform)
+
+    def exit(self):
+        try:
+            self.renderer.ui_items.clear()
+            if self.canvas is not None:
+                self.canvas.close()
+        finally:
+            self.engine = None
+
+
 if __name__ == '__main__':
-    Engine().run(WorldDemo())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--ui', action='store_true', help='Level 없는 UI 단독 검사')
+    args = parser.parse_args()
+    Engine().run(UIDemo() if args.ui else WorldDemo())
