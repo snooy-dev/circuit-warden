@@ -52,6 +52,10 @@
 
 ### 책임과 소유
 
+P3 월드 기본 경로는 구현·자동 검증했다. `WorldTransform(viewport, center=(0,0), view_height=10)`은 좌상단 출력 점·길이와 월드 역변환을 제공하며 0 크기에서 점 변환은 None이다. `RenderItem(drawable, draw_order=0, bounds=None, visible=True, opacity=1)`은 불변 값이며 drawable은 `(transform, opacity)`로 호출한다. `Renderer.draw(level, transform)`은 매번 등록순에서 수집해 안정 정렬하고 마지막에 참조를 비운다. 컬링은 실제 bounds에 출력 1픽셀의 여유를 두고 Level update는 유지한다. 렌더 중 Level 수명·등록·삭제·전달 및 렌더 재진입은 거부한다.
+
+`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, camera_center=(0,0), view_height=10)`은 Canvas 없이 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 두 종류 SDL 렌더 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. 실제 월드 데모 검증은 아직 남아 있다.
+
 | 개념 | 제안 책임 | 경계 |
 |---|---|---|
 | Level | GameObject·배치 상태·GameMode 하나 소유 | 게임오브젝트 소유와 등록 순서의 기준 |

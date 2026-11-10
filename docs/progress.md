@@ -33,7 +33,7 @@
 
 ## 다음 작업
 
-P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`와 P2 최종 `c3eef90`의 검증 커밋을 통합했다. 이전 P2 커밋 차단은 해결됐다. P3의 좌표·정렬·범위·알파 검사 초안을 활성 검사로 옮겨 구현·검증한다. P3 종료 후 P4, 이후 P5가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering` 브랜치를 순차 인계받는다. 전체 완료는 P5에서 판정한다. [계획별 검증](../specs/008-game-framework/verification.md)을 참조한다.
+P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`와 P2 최종 `c3eef90`의 검증 커밋을 통합했다. 이전 P2 커밋 차단은 해결됐다. P3 월드 기본 경로와 좌표·정렬·범위·알파·리셋·정리 자동 검사를 구현했고 전체 55개를 통과했다. UI 없는 월드 검사 화면과 실제 창 검증을 이어간다. P3 종료 후 P4, 이후 P5가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering` 브랜치를 순차 인계받는다. 전체 완료는 P5에서 판정한다. [계획별 검증](../specs/008-game-framework/verification.md)을 참조한다.
 
 ## 개발 방식 조정
 

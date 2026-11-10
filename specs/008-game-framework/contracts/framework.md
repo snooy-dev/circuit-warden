@@ -4,7 +4,9 @@
 
 **상태**: P1 객체·레벨·규칙과 P2 출력 기반 검증 커밋 통합 / P3 구현 중 / P4·P5는 목표 계약. [architecture](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)가 세부 순서·비용의 기준이다. 기존 Scene 콜백과 기본 Engine 실행 호출은 유지하되 Engine의 크기/전체화면 설정·출력 조회·필요한 SDL 이벤트 처리는 P2 구현 계약을 따른다.
 
-- LevelScene(level, canvas)은 Level·Canvas·Renderer를 연결한다. UI 항목을 화면이 직접 소유하는 ui_items API는 두지 않는다.
+- P3 구현 API: `LevelScene(level, camera_center=(0,0), view_height=10)`은 Canvas 없는 월드 장면이다. `transform`, `event_to_world(event)`, 기존 Scene 콜백을 제공한다. P5에서 Canvas 결합을 확장하며 현재 빈 Canvas 인자는 요구하지 않는다.
+- P3 구현 API: `WorldTransform(viewport, center=(0,0), view_height=10)`의 point/inverse/length/bounds, 불변 `RenderItem(drawable, draw_order=0, bounds=None, visible=True, opacity=1)`, `Renderer.draw(level, transform)`. drawable은 `(transform, opacity)`를 받는다. 원본 등록순에서 매번 수집·안정 정렬하고 1출력픽셀 여유를 둔 범위 판정 후 그린다. 목록은 성공·실패 모두 비운다.
+- P3 구현 API: `draw_rect(transform, bounds, color, opacity=1)`, `draw_image(image, transform, bounds, opacity=1)`는 SDL 출력 좌표를 직접 사용하고 공유 상태를 복원한다. 이미지 texture 소유는 호출자다. LevelScene은 렌더 리셋 이벤트와 reset_generation 변화를 명시 오류로 처리하며 자동 자원 재업로드는 하지 않는다.
 - P1 공개 API: Level(mode=None), 읽기 전용 mode/objects, get(id). GameMode는 생성 시 해당 Level에 연결되고 다른 Level에서 재사용하지 않는다. GameObject의 level/id는 읽기 전용이다. Level.on_open()에서 새 객체로 초기 배치를 구성한 뒤 mode.on_start()를 호출한다.
 - Level.open()/close()는 초기 배치와 GameMode 수명을 관리한다. 닫는 상태와 정리 콜백 중 신규 등록을 거부한다. 부분 실패에도 전체 정리를 시도하고 오류를 보존한다.
 - Level.spawn(obj)는 새 인스턴스에 재사용하지 않는 Level 내부 ID를 부여해 dict에 등록한다. 동일 인스턴스의 재등록을 거부한다. GameObject.destroy()는 등록/소속을 먼저 해제한 뒤 정리를 한 번 시도한다. 반복 제거는 무해하다.

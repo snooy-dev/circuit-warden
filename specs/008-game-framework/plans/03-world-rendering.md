@@ -2,8 +2,8 @@
 
 **현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
-**Branch**: feature/game-framework | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
-**Status**: 구현 승인 — 선행 조건 충족 시 실행
+**Branch**: feature/world-rendering | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
+**Status**: P1/P2 검증 커밋 통합 / 기본 월드 경로 자동 검증 / 데모 구현 진행
 **Input**: [전체 계획](../plan.md), [기술 기준](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)
 
 ## Summary
@@ -13,7 +13,7 @@
 Python 3.14 + Pico2D 1.5.1, Windows. 새 의존성·외부 에셋 생성 없음. 게임 검사에는 원본 저장소 .venv/Scripts/python.exe를 명시한다. 성능 목표 수치는 아직 미정이다.
 
 ## Constitution Check
-- [x] 계획 분리 요청과 기존 구현 보류를 구분했다. 이 문서는 구현 승인이 아니다.
+- [x] 2026-11-10 구현 지시와 상세 게임 정책 확정을 구분했다. 선행 P1/P2 검증 커밋을 통합했다.
 - [x] 공통 Spec Kit 명세/작업 체계 안에서 범위·제외·선행 계약·검증·docs 영향을 정의했다.
 - [x] 검증된 증분의 docs/verification 갱신·커밋과 PR 승인 경계를 유지한다.
 
@@ -30,7 +30,7 @@ Python 3.14 + Pico2D 1.5.1, Windows. 새 의존성·외부 에셋 생성 없음.
 제외: Canvas·UI 트리·UI 배율/anchor는 없다. 객체 풀·공간 인덱스·정렬 캐시·가림 제외·추적 카메라·조작용 줌은 넣지 않는다.
 
 ## Project Structure & Interfaces
-변경 대상: game_framework.py의 월드 렌더링/카메라 변환/LevelScene, tests/test_game_framework.py, framework_demo.py, tests/test_framework_demo.py. P2 출력 계약 수정이 필요하면 해당 계약·회귀도 같이 갱신한다.
+변경 대상: game_framework.py의 월드 렌더링/카메라 변환/LevelScene, tests/test_world_rendering.py(기존 core 검사와 분리), framework_demo.py, tests/test_framework_demo.py. P2 출력 계약 수정이 필요하면 해당 계약·회귀도 같이 갱신한다. P3 종료 후 P4/P5는 같은 작업트리와 feature/world-rendering 브랜치를 순차 재사용한다.
 
 인계 계약: Level 등록순을 변경하지 않고 RenderItem을 소비한다. 나중 UI 패스를 추가할 수 있지만 빈 Canvas 인스턴스나 UI 전용 인자를 필수로 만들지 않는다. 월드 전용 실행이 완결되어야 한다.
 

@@ -66,8 +66,8 @@ P1은 창 없는 core 계획이므로 새 실제 창·UI 자동 조작·사용�
 
 P2 구현 커밋 `6c92565bfe726d50458f1e6eeca64494258073f4`, 최종 인계 커밋 `c3eef90`을 Git merge했다. 이전 커밋 차단은 해결됐다. P1 최종 인계 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`도 포함한다.
 
-## P3 현재 작업
+## P3 현재 검증
 
-브랜치 `feature/world-rendering`, 작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`. 두 선행 검증 커밋 통합 후 회귀 검사와 월드 렌더링 구현을 진행한다. 준비한 검사 초안은 구현과 대조해 활성 검사로 옮긴다. P3 종료 후 P4, P4 종료 후 P5가 동일 작업트리/브랜치를 순차 재사용한다. 동시 쓰기·기존 브랜치/워크트리 삭제·아카이브는 하지 않는다. PR 승인은 별도다.
+브랜치 `feature/world-rendering`, 작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`. P1/P2 통합 후 기존 43개 회귀를 통과했다. 월드 기본 경로·LevelScene·SDL 그리기 헬퍼를 구현한 뒤 `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v` 전체 **55개 통과**(P3 12개 포함). 모의 draw 순서·수명 검사와 실제 SDL 소프트웨어 렌더러 픽셀 읽기를 구분한다. 후자는 source-over RGB, 이미지 픽셀 alpha×opacity, 서로 다른 opacity의 공유 texture 상태, 도형/이미지 draw 실패 뒤 color/blend/alpha 복원을 검증했다. 좌표 왕복·화면비·0크기·뎁스 동률 복원·등록순 불변·부분/경계/1픽셀 여유/미확인 bounds·화면 밖 update·렌더 중 소유 변경/전달 재진입 거부·오류 후 참조 해제·리셋 명시 실패·장면 정리도 통과했다.
 
-통합 후 게임 Python의 unittest discover 전체 43개(P1 16 + P2/기존 27) 통과. 충돌 표식 검색과 git diff --check도 통과했다. 코드 충돌은 없었으며 공통 상태 문서에는 두 계획의 근거를 함께 보존했다.
+T010은 완료했고 T011의 월드 데모와 T012 실제 창 검증은 남아 있다. Canvas·UI·자동 자원 재업로드·추적 카메라는 구현하지 않았다. 게임/아트/의존성 변경은 없다. architecture와 P3 계획·계약·tasks·progress를 실제 API와 이 부분 상태로 갱신했다. P3 종료 후 P4, P4 종료 후 P5가 동일 작업트리/브랜치를 순차 재사용한다. PR은 별도 승인 대상이다.

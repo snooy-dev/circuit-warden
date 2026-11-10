@@ -7,7 +7,8 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import pico2d.pico2d as pico
-from game_framework import (GameObject, Level, RenderItem, Renderer, WorldTransform,
+from engine import Engine
+from game_framework import (GameObject, Level, LevelScene, RenderItem, Renderer, WorldTransform,
                             draw_image, draw_rect)
 
 
@@ -102,6 +103,14 @@ class WorldRenderingTests(unittest.TestCase):
         with self.assertRaises(FrozenInstanceError):
             RenderItem(Mock()).draw_order = 1
 
+    def test_culling_keeps_a_pixel_rounding_margin(self):
+        near, far = Mock(), Mock()
+        self.obj(RenderItem(near, bounds=(0, 5.005, 1, 6)),
+                 RenderItem(far, bounds=(0, 5.1, 1, 6)))
+        self.renderer.draw(self.level, self.transform)
+        near.assert_called_once()
+        far.assert_not_called()
+
     def test_mutation_and_reentrant_dispatch_are_rejected_during_collection_and_draw(self):
         obj = self.obj()
         for action in (lambda: self.level.spawn(GameObject()), obj.destroy,
@@ -139,6 +148,65 @@ class WorldRenderingTests(unittest.TestCase):
                 gc.collect()
                 self.assertIsNone(ref())
                 self.level.update(.1)
+
+
+class LevelSceneTests(unittest.TestCase):
+    def setUp(self):
+        self.app = Engine()
+        self.app.output_size = (1600, 1200)
+        self.app.viewport = (0, 0, 1600, 1200)
+        self.app.output_valid = True
+        self.level = Level()
+        self.scene = LevelScene(self.level)
+        self.scene.enter(self.app)
+        self.addCleanup(self.scene.exit)
+
+    def test_scene_update_draw_input_and_reopen(self):
+        obj = self.level.spawn(GameObject())
+        state = [0]
+        obj.update = lambda dt: state.__setitem__(0, state[0] + dt)
+        draw = Mock()
+        obj.render_items = lambda: (RenderItem(draw),)
+        self.scene.update(.1)
+        self.scene.draw()
+        self.assertEqual(state, [.1])
+        draw.assert_called_once_with(self.scene.transform, 1)
+        mouse = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, x=460, y=240)
+        self.assertEqual(self.scene.event_to_world(mouse), (1, 1))
+        self.assertIsNone(self.scene.event_to_world(SimpleNamespace(type=pico.SDL_MOUSEWHEEL)))
+        self.app.output_valid = False
+        self.assertIsNone(self.scene.event_to_world(mouse))
+        self.scene.draw()
+        self.assertEqual(draw.call_count, 1)
+        self.scene.exit()
+        self.scene.exit()
+        self.assertIsNone(obj.level)
+        self.assertIsNone(self.scene.engine)
+        self.scene.enter(self.app)
+        self.assertEqual(self.level.objects, ())
+
+    def test_reset_event_or_missed_generation_fails_explicitly(self):
+        obj = self.level.spawn(GameObject())
+        for event_type in (pico.SDL_RENDER_TARGETS_RESET, pico.SDL_RENDER_DEVICE_RESET):
+            with self.assertRaisesRegex(RuntimeError, '리셋'):
+                self.scene.handle_event(SimpleNamespace(type=event_type))
+        self.app.reset_generation += 1
+        with self.assertRaisesRegex(RuntimeError, '리셋'):
+            self.scene.draw()
+        self.scene.exit()
+        self.assertIsNone(obj.level)
+        self.assertEqual(self.scene.renderer.world_items, [])
+
+    def test_cleanup_failure_still_releases_scene_and_all_objects(self):
+        a, b = [self.level.spawn(GameObject()) for _ in range(2)]
+        a.on_destroy = Mock(side_effect=ValueError('cleanup'))
+        b.on_destroy = Mock()
+        with self.assertRaisesRegex(ValueError, 'cleanup'):
+            self.scene.exit()
+        b.on_destroy.assert_called_once()
+        self.assertEqual(self.level.objects, ())
+        self.assertIsNone(self.scene.engine)
+        self.assertEqual(self.scene.renderer.world_items, [])
 
 
 class DrawingStateTests(unittest.TestCase):
