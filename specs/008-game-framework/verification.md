@@ -14,7 +14,7 @@
 | P1 객체·규칙 | 구현·자동 검증 완료 | 새 core 검사 16개 + 기존 16개 통과. FR-001~004의 월드 소유·규칙·전달 수명 담당 범위 충족 |
 | P2 창·출력 | 검증 커밋 통합 | 별도 27개 자동·실제 SDL 검증 근거 보존 |
 | P3 월드 렌더링 | 구현·자동/실제 SDL 검증 완료 | 전체 60개와 아래 실제 창 검사 통과 |
-| P4 Canvas UI | 선행 결과 대기 | P3 후 구현 |
+| P4 Canvas UI | 기본 경로 자동 검증 / UI 장면·실제 창 후속 | 새 Canvas 11개 포함 전체 71개 통과 |
 | P5 통합 | 선행 결과 대기 | P1~P4 후 SC-001/002/DOC 전체 판정 |
 
 ## 실제 명령과 결과
@@ -85,3 +85,12 @@ Luna/high 계약 준비 검토와 Sol/high 읽기 전용 코드 검토를 수행
 architecture/progress/README와 spec/plan/P3 plan/tasks/data-model/contracts/quickstart를 현재 API·실행·한계로 갱신했다. 게임 정책·아트·의존성을 바꾸지 않아 game-design/systems/art-direction과 requirements에는 영향이 없다. Pico2D 설치본·원본 D:/GitHub 작업·다른 워크트리는 변경하지 않았다. P4는 이 작업트리·브랜치를 순차 인계받고 P4 종료 후 P5가 이어간다. 빈 Canvas/추적 카메라/공간 인덱스/정렬 캐시/자원 자동 재업로드는 추가하지 않았다. 장치 리셋 때 새 자원 복구가 필요한 것은 명시된 제한이다. PR 생성·게시·병합은 하지 않았다.
 
 정적 검증: 명시 SPECIFY_FEATURE_DIRECTORY로 check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks 성공. 변경 Markdown 15개의 로컬 링크·줄 끝 공백·충돌 표식 검사와 git diff --check 통과. P1/P4/P5 계획 헤더의 브랜치명도 최신 이름과 공유 인계 방식으로 맞췄다.
+
+## P4 검증과 인계
+
+작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`, 브랜치 `feature/world-rendering`을 P3 종료·최종 인계 커밋 `4696fb61317c29a2a91f0eafa9245a5160f78f7b`·깨끗한 상태 확인 후 그대로 사용했다. 준비 브랜치 `feature/canvas-ui`의 커밋은 보존하고 필요한 계약만 검토했으며 전체 병합·중복 checkout·동시 쓰기는 하지 않았다.
+
+- Spec Kit 필수 문서 검사: 명시 SPECIFY_FEATURE_DIRECTORY와 SPECIFY_FEATURE_NO_PERSIST=1로 check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks 성공. requirements 체크리스트 11개는 체크 상태이며 바꾸지 않았다. 확장 hooks 파일 없음.
+- analyze: T014~T017이 FR-004/006~010의 P4 범위에 대응하며 P3 알파/출력 경로를 재사용하고 공동 Level/Canvas 업데이트는 P5에 남긴다. Canvas 기준 크기는 명시 생성자 인수이며 게임 해상도나 메뉴 정책으로 확정하지 않는다.
+- `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q` → **71개 통과** (기존 60개 + Canvas 11개). 구현 전 Canvas import 실패를 확인한 뒤 기본 경로를 구현했다. 단일 부착·하위 트리 전체 해제/실패 집계·자식 우선 정리·1500 깊이 트리·전체 DFS 스냅샷·숨김 update·안정 형제 순서/동률 복원·부모 누적 위치·anchor·화면비/길이/역변환·0크기·자기 bounds/opacity·실패 가드/참조 정리를 검사했다.
+- architecture/progress/P4 계획을 실제 기본 API·현재 상태로 갱신했다. 이 증분은 기본 경로만 검증했으며 UI 단독 장면·실제 UI 창·P4 전체 완료 converge는 아직 미실행이다. T014~T017 완료 체크는 최종 검증 후 반영한다. 게임 정책·아트·의존성·원본 작업 폴더는 영향 없다. PR 없음.

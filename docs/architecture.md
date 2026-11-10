@@ -1,6 +1,6 @@
 # 기술 구조
 
-상태: **기본 실행 기반 완료 / P1/P2 통합·P3 월드 렌더링 검증 완료 / P4 UI·P5 통합 후속**
+상태: **기본 실행 기반 완료 / P1/P2 통합·P3 월드 렌더링 검증 완료 / P4 UI 기본 경로 자동 검증·실제 UI 검사 준비 / P5 후속**
 
 2026-11-08 사용자가 명세·계획 시각화 검토 후 계획을 승인했다. 아래 기술 계약은 이번 기본 실행 기반에 적용한다. 실제 키 조작은 사용자가 정상 확인했고 자동 검사 및 창 검사도 통과했다.
 
@@ -52,6 +52,10 @@
 
 ### 책임과 소유
 
+P4 기본 경로는 `Canvas(reference_size)`, `UIElement(x=0, y=0, anchor=(0,0), visible=True, draw_order=0, bounds=None, opacity=1)`, `UITransform(viewport, reference_size)`, `Renderer.draw_ui(canvas, transform)`으로 구현했다. Canvas는 생성 직후 부착 가능하고 close 뒤 재사용하지 않는다. roots/children/parent/canvas는 읽기 전용 조회이며 새 노드만 한 번 부착한다. remove는 하위 트리 소속·연결을 먼저 모두 해제한 뒤 자식부터 on_destroy를 한 번씩 시도한다. close는 전체 목록을 한 번 분리한다. 복수 정리 오류는 BaseExceptionGroup으로 보존한다. update는 숨김과 무관한 등록순 전위 DFS 전체 스냅샷을 사용한다.
+
+`canvas.transform(viewport)`는 매 출력 상태의 UITransform을 만들며 scale/logical_size/bounds/point/inverse/length를 제공한다. reference_size는 필수 양수 제작 단위이고 게임의 최종 해상도를 고정하지 않는다. 루트 anchor는 0~1, 자식 anchor는 (0,0)만 허용한다. ui_items는 `(element, (x,y), opacity)` 목록이며 `element.draw(origin, transform, opacity)`로 자기 표현만 그린다. 형제 복사본 안정 정렬과 전위 DFS로 패널 하위 트리를 연속 표시한다. 부모 opacity/bounds 제외는 자식에 상속하지 않고 visible=false만 하위 트리를 숨긴다. 렌더 중 소유 API·뎁스 변경·update/렌더 재진입은 거부하고 실패 시에도 목록을 비운다. UI 단독 장면·실제 화면 검사는 후속 증분이며 LevelScene 공동 스냅샷·두 패스 연결은 P5 담당이다.
+
 P3 월드 기본 경로는 구현·자동 검증했다. `WorldTransform(viewport, center=(0,0), view_height=10)`은 좌상단 출력 점·길이와 월드 역변환을 제공하며 0 크기에서 점 변환은 None이다. `RenderItem(drawable, draw_order=0, bounds=None, visible=True, opacity=1)`은 불변 값이며 drawable은 `(transform, opacity)`로 호출한다. `Renderer.draw(level, transform)`은 매번 등록순에서 수집해 안정 정렬하고 마지막에 참조를 비운다. 컬링은 실제 bounds에 출력 1픽셀의 여유를 두고 Level update는 유지한다. 렌더 중 Level 수명·등록·삭제·전달 및 렌더 재진입은 거부한다.
 
 `draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, camera_center=(0,0), view_height=10)`은 Canvas 없이 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 렌더 타깃 리셋은 도형·일반 이미지를 재그리며 세대를 갱신한다. 장치 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. draw_image는 내용 복구가 필요한 TARGET texture를 명시 오류로 거부한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. UI 없는 framework_demo.py와 실제 SDL 월드 검사를 통과했으며 결과·한계는 verification에 있다.
@@ -79,7 +83,7 @@ Level과 Canvas를 화면이 각각 소유하는 제안이다. Level이 Canvas�
 | GameObject.render_items() | 순서 있는 RenderItem 모음 | 몸·무기 등 한 객체의 여러 이미지를 독립 정렬 |
 | RenderItem | drawable 참조 + 정수 draw_order + 월드 bounds 또는 None + visible + opacity | 월드 이미지 단위의 정렬·범위·불투명도 정보 |
 | Renderer.world_items | list[RenderItem] | 프레임별 월드 정렬 목록 |
-| Renderer.ui_items | list[tuple[UIElement, UI 논리 x, UI 논리 y, opacity]] | 형제 순서가 반영된 참조·논리 위치. 공유 UI→출력 변환으로 그리기 |
+| Renderer.ui_items | list[tuple[UIElement, (UI 논리 x, UI 논리 y), opacity]] | 형제 순서가 반영된 참조·논리 위치. 공유 UI→출력 변환으로 그리기 |
 | LevelScene 카메라 상태 | center: (x,y), view_height: 양의 실수 | 월드 단위로 표현한 카메라 중심과 보이는 세로 길이 |
 | Canvas 배율 상태 | reference_size: (Rw,Rh), logical_size, scale | 기준 UI 크기와 현재 viewport에서 유도한 논리 크기/배율 |
 | Engine 출력 상태 | window_size, output_size, viewport | 창 입력 단위·물리 출력 픽셀·출력 내 표시 사각형을 구분 |

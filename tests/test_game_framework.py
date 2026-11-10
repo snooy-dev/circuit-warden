@@ -3,7 +3,7 @@ import weakref
 import gc
 from unittest.mock import Mock
 
-from game_framework import GameMode, GameObject, Level
+from game_framework import (GameMode, GameObject, Level, Canvas, UIElement, UITransform, Renderer)
 
 
 class FrameworkTests(unittest.TestCase):
@@ -285,6 +285,227 @@ class FrameworkTests(unittest.TestCase):
                 self.level.update(.1)
             gc.collect()
             self.assertIsNone(ref())
+
+
+
+class CanvasTests(unittest.TestCase):
+    def setUp(self):
+        self.canvas = Canvas((800, 600))
+        self.addCleanup(self.canvas.close)
+        self.renderer = Renderer()
+        self.transform = self.canvas.transform((0, 0, 800, 600))
+
+    def node(self, parent=None, **kwargs):
+        return self.canvas.add(UIElement(**kwargs), parent)
+
+    def test_single_attachment_and_read_only_tree(self):
+        root = self.node()
+        child = self.node(root)
+        self.assertEqual(self.canvas.roots, (root,))
+        self.assertEqual(root.children, (child,))
+        self.assertIs(child.parent, root)
+        for canvas, parent, element in ((self.canvas, None, root),
+                                         (Canvas((1, 1)), None, child),
+                                         (self.canvas, UIElement(), UIElement())):
+            with self.assertRaises(RuntimeError):
+                canvas.add(element, parent)
+        for field in ('parent', 'canvas', 'children'):
+            with self.assertRaises(AttributeError):
+                setattr(child, field, None)
+        self.canvas.remove(root)
+        self.canvas.remove(root)
+        for node in (root, child):
+            self.assertIsNone(node.canvas)
+            self.assertIsNone(node.parent)
+            self.assertEqual(node.children, ())
+            with self.assertRaises(RuntimeError):
+                self.canvas.add(node)
+
+    def test_subtree_detaches_before_child_first_cleanup_and_preserves_failures(self):
+        a, other = self.node(), self.node()
+        b, c = self.node(a), None
+        c = self.node(b)
+        log = []
+        def clean(node, name):
+            self.assertTrue(all(n.canvas is None and n.parent is None and not n.children
+                                for n in (a, b, c)))
+            with self.assertRaises(RuntimeError):
+                self.canvas.add(UIElement())
+            log.append(name)
+            if node is not b:
+                raise ValueError(name)
+        for node, name in ((a, 'a'), (b, 'b'), (c, 'c')):
+            node.on_destroy = lambda n=node, v=name: clean(n, v)
+        with self.assertRaises(BaseExceptionGroup) as result:
+            self.canvas.remove(a)
+        self.assertEqual(log, ['c', 'b', 'a'])
+        self.assertEqual(len(result.exception.exceptions), 2)
+        self.assertEqual(self.canvas.roots, (other,))
+        self.canvas.remove(a)
+        self.assertEqual(log, ['c', 'b', 'a'])
+
+    def test_whole_dfs_snapshot_and_membership_check_even_when_hidden(self):
+        a, b = self.node(visible=False), self.node()
+        child = self.node(b)
+        log = []
+        def mutate(dt):
+            log.append('a')
+            self.canvas.remove(child)
+            new = self.node(b)
+            new.update = lambda dt: log.append('new')
+            a.update = lambda dt: log.append('a')
+        a.update = mutate
+        b.update = lambda dt: log.append('b')
+        child.update = lambda dt: log.append('removed')
+        self.canvas.update(.1)
+        self.assertEqual(log, ['a', 'b'])
+        self.canvas.update(.1)
+        self.assertEqual(log, ['a', 'b', 'a', 'b', 'new'])
+
+    def test_update_failure_reentrancy_and_reference_release(self):
+        node = self.node()
+        def fail(dt):
+            with self.assertRaises(RuntimeError):
+                self.canvas.update(dt)
+            raise ValueError('update')
+        node.update = fail
+        with self.assertRaisesRegex(ValueError, 'update'):
+            self.canvas.update(.1)
+        node.update = lambda dt: None
+        self.canvas.update(.1)
+        ref = weakref.ref(node)
+        self.canvas.remove(node)
+        del node
+        gc.collect()
+        self.assertIsNone(ref())
+
+    def test_deep_tree_and_bulk_close_are_iterative(self):
+        nodes, parent = [], None
+        for _ in range(1500):
+            parent = self.node(parent)
+            nodes.append(parent)
+        self.canvas.update(.1)
+        self.renderer.draw_ui(self.canvas, self.transform)
+        nodes[0].on_destroy = Mock(side_effect=ValueError('close'))
+        with self.assertRaisesRegex(ValueError, 'close'):
+            self.canvas.close()
+        self.assertEqual(self.canvas.roots, ())
+        self.assertTrue(all(n.canvas is None and not n.children for n in nodes))
+        self.canvas.close()
+        with self.assertRaises(RuntimeError):
+            self.node()
+
+    def test_sibling_sort_contiguous_subtrees_ties_and_update_order(self):
+        a, b = self.node(), self.node(draw_order=1)
+        child = self.node(a, draw_order=999)
+        log = []
+        for node, name in ((a, 'a'), (child, 'child'), (b, 'b')):
+            node.draw = lambda *args, name=name: log.append(name)
+        self.renderer.draw_ui(self.canvas, self.transform)
+        self.assertEqual(log, ['a', 'child', 'b'])
+        a.draw_order = 2
+        log.clear()
+        self.renderer.draw_ui(self.canvas, self.transform)
+        self.assertEqual(log, ['b', 'a', 'child'])
+        a.draw_order = b.draw_order = 0
+        log.clear()
+        self.renderer.draw_ui(self.canvas, self.transform)
+        self.assertEqual(log, ['a', 'child', 'b'])
+        for node, name in ((a, 'a'), (child, 'child'), (b, 'b')):
+            node.update = lambda dt, name=name: log.append(name)
+        log.clear()
+        self.canvas.update(.1)
+        self.assertEqual(log, ['a', 'child', 'b'])
+        self.assertEqual(self.canvas.roots, (a, b))
+        self.assertEqual(self.renderer.ui_items, [])
+
+    def test_anchor_parent_offset_self_culling_opacity_and_subtree_hiding(self):
+        parent = self.node(x=-100, y=10, bounds=(0, 0, 10, 10), opacity=0)
+        child = self.node(parent, x=110, y=20, bounds=(0, 0, 30, 30), opacity=.5)
+        corner = self.node(x=-40, y=-20, anchor=(1, 1))
+        parent.draw, child.draw, corner.draw = Mock(), Mock(), Mock()
+        transform = self.canvas.transform((20, 30, 1600, 900))
+        self.renderer.draw_ui(self.canvas, transform)
+        parent.draw.assert_not_called()
+        child.draw.assert_called_once_with((10, 30), transform, .5)
+        corner.draw.assert_called_once_with((1026 + 2 / 3, 580), transform, 1)
+        parent.visible = False
+        child.draw.reset_mock()
+        self.renderer.draw_ui(self.canvas, transform)
+        child.draw.assert_not_called()
+        parent.visible, parent.opacity = True, 1
+        self.renderer.draw_ui(self.canvas, transform)
+        parent.draw.assert_not_called()
+        child.draw.assert_called_once()
+
+    def test_ui_culling_keeps_unknown_partial_boundary_and_pixel_margin(self):
+        nodes = [self.node(bounds=b) for b in (None, (-10, 0, 5, 10),
+                    (800, 0, 810, 10), (800.5, 0, 810, 10), (802, 0, 810, 10))]
+        for node in nodes:
+            node.draw = Mock()
+        self.renderer.draw_ui(self.canvas, self.transform)
+        self.assertTrue(all(n.draw.called for n in nodes[:4]))
+        nodes[-1].draw.assert_not_called()
+
+    def test_render_mutation_and_failure_release_guards_and_references(self):
+        node = self.node()
+        actions = [lambda: self.node(), lambda: self.canvas.remove(node), self.canvas.close,
+                   lambda: self.canvas.update(.1), lambda: setattr(node, 'draw_order', 1),
+                   lambda: self.renderer.draw_ui(self.canvas, self.transform)]
+        for action in actions:
+            def draw(*args):
+                with self.assertRaises(RuntimeError):
+                    action()
+            node.draw = draw
+            self.renderer.draw_ui(self.canvas, self.transform)
+        node.draw = Mock(side_effect=ValueError('draw'))
+        with self.assertRaisesRegex(ValueError, 'draw'):
+            self.renderer.draw_ui(self.canvas, self.transform)
+        self.assertEqual(self.renderer.ui_items, [])
+        node.draw = Mock()
+        self.renderer.draw_ui(self.canvas, self.transform)
+        self.canvas.update(.1)
+        self.canvas.remove(node)
+        self.assertIsNone(node.canvas)
+
+    def test_transform_roundtrip_sizes_font_lengths_and_zero_output(self):
+        for viewport, scale, size in (((20, 30, 1600, 1200), 2, (800, 600)),
+                ((20, 30, 1200, 600), 1, (1200, 600)),
+                ((0, 0, 600, 900), .75, (800, 1200))):
+            transform = self.canvas.transform(viewport)
+            self.assertEqual(transform.scale, scale)
+            self.assertEqual(transform.logical_size, size)
+            self.assertEqual(transform.length(18), 18 * scale)
+            self.assertEqual(transform.point(0, 0), tuple(viewport[:2]))
+            for point in ((0, 0), (17.5, 22), (-40, 900)):
+                self.assertEqual(transform.inverse(*transform.point(*point)), point)
+        node = self.node()
+        node.draw = Mock()
+        for viewport in ((0, 0, 0, 600), (0, 0, 800, 0)):
+            transform = self.canvas.transform(viewport)
+            self.assertIsNone(transform.point(1, 2))
+            self.assertIsNone(transform.inverse(1, 2))
+            self.assertIsNone(transform.logical_size)
+            self.renderer.draw_ui(self.canvas, transform)
+        node.draw.assert_not_called()
+
+    def test_validation_and_collection_error_recovery(self):
+        for size in ((0, 1), (1, float('inf')), (1, 2, 3)):
+            with self.assertRaises(ValueError):
+                Canvas(size)
+        for kwargs in ({'anchor': (-.1, 0)}, {'x': float('nan')},
+                {'opacity': 2}, {'bounds': (1, 0, 0, 1)}, {'draw_order': .5}):
+            with self.assertRaises((ValueError, TypeError)):
+                UIElement(**kwargs)
+        with self.assertRaises(ValueError):
+            self.node(self.node(), anchor=(1, 0))
+        node = self.node()
+        node.opacity = float('nan')
+        with self.assertRaises(ValueError):
+            self.renderer.draw_ui(self.canvas, self.transform)
+        self.assertEqual(self.renderer.ui_items, [])
+        node.opacity = 1
+        self.renderer.draw_ui(self.canvas, self.transform)
 
 
 if __name__ == '__main__':
