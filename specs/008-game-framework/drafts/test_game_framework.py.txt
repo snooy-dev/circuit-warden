@@ -1,0 +1,232 @@
+import unittest
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+from game_framework import GameMode, GameObject
+
+
+class Object(GameObject):
+    def __init__(self, name, log):
+        super().__init__()
+        self.name, self.log = name, log
+
+    def on_spawn(self):
+        self.log.append((self.name, 'spawn', self.mode))
+
+    def on_destroy(self):
+        self.log.append((self.name, 'destroy', self.mode))
+
+    def handle_event(self, event):
+        self.log.append((self.name, 'event', event))
+
+    def update(self, dt):
+        self.log.append((self.name, 'update', dt))
+
+    def draw(self):
+        self.log.append((self.name, 'draw'))
+
+
+class FrameworkTests(unittest.TestCase):
+    def setUp(self):
+        self.mode = GameMode()
+        self.engine = Mock()
+        self.mode.enter(self.engine)
+        self.log = []
+
+    def obj(self, name='A'):
+        return Object(name, self.log)
+
+    def test_spawn_destroy_and_repeat_destroy(self):
+        obj = self.obj()
+        self.assertIs(self.mode.spawn(obj), obj)
+        self.assertIs(obj.mode, self.mode)
+        self.assertEqual(self.mode.objects, (obj,))
+        obj.destroy()
+        obj.destroy()
+        self.assertIsNone(obj.mode)
+        self.assertEqual(self.mode.objects, ())
+        self.assertEqual([entry[1] for entry in self.log], ['spawn', 'destroy'])
+        self.assertIs(self.log[-1][2], self.mode)
+
+    def test_invalid_spawn_does_not_change_ownership(self):
+        other = GameMode()
+        obj = self.obj()
+        with self.assertRaises(RuntimeError):
+            other.spawn(obj)
+        with self.assertRaises(TypeError):
+            self.mode.spawn(object())
+        self.mode.spawn(obj)
+        other.enter(self.engine)
+        for mode in (self.mode, other):
+            with self.assertRaises(RuntimeError):
+                mode.spawn(obj)
+        with self.assertRaises(AttributeError):
+            obj.mode = other
+        obj.destroy()
+        with self.assertRaises(RuntimeError):
+            other.spawn(obj)
+        self.assertEqual(other.objects, ())
+
+    def test_destroy_unspawned_is_harmless(self):
+        obj = self.obj()
+        obj.destroy()
+        self.mode.spawn(obj)
+        self.assertIs(obj.mode, self.mode)
+
+    def test_spawn_failure_cleans_partial_object(self):
+        obj = self.obj()
+        obj.on_spawn = Mock(side_effect=ValueError('spawn'))
+        with self.assertRaisesRegex(ValueError, 'spawn'):
+            self.mode.spawn(obj)
+        self.assertIsNone(obj.mode)
+        self.assertEqual(self.mode.objects, ())
+        self.assertEqual([row[1] for row in self.log], ['destroy'])
+
+    def test_spawn_and_cleanup_errors_are_preserved(self):
+        obj = self.obj()
+        obj.on_spawn = Mock(side_effect=ValueError('spawn'))
+        obj.on_destroy = Mock(side_effect=OSError('destroy'))
+        with self.assertRaises(OSError) as caught:
+            self.mode.spawn(obj)
+        self.assertIsInstance(caught.exception.__context__, ValueError)
+        self.assertIsNone(obj.mode)
+        self.assertEqual(self.mode.objects, ())
+
+    def test_destroy_reentrancy_and_failure_release_owner(self):
+        obj = self.mode.spawn(self.obj())
+        def destroy():
+            obj.destroy()
+            self.assertNotIn(obj, self.mode.objects)
+            raise ValueError('destroy')
+        obj.on_destroy = Mock(side_effect=destroy)
+        with self.assertRaises(ValueError):
+            obj.destroy()
+        obj.destroy()
+        obj.on_destroy.assert_called_once()
+        self.assertIsNone(obj.mode)
+
+    def test_self_destroy_during_spawn(self):
+        obj = self.obj()
+        obj.on_spawn = obj.destroy
+        self.mode.spawn(obj)
+        self.mode.update(.1)
+        self.assertEqual(self.mode.objects, ())
+        self.assertEqual([row[1] for row in self.log], ['destroy'])
+
+    def test_equal_objects_are_distinct(self):
+        class EqualObject(Object):
+            def __eq__(self, other):
+                return True
+        a = self.mode.spawn(EqualObject('A', self.log))
+        b = self.mode.spawn(EqualObject('B', self.log))
+        b.destroy()
+        self.assertEqual(len(self.mode.objects), 1)
+        self.assertIs(self.mode.objects[0], a)
+        self.assertIsNone(b.mode)
+
+    def test_dispatch_mode_first_and_original_values_in_order(self):
+        a, b = self.mode.spawn(self.obj('A')), self.mode.spawn(self.obj('B'))
+        evt = SimpleNamespace(type=123)
+        self.mode.on_event = lambda value: self.log.append(('mode', 'event', value))
+        self.mode.on_update = lambda value: self.log.append(('mode', 'update', value))
+        self.mode.on_draw = lambda: self.log.append(('mode', 'draw'))
+        self.log.clear()
+        self.mode.handle_event(evt)
+        self.mode.update(.25)
+        self.mode.draw()
+        self.assertEqual(self.log, [
+            ('mode', 'event', evt), ('A', 'event', evt), ('B', 'event', evt),
+            ('mode', 'update', .25), ('A', 'update', .25), ('B', 'update', .25),
+            ('mode', 'draw'), ('A', 'draw'), ('B', 'draw')])
+        self.assertIs(self.log[1][2], evt)
+
+    def test_mutation_during_every_dispatch(self):
+        for method, args in [('handle_event', (object(),)), ('update', (.1,)), ('draw', ())]:
+            with self.subTest(method=method):
+                mode = GameMode()
+                mode.enter(self.engine)
+                a, b, c = [self.obj(name) for name in 'ABC']
+                mode.spawn(a)
+                mode.spawn(b)
+                def change(*unused):
+                    a.destroy()
+                    b.destroy()
+                    mode.spawn(c)
+                setattr(a, method, change)
+                setattr(b, method, Mock())
+                setattr(c, method, Mock())
+                getattr(mode, method)(*args)
+                getattr(b, method).assert_not_called()
+                getattr(c, method).assert_not_called()
+                getattr(mode, method)(*args)
+                getattr(c, method).assert_called_once_with(*args)
+                mode.exit()
+
+    def test_mode_hook_addition_waits_until_next_dispatch(self):
+        obj = self.obj()
+        self.mode.on_update = lambda dt: self.mode.spawn(obj)
+        self.mode.update(.1)
+        self.assertEqual([row[1] for row in self.log], ['spawn'])
+        self.mode.draw()
+        self.assertEqual(self.log[-1], ('A', 'draw'))
+
+    def test_exit_cleans_every_object_despite_multiple_errors(self):
+        a, b = [self.mode.spawn(self.obj(name)) for name in 'AB']
+        self.mode.on_exit = Mock(side_effect=ValueError('exit'))
+        a.on_destroy = Mock(side_effect=OSError('A'))
+        b.on_destroy = Mock(side_effect=RuntimeError('B'))
+        with self.assertRaises(BaseExceptionGroup) as caught:
+            self.mode.exit()
+        self.assertEqual([str(e) for e in caught.exception.exceptions], ['exit', 'A', 'B'])
+        for obj in (a, b):
+            obj.on_destroy.assert_called_once()
+            self.assertIsNone(obj.mode)
+        self.assertIsNone(self.mode.engine)
+        self.assertEqual(self.mode.objects, ())
+        self.mode.exit()
+        self.mode.on_exit.assert_called_once()
+
+    def test_exit_rejects_spawn_and_nested_exit_is_harmless(self):
+        a = self.mode.spawn(self.obj())
+        def destroy():
+            self.mode.exit()
+            with self.assertRaises(RuntimeError):
+                self.mode.spawn(self.obj('B'))
+        a.on_destroy = Mock(side_effect=destroy)
+        self.mode.exit()
+        a.on_destroy.assert_called_once()
+        self.assertEqual(self.mode.objects, ())
+
+    def test_partial_enter_failure_and_reenter(self):
+        mode = GameMode()
+        created = []
+        def enter():
+            created.append(mode.spawn(self.obj()))
+            raise ValueError('enter')
+        mode.on_enter = enter
+        with self.assertRaises(ValueError):
+            mode.enter(self.engine)
+        with self.assertRaises(RuntimeError):
+            mode.enter(self.engine)
+        mode.exit()
+        self.assertIsNone(created[0].mode)
+        mode.on_enter = lambda: created.append(mode.spawn(self.obj()))
+        mode.enter(self.engine)
+        self.assertEqual(len(mode.objects), 1)
+        self.assertIsNot(created[0], created[1])
+        mode.exit()
+
+    def test_inactive_dispatch_does_nothing(self):
+        self.mode.on_event = Mock()
+        self.mode.on_update = Mock()
+        self.mode.on_draw = Mock()
+        self.mode.exit()
+        self.mode.handle_event(object())
+        self.mode.update(.1)
+        self.mode.draw()
+        for callback in (self.mode.on_event, self.mode.on_update, self.mode.on_draw):
+            callback.assert_not_called()
+
+
+if __name__ == '__main__':
+    unittest.main()
