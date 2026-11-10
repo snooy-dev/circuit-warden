@@ -13,9 +13,9 @@
 - [X] T002 plans/01-core.md~05-integration.md와 docs/architecture.md·docs/progress.md에 담당·선행 계약·검증·다음 검토 계획을 반영한다.
 
 ## Phase 2: P1 - 게임 객체·레벨·규칙
-- [ ] T003 [US1] tests/test_game_framework.py에 창 없는 소유·ID/재등록·생성/삭제·스냅샷·규칙 격리·부분 실패 검사를 작성한다 (FR-001~004).
-- [ ] T004 [US1] game_framework.py에 GameObject·Level·GameMode와 입력/update/열기/닫기를 구현한다. UI/Renderer/SDL은 도입하지 않는다.
-- [ ] T005 P1 자동 검사·기존 엔진 회귀를 실행하고 docs/architecture.md·docs/progress.md·verification.md의 P1 상태/근거를 갱신한 검증 증분을 커밋한다.
+- [X] T003 [US1] tests/test_game_framework.py에 창 없는 소유·ID/재등록·생성/삭제·스냅샷·규칙 격리·부분 실패 검사를 작성한다 (FR-001~004).
+- [X] T004 [US1] game_framework.py에 GameObject·Level·GameMode와 입력/update/열기/닫기를 구현한다. UI/Renderer/SDL은 도입하지 않는다.
+- [X] T005 P1 자동 검사·기존 엔진 회귀를 실행하고 docs/architecture.md·docs/progress.md·verification.md의 P1 상태/근거를 갱신한 검증 증분을 커밋한다.
 
 ## Phase 3: P2 - 창·출력 기반
 - [ ] T006 [US3] tests/test_engine.py에 window/output/viewport·DPI 비율·휠 구분·0 크기·모드 전환 실패·창/렌더 리셋 이벤트 보존 검사를 작성한다 (FR-006/010).
