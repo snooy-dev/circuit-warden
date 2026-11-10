@@ -33,7 +33,7 @@
 
 ## 다음 작업
 
-P3 월드 경로·UI 없는 데모를 구현했고 전체 자동 검사 60개와 실제 SDL 월드 검사를 통과했다. P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`, P2 최종 `c3eef90`을 통합했으며 이전 커밋 차단은 해결됐다. 타깃 리셋은 일반 그림 재그리기, 장치/누락 리셋은 명시 오류·정리로 처리한다. P4가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering` 브랜치를 인계받아 Canvas를 구현한다. P4 종료 뒤 P5가 순차 재사용하며 동시 쓰기는 하지 않는다. 기존 별도 브랜치·워크트리는 삭제/아카이브하지 않는다. 전체 프레임워크 완료는 P5에서 판정한다. [계획별 검증](../specs/008-game-framework/verification.md)을 참조한다.
+P3 월드 경로·UI 없는 데모를 구현했고 전체 자동 검사 60개와 실제 SDL 월드 검사를 통과했다. 최종 구현·검증 커밋은 `76e9863cab36fa8e8c0e3db751b26f52b4ded53d`다. P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`, P2 최종 `c3eef90`을 통합했으며 이전 커밋 차단은 해결됐다. 타깃 리셋은 일반 그림 재그리기, 장치/누락 리셋은 명시 오류·정리로 처리한다. P4가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering` 브랜치를 인계받아 Canvas를 구현한다. P4 종료 뒤 P5가 순차 재사용하며 동시 쓰기는 하지 않는다. 기존 별도 브랜치·워크트리는 삭제/아카이브하지 않는다. 전체 프레임워크 완료는 P5에서 판정한다. [계획별 검증](../specs/008-game-framework/verification.md)을 참조한다.
 
 ## 개발 방식 조정
 

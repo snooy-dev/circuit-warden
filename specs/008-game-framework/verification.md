@@ -69,7 +69,7 @@ P2 구현 커밋 `6c92565bfe726d50458f1e6eeca64494258073f4`, 최종 인계 커�
 ## P3 검증과 인계
 
 - 작업트리: `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`, 브랜치: `feature/world-rendering`.
-- P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`, P2 최종 `c3eef90`을 Git merge했다. 통합 커밋 `e229bf2`에서 전체 43개 회귀를 통과했다. P3 월드 기본 경로 증분 `4a4426a`는 전체 55개를 통과했다. 최종 구현 커밋은 인계 기록에서 확인한다.
+- P1 최종 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`, P2 최종 `c3eef90`을 Git merge했다. 통합 커밋 `e229bf2`에서 전체 43개 회귀를 통과했다. P3 월드 기본 경로 증분 `4a4426a`는 전체 55개를 통과했다. 최종 구현·검증 커밋: `76e9863cab36fa8e8c0e3db751b26f52b4ded53d`. 이 커밋의 코드·검사·docs와 후속 인계 문서 커밋을 포함한 같은 브랜치를 P4가 그대로 이어간다.
 - 자동 명령: `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q` → **60개 통과**. 기존·P1/P2 43개와 P3 17개다. `tests/test_world_rendering.py`는 좌표 왕복/길이/화면비/0크기, 등록순/이미지별 안정 정렬/동률 복원, 부분·경계·1픽셀 여유·미확인 bounds와 update 유지, 렌더 중 수명/전달 재진입 거부, 실패 뒤 참조 해제, 리셋 명시 실패와 정리를 검사한다. `tests/test_framework_demo.py`는 클릭→update 단일 이동→draw 상태 불변, 레벨 왕복·규칙 격리, 카메라·뎁스·출력 요청을 검사한다.
 - 실제 SDL 소프트웨어 렌더러 검사: 메모리 surface/texture와 `SDL_RenderReadPixels`로 source-over RGB, 이미지 자체 alpha×opacity, 공유 texture의 다른 opacity, texture/도형 draw 및 상태 설정 실패 뒤 원래 color/blend/alpha 복원을 확인했다. TARGET texture는 내용 복구 경로가 없어 명시 오류로 거부한다.
 - 실제 창 명령: `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/world_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c41a-a29f-77a0-905b-a7e7ea69059f` → 종료 0, `PASS: world/alpha/image/culling/input/camera/resize/fullscreen/roundtrip`. 실제 640×480 → 960×540 → 5120×1440 보더리스 → 960×540 복귀를 확인했다. SDL 입력 큐로 생성·삭제·카메라·A→B→A를 실행하고 레벨별 새 초기 배치·이전 소유 해제·마지막 장면/renderer 참조 정리를 assert했다. 2×2 RGBA 검사용 texture를 메모리에서 만들어 실제 이미지 합성 픽셀을 확인하고 각 레벨 종료 때 해제했다. 외부 에셋 생성은 없다.
