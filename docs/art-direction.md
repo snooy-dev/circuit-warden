@@ -26,12 +26,12 @@
 |---|---|---|
 | idle | [비무장 v7](../art/warden/provisional-approved/idle-unarmed-v7/unarmed/preview.gif) 잠정 승인 | idle 중 비발검, hibit·16색, 128×104, 48프레임·2초 |
 | 걷기 | [좌우 v4](../art/warden/provisional-approved/walk-v4/both.gif) 잠정 승인 | 짧은 다리·둥근 골반, 128×104, 방향별 24프레임·1초 |
-| Run | [좌우 v3](../art/warden/provisional-approved/run-v3/both.gif) 잠정 승인 | 직립·둥근 꼬리·긴 천의 관성, 128×104, 방향별 16프레임·480ms |
+| Run | [복원·경계 수정 v4](../art/warden/provisional-approved/run-v4/review.html) 잠정 승인 | 청색 명암·짧은 귀와 팔·골반 연동·꼬리와 다리 경계 보존, 전류·천·귀·꼬리 관성 유지. 128×104, 방향별 16프레임·480ms |
+| 기존 Run v3 | [보존본](../art/warden/provisional-approved/run-v3/README.md) 이전 후보로 강등 | 2026-11-10 사용자 결정으로 잠정 승인에서 제외. 프레임과 과거 승인 기록 보존 |
 | 이전 달리기 | [review-v2](../art/warden/run-hibit/review-v2/both.gif) 보류 | 잠정 승인에 포함하지 않음 |
 | 공격 | [review-v6](../art/warden/attack-hibit/review-v6/both.gif) 검토 대기 | 앞으로 숙인 전신 동작·어깨 높이 베기·앞발 디딤·회수, 160×112, 방향별 24프레임·720ms 단발. 공격 중 검 표시, 소환 VFX 보류 |
-| 명암·비율 복원 Run | [run-review-v1](../art/warden/shading-restore/run-review-v1/review.html) 검토 대기 | 지정 이미지의 청색 명암·짧은 귀와 팔, 방향별 16프레임·480ms. 기존 잠정 승인본과 별도 후보 |
 
-[잠정 승인 보관 목록](../art/warden/provisional-approved/README.md)의 128개 PNG와 원화는 보존한다. 잠정 승인은 최종 게임 사용·통합 승인이 아니다. 걷기·공격에 복원본의 최신 자세를 적용하는 작업은 아직 수행하지 않았다.
+[잠정 승인 보관 목록](../art/warden/provisional-approved/README.md)의 현재 승인 프레임은 128개 PNG다. Run은 사용자가 검토한 [run-review-v4](../art/warden/shading-restore/run-review-v4/review.html)를 변경 없이 복사했으며 이전 Run 32개 PNG와 원화도 보존한다. 잠정 승인은 최종 게임 사용·통합 승인이 아니다. 걷기·공격에 복원본의 최신 자세를 적용하는 작업은 아직 수행하지 않았다.
 
 측면 파생 이미지는 원화보다 시안 면적이 크고 중간 청색 명암이 줄어들었다. 같은 16색 팔레트를 쓴다는 사실만으로 색조·입체감 일치를 보장하지 않는다. 전류는 한 방향으로 흐르고 천·귀·꼬리는 관성을 표현한다. 기존 코드 애니메이션의 천 물리는 질점·스프링 근사이며 접힘·충돌·지면 마찰을 계산하지 않는다.
 
