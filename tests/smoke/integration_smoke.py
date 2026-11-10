@@ -6,11 +6,11 @@ from pathlib import Path
 from time import monotonic
 from types import SimpleNamespace
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from framework_demo import FrameworkDemo
+from demos.framework import FrameworkDemo
 from world_smoke import push_button, push_key
 
 

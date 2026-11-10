@@ -6,11 +6,11 @@ from pathlib import Path
 from time import monotonic
 from types import SimpleNamespace
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from framework_demo import WorldDemo
+from demos.framework import WorldDemo
 from game_framework import GameObject, RenderItem, draw_image
 
 

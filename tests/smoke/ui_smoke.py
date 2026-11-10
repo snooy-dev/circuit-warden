@@ -5,11 +5,11 @@ from ctypes import byref, c_ubyte
 from pathlib import Path
 from time import monotonic
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from framework_demo import UIDemo
+from demos.framework import UIDemo
 from world_smoke import push_key
 
 

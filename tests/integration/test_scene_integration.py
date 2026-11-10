@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-import engine
+import engine.loop as engine
 from game_framework import Canvas, GameMode, GameObject, Level, LevelScene, RenderItem, UIElement
 
 
@@ -198,7 +198,7 @@ class SceneIntegrationTests(unittest.TestCase):
                 def opened(*args):
                     backend.window = backend.renderer = object()
                 backend.open_canvas.side_effect = opened
-                with patch.object(engine, 'pico', backend), patch.object(engine, 'poll_events', return_value=[]), patch.object(engine.Engine, '_query_display', return_value=((800, 600), (800, 600), 0)):
+                with patch('engine.display.pico', backend), patch.object(engine, 'pico', backend), patch.object(engine, 'poll_events', return_value=[]), patch.object(engine.Engine, '_query_display', return_value=((800, 600), (800, 600), 0)):
                     with self.assertRaisesRegex(ValueError, 'draw-failure'):
                         engine.Engine().run(scene)
                 self.assertIsNone(scene.engine)

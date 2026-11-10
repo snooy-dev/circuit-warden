@@ -1,5 +1,36 @@
 # 검증 상태: 게임프레임워크
 
+## 소스 기준 동기화 검증 (2026-11-11)
+
+사용자가 feature/engine을 각 소스 브랜치로 가져와 충돌을 해결하는 것을 명시 승인했다. 기준은 a32333c964be1e81a3da30024efc094184c3e7c5이며 대상 브랜치 자체는 변경하지 않는다. docs README/progress·008 plan/tasks의 문서 충돌만 해결했다. 최신 대상의 정책·아트 기준·제작 스크립트는 그대로 보존하고 아래 검증된 공통 구조를 유지한다.
+
+`git diff e3a0029 -- engine game_framework demos main.py framework_demo.py tests requirements.txt`가 비어 있어 런타임·검사·의존성이 동일하다. docs/workflow.md의 검사 실행 범위와 과도한 검사 방지 사용자 지시에 따라 기존 90개 자동 검사·독점 SDL16 결과를 재사용하고 재실행하지 않았다. feature/engine 대비 PR에서 변경한 문서의 링크·작업 ID·충돌 표식·diff 검사와 feature/engine 포함 관계·merge-tree 충돌 없음을 확인했다. 대상에서 그대로 가져온 art-direction의 로컬 원화 링크는 이 코드 작업트리에 비추적 art 파일이 없어 전체 링크 검사에서 제외했다. 원화나 대상 아트 문서 내용을 임의로 바꾸지 않았다. 다른 소스도 동일한 최종 트리를 사용하므로 브랜치마다 상충하는 현재 문서를 만들지 않는다.
+
+## 엔진/게임 API 경계 정리 검증 (2026-11-11)
+
+사용자 승인 범위: game-facing API를 game_framework에 두고 내부 실행을 engine 패키지로 분리하며 demos·tests/unit·integration·smoke를 분류한다. 상태: FR-011~013/SC-003/004 및 T023~T032 완료. 실행 폴더는 C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden, 브랜치는 feature/game-framework다. 다른 작업트리·PR·대상 브랜치 수정은 범위 밖이다. 소스 브랜치로의 기준 병합은 아래 최신 명시 승인 범위다.
+
+| 검사 | 실제 명령·방법 | 결과 |
+|---|---|---|
+| 사전 작업·체크리스트 | .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks, requirements.md 읽기 전용 확인 | 필수 문서 확인, 11/11 완료, extensions.yml 없음 |
+| 전체 회귀/API/경계 | D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q | 90개 통과. 기존 87개와 엔진 독립/중립 실행 2개·지연 수집 실패 1개 |
+| 엔진 구현 본문 | git show 595df01:engine.py와 현재 각 담당 모듈의 AST 함수/메서드 본문 비교 | 기존 모든 함수·메서드 본문 보존. 위치·클래스 기반·import만 변경 |
+| 실제 SDL 통합 | 같은 Python으로 tests/smoke/integration_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c61f-5a75-7843-b6ce-610dc3aecc4c/framework-boundaries | 독점 최종 실행 종료 0, 16단계 integrated/snapshots/order/alpha/input/camera/resize/fullscreen/minimize/roundtrip/escape PASS |
+| 실제 화면 관찰 | 위 출력의 p5-initial.png·p5-resized.png 열기 | 월드/UI source-over 겹침·크기 변경 배치와 오른쪽 기준점 관찰 |
+| 정적 문서 검사 | 변경 Markdown의 로컬 링크·작업 ID·충돌 표식 검사, git diff --check | 통과 |
+
+엔진 패키지 검사는 AST import와 새 Python 프로세스로 engine이 game_framework/demos를 import하지 않음을 확인한다. execute는 일반 tuple 목록만으로 안정 정렬·입력 순서·오류 전파를 검사한다. 기존 Renderer 검사는 두 패스·교차 변경/재진입 거부·그리기 실패 정리를 유지하며 새 generator 검사는 지연 수집 도중 실패에도 잠금과 임시 목록이 풀리는 것을 확인한다. SDL 도형/texture 알파와 실패 시 공유 상태 복원은 tests/integration/test_drawing.py에서 실제 소프트웨어 렌더러로 검사한다.
+
+최초 smoke 호출은 출력 폴더를 만들지 않아 실행 전 assert로 중단했고 지정 폴더 생성 후 진행했다. 첫 창 실행은 전체화면 복귀에서 SDL_RenderReadPixels 실패, 동일 코드 재실행과 다른 SDL 창 없이 실행한 최종 검사는 모두 통과했다. 당시 다른 브랜치 SDL 검사가 겹쳤을 가능성이 있으나 원인은 확정하지 않는다. 실패를 숨기거나 통과시키도록 검사/런타임을 완화하지 않았다.
+
+analyze: FR-012→T027/T028, FR-013→T029, SC-004→T030, SC-DOC→T031 대응. converge: 승인된 소유/실행 경계·게임 타입 의존 금지·공개 import/실행 명령·지연 수집/가드·오류 정리·docs를 대조했고 필수 잔여 작업 없음. world/level_scene가 본 구현이며 core/scene는 직전 하위 모듈 import 호환이다. SDL은 engine/rendering에서만 직접 실행하고 게임 drawing은 좌표/값 검사를 제공한다. 월드/UI/통합 예제는 공통 검사 객체 때문에 demos/framework.py에 함께 두었다. 새 추상 관리자·게임 기능·의존성을 추가하지 않았다.
+
+README·docs README/architecture/progress·008 spec/plan/tasks/quickstart를 현재 구조·검사와 동기화했다. 초기 하위 계획의 단일 파일 경로는 당시 단위를 가리키며 현재 위치는 architecture 표가 기준이다. 아래 이전 검증 경로는 당시 실제 실행 근거다. 게임 설계·아트·의존성·도구 환경은 영향 없다.
+
+독립 display/world/UI 실제 창 smoke는 이번 증분에서 재실행하지 않았다. 전체 자동 검사와 통합 실제 창 검사로 변경 경계를 확인했다. 사용자 직접 키·실물 DPI/다른 모니터는 미확인이다. Python __module__ 경로 변경으로 기존 pickle 저장물 호환을 보증하지 않는다(영속 저장 기능 없음). PR 생성·게시·병합은 하지 않았다.
+
+## P1~P5 검증 기반
+
 **상태**: P1~P5 구현·자동 검사·실제 SDL 창 검증 완료. 상세 게임 규칙·아트·성능 목표의 확정은 아니다.
 **P1~P5 실행 근거**: 2026-11-10 사용자가 모든 계획의 구현·검증 증분 커밋과 독립 P1/P2 병렬·P3→P4→P5 동일 경로 순차 진행을 지시했다. PR 생성·게시·병합은 범위 밖이다.
 **현재 통합 브랜치/작업트리**: `feature/engine`, `C:/Users/Developer/.codex/worktrees/engine-integration/circuit-warden`
@@ -13,7 +44,7 @@
 
 감사에서 bda35a8의 `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m unittest discover -s tests -v`는 85개/0.047초 통과했다. 같은 Python의 `tests/integration_smoke.py <출력 폴더>`는 실제 SDL 16단계/종료 0이며 p5-resized.png를 열어 겹침/출력 배치를 관찰했다. 출력은 `C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c5e8-30ea-72d0-bce6-3073464ac646`에 있다. 코드 독립 검토와 창 없는 수명 경계 검사 3개에서도 재현 결함을 발견하지 못했다. 이후 실행 코드·테스트·의존성은 변경하지 않으므로 같은 검사를 반복하지 않는다.
 
-`git diff feature/world-rendering -- engine.py game_framework.py framework_demo.py main.py tests requirements.txt`는 차이 없음이다. `git diff main -- docs/art-direction.md AGENTS.md .specify scripts`도 차이 없음으로 최신 커밋된 아트·정책·제작 스크립트를 보존했다. 변경 Markdown 9개의 로컬 링크 대상·충돌 표식과 `git diff --check`가 통과했다. analyze/converge 대조에서 새 런타임 변경·필수 미완료·문서 충돌은 없으며 T023을 완료한다. 두 선행 브랜치의 커밋을 보존하는 merge commit으로 기록한다. 실제 게임·실물 DPI·물리 키 조작·성능 한계는 여전히 미확인이다. 테스트 삭제는 제안만 하며 실행 파일은 보존한다.
+`git diff feature/world-rendering -- engine.py game_framework.py framework_demo.py main.py tests requirements.txt`는 차이 없음이다. `git diff main -- docs/art-direction.md AGENTS.md .specify scripts`도 차이 없음으로 최신 커밋된 아트·정책·제작 스크립트를 보존했다. 변경 Markdown 9개의 로컬 링크 대상·충돌 표식과 `git diff --check`가 통과했다. 당시 analyze/converge 대조에서 새 런타임 변경·필수 미완료·문서 충돌은 없었으며 당시 통합 작업을 완료했다. 두 선행 브랜치의 커밋을 보존하는 merge commit으로 기록한다. 실제 게임·실물 DPI·물리 키 조작·성능 한계는 여전히 미확인이다. 테스트 삭제는 제안만 하며 실행 파일은 보존한다.
 
 ## 계획별 결과·커밋
 
@@ -27,7 +58,7 @@
 
 P1/P2 검증 커밋은 `e229bf2`에서 Git merge했고 이후 P3/P4/P5는 같은 브랜치에서 순차 진행했다. P5는 P4 완료 채팅·최종 인계·깨끗한 작업트리를 확인한 뒤 쓰기를 시작했다. 기존 준비 브랜치 `feature/game-screen-integration`의 커밋은 보존하고 필요한 문장만 검토해 반영했다. 준비 브랜치 전체 merge·동일 선행 결과 중복 merge·새 checkout·기존 작업트리 삭제/아카이브는 하지 않았다. 원본 D:/GitHub 작업과 다른 작업트리의 미커밋 변경은 건드리지 않았다.
 
-## 최신 실제 명령·결과
+## P1~P5 구현 검증 명령·결과
 
 아래 P1~P5 명령은 원본 검증 작업트리에서 원본 게임 Python으로 실행했다. 실제 창 검사는 동시에 실행하지 않았다.
 

@@ -5,7 +5,7 @@
 **P1~P5 구현 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
 **Created**: 2026-11-10
-**Status**: P1~P5 구현·자동/실제 SDL 검증 완료 — 상세 게임 정책 미확정
+**Status**: P1~P5와 승인된 패키지/책임 경계 정리 구현·검증 완료 — 상세 게임 정책 미확정
 **Input**: 게임프레임워크 개발 요청. 레벨은 배치를 보관하고 씬은 렌더링 구조, 게임모드는 레벨별 규칙 객체라는 사용자 의도 제안. 현재 물리·별도 시뮬레이션 없음. 이미지별 뎁스와 월드/UI 구분을 요청했다.
 **Design approval**: 최종 승인 없음. 역할 의도와 기술 가정을 구분한다. Renderer는 사용자 지정 이름이다. Level·Canvas·Renderer의 구체 자료 구조와 Canvas 최소 계층은 Codex의 미승인 제안이며 architecture에서 검토한다.
 **Implementation authorization**: 사용자가 모든 계획을 새 채팅에서 구현하도록 지시했다. P1/P2는 별도 워크트리에서 병렬 구현하고 P3~P5는 선행 결과를 검증·통합한 뒤 진행한다. PR 생성/게시/병합 승인은 별도다.
@@ -86,3 +86,18 @@ Python + Pico2D와 기존 게임 환경 유지. 신규 의존성·외부 전송�
 기술 제안의 기준은 [architecture](../../docs/architecture.md#게임프레임워크-계약-제안-미구현)다. Level의 dict·Canvas의 roots/children 목록 트리·월드 전역 정렬/UI 형제 정렬을 권장하는 구체안이며 최종 승인 전이다. LevelScene이 Level과 선택적 Canvas를 각각 소유하도록 구현했다. 이는 구현 기본값이며 게임 정책 최종 확정과 구분한다. UIElement의 논리 로컬 위치·루트 anchor·숨김·부모/자식 수명과 순서, Canvas의 균등 배율을 포함한다. UI 입력/포커스·루트 기준점 외 자동 레이아웃·클리핑·노드별 회전/스케일 상속·reparent는 제외한다.
 
 파일 보관·영속 World·공통 UI 수명·구체 게임 규칙·업데이트 결과 판정 시점은 미정이다. GameMode의 GameObject 상속은 필수가 아니며 물리·simulate 단계는 없다. 객체 규모·변경률·메모리/프레임 예산은 미정이고 독립 Python 비교는 실제 게임 성능 보증이 아니다. 독립 월드/Canvas 좌표와 카메라 투영·가변 출력/전체화면·입력 역변환·화면 밖 제외·표준 알파 합성은 이번 검토안에 포함하며 카메라 추적/줌·가림 판정 제외·화면 밖 update 정지는 포함하지 않는다. 2026-11-10 구현 지시 범위 안에서 진행하며 상세 기술 선택을 사용자 게임 정책 확정으로 표시하지 않는다.
+
+## Framework Package Refactoring
+2026-11-11 사용자가 feature/game-framework 워크트리에서 비대해진 프레임워크 모듈과 폴더 구조 정리를 요청했다. 후속 구현 브랜치의 검증된 결과를 이 브랜치에 통합해 작업한다.
+- **FR-011**: 객체 수명, 좌표 변환, UI 소유, 렌더 수집, 게임용 그리기 API, 장면 연결을 game_framework 패키지의 책임별 모듈로 분리한다. SDL 실행은 후속 FR-012의 engine 경계를 따른다. 기존 공개 이름·생성자·동작·오류 처리·루트 import를 유지한다.
+- **SC-003**: 기존 85개 검사와 공개 API/개별 모듈 import 검사가 통과하고, 실제 SDL 통합 검사에서 기존 동작이 유지된다.
+추가 게임 기능·의존성은 제외한다. 후속 승인 범위는 아래 책임 경계 정리를 따른다. 클래스의 Python __module__ 경로는 바뀌며 기존 pickle 저장물의 호환성은 이번 범위에 없다(영속 저장 기능 없음).
+
+## Source Branch Base Synchronization
+2026-11-11 사용자가 각 소스 브랜치에 feature/engine을 가져와 충돌을 해결하도록 명시 승인했다. 최신 정책·아트·제작 스크립트와 검증된 공통 구조를 함께 보존하며, 대상 브랜치 병합·PR 승인을 뜻하지 않는다. 동일 실행 파일·환경의 검사는 기존 결과를 재사용한다.
+
+## Engine and Game-facing Boundaries
+2026-11-11 사용자가 game-facing API와 엔진 내부 책임 경계를 승인하고 기존 작업트리에서 정리를 요청했다.
+- **FR-012**: game_framework는 world(GameObject·GameMode·Level), ui(Canvas·UIElement), transforms, RenderItem·drawing API, level_scene을 제공한다. engine 패키지는 loop·scene·display·events와 중립 렌더 실행·SDL 그리기를 담당하며 game_framework를 import하지 않는다. 게임 소유·수집·가드는 game_framework에 남긴다.
+- **FR-013**: 검사 예제는 demos, 테스트는 unit·integration·smoke로 분류하고 기존 루트 실행 명령과 공개 import를 유지한다. 수집 지연 평가·두 패스·재진입 방지·오류 시 정리를 보존한다.
+- **SC-004**: 패키지 의존 방향·공개 API·중립 렌더 실행 검사와 전체 unittest 탐색·실제 SDL 통합 smoke가 통과한다.

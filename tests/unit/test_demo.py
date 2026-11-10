@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-import main
+from demos import check as main
 
 
 class DemoTests(unittest.TestCase):
