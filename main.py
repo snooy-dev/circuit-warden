@@ -17,16 +17,24 @@ class CheckScene(Scene):
     def handle_event(self, event):
         if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_SPACE:
             self.engine.change_scene(CheckScene(not self.alternate))
+        elif event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_F11:
+            self.engine.set_display(fullscreen=not self.engine.fullscreen)
+        elif event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_F6:
+            size = (1024, 720) if self.engine.window_size == (800, 600) else (800, 600)
+            self.engine.set_display(fullscreen=False, window_size=size)
         elif event.type == pico.SDL_MOUSEMOTION:
-            self.pointer = (event.x, HEIGHT - 1 - event.y)
+            point = self.engine.event_to_output(event)
+            if point is not None:
+                self.pointer = (point[0], self.engine.output_size[1] - 1 - point[1])
 
     def update(self, dt):
-        self.x = (self.x + 160 * dt) % (WIDTH - 40)
+        self.x = (self.x + 160 * dt) % max(1, self.engine.output_size[0] - 40)
 
     def draw(self):
         color = (220, 110, 35) if self.alternate else (40, 100, 210)
-        left = WIDTH - 180 if self.alternate else 60
-        pico.draw_rectangle(left, HEIGHT - 180, left + 120, HEIGHT - 60,
+        width, height = self.engine.output_size
+        left = width - 180 if self.alternate else 60
+        pico.draw_rectangle(left, height - 180, left + 120, height - 60,
                             *color, filled=True)
         pico.draw_rectangle(self.x, 60, self.x + 40, 100, *color, filled=True)
         x, y = self.pointer
@@ -34,5 +42,5 @@ class CheckScene(Scene):
 
 
 if __name__ == '__main__':
-    print('엔진 검사: Space = 장면 전환 / 마우스 = 표시 이동 / Escape = 종료', flush=True)
+    print('엔진 검사: Space = 장면 전환 / F6 = 창 크기 / F11 = 전체화면 / 마우스 = 표시 이동 / Escape = 종료', flush=True)
     Engine().run(CheckScene())

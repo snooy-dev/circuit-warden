@@ -11,6 +11,8 @@
 
 반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다.
 
+엔진 통합 브랜치는 `feature/engine`이다. [008 계획](../specs/008-game-framework/plan.md)의 P1~P5 구현·검증을 통합했으며, 실행 방법과 한계는 [quickstart](../specs/008-game-framework/quickstart.md)와 [검증 결과](../specs/008-game-framework/verification.md)를 따른다. 실제 게임 규칙·아트 통합은 별도 범위다.
+
 ## 운영 원칙
 
 - docs는 현재 기준, specs는 진행 중인 변경의 작업 문서다. 변경 이력은 Git 로그·diff로 확인한다.
