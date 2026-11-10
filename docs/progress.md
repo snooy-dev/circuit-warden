@@ -33,7 +33,7 @@
 
 ## 다음 작업
 
-P2는 검증된 로컬 커밋을 인계한다. 현재 브랜치는 feature/display-management이며 verification에 실제 명령과 남은 검증을 기록했다. P1은 독립 채팅에서 진행한다. 후속 채팅은 선행 채팅을 확인하고 검증된 커밋을 통합한 뒤 담당 구현을 시작한다. [계획별 검증](../specs/008-game-framework/verification.md)을 현재 결과로 갱신한다.
+P2는 구현 커밋 6c92565bfe726d50458f1e6eeca64494258073f4를 인계한다. 현재 브랜치는 feature/display-management이며 verification에 실제 명령과 남은 검증을 기록했다. P1은 독립 채팅에서 진행한다. 후속 채팅은 선행 채팅을 확인하고 검증된 커밋을 통합한 뒤 담당 구현을 시작한다. [계획별 검증](../specs/008-game-framework/verification.md)을 현재 결과로 갱신한다.
 
 ## 개발 방식 조정
 
