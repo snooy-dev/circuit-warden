@@ -2,7 +2,7 @@
 
 **현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
-**Branch**: feature/framework-p1 | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
+**Branch**: feature/gameplay-core | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
 **Status**: P1 구현·자동 검증 완료 — 전체 프레임워크 완료와 구분
 **Input**: [전체 계획](../plan.md), [기술 기준](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)
 
@@ -31,7 +31,7 @@ Python 3.14 + Pico2D 1.5.1, Windows. 새 의존성·외부 에셋 생성 없음.
 ## Project Structure & Interfaces
 변경 대상: game_framework.py의 core 클래스, tests/test_game_framework.py의 순수 규칙 검사. engine.py와 main.py는 변경하지 않는다.
 
-인계 계약: Level의 소유 조회와 입력/update/열기/닫기 계약을 제공한다. 후속 렌더링은 이 등록순 조회를 소비한다. 단계 스냅샷의 소유/검증 규칙을 유지하며 Canvas 결합은 P5에서 한다.
+인계 계약: Level의 소유 조회와 입력/update/열기/닫기 계약을 제공한다. 후속 렌더링은 이 등록순 조회를 소비한다. 단계 스냅샷의 소유/검증 규칙을 유지하며 Canvas 결합은 P5에서 한다. P3는 P1/P2 검증 커밋을 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 `feature/world-rendering`에 통합한다. P3 완료 후 P4, P4 완료 후 P5가 같은 워크트리·브랜치를 순차 재사용하며 동시 쓰기는 금지한다. 기존 브랜치·워크트리는 삭제하거나 아카이브하지 않는다.
 
 ## Verification & Completion
 - 순서·재등록 거부·자기/다른 객체 제거·규칙 격리·부분 실패를 창 없는 자동 검사로 확인한다.

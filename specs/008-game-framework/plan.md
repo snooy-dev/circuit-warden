@@ -9,7 +9,7 @@
 사용자가 광범위해진 계획을 여러 계획으로 분리하도록 제안했다. 한 번에 객체·출력·월드 렌더링·UI를 구현하던 초안을 아래 다섯 계획으로 나눈다. 분리 자체와 구현 지시는 별개다. 2026-11-10 모든 계획의 새 채팅 구현 지시를 받았으며 P1은 구현·자동 검증했다. 후속 계획은 선행 검증 결과를 통합해 진행한다. 상세 게임 정책 확정과 구현 결과를 구분한다.
 
 ## Technical Context
-Python 3.14 + Pico2D 1.5.1, Windows와 기존 게임 .venv 유지. 기존 001 엔진이 출발점이다. 새 엔진·의존성·외부 에셋 생성은 없다. 현재 feature/game-framework와 활성 specs/008-game-framework를 유지한다. 계획 분리만을 위해 브랜치·워크트리·활성 기능 포인터를 만들거나 바꾸지 않는다.
+Python 3.14 + Pico2D 1.5.1, Windows와 기존 게임 .venv 유지. 기존 001 엔진이 출발점이다. 새 엔진·의존성·외부 에셋 생성은 없다. 활성 specs/008-game-framework를 유지한다. 독립 P1/P2만 별도 브랜치·워크트리를 사용하며 P1의 현재 브랜치는 feature/gameplay-core다. P3는 P1/P2 검증 커밋을 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 `feature/world-rendering`에 통합한다. P3 완료 후 P4, P4 완료 후 P5가 같은 워크트리·브랜치를 순차 재사용하며 동시 쓰기는 금지한다. 기존 브랜치·워크트리는 삭제하거나 아카이브하지 않는다.
 
 ## Constitution Check
 - [x] Spec Kit의 spec → plan → tasks → analyze → implement → docs → converge 흐름을 유지한다.
@@ -27,7 +27,7 @@ Python 3.14 + Pico2D 1.5.1, Windows와 기존 게임 .venv 유지. 기존 001 �
 | [P4 Canvas UI](plans/04-canvas.md) | UI 트리·논리 좌표·배율·anchor·형제 순서 | P2 + P3의 그리기 경로 | 게임 규칙 없는 UI 검사 화면 |
 | [P5 통합·최종 검증](plans/05-integration.md) | 복합 수명·공동 스냅샷·실행 화면·전체 회귀 | P1~P4 | 통합 데모와 SC 전체 판정 |
 
-권장 검토/구현 순서는 P1 → P2 → P3 → P4 → P5다. P1과 P2는 논리적으로 독립이며 별도 워크트리 병렬 구현이 승인됐다. P3~P5는 공통 파일을 확장하므로 순차 통합한다. 독립 완료 조건은 선행 계약이 없어도 모두 구현할 수 있다는 의미가 아니다.
+권장 검토/구현 순서는 P1 → P2 → P3 → P4 → P5다. P1과 P2는 논리적으로 독립이며 별도 워크트리 병렬 구현이 승인됐다. P3~P5는 공통 파일을 확장하므로 feature/world-rendering의 같은 워크트리에서 순차 실행한다. P4/P5 전용 브랜치는 만들지 않는다. 독립 완료 조건은 선행 계약이 없어도 모두 구현할 수 있다는 의미가 아니다.
 
 ## Requirements Ownership
 

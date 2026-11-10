@@ -3,9 +3,9 @@
 **현재 실행 근거**: 2026-11-10 사용자가 P1~P5의 새 채팅 구현과 독립 계획의 별도 워크트리 병렬 작업을 지시했다. 이전 구현 보류는 해제됐다. 상세 기술 선택과 사용자 게임 정책 확정은 구분한다.
 
 **상태**: P1 구현·자동 검증 완료. 전체 프레임워크 완료 아님.
-**P1 브랜치**: `feature/framework-p1`
+**P1 브랜치**: `feature/gameplay-core` (사용자 지시에 따라 이름만 변경, 구현 커밋 유지)
 **기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
-**P1 구현 커밋**: `d3c4ed06f2efa199c41a15f525b161d9e894f7b3` (코드·검사·docs·명세·검증 포함). 후속 인계 문서 커밋까지 포함한 `feature/framework-p1` 브랜치를 통합하면 된다.
+**P1 구현 커밋**: `d3c4ed06f2efa199c41a15f525b161d9e894f7b3` (코드·검사·docs·명세·검증 포함). 후속 인계 문서 커밋까지 포함한 `feature/gameplay-core` 브랜치를 통합하면 된다.
 
 ## 계획별 상태
 
@@ -27,6 +27,7 @@
 | `git switch -c feature/framework-p1 1940dd423daf423a84637b9ccec7d23eb92d722f` | 전용 브랜치 생성. 최초 제한된 Git 관리 경로 쓰기는 거부됐고 승인된 확장 실행으로 성공 |
 | `$env:SPECIFY_FEATURE_DIRECTORY=(Resolve-Path specs/008-game-framework).Path; ./.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks` | 성공. 최초 SPECIFY_FEATURE만 지정한 시도는 디렉터리 미해결로 실패했고 명시 디렉터리로 해결 |
 | `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v` | 32개 통과: P1 16개, 기존 엔진·데모 16개 |
+| `git branch --show-current`, `git status --short` | 변경 지시 수신 후 feature/gameplay-core와 깨끗한 작업트리 확인. 브랜치 이름 변경은 상위 채팅에서 이미 수행됐으며 이 작업에서는 재변경하지 않음 |
 | `git diff --check` | 통과 |
 | 게임 Python 표준입력 pathlib/re 검사: 변경 Markdown의 로컬 링크 대상·줄 끝 공백 | 11개 문서 통과 |
 
@@ -46,10 +47,12 @@ P1 계획·T003~T005·spec/plan/data-model/contracts/quickstart와 docs/architec
 
 analyze에서 P1은 렌더/Canvas/SDL 없이 FR-001~004의 담당 범위를 구현할 수 있음을 확인했다. 구체 승패·업데이트 후 판정은 제외다. 테스트 초안은 예전 GameMode 소유 모델이므로 복사하지 않고 현재 Level 계약으로 새 검사를 작성했다. 독립 읽기 전용 Luna/high 검토에서 재현 가능한 P1 결함은 없었으며 core 16개를 별도로 통과했다. 지적된 모드 시작 중 닫기 검사 공백을 보완하고 전체 32개를 다시 통과했다. converge에서 P1 요구사항·실제 API·검사·문서 대응과 제외 범위를 대조했고 P1 필수 미완료는 없다. 기존 engine.py/main.py/requirements.txt와 원본 작업 폴더는 변경하지 않았다. systems·game-design·art-direction은 게임 규칙·아트를 변경하지 않아 영향 없다. 외부 서비스·생성·새 의존성·PR 없음.
 
+이번 인계 방식 변경은 docs/progress·전체 계획·P1 계획·verification만 갱신했다. 변경 Markdown 4개의 로컬 링크·공백과 git diff --check를 검사하며 런타임 변경이 없어 게임 검사를 재실행하지 않는다. 이전 실제 브랜치 생성 명령은 당시 실행 증거로 보존한다.
+
 ## 미실행·한계
 
 P1은 창 없는 core 계획이므로 새 실제 창·UI 자동 조작·사용자 직접 확인은 수행하지 않았다. P2~P5의 실제 출력·렌더·Canvas·복합 장면 검증을 대체하지 않는다. 실제 게임 규모·성능 예산은 미정이며 새 성능 주장을 하지 않는다. 오류 traceback이나 외부 변수가 잡고 있는 참조의 즉시 메모리 해제는 보장하지 않는다.
 
 ## 다음 단계
 
-P3 담당은 P1 구현 커밋과 별도 P2 검증 커밋을 통합한 뒤 월드 렌더링을 진행한다. 이 문서의 P2~P5 상태는 이 작업트리에서 확인한 범위이며 다른 워크트리의 최신 결과는 해당 검증 커밋에서 가져온다.
+P3는 P1/P2 검증 커밋을 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 `feature/world-rendering`에 통합한다. P3 완료 후 P4, P4 완료 후 P5가 같은 워크트리·브랜치를 순차 재사용하며 동시 쓰기는 금지한다. 기존 브랜치·워크트리는 삭제하거나 아카이브하지 않는다. 이 문서의 P2~P5 상태는 이 작업트리에서 확인한 범위이며 다른 워크트리의 최신 결과는 해당 검증 커밋에서 가져온다.
