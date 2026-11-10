@@ -20,4 +20,4 @@
 
 ## 명암·비율 복원 검토
 
-[009 복원](../specs/009-warden-shading-restore/spec.md)은 원화의 청색 중간 명암 복원과 추가 발·몸/머리 방향 수정이다. 기존 잠정 승인본은 유지한다. 최신 split-turn-v1 후보는 [비율 검사](../specs/009-warden-shading-restore/proportion-verification.md)에서 가까운 귀·팔 과대가 확인되어 복원 미완료이며 아직 동작에 적용하지 않았다.
+[009 복원](../specs/009-warden-shading-restore/spec.md)은 원화의 청색 중간 명암 복원과 추가 발·몸/머리 방향 수정이다. 기존 잠정 승인본은 유지한다. 최신 proportion-fix-v1은 가까운 귀·팔을 줄인 정지 검토 후보로 [비율 검사](../specs/009-warden-shading-restore/proportion-verification.md)를 마쳤으며 아직 동작에 적용하지 않았다.

@@ -1,6 +1,6 @@
 # 진행 상태
 
-- 2026-11-10 [009 명암·비율 복원](../specs/009-warden-shading-restore/spec.md) 진행 중. 명암 복원 뒤 사용자 지시로 둥근 발·몸/머리 방향 후보를 편집했다. 최신 후보의 [원화 대비 비율 검사](../specs/009-warden-shading-restore/proportion-verification.md)에서 가까운 귀·팔 과대를 확인해 미완료다. 최신 자세의 동작 적용 전 비율 수정이 남는다. 기존 승인128PNG·원화는 보존하며 잠정 승인 분류·게임 미통합을 유지한다.
+- 2026-11-10 [009 명암·비율 복원](../specs/009-warden-shading-restore/spec.md) 진행 중. 사용자 요청으로 가까운 귀·팔을 원화 비율에 가깝게 줄인 정지 후보 proportion-fix-v1을 준비하고 [비율 검증](../specs/009-warden-shading-restore/proportion-verification.md)을 마쳤다. 최신 자세의 동작 적용은 남는다. 기존 승인128PNG·원화는 보존하며 잠정 승인 분류·게임 미통합을 유지한다.
 
 갱신일: 2026-11-10
 

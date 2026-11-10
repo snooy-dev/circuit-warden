@@ -38,4 +38,4 @@ idle은 reference/master-source.png를 사용하고, 걷기와 Run은 walk-hibit
 
 문서 상대 링크 4개가 존재하며 `git diff --check`는 종료 코드 0이다. 기존 파일의 LF→CRLF 안내만 출력됐다.
 
-사용자 후속 복원 요청은 [009](../specs/009-warden-shading-restore/spec.md)에서 진행한다. 초기 명암 복원과 이후 몸/머리 각도 후보를 구분하며 최신 후보의 귀·팔 비율은 미완료다. [최신 비율 검사](../specs/009-warden-shading-restore/proportion-verification.md) 참조.
+사용자 후속 복원 요청은 [009](../specs/009-warden-shading-restore/spec.md)에서 진행한다. 초기 명암 복원과 이후 몸/머리 각도 후보를 구분하며 이후 귀·팔을 줄인 정지 검토 후보를 준비했다. 최신 자세의 동작 적용은 남는다. [최신 비율 검사](../specs/009-warden-shading-restore/proportion-verification.md) 참조.
