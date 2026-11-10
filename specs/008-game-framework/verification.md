@@ -5,6 +5,7 @@
 **상태**: P4 준비만 검증 / 선행 P3 미완료로 차단. Canvas 구현·전체 기능 완료 보고가 아니다.
 **브랜치**: `feature/framework-p4`
 **기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
+**P4 준비 커밋**: `affd3ace2ab46c313b256ef6f79173c8939c9646` — UI 계획·진행 상태·검증/차단 근거만 포함. P4 구현 완료 커밋은 없다.
 **작업트리**: `C:/Users/Developer/.codex/worktrees/fc2d/circuit-warden`
 
 ## 선행 상태와 통합 조건
@@ -30,6 +31,7 @@
 | `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v` | 기존 엔진·데모 16개 통과. P4 검증은 아님 |
 | `git log -3 --oneline feature/framework-p3`, `git show feature/framework-p3:specs/008-game-framework/verification.md` | 선행 브랜치가 P1 통합까지임을 직접 확인 |
 | `git diff --check` | 통과 |
+| 게임 Python 표준입력 pathlib/re 문서 검사 | 변경 Markdown 3개의 로컬 링크·줄 끝 공백, T014~T017 미체크와 런타임 파일 부재 확인 통과 |
 
 ## analyze·문서 영향·미실행
 
