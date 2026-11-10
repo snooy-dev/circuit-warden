@@ -1,64 +1,72 @@
 # 검증 상태: 게임프레임워크
 
-**현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
+**상태**: P1~P5 구현·자동 검사·실제 SDL 창 검증 완료. 상세 게임 규칙·아트·성능 목표의 확정은 아니다.
+**실행 근거**: 2026-11-10 사용자가 모든 계획의 구현·검증 증분 커밋과 독립 P1/P2 병렬·P3→P4→P5 동일 경로 순차 진행을 지시했다. PR 생성·게시·병합은 범위 밖이다.
+**현재 브랜치/작업트리**: `feature/world-rendering`, `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`
+**기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
 
-**상태**: 분리 계획 검토 대기 / 모든 구현 보류. 완료 보고 아님.
-**근거**: 2026-11-10 사용자가 이번에는 계획을 읽고 승인 여부·수정사항을 제시한다고 지시했다.
+## 계획별 결과·커밋
 
-## 계획별 상태
-
-| 계획 | 상태 | 실제 실행 근거 / 다음 검토 |
+| 계획 | 상태·검증 근거 | 구현·인계 커밋 |
 |---|---|---|
-| P1 객체·규칙 | 미승인·미구현 | 다음 검토 대상. core 자동 검사는 아직 없음 |
-| P2 창·출력 | 미승인·미구현 | 기존 001 검사 성공은 가변 출력/전체화면 성공 근거가 아님 |
-| P3 월드 렌더링 | 미승인·미구현 | 합성 컨테이너 실험은 실제 렌더 구현 성공 근거가 아님 |
-| P4 Canvas UI | 미승인·미구현 | UI 트리/배율/패스 실행 검증 없음 |
-| P5 통합 | 미승인·미구현 | P1~P4 선행. 통합 검사/전체 완료 판정 없음 |
+| P1 객체·규칙 | core 16개와 기존 회귀 16개 통과. 단일 소유·ID·스냅샷·규칙 격리·실패 정리 | 구현 `d3c4ed06f2efa199c41a15f525b161d9e894f7b3`, 최종 인계 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b` |
+| P2 창·출력 | 27개 자동·실제 SDL 크기/전체화면/복귀/최소화/입력 검사 통과 | 구현 `6c92565bfe726d50458f1e6eeca64494258073f4`, 최종 인계 `c3eef90` |
+| P3 월드 렌더링 | 60개 자동·실제 SDL 픽셀/이미지/경계/레벨 왕복 통과 | 구현 `76e9863cab36fa8e8c0e3db751b26f52b4ded53d`, 최종 인계 `4696fb61317c29a2a91f0eafa9245a5160f78f7b` |
+| P4 Canvas UI | 74개 자동·실제 SDL 트리/알파/anchor/입력/최소화 검사 통과 | 구현 `1a88cee34c751954836d676f4aa9012412498cb8`, 최종 인계 `0f4bc9f6151e1fac705499d737da01901c6b28f8` |
+| P5 통합 | 전체 85개·실제 통합/월드/UI SDL 회귀 통과. 아래 명령·범위 참조 | 공동 수명·스냅샷 `b11e7a55c3f031720a991e2a9963ba6a79cc531f`, 통합 화면·최종 검증 `7bd9299305717f12243617db8f04e6ac6154e13b` |
 
-## 실제 확인
-| 작업·명령 | 결과 | 범위 |
-|---|---|---|
-| 원본 폴더의 .venv/Scripts/python.exe -m unittest discover -s tests -v | 기존 16개 통과 | 엔진 출발 상태만 확인 |
-| git log/branch와 main..feature/engine 비교 | main에 엔진 없음. d2a0a8c는 엔진 5bfca50과 최신 정책을 포함 | 새 feature/game-framework 기반 선택 |
-| 관리 워크트리 생성, git switch -c feature/game-framework | 별도 작업 폴더·브랜치 생성 | 원본 미커밋 변경 보존 |
-| resolve-template.ps1 spec-template -Json, setup-plan.ps1 -Json, setup-tasks.ps1 -Json, check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks | 성공 | 프로젝트 템플릿과 필수 문서 확인 |
-| 원본 게임 Python -m unittest discover -s tests -p test_game_framework.py -v (새 작업 폴더) | ModuleNotFoundError: game_framework, 예상 미구현 실패 | 기능 구현 성공 증거 아님 |
-| 계획·명세·작업 대조 | FR 10개, SC 3개에 작업 대응. 구조·파이프라인은 검토안이며 저장 범위·세부 API·업데이트 결과 판정은 최종 검토 대상 | 사용자 상세 승인과 구분 |
+P1/P2 검증 커밋은 `e229bf2`에서 Git merge했고 이후 P3/P4/P5는 같은 브랜치에서 순차 진행했다. P5는 P4 완료 채팅·최종 인계·깨끗한 작업트리를 확인한 뒤 쓰기를 시작했다. 기존 준비 브랜치 `feature/game-screen-integration`의 커밋은 보존하고 필요한 문장만 검토해 반영했다. 준비 브랜치 전체 merge·동일 선행 결과 중복 merge·새 checkout·기존 작업트리 삭제/아카이브는 하지 않았다. 원본 D:/GitHub 작업과 다른 작업트리의 미커밋 변경은 건드리지 않았다.
 
-## 보류 시점과 문서 영향
-게임프레임워크 런타임 코드는 작성하지 않았다. 작성한 테스트 초안은 drafts/test_game_framework.py.txt로 옮겨 기존 자동 검사에 영향을 주지 않게 보존했다. 구현·새 테스트 통과·실제 창·converge·증분 커밋은 수행하지 않았다. 사용자 직접 확인도 없다.
+## 최신 실제 명령·결과
 
-spec/plan/tasks와 research·data-model·contracts·quickstart·checklist, docs/architecture·progress·game-design을 레벨 소유·씬 참조·규칙 분리·입력/업데이트/렌더링·이미지별 뎁스·월드/UI 분리 제안에 맞췄다. 계획 검토/구현 보류를 유지한다. README·workflow의 기존 엔진 실행 안내는 변경하지 않았다. systems·art-direction 및 원본 폴더의 미커밋 작업은 변경하지 않았다.
+명령은 위 공유 작업트리에서 원본 게임 Python으로 실행했다. 실제 창 검사는 동시에 실행하지 않았다.
 
-## 명칭 조사 범위
+| 명령·검사 | 결과 |
+|---|---|
+| `git status --short`, `git branch --show-current`, `git rev-parse HEAD` | P4 인계 당시 깨끗함·feature/world-rendering·0f4bc9f 확인. 최초 제한 실행의 Git status는 경로 접근 제한으로 실패했고 확장 실행은 승인되어 성공 |
+| 명시 `SPECIFY_FEATURE_DIRECTORY=specs/008-game-framework`, `SPECIFY_FEATURE_NO_PERSIST=1`로 `check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks` | 성공. 필수 문서와 선택 문서 확인. 활성 포인터 변경 없음 |
+| `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v` | **85개 통과**. 기존 P1~P4 74개, P5 공동 수명·순회 9개, 통합 데모 2개 |
+| 같은 Python으로 `tests/integration_smoke.py <출력 폴더>` | 종료 0. 16단계 통합 검사와 Escape 종료·양쪽 소유/임시 참조 해제 assert 통과 |
+| 같은 Python으로 `tests/world_smoke.py <출력 폴더>` | 종료 0. `PASS: world/alpha/image/culling/input/camera/resize/fullscreen/roundtrip` |
+| 같은 Python으로 `tests/ui_smoke.py <출력 폴더>` | 종료 0. `PASS: ui/tree/order/alpha/anchor/mouse/resize/fullscreen/minimize/cleanup` |
+| `git diff --check`, 게임 Python pathlib/re로 변경 Markdown 링크·줄 끝 공백·충돌 표식·작업/명세 ID 검사 | 통과. T001~T022와 FR-001~010/SC-001/002/DOC 대응 확인 |
 
-공식 Unity Scene/GameObject/uGUI Canvas/2D 정렬, GameMaker Room/Object/UI Layers, Godot Scene/CanvasItem/CanvasLayer 및 Unreal GameMode 문서를 웹으로 확인하고 research.md에 출처·해석·후보를 구분했다. 일부 빠른 시작 UI URL은 조회 실패하여 GameMaker 월간 UI Layers 본문과 Runtime 문서를 확인했다. 외부 엔진 설치·실행은 하지 않았다. Python 자료 구조의 독립 비교는 아래와 같이 수행했다. Renderer는 사용자 지정 이름이다. Canvas·UIElement는 이후 구체 자료 구조 제안에 포함한 미승인 후보이며 LevelScene 이름은 유지한다.
+출력 폴더는 `C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c41b-691b-7d90-a321-b0deae430b7d`다. P5 실제 창은 640×480→960×540→5120×1440 보더리스→960×540 복귀, 최소화/복구를 검사했다. SDL 입력 큐로 월드 생성/삭제·큰 월드 뎁스·카메라·UI 숨김/하위 트리 삭제·A→B→A·Escape를 실행했다. SDL_WarpMouseInWindow가 만든 실제 이동 이벤트에서 월드/UI 역변환이 같은 프레임 출력 상태와 일치함을 확인했다. 최소화 중 update는 유지되고 draw 횟수는 증가하지 않았으며 복구 후 재개됐다.
 
-## 자료 구조 검토용 실험
+SDL_RenderReadPixels로 반투명 UI 아래 월드와 UI 패널 간 source-over 픽셀, 큰 월드 뎁스 위 UI, 화면 밖 이동 도형의 경계 진입, 오른쪽 anchor를 assert했다. p5-initial/resized/level-B/return-A.png를 직접 열어 월드 이미지·UI 겹침·카메라와 독립인 UI·화면비·새 초기 배치를 관찰했다. 검사용 픽셀/메모리 texture는 외부 에셋 제작이 아니다.
 
-게임 Python으로 `C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c37d-0ed1-7d02-9951-6a21f240d309/framework-container-comparison.py`를 실행했다. 종료 0, 전체 순서·잔존 항목·제거/신규 항목의 같은 단계 갱신 방지 assert 통과. 준비 3회·측정 31회, GC 측정 구간 중지, 준비/검사 시간 제외. 최종 수치는 research.md와 같은 폴더의 JSON에 보존한다. 컨테이너 단품과 합성 단계 비교이며 실제 게임 콜백·UI 레이아웃·그리기·GPU·전체 게임 프레임 검증이 아니다. 프레임워크 구현·implement·전체 workflow는 실행하지 않았다.
+통합 smoke의 첫 실행은 타이머가 창 생성 전부터 진행해 첫 draw 전에 초기 캡처를 요구한 검사 코드 오류로 실패했다. 타이머를 enter 뒤로 옮겨 재실행했고 위 전체 16단계가 통과했다. 앱 동작·명세를 실패에 맞춰 바꾸지 않았다.
 
-공식 Cocos RenderCommand, Godot drawing commands, Unreal PrimitiveComponent/SceneProxy, Python 3.14 list/dict/sort/heap 문서로 명칭·연산 근거를 확인했다. 일부 문서 접근이 실패한 경우 검색에 반환된 공식 문서 본문과 접근 가능한 공식 API 문서를 사용했다. 서브에이전트의 읽기 전용 검토에서 단계 스냅샷 시점과 정렬 캐시 동률 문제를 확인하고 계약에 반영했다.
+## 요구사항·성공 조건 대응
 
-## 화면 밖·반투명 조사
+| 요구사항 | 현재 코드·검사 근거 |
+|---|---|
+| FR-001/002 | Level/GameObject/GameMode. tests/test_game_framework.py의 소유·ID·한 번 생성/정리·재등록·격리 검사 |
+| FR-003 | Level._dispatch_snapshot, Canvas._update_snapshot, LevelScene.update. 두 스냅샷을 콜백 전에 취득하고 모드→월드→UI 전달. tests/test_scene_integration.py의 교차 생성/제거·재진입·실패 가드 복구 |
+| FR-004 | LevelScene.enter/exit의 양쪽 정리·복수 오류 보존, Renderer finally 목록 해제. Level 시작/UI 준비 실패·복수 cleanup 오류·Engine.run 월드/UI draw 실패 검사 |
+| FR-005 | 기본 FrameworkDemo와 통합/월드 smoke. 업데이트 단일 이동·draw 불변·왕복 초기 배치·모드 속도 격리 |
+| FR-006 | 자동 검사·앱 내부 SDL 입력/API·실제 PNG 관찰·사용자 직접 확인을 이 문서에서 구분 |
+| FR-007 | Renderer 월드 안정 정렬·UI 형제 DFS·두 패스. 기존 동률/이미지 교차 검사와 P5 큰 월드 뎁스 위 UI 픽셀 검사 |
+| FR-008 | 이미지별 bounds+1픽셀 여유·UI 자기 bounds. 기존 부모 밖/자식 안 검사와 P5 실제 경계 진입·카메라 이동·UI 고정 |
+| FR-009 | draw_rect/draw_image의 source-over·공유 상태 성공/실패 복원. 실제 SDL 메모리 texture 자동 검사와 통합 UI/월드 픽셀 검사 |
+| FR-010 | Engine 출력 상태·WorldTransform/UITransform·event_to_world/ui. 모의 2배 DPI/0출력·실제 크기/전체화면/복귀/최소화/마우스·좌표 보존 검사 |
+| SC-001 | 기존 16개 회귀를 포함한 전체 85개 자동 검사 통과 |
+| SC-002 | 실제 SDL 통합 창의 크기/전체화면·좌표·시간 이동·생성/제거·순서·UI 겹침·경계·알파·왕복·Escape 종료를 검사하고 저장 출력 직접 관찰 |
+| SC-DOC | docs와 spec/plan/tasks/data-model/contracts/quickstart/P5 계획을 실제 API·검사·미확인 환경에 맞춰 갱신하고 정적 대조 |
 
-로컬 Pico2D의 Image.draw/opacify·도형 함수를 rg와 Get-Content로 읽어 SDL 호출/공유 상태 변경을 확인했다. 최초 wildcard 경로 조회는 Windows 경로 오류로 실패했고 rg --files로 실제 경로를 찾아 읽었다. 공식 Unity bounds, SDL2 blend/alpha modulation/texture blend 문서도 확인했다. FR-008/009, 보기 원점·범위·불투명도 계약과 수용 검사를 관련 docs·spec·plan·data-model·contracts·tasks·quickstart·research에 반영했다. 새 요구는 고려 대상으로 반영했으며 상세 제안의 사용자 승인·구현 재개로 기록하지 않았다. 창/픽셀 합성/성능·신규 게임 테스트는 미실행이다.
+## analyze·검토·converge와 문서 영향
 
-## 독립 좌표·가변 출력 검토
+requirements 체크리스트 11개는 읽기 전용으로 확인했고 수정하지 않았다. 체크리스트는 최초 명세 품질 검토이며 현재 구현 상태는 tasks/verification이 소유한다. `.specify/extensions.yml`이 없어 전후 hooks는 없다. analyze에서 T018~T022가 FR-001~010·SC 전체를 담당하고 새 게임 정책·관리자 계층·최적화가 필요하지 않음을 확인했다.
 
-engine.py의 고정 창 크기와 Pico2D open_canvas/resize_canvas/get_events/y 변환을 읽었다. SDL2의 창 크기·renderer 출력 픽셀·전체화면 공식 문서를 확인했다. 월드/Canvas 논리 좌표·양방향 변환·UI 루트 anchor·Engine 출력 상태/필요 이벤트 보존을 FR-010 및 관련 계획/계약에 반영했다. 기존 1:1 이동 제안은 대체했다. 읽기 전용 수식 검토에서 y 방향과 0 크기의 렌더/입력 제외 조건을 확인했다. 실제 코드·의존성·창 상태 변경은 없으며 해상도/DPI/전체화면/리셋·좌표 왕복 테스트는 미실행이다.
+공동 수명 증분은 신규 9개 미구현 실패를 확인한 뒤 전체 83개로 검증·커밋했다. 이후 기본 통합 화면·독립 --world/--ui·실제 SDL smoke와 통합 2개를 추가해 전체 85개가 통과했다. Sol/high 독립 읽기 전용 검토도 공동 수명/스냅샷/교차 변경/오류 보존과 데모 호출자 호환성을 확인하고 9개·83개·최종 85개를 각각 실행해 통과했다. 재현 가능한 결함은 없었으며 검토자는 실화면·최종 docs를 확인하지 않았다.
 
-## 문서 검증
+최종 converge는 FR 10개·SC 3개·사용자 시나리오·경계 조건·계획 책임·constitution을 현재 코드/검사와 대조했다. 필수 미구현·부분 구현·요구 위반·요청 밖 기능은 발견하지 못했다. 새 잔여 작업을 tasks에 추가하지 않는다. 검증된 범위에서 T018~T022를 완료 처리하고 문서·증거를 함께 커밋한다.
 
-엔진 내부 자료 구조는 Cocos2d-x v4 소스, Unity uGUI main 소스, Unreal 5.5 ULevel 공식 API에서 확인했다. Defold는 읽기 전용 서브에이전트가 공식 GitHub 연결로 개발 커밋 9066bb952b42ddfd2cd6a68c48352b0937dab4e3의 선언·사용 코드를 대조했다. 주 에이전트의 Defold raw URL 재조회는 cache miss로 실패하여 해당 독립 조사 근거를 통합했다. 공식 엔진 조사와 Python dict 삽입 순서·sort 안정성을 근거로 Level=dict, Canvas=roots/children 목록 트리, Renderer=월드 전역/UI 형제 정렬 구체안을 작성했다. architecture·research·spec·plan·data-model·contracts·tasks·quickstart·progress·game-design을 대조·갱신했다. UI 계층·하위 트리 수명/표시·로컬 뎁스와 전체 UI 스냅샷은 새 기술 제안이며 사용자 승인으로 표시하지 않았다. 엔진 설치·실행·새 성능 측정은 하지 않았다.
+README·docs README/workflow/architecture/progress와 spec/plan/tasks/data-model/contracts/quickstart/P5 계획을 현재 동작에 맞췄다. game-design의 옛 구현 보류 문장도 최신 구현 지시와 검증 상태로 정정했다. 게임 규칙·아트는 그대로 미정이다. systems/art-direction·requirements·Pico2D 설치본·원본 폴더에는 영향 없다. 문서가 소유하는 동일 수치를 새 규칙으로 중복 정의하지 않았다.
 
-분리 계획을 포함한 관련 Markdown 19개를 대상으로 Python pathlib/re 정적 검사(로컬 링크 대상·줄 끝 공백, 미구현 런타임 파일 부재 확인)와 git diff --check를 통과했다. 역할·프레임 순서·보류 상태를 문서 간 대조했다. 현재 변경은 문서만이며 물리·별도 simulate 단계는 범위에 없다. 신규 기능 테스트·실제 창 검사는 구현 보류로 실행하지 않는다.
+## 미실행·한계
 
-읽기 전용 설계 검토에서 동일 인스턴스 재등록·전체 UI DFS 스냅샷 시점·종료 중 등록·부모 숨김·UI 로컬 정렬 제약을 확인해 계약에 반영했다. 위 검토는 실행 테스트가 아니다. 추가 수용 검사는 tasks/quickstart에 계획했으며 기존 합성 컨테이너 실험을 UI 트리 성능 증거로 사용하지 않는다.
-
-## 계획 분리 검증
-
-plan.md를 다섯 하위 계획의 안내·요구사항 대응으로 바꾸고 plans/01-core.md~05-integration.md를 작성했다. 각 문서에 범위·제외·선행/인계 계약·변경 파일·검증·완료·docs 영향을 명시하고 tasks.md를 같은 순서로 재구성했다. 공통 spec/research/data-model/contracts는 보존했다. `.specify/feature.json`과 브랜치·코드·원본 작업 폴더는 변경하지 않았다. 읽기 전용 분할 검토에서는 의존순환·책임 누락이 없음을 확인했으며 이는 구현 검증이 아니다. 문서 검사에서 하위 계획 5개·필수 섹션·구현 보류, 작업 ID T001~T022의 유일성·미실행 구현 작업 20개, 활성 기능 포인터와 런타임 파일 부재를 확인했다. 문서 검사 결과는 위 문서 검증에 따른다.
-
-## 다음 단계
-분리 구성과 우선 P1의 사용자 승인 여부·수정사항을 받은 뒤 해당 계획과 상태를 갱신한다. 한 계획의 승인을 전체 승인으로 확대하지 않는다. 승인 전 implement나 전체 workflow를 실행하지 않는다. 보존된 옛 테스트 초안은 새 계획의 검증 증거가 아니며 승인 후 다시 작성해야 한다.
+- 이번 008에서 사용자 직접 확인·물리 키 조작·테두리 드래그·실물 고DPI/다른 모니터 이동은 수행하지 않았다. 실제 window/output 비율은 1:1이고 2배 DPI는 모의 자동 검사다. SDL 입력 큐/API 검사를 자동 UI 입력 성공이나 사용자 확인으로 표시하지 않는다. 앞 계획에서 일반 창 자동 키 입력은 반응을 확인하지 못했고 원인은 미확정이다.
+- 전달된 타깃 리셋은 일반 그림 재그리기와 한 세대 갱신을 허용한다. 장치 리셋·누락 세대는 명시 오류·양쪽 정리로 종료하며 자동 자원 재업로드는 없다. TARGET texture는 복구 로더가 없어 명시 오류로 거부한다.
+- 게임 규모·성능 예산·게임 규칙·실제 HUD/메뉴·공통 UI 영속성은 미정이다. 물리·UI 입력 소비/포커스·자동 레이아웃·reparent·공간 인덱스·정렬 캐시를 추가하지 않았다. 실제 플레이 판단·성능 보증은 하지 않는다.
+- PR 생성·게시·병합은 하지 않았다. 기존 준비 브랜치/작업트리는 보존한다. 필수 기능 미완료는 없으며 위 환경·제품 범위 한계와 구분한다.

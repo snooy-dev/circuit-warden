@@ -5,9 +5,9 @@
 ## 현재 단계
 
 - **게임프레임워크 계획별 구현 승인 / 새 채팅 인계**: 사용자가 2026-11-10 각 계획 구현 시작과 독립 계획의 별도 워크트리 병렬 진행을 지시했다. 이전 구현 보류는 해제됐다.
-- P1은 feature/gameplay-core, P2는 feature/display-management의 독립 워크트리에서 병렬 진행한다. P3가 두 결과를 feature/world-rendering에 통합하고, P4→P5는 같은 브랜치와 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden 워크트리를 선행 완료 후 순차 재사용한다. 동시 쓰기는 금지한다. 기존 P4/P5 준비 브랜치·워크트리는 변경 보존을 위해 남겨 두며 실행 경로로 사용하지 않는다. 사용자가 수정 지시 전달을 승인했고 다섯 채팅 모두에 전달했다.
-- [전체 계획](../specs/008-game-framework/plan.md)의 범위·제외·완료 조건과 Spec Kit 흐름을 따른다. 현재 코드는 아직 미구현이며 계획별 실행 상태는 verification에서 갱신한다.
-- 기준 브랜치는 feature/game-framework이며 엔진·정책 기반과 계획 문서를 보존한다. 독립 작업은 전용 워크트리, 후속 의존 작업은 인계된 공유 워크트리만 수정하고 원본 D:/GitHub/circuit-warden의 미커밋 작업을 건드리지 않는다.
+- P1 객체·규칙과 P2 창·출력은 독립 워크트리에서 구현·검증했고 이 작업트리에 통합했다. P3 월드 렌더링 → P4 Canvas → P5 통합은 같은 feature/world-rendering 브랜치와 작업트리에서 순차 진행한다. 선행 종료 전 다음 쓰기는 금지하며 기존 브랜치·워크트리는 보존한다.
+- [전체 계획](../specs/008-game-framework/plan.md)의 범위·제외·완료 조건과 Spec Kit 흐름을 따른다. P1 객체·규칙은 전용 브랜치 feature/gameplay-core에서 구현·검증했다. P2 검증 커밋도 통합했고 P3 월드 렌더링·P4 독립 UI·P5 통합을 구현·검증했으며 계획별 상태는 verification에서 확인한다.
+- 기준 브랜치는 feature/game-framework이며 엔진·정책 기반과 계획 문서를 보존한다. 새 채팅은 전용 워크트리/feature 브랜치만 수정하고 원본 D:/GitHub/circuit-warden의 미커밋 작업을 건드리지 않는다.
 - 구현 승인과 상세 게임 정책 확정은 구분한다. 현재 기술 제안 기본값으로 진행하며 PR 생성·게시·병합은 별도 승인 대상이다.
 
 - **기본 실행 기반 구현·검증 완료.**
@@ -33,7 +33,11 @@
 
 ## 다음 작업
 
-P1/P2 새 채팅에서 구현·검증·docs 갱신·증분 커밋을 시작한다. 후속 채팅은 선행 채팅을 확인하고 검증된 커밋을 통합한 뒤 담당 구현을 시작한다. [계획별 검증](../specs/008-game-framework/verification.md)을 현재 결과로 갱신한다.
+P4 최종 인계 `0f4bc9f6151e1fac705499d737da01901c6b28f8`와 깨끗한 상태를 확인하고 P5가 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 `feature/world-rendering`을 이어받았다. P1/P2 검증 커밋과 P3/P4 구현은 이미 이 브랜치에 있어 중복 병합하지 않는다. 기존 준비 브랜치/워크트리는 보존한다.
+
+P5 공동 스냅샷·복합 수명 증분 `b11e7a5`와 통합 FrameworkDemo를 구현했다. 전체 자동 검사 85개와 실제 SDL 통합/월드/UI 회귀가 통과했다. 통합 검사는 크기·전체화면·최소화·마우스 좌표·반투명 UI/월드·생성/삭제·카메라·레벨 왕복·종료를 확인했고 출력 PNG도 직접 관찰했다. 사용자 직접 확인·실물 DPI·물리 키 조작은 미확인이다. 게임 규칙·아트·성능 예산은 여전히 미정이며 장치/누락 리셋은 명시 오류·정리다.
+
+008 범위의 필수 미완료는 없다. FR 10개·SC 3개·수용 조건 15개·작업 22개의 코드/검사/문서 대응을 대조했고 converge에서 추가 잔여 작업은 없었다. 최종 구현·검증 커밋은 `7bd9299305717f12243617db8f04e6ac6154e13b`이며 이 커밋과 후속 SHA 인계 문서 커밋을 포함한 같은 브랜치를 유지한다. 검증 근거는 verification에 보존한다. 새 게임 기능은 사용자가 정할 범위에서 진행하며 PR 생성·게시·병합은 하지 않는다. 기본 통합/월드 전용/독립 UI 실행은 [quickstart](../specs/008-game-framework/quickstart.md), 근거·한계는 [verification](../specs/008-game-framework/verification.md)을 참조한다.
 
 ## 개발 방식 조정
 

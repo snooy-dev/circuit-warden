@@ -2,8 +2,8 @@
 
 **현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
-**Branch**: feature/game-framework | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
-**Status**: 구현 승인 — 선행 조건 충족 시 실행
+**Branch**: feature/world-rendering | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
+**Status**: 구현·검증 완료 — P5 동일 작업트리 순차 인계
 **Input**: [전체 계획](../plan.md), [기술 기준](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)
 
 ## Summary
@@ -13,7 +13,7 @@
 Python 3.14 + Pico2D 1.5.1, Windows. 새 의존성·외부 에셋 생성 없음. 게임 검사에는 원본 저장소 .venv/Scripts/python.exe를 명시한다. 성능 목표 수치는 아직 미정이다.
 
 ## Constitution Check
-- [x] 계획 분리 요청과 기존 구현 보류를 구분했다. 이 문서는 구현 승인이 아니다.
+- [x] 최신 사용자 구현 지시와 P3 완료 커밋을 실행 근거로 삼고 상세 게임 설계 확정과 구분한다.
 - [x] 공통 Spec Kit 명세/작업 체계 안에서 범위·제외·선행 계약·검증·docs 영향을 정의했다.
 - [x] 검증된 증분의 docs/verification 갱신·커밋과 PR 승인 경계를 유지한다.
 
@@ -47,4 +47,4 @@ docs/architecture.md의 이 계획 담당 계약과 구현 상태, docs/progress
 ## Tasks & Review Decisions
 작업은 [공통 tasks.md](../tasks.md)의 T014~T017가 단일 기준이다. 여기에서 별도 중복 체크리스트를 운영하지 않는다. 승인된 범위의 검증된 작은 증분마다 관련 docs·검증과 함께 커밋하며 PR은 별도 승인 대상이다.
 
-미결: UI 제작 기준 크기·허용 화면비/최소 크기와 root anchor 제약을 검토한다. 실제 메뉴/게임 HUD 디자인은 결정하지 않는다.
+기술 기본값: Canvas 생성자가 유한한 양수 reference_size를 받는다. 양의 viewport에는 화면비 제한을 두지 않고 최소화/0 크기는 변환·그리기를 생략한다. 루트 anchor는 각 축 0~1, 자식 anchor는 (0,0)만 허용한다. 최소 창 크기·실제 메뉴/게임 HUD 디자인은 결정하지 않는다. P3 완료 뒤 같은 cbb2 작업트리/feature/world-rendering에서 실행하며 P4 종료 후 P5가 이어간다. 준비 브랜치 feature/canvas-ui는 보존하며 전체 병합하지 않았다.
