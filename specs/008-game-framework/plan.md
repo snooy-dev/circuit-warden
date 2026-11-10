@@ -60,6 +60,11 @@ P2는 출력/리셋 정보를 제공하고 P3가 자신의 그리기 자원을 �
 
 사용자 수정 지시: 계획 번호를 브랜치명에 쓰지 않고 기능명으로 표현한다. P1 feature/gameplay-core와 P2 feature/display-management만 별도 워크트리에서 병렬 실행한다. P3는 feature/world-rendering의 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden에 두 결과를 통합한다. P4와 P5는 이 같은 브랜치/워크트리를 순차 인계받으며 별도 분기·중복 병합을 하지 않는다. 선행 완료·깨끗한 커밋 확인 전 공유 쓰기는 금지한다. 기존 feature/canvas-ui와 feature/game-screen-integration의 준비 커밋/미커밋 변경은 보존하고 필요한 부분만 인계한다. 현재 해당 워크트리 삭제·아카이브는 하지 않았다.
 
-## Package Refactoring Plan
+## Package Refactoring Plan (완료한 1차 분리)
 2026-11-11 요청에 따라 기존 단일 파일 방침을 대체한다. game_framework.py를 같은 이름의 패키지로 옮긴다. core.py는 객체·모드·레벨, transforms.py는 두 좌표 변환, ui.py는 UIElement·Canvas, rendering.py는 RenderItem·Renderer, drawing.py는 SDL 그리기, scene.py는 LevelScene, _validation.py는 공유 값 검사를 담당한다. __init__.py는 기존 공개 12개 이름만 재노출한다. 내부에서는 패키지 루트를 거치지 않고 담당 모듈을 직접 import해 순환을 피한다.
-메서드/함수 본문은 그대로 옮기며 추상화·새 의존성은 추가하지 않는다. engine.py, main.py, framework_demo.py와 기존 테스트의 공개 import는 유지한다. AST 대조로 구현 본문 보존을 확인하고 전체 자동 검사 및 기존 integration_smoke.py를 실행한다. architecture/progress와 최신 verification을 갱신한다. 원본 작업 폴더·다른 브랜치·아트는 변경하지 않는다.
+메서드/함수 본문은 그대로 옮기며 추상화·새 의존성은 추가하지 않는다. 당시 engine.py 배치를 유지했다. 현재 엔진/예제/검사 위치는 아래 후속 계획이 대체하며 공개 import와 실행 명령은 유지한다. AST 대조로 구현 본문 보존을 확인하고 전체 자동 검사 및 기존 integration_smoke.py를 실행한다. architecture/progress와 최신 verification을 갱신한다. 원본 작업 폴더·다른 브랜치·아트는 변경하지 않는다.
+
+## Engine Boundary Refactoring Plan
+승인된 후속 범위로 engine.py를 engine/{loop,scene,display,events}.py와 engine/rendering/{renderer,drawing}.py로 분리한다. 창 조회/모드 관련 메서드는 내부 Display 클래스로 이동하고 Engine은 이를 사용한다. engine/__init__.py는 Engine·Scene·기존 상수·poll_events를 재노출한다. game_framework/world.py와 level_scene.py가 본 구현이며 core.py/scene.py는 직전 import 경로 호환을 유지한다. 게임 쪽 drawing은 값 검사·좌표 투영을 수행하고 엔진에는 출력 사각형·texture만 전달한다. game_framework/rendering.py는 RenderItem·소유 객체 수집·트리 순회·가드를 유지하고 엔진 실행 함수에 정렬·그리기를 위임한다. 엔진은 게임 타입을 import하지 않는다.
+예제는 demos/check.py와 demos/framework.py로 묶는다. 월드/UI/통합은 같은 검사용 Block·패널을 공유하므로 파일을 추가로 잘게 나누지 않는다. main.py/framework_demo.py는 실행 호환 진입점이다. tests/unit·integration은 __init__.py로 unittest 탐색을 유지하고 창 smoke는 tests/smoke로 옮겨 프로젝트 경로 계산과 문서 명령을 수정한다. 기존 모의 패치 위치는 실제 구현 모듈로 맞춘다.
+analyze: FR-012→T027/T028, FR-013→T029, SC-004→T030, SC-DOC→T031로 대응한다. 게임 기능·새 의존성·다른 작업트리·PR은 범위 밖이다. game_framework 수명/수집 책임과 engine 실행 책임을 직접 분리하며 일반 리소스/렌더 관리자 계층은 추가하지 않는다.

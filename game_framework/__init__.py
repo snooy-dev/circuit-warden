@@ -1,9 +1,9 @@
 """게임프레임워크의 공개 API."""
 
-from .core import GameMode, GameObject, Level
+from .world import GameMode, GameObject, Level
 from .drawing import draw_image, draw_rect
 from .rendering import RenderItem, Renderer
-from .scene import LevelScene
+from .level_scene import LevelScene
 from .transforms import UITransform, WorldTransform
 from .ui import Canvas, UIElement
 

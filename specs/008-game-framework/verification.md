@@ -1,21 +1,27 @@
 # 검증 상태: 게임프레임워크
 
-## 최신 검증: 패키지 구조 정리 (2026-11-11)
+## 최신 검증: 엔진/게임 API 경계 정리 (2026-11-11)
 
-사용자 요청 범위: feature/game-framework에서 단일 모듈과 폴더 구조 정리. 상태: FR-011/SC-003 및 T023~T026 완료. P1~P5 구현은 아래 기존 증거를 보존한다. 이번 실행 폴더는 C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden이다.
+사용자 승인 범위: game-facing API를 game_framework에 두고 내부 실행을 engine 패키지로 분리하며 demos·tests/unit·integration·smoke를 분류한다. 상태: FR-011~013/SC-003/004 및 T023~T031 완료. 실행 폴더는 C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden, 브랜치는 feature/game-framework다. 다른 작업트리·PR·병합은 수정 범위가 아니다.
 
 | 검사 | 실제 명령·방법 | 결과 |
 |---|---|---|
-| 통합 기준 회귀 | D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q | 분리 전 85개 통과 |
-| 구현 본문 보존 | Python ast.parse/ast.dump로 분리 전후 모든 최상위 클래스·함수 대응 비교 | 19개 정의 동일, 누락 없음 |
-| 분리 후 회귀/API | 같은 unittest 명령 | 87개 통과, 공개 이름 12개 동일 객체 및 7개 하위 모듈 새 프로세스 import 포함 |
-| 실제 SDL 통합 | D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/integration_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c61f-5a75-7843-b6ce-610dc3aecc4c/framework-refactor | 종료 0, snapshots/order/alpha/input/camera/resize/fullscreen/minimize/roundtrip/escape PASS |
-| 실제 화면 관찰 | 위 산출물의 p5-initial.png·p5-resized.png 열기 | 월드/UI 겹침·크기 변경 배치 관찰 |
-| 문서·diff | 변경 Markdown의 로컬 링크 검사, git diff --check | 통과 |
+| 사전 작업·체크리스트 | .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks, requirements.md 읽기 전용 확인 | 필수 문서 확인, 11/11 완료, extensions.yml 없음 |
+| 전체 회귀/API/경계 | D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q | 90개 통과. 기존 87개와 엔진 독립/중립 실행 2개·지연 수집 실패 1개 |
+| 엔진 구현 본문 | git show 595df01:engine.py와 현재 각 담당 모듈의 AST 함수/메서드 본문 비교 | 기존 모든 함수·메서드 본문 보존. 위치·클래스 기반·import만 변경 |
+| 실제 SDL 통합 | 같은 Python으로 tests/smoke/integration_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c61f-5a75-7843-b6ce-610dc3aecc4c/framework-boundaries | 독점 최종 실행 종료 0, 16단계 integrated/snapshots/order/alpha/input/camera/resize/fullscreen/minimize/roundtrip/escape PASS |
+| 실제 화면 관찰 | 위 출력의 p5-initial.png·p5-resized.png 열기 | 월드/UI source-over 겹침·크기 변경 배치와 오른쪽 기준점 관찰 |
+| 정적 문서 검사 | 변경 Markdown의 로컬 링크·작업 ID·충돌 표식 검사, git diff --check | 통과 |
 
-analyze: FR-011→T023/T024, SC-003→T025, 문서 완료 조건→T026 대응 확인. 독립 읽기 전용 코드 검토에서 순환 import·patch 경로 차단 문제 없음. converge: 책임별 파일·루트 API·본문 보존·검증·현재 docs를 대조해 이번 범위 잔여 작업 없음. 새 게임 규칙·엔진/데모 재설계·의존성 추가 없음.
+엔진 패키지 검사는 AST import와 새 Python 프로세스로 engine이 game_framework/demos를 import하지 않음을 확인한다. execute는 일반 tuple 목록만으로 안정 정렬·입력 순서·오류 전파를 검사한다. 기존 Renderer 검사는 두 패스·교차 변경/재진입 거부·그리기 실패 정리를 유지하며 새 generator 검사는 지연 수집 도중 실패에도 잠금과 임시 목록이 풀리는 것을 확인한다. SDL 도형/texture 알파와 실패 시 공유 상태 복원은 tests/integration/test_drawing.py에서 실제 소프트웨어 렌더러로 검사한다.
 
-architecture/progress와 기존 spec/plan/tasks를 갱신했다. 초기 하위 계획의 game_framework.py 표기는 당시 구현 단위를 가리키며 현재 위치는 architecture의 패키지 표를 따른다. 게임 설계·아트·실행 명령은 변경하지 않았다. 독립 월드/UI smoke는 이번에 재실행하지 않았고 전체 자동 회귀와 복합 SDL smoke로 분리 영향을 검사했다. 사용자 직접 조작·실물 DPI는 미확인이다. 클래스 __module__은 새 경로이며 pickle 영속 호환성은 보증하지 않는다.
+최초 smoke 호출은 출력 폴더를 만들지 않아 실행 전 assert로 중단했고 지정 폴더 생성 후 진행했다. 첫 창 실행은 전체화면 복귀에서 SDL_RenderReadPixels 실패, 동일 코드 재실행과 다른 SDL 창 없이 실행한 최종 검사는 모두 통과했다. 당시 다른 브랜치 SDL 검사가 겹쳤을 가능성이 있으나 원인은 확정하지 않는다. 실패를 숨기거나 통과시키도록 검사/런타임을 완화하지 않았다.
+
+analyze: FR-012→T027/T028, FR-013→T029, SC-004→T030, SC-DOC→T031 대응. converge: 승인된 소유/실행 경계·게임 타입 의존 금지·공개 import/실행 명령·지연 수집/가드·오류 정리·docs를 대조했고 필수 잔여 작업 없음. world/level_scene가 본 구현이며 core/scene는 직전 하위 모듈 import 호환이다. SDL은 engine/rendering에서만 직접 실행하고 게임 drawing은 좌표/값 검사를 제공한다. 월드/UI/통합 예제는 공통 검사 객체 때문에 demos/framework.py에 함께 두었다. 새 추상 관리자·게임 기능·의존성을 추가하지 않았다.
+
+README·docs README/architecture/progress·008 spec/plan/tasks/quickstart를 현재 구조·검사와 동기화했다. 초기 하위 계획의 단일 파일 경로는 당시 단위를 가리키며 현재 위치는 architecture 표가 기준이다. 아래 이전 검증 경로는 당시 실제 실행 근거다. 게임 설계·아트·의존성·도구 환경은 영향 없다.
+
+독립 display/world/UI 실제 창 smoke는 이번 증분에서 재실행하지 않았다. 전체 자동 검사와 통합 실제 창 검사로 변경 경계를 확인했다. 사용자 직접 키·실물 DPI/다른 모니터는 미확인이다. Python __module__ 경로 변경으로 기존 pickle 저장물 호환을 보증하지 않는다(영속 저장 기능 없음). PR 생성·게시·병합은 하지 않았다.
 
 ## P1~P5 검증 기반
 

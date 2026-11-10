@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 from engine import Engine
-from framework_demo import WorldDemo, UIDemo, FrameworkDemo
+from demos.framework import WorldDemo, UIDemo, FrameworkDemo
 
 
 class FrameworkDemoTests(unittest.TestCase):
@@ -15,7 +15,7 @@ class FrameworkDemoTests(unittest.TestCase):
         self.app.viewport = (0, 0, 800, 600)
         patch.object(pico, 'window', object(), create=True).start()
         patch.object(pico, 'SDL_SetWindowTitle').start()
-        self.draw = patch('framework_demo.draw_rect').start()
+        self.draw = patch('demos.framework.draw_rect').start()
         self.addCleanup(patch.stopall)
         self.scene = WorldDemo()
         self.scene.enter(self.app)
@@ -90,7 +90,7 @@ class UIDemoTests(unittest.TestCase):
         self.app.viewport = (0, 0, 1600, 1200)
         patch.object(pico, 'window', object(), create=True).start()
         patch.object(pico, 'SDL_SetWindowTitle').start()
-        self.draw = patch('framework_demo.draw_rect').start()
+        self.draw = patch('demos.framework.draw_rect').start()
         self.addCleanup(patch.stopall)
         self.scene = UIDemo()
         self.scene.enter(self.app)
@@ -170,7 +170,7 @@ class IntegratedDemoTests(unittest.TestCase):
         self.app.viewport = (0, 0, 800, 600)
         patch.object(pico, 'window', object(), create=True).start()
         patch.object(pico, 'SDL_SetWindowTitle').start()
-        self.draw = patch('framework_demo.draw_rect').start()
+        self.draw = patch('demos.framework.draw_rect').start()
         self.addCleanup(patch.stopall)
         self.scene = FrameworkDemo()
         self.scene.enter(self.app)

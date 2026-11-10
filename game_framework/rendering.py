@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from engine.rendering.renderer import execute
+
 from ._validation import _bounds, _opacity
 
 
@@ -67,9 +69,8 @@ class Renderer:
                             (item.bounds is None or _intersects(
                                 item.bounds, transform.bounds, 1 / transform.scale))):
                         self.world_items.append(item)
-            self.world_items.sort(key=lambda item: item.draw_order)
-            for item in self.world_items:
-                item.drawable(transform, item.opacity)
+            execute(self.world_items, lambda item: item.drawable(transform, item.opacity),
+                    key=lambda item: item.draw_order)
         finally:
             self.world_items.clear()
             snapshot = ()
@@ -107,8 +108,7 @@ class Renderer:
                     self.ui_items.append((element, origin, element.opacity))
                 for child in reversed(sorted(element.children, key=lambda n: n.draw_order)):
                     stack.append((child, origin))
-            for element, origin, opacity in self.ui_items:
-                element.draw(origin, transform, opacity)
+            execute(self.ui_items, lambda item: item[0].draw(item[1], transform, item[2]))
         finally:
             stack.clear()
             self.ui_items.clear()

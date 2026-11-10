@@ -4,11 +4,10 @@
 
 ## 현재 단계
 
-- **게임프레임워크 패키지 정리 완료**: 2026-11-11 사용자 요청에 따라 feature/game-framework 워크트리에서 후속 feature/world-rendering의 P1~P5 완성 결과를 통합하고 책임별 파일로 분리했다.
-- 작업 폴더: C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden. 다른 워크트리와 원본의 미커밋 작업은 보존했다.
-- 공개 API 12개 및 기존 동작 유지. 클래스·함수 19개 본문 AST 일치, 자동 87개와 실제 SDL 통합 검사 통과. 초기/크기 변경 PNG를 관찰했다. 실물 DPI·물리 키·사용자 직접 확인은 이번에 수행하지 않았다.
-- 명세 FR-011/SC-003과 Phase 7 완료 근거는 [검증](../specs/008-game-framework/verification.md), 현재 구조는 [기술 구조](architecture.md#코드-폴더-구조)를 따른다.
-- 기본 엔진 및 P1~P5 구현 상태를 유지한다. 상세 게임 정책 확정·게임 아트 통합·PR 승인은 이번 범위가 아니다.
+- **엔진/게임 API 책임 경계 정리 완료**: 2026-11-11 사용자 승인 범위로 game_framework 공개 조작 API와 engine 내부 실행을 분리했다. 기존 기능·공개 import·실행 명령을 유지하고 demos 및 tests/unit·integration·smoke를 분류했다.
+- 작업 폴더: C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden, feature/game-framework. 다른 작업트리·미커밋 변경은 건드리지 않았다.
+- 전체 자동 90개 통과. 지연 수집·수명 가드·실패 정리·정렬 및 engine→game_framework 의존 금지를 확인했다. 실제 SDL 통합 smoke와 초기/크기 변경 PNG 관찰 결과는 [검증](../specs/008-game-framework/verification.md)을 따른다. 실물 DPI·물리 키·사용자 직접 확인은 이번에 수행하지 않았다.
+- 현재 구조는 [기술 구조](architecture.md#코드-폴더-구조), 요구사항 FR-012/013·SC-004와 Phase 8은 008에 반영했다. 게임 정책·아트 통합·PR은 이번 범위 밖이다.
 
 ## 확정 사항
 

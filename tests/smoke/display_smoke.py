@@ -5,11 +5,11 @@ from ctypes import byref
 from pathlib import Path
 from time import monotonic
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from main import CheckScene
+from demos.check import CheckScene
 
 
 class DisplaySmoke(CheckScene):

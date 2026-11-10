@@ -10,24 +10,37 @@
 
 ## 코드 폴더 구조
 
-2026-11-11 구조 정리로 단일 game_framework.py를 같은 이름의 패키지로 대체했다. 기존 `from game_framework import ...` 공개 API와 동작은 유지한다.
+2026-11-11 승인된 책임 경계에 따라 게임의 조작 API는 game_framework, 창·루프·SDL 실행은 engine 패키지에 둔다. engine은 game_framework와 demos를 import하지 않는다. 기존 `from engine import Engine, Scene`과 `from game_framework import ...` 공개 이름·동작은 유지한다.
 
 | 경로 | 책임 |
 |---|---|
+| `engine/__init__.py` | Engine·Scene·기존 상수·poll_events 공개 import |
+| `engine/loop.py` | Engine 실행·장면 전환·종료·시간 제한 |
+| `engine/scene.py` | Scene 콜백 계약 |
+| `engine/display.py` | 창·출력 조회·전체화면·입력 좌표 변환. Display는 Engine 상태를 사용하는 내부 기반 클래스 |
+| `engine/events.py` | 원본 SDL 이벤트 보존과 입력 수집 |
+| `engine/rendering/renderer.py` | 수집된 중립 목록의 안정 정렬·그리기 실행 |
+| `engine/rendering/drawing.py` | 출력 픽셀/texture SDL 그리기와 공유 상태 복원 |
 | `game_framework/__init__.py` | 기존 공개 API 12개 재노출 |
-| `game_framework/core.py` | GameObject·GameMode·Level 수명과 전달 |
-| `game_framework/transforms.py` | WorldTransform·UITransform 좌표 변환 |
+| `game_framework/world.py` | GameObject·GameMode·Level 수명과 전달 |
+| `game_framework/transforms.py` | WorldTransform·UITransform 게임 좌표 변환 |
 | `game_framework/ui.py` | UIElement·Canvas 트리 소유와 업데이트 |
-| `game_framework/rendering.py` | RenderItem·Renderer 수집·정렬·두 패스 |
-| `game_framework/drawing.py` | Pico2D/SDL 그리기와 상태 복원 |
-| `game_framework/scene.py` | LevelScene의 엔진·레벨·Canvas 연결 |
-| `game_framework/_validation.py` | 내부 공유 값 검사 |
+| `game_framework/rendering.py` | RenderItem·Renderer의 소유 모델 수집·가드·월드/UI 두 패스 |
+| `game_framework/drawing.py` | 게임용 draw_rect/draw_image 값 검사·좌표 투영 후 엔진 호출 |
+| `game_framework/level_scene.py` | LevelScene의 엔진·레벨·Canvas 연결 |
+| `game_framework/_validation.py` | 게임 API 공유 값 검사 |
+| `game_framework/core.py`, `scene.py` | 직전 패키지 import 경로의 재노출 호환 |
+| `demos/check.py`, `demos/framework.py` | 기본 검사·월드·UI·통합 검사 예제 |
+| `main.py`, `framework_demo.py` | 기존 실행 명령을 유지하는 얇은 진입점 |
+| `tests/unit/`, `tests/integration/`, `tests/smoke/` | 모의 단위 검사·조합/실제 SDL 소프트웨어 검사·별도 실제 창 검사 |
 
-내부 모듈은 패키지 루트를 import하지 않는다. scene은 rendering/transforms/ui, ui는 transforms/_validation, rendering과 drawing은 _validation에 의존한다. core에는 SDL 의존이 없다. 다만 패키지 루트는 기존처럼 Pico2D를 로드한다. engine.py와 두 실행 진입점 main.py/framework_demo.py, tests/ 배치는 유지한다. 새 추상화·게임 동작은 추가하지 않았다.
+게임 Renderer는 지연 render_items 순회·UI 트리 수집·수명 잠금·실패 시 목록 해제를 소유한다. engine의 execute는 게임 타입 없이 준비된 목록과 그리기 콜백을 받으며 참조를 저장하지 않는다. drawing API는 검증된 출력 사각형/texture만 SDL backend로 전달한다. 내부 모듈은 담당 모듈을 직접 import하고 패키지 루트를 거치지 않는다. world에는 SDL 의존이 없지만 공개 루트 import는 기존처럼 Pico2D를 로드한다.
+
+월드/UI/통합 예제는 작은 검사용 Block·패널을 공유하므로 demos/framework.py에 묶어 중복을 피한다. 새로운 게임 동작·의존성·관리자 계층은 추가하지 않았다.
 
 ## 실행과 장면 계약
 
-- engine.py의 Engine.run(initial_scene)이 창 수명과 루프를 소유한다. main.py는 실행 검사 화면이다. Pico2D가 전역 창 하나를 사용하므로 동시 엔진 실행은 지원하지 않는다.
+- engine/loop.py의 Engine.run(initial_scene)이 창 수명과 루프를 소유한다. main.py는 demos/check.py 검사 화면의 진입점이다. Pico2D가 전역 창 하나를 사용하므로 동시 엔진 실행은 지원하지 않는다.
 - Scene의 enter(engine), handle_event(event), update(dt), draw(), exit()가 연결 지점이다. 기본 메서드는 아무 동작도 하지 않는다. 필요한 메서드만 재정의한다.
 - 활성 장면 하나만 실행한다. 입력 묶음 → update → clear/draw/present → 전환 → 남은 시간 대기 순서다.
 - Engine.change_scene(scene)은 요청만 저장한다. 같은 프레임의 마지막 요청을 프레임 끝에 적용하고 이전 exit → 새 enter 순서로 호출한다. 새 장면의 첫 갱신은 다음 프레임이다. 전환 콜백이 만든 후속 요청은 다음 경계까지 보류한다.
@@ -113,7 +126,7 @@ UI는 루트 목록에 여러 트리를 담는 형태다. 별도 UI ID 조회 �
 
 ### Level 생성·삭제·순회
 
-P1 구현: `game_framework/core.py`의 GameObject·Level·GameMode. `Level(mode=None)`은 독립 기본 모드를 만들거나 전달받은 모드를 해당 Level 수명 내내 연결하며 다른 Level에서 공유·재사용하지 않는다. `mode.level`, `obj.level`, `obj.id`는 읽기 전용이다. `Level.objects`는 등록순 tuple, `Level.get(id)`는 현재 객체 또는 None을 돌려준다.
+P1 구현: `game_framework/world.py`의 GameObject·Level·GameMode. `Level(mode=None)`은 독립 기본 모드를 만들거나 전달받은 모드를 해당 Level 수명 내내 연결하며 다른 Level에서 공유·재사용하지 않는다. `mode.level`, `obj.level`, `obj.id`는 읽기 전용이다. `Level.objects`는 등록순 tuple, `Level.get(id)`는 현재 객체 또는 None을 돌려준다.
 
 `Level.on_open()`에서 매번 새 객체로 초기 배치를 만들고 이어 `GameMode.on_start()`를 호출한다. 열기 실패 시 `on_end()`도 시도해 부분 모드 자원을 정리한다. 닫기는 반복해도 무해하며 다시 열 수 있지만 ID는 초기화하지 않는다. 닫힌 상태의 입력/update는 무시한다. 전달 중 닫기는 이후 객체 호출을 중단하며 같은 전달 안의 재열기는 거부한다. 정리 콜백 중 등록과 재열기도 거부한다. 단일 오류는 그대로 전달하고 복수 초기화/정리 오류는 BaseExceptionGroup으로 보존한다. 위치·게임 상태는 구체 객체가 보유하며 빈 렌더 필드는 추가하지 않았다.
 
@@ -203,7 +216,7 @@ UI는 화면 전체를 사용하고 남는 공간을 논리 영역의 확장으�
 
 Engine은 창 크기와 SDL renderer 실제 출력 크기를 구분해 조회한다. 프레임 입력 처리 전에 출력 상태를 확인하고 크기/전체화면/DPI 변경 시 갱신한다. 프레임워크가 요청한 화면 모드 변경은 프레임 경계에 적용하며 입력·그리기 사이 외부 크기 변경이 확인되면 그 프레임 표시를 건너뛰고 다음 프레임에서 일치시킨다. 최소화/0 크기는 나눗셈·입력 역변환·그리기를 생략하되 종료 이벤트 처리는 계속한다. 월드 상태 유지·업데이트를 임의 중지하는 게임 규칙은 추가하지 않는다.
 
-첫 전체화면 정책은 데스크톱 해상도를 사용하는 보더리스 전체화면을 제안한다. 독점 해상도 변경은 넣지 않는다. Engine이 창 모드·크기·변경/복귀와 실제 출력 조회를 담당하고 Renderer는 viewport만 소비한다. 기존 Scene 콜백 시그니처는 유지하지만 engine.py의 고정 크기 사용과 출력 상태 관리는 수정이 필요하다.
+첫 전체화면 정책은 데스크톱 해상도를 사용하는 보더리스 전체화면을 제안한다. 독점 해상도 변경은 넣지 않는다. Engine이 창 모드·크기·변경/복귀와 실제 출력 조회를 담당하고 Renderer는 viewport만 소비한다. Scene 콜백 시그니처를 유지하며 engine/display.py가 실제 출력 상태와 모드 변경을 처리한다.
 
 Pico2D get_events는 창 크기/렌더 리셋 이벤트를 전달하지 않으며 마우스 x/y는 SDL 좌상단 창 좌표를 그대로 반환한다. canvas_height를 사용하는 y 뒤집기는 그리기 함수에서 수행한다. 따라서 기존 코드 그대로 지원된다고 간주하지 않는다. 프로젝트 엔진의 이벤트 처리에서 필요한 SDL 창/렌더 이벤트를 보존하고, Pico2D 그리기 좌표 변환의 높이를 실제 출력과 맞추거나 프로젝트 그리기 경계에서 직접 변환해야 한다. resize_canvas는 SDL_SetWindowSize도 호출하므로 물리 픽셀 크기를 매번 전달해 동기화하지 않는다. 출력 y 뒤집기는 백엔드 경계에서 정확히 한 번만 수행한다. UI/월드 콜백에는 단순 이동량 대신 해당 좌표 변환을 전달한다. 렌더 리셋 시 영향받은 자원 복구와 오류 처리를 검증한다. P2에서 이 백엔드 연결을 구현했다. 아래 P2 실행 계약을 따른다.
 

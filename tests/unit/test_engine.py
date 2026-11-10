@@ -2,7 +2,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-import engine
+import engine.loop as engine
 
 
 def event(kind, **values):
@@ -29,6 +29,7 @@ class EngineTests(unittest.TestCase):
         self.pico.update_canvas.side_effect = lambda: self.log.append('present')
         self.addCleanup(patch.stopall)
         patch.object(engine, 'pico', self.pico).start()
+        patch('engine.display.pico', self.pico).start()
         self.clock = patch.object(engine, 'perf_counter', return_value=0.0).start()
         self.sleep = patch.object(engine, 'sleep').start()
         self.app = engine.Engine()

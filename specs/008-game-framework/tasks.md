@@ -58,3 +58,10 @@ P1/P2의 독립 읽기 전용 검토는 병행할 수 있다. 실제 동시 구�
 - [X] T024 game_framework 패키지로 구현 본문을 보존해 이동하고 공개 API 및 개별 모듈 import 검사를 추가한다.
 - [X] T025 전체 자동/SDL 통합 검사와 AST 본문 보존을 검사한다.
 - [X] T026 architecture/progress/verification을 갱신하고 링크·diff·converge 대조 후 커밋한다.
+
+## Phase 8: Engine and Game-facing Boundaries
+- [X] T027 승인 경계·호출자·검사/문서 영향을 spec/plan에 반영하고 checklist·의존 관계를 확인한다.
+- [X] T028 engine 패키지와 world/level_scene를 분리하고 drawing API·소유 수집/가드·중립 실행을 연결한다 (FR-012).
+- [X] T029 demos와 tests/unit·integration·smoke를 분류하고 기존 진입점/공개 import·검사 패치를 맞춘다 (FR-013).
+- [X] T030 중립 실행·일방 의존 검사, 전체 unittest, 실제 SDL 통합 smoke를 실행하고 실패를 해결한다 (SC-004).
+- [X] T031 architecture/progress/README/quickstart/verification을 현재 구조와 실제 근거로 갱신하고 링크·diff·converge 대조 후 커밋한다.

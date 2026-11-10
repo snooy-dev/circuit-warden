@@ -89,6 +89,12 @@ Python + Pico2D와 기존 게임 환경 유지. 신규 의존성·외부 전송�
 
 ## Framework Package Refactoring
 2026-11-11 사용자가 feature/game-framework 워크트리에서 비대해진 프레임워크 모듈과 폴더 구조 정리를 요청했다. 후속 구현 브랜치의 검증된 결과를 이 브랜치에 통합해 작업한다.
-- **FR-011**: 객체 수명, 좌표 변환, UI 소유, 렌더 순서, SDL 그리기, 장면 연결을 game_framework 패키지의 책임별 모듈로 분리한다. 기존 공개 이름·생성자·동작·오류 처리·루트 import를 유지한다.
+- **FR-011**: 객체 수명, 좌표 변환, UI 소유, 렌더 수집, 게임용 그리기 API, 장면 연결을 game_framework 패키지의 책임별 모듈로 분리한다. SDL 실행은 후속 FR-012의 engine 경계를 따른다. 기존 공개 이름·생성자·동작·오류 처리·루트 import를 유지한다.
 - **SC-003**: 기존 85개 검사와 공개 API/개별 모듈 import 검사가 통과하고, 실제 SDL 통합 검사에서 기존 동작이 유지된다.
-추가 게임 기능·의존성·엔진/데모 재설계는 제외한다. 클래스의 Python __module__ 경로는 바뀌며 기존 pickle 저장물의 호환성은 이번 범위에 없다(영속 저장 기능 없음).
+추가 게임 기능·의존성은 제외한다. 후속 승인 범위는 아래 책임 경계 정리를 따른다. 클래스의 Python __module__ 경로는 바뀌며 기존 pickle 저장물의 호환성은 이번 범위에 없다(영속 저장 기능 없음).
+
+## Engine and Game-facing Boundaries
+2026-11-11 사용자가 game-facing API와 엔진 내부 책임 경계를 승인하고 기존 작업트리에서 정리를 요청했다.
+- **FR-012**: game_framework는 world(GameObject·GameMode·Level), ui(Canvas·UIElement), transforms, RenderItem·drawing API, level_scene을 제공한다. engine 패키지는 loop·scene·display·events와 중립 렌더 실행·SDL 그리기를 담당하며 game_framework를 import하지 않는다. 게임 소유·수집·가드는 game_framework에 남긴다.
+- **FR-013**: 검사 예제는 demos, 테스트는 unit·integration·smoke로 분류하고 기존 루트 실행 명령과 공개 import를 유지한다. 수집 지연 평가·두 패스·재진입 방지·오류 시 정리를 보존한다.
+- **SC-004**: 패키지 의존 방향·공개 API·중립 렌더 실행 검사와 전체 unittest 탐색·실제 SDL 통합 smoke가 통과한다.
