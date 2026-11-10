@@ -166,13 +166,18 @@ class Level:
         snapshot = self.objects
         self._dispatching = True
         try:
-            getattr(self.mode, mode_method)(value)
-            for obj in snapshot:
-                if obj.level is self:
-                    getattr(obj, object_method)(value)
+            self._dispatch_snapshot(mode_method, object_method, value, snapshot)
         finally:
             snapshot = ()
             self._dispatching = False
+
+    def _dispatch_snapshot(self, mode_method, object_method, value, snapshot):
+        if self._state != 'open':
+            return
+        getattr(self.mode, mode_method)(value)
+        for obj in snapshot:
+            if obj.level is self:
+                getattr(obj, object_method)(value)
 
     def close(self):
         self._check_rendering()
@@ -496,12 +501,17 @@ class Canvas:
         snapshot = _ui_snapshot(self._roots)
         self._dispatching = True
         try:
-            for element in snapshot:
-                if element.canvas is self:
-                    element.update(dt)
+            self._update_snapshot(dt, snapshot)
         finally:
             snapshot = ()
             self._dispatching = False
+
+    def _update_snapshot(self, dt, snapshot):
+        if self._closed:
+            return
+        for element in snapshot:
+            if element.canvas is self:
+                element.update(dt)
 
     def close(self):
         self._check_rendering()
@@ -519,7 +529,26 @@ class Renderer:
         self.ui_items = []
         self._drawing = False
 
-    def draw(self, level, transform):
+    def draw(self, level, transform, canvas=None):
+        if canvas is None:
+            return self._draw_world(level, transform)
+        if (self._drawing or level._rendering or level._dispatching or
+                canvas._rendering or canvas._dispatching):
+            raise RuntimeError('렌더링·전달에 재진입할 수 없습니다.')
+        ui_transform = canvas.transform(transform.viewport)
+        try:
+            # 다른 패스의 소유 API도 수집부터 그리기 끝까지 잠근다.
+            canvas._rendering = True
+            self._draw_world(level, transform)
+            canvas._rendering = False
+            level._rendering = True
+            self.draw_ui(canvas, ui_transform)
+        finally:
+            self.world_items.clear()
+            self.ui_items.clear()
+            level._rendering = canvas._rendering = False
+
+    def _draw_world(self, level, transform):
         if self._drawing or level._rendering or level._dispatching:
             raise RuntimeError('렌더링·전달에 재진입할 수 없습니다.')
         if not transform.valid or level._state != 'open':
@@ -642,9 +671,9 @@ def draw_image(image, transform, bounds, opacity=1):
 
 
 class LevelScene(Scene):
-    def __init__(self, level, *, camera_center=(0, 0), view_height=10):
+    def __init__(self, level, canvas=None, *, camera_center=(0, 0), view_height=10):
         camera = WorldTransform((0, 0, 0, 0), camera_center, view_height)
-        self.level = level
+        self.level, self.canvas = level, canvas
         self.camera_center, self.view_height = camera.center, camera.view_height
         self.renderer = Renderer()
         self.engine = None
@@ -655,14 +684,39 @@ class LevelScene(Scene):
         viewport = self.engine.viewport if self.engine.output_valid else (0, 0, 0, 0)
         return WorldTransform(viewport, self.camera_center, self.view_height)
 
+    @property
+    def ui_transform(self):
+        if self.canvas is None:
+            return None
+        viewport = self.engine.viewport if self.engine.output_valid else (0, 0, 0, 0)
+        return self.canvas.transform(viewport)
+
     def enter(self, engine):
+        if self.engine is not None or (self.canvas is not None and self.canvas._closed):
+            raise RuntimeError('이미 진입했거나 닫힌 Canvas를 가진 장면입니다.')
         self.engine = engine
         self._reset_generation = engine.reset_generation
-        self.level.open()
+        try:
+            self.level.open()
+            if self.canvas is not None:
+                self.ui_transform
+        except BaseException as error:
+            try:
+                self.exit()
+            except BaseException as cleanup_error:
+                raise BaseExceptionGroup('장면 초기화와 정리 실패',
+                                         [error, cleanup_error]) from None
+            raise
 
     def event_to_world(self, event):
         point = self.engine.event_to_output(event)
         return None if point is None else self.transform.inverse(*point)
+
+    def event_to_ui(self, event):
+        if self.canvas is None:
+            return None
+        point = self.engine.event_to_output(event)
+        return None if point is None else self.ui_transform.inverse(*point)
 
     def handle_event(self, event):
         if event.type == pico.SDL_RENDER_DEVICE_RESET:
@@ -672,17 +726,46 @@ class LevelScene(Scene):
         self.level.handle_event(event)
 
     def update(self, dt):
-        self.level.update(dt)
+        if self.canvas is None:
+            return self.level.update(dt)
+        self.level._check_rendering()
+        self.canvas._check_rendering()
+        if self.level._dispatching or self.canvas._dispatching:
+            raise RuntimeError('입력/업데이트 전달에 재진입할 수 없습니다.')
+        self.level._dispatching = self.canvas._dispatching = True
+        world_snapshot = ui_snapshot = ()
+        try:
+            world_snapshot = self.level.objects
+            ui_snapshot = _ui_snapshot(self.canvas._roots)
+            self.level._dispatch_snapshot('on_update', 'update', dt, world_snapshot)
+            self.canvas._update_snapshot(dt, ui_snapshot)
+        finally:
+            world_snapshot = ui_snapshot = ()
+            self.level._dispatching = self.canvas._dispatching = False
 
     def draw(self):
         # shortcut: 장치/누락 리셋은 오류로 종료, 자원 로더 도입 때 재업로드로 확장한다.
         if self.engine.reset_generation != self._reset_generation:
             raise RuntimeError('렌더 리셋으로 그리기 자원을 다시 만들어야 합니다.')
-        self.renderer.draw(self.level, self.transform)
+        self.renderer.draw(self.level, self.transform, self.canvas)
 
     def exit(self):
+        self.level._check_rendering()
+        if self.canvas is not None:
+            self.canvas._check_rendering()
+        errors = []
         try:
-            self.renderer.world_items.clear()
-            self.level.close()
+            for owner in (self.level, self.canvas):
+                if owner is not None:
+                    try:
+                        owner.close()
+                    except BaseException as error:
+                        errors.append(error)
         finally:
+            self.renderer.world_items.clear()
+            self.renderer.ui_items.clear()
             self.engine = None
+        if len(errors) == 1:
+            raise errors[0]
+        if errors:
+            raise BaseExceptionGroup('장면 정리 실패', errors)

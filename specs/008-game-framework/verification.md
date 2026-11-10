@@ -15,7 +15,7 @@
 | P2 창·출력 | 검증 커밋 통합 | 별도 27개 자동·실제 SDL 검증 근거 보존 |
 | P3 월드 렌더링 | 구현·자동/실제 SDL 검증 완료 | 전체 60개와 아래 실제 창 검사 통과 |
 | P4 Canvas UI | 구현·자동/실제 SDL 검증 완료 | 전체 74개와 아래 실제 UI 창 검사 통과 |
-| P5 통합 | 선행 결과 대기 | P1~P4 후 SC-001/002/DOC 전체 판정 |
+| P5 통합 | 공동 수명·스냅샷·렌더 연결 자동 검증 / 통합 화면 준비 | 전체 83개 통과. 실제 통합 창·SC 전체 판정은 진행 중 |
 
 ## 실제 명령과 결과
 
@@ -100,3 +100,14 @@ architecture/progress/README와 spec/plan/P3 plan/tasks/data-model/contracts/qui
 - 미실행: 사용자 직접 확인·물리 키 조작/테두리 드래그·실물 DPI 변경·실제 폰트 어댑터와 P5 통합 검사. 폰트는 별도 렌더러 없이 공통 length 배율만 검사했다. 실제 창 조작 증거는 앱 내부 SDL 큐/API이며 자동 UI 입력 성공으로 표시하지 않는다. UI 장치/누락 리셋은 P3와 같이 명시 오류·정리이며 자동 자원 재업로드는 지원하지 않는다. PR 생성·게시·병합은 하지 않았다.
 
 P5는 P4 최종 인계 커밋과 깨끗한 상태를 확인한 뒤 같은 공유 작업트리·브랜치를 그대로 사용한다. 이 P4 채팅 종료 전 동시 쓰기를 하지 않는다. 기존 준비 브랜치/워크트리는 보존했다.
+
+## P5 공동 수명·스냅샷 증분
+
+P4 완료 채팅과 최종 인계 `0f4bc9f6151e1fac705499d737da01901c6b28f8`를 확인했다. P3/P4 종료 후 공유 경로 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 `feature/world-rendering`과 깨끗한 상태를 확인하고 순차 인계받았다. 기존 준비 브랜치 `feature/game-screen-integration`의 커밋은 보존하고 최신 계획에 필요한 문장만 검토해 반영했다. 전체 준비 브랜치 merge·중복 선행 merge·새 checkout·기존 작업트리 삭제/아카이브는 하지 않았다.
+
+- 명시 SPECIFY_FEATURE_DIRECTORY와 NO_PERSIST로 `check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks` 성공. 체크리스트 11개 완료, hooks 파일 없음.
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q`: 인계 상태 74개 통과. 신규 tests/test_scene_integration.py 9개는 Canvas 인자 미지원으로 예상 실패를 확인한 뒤 구현하고 전체 **83개 통과**.
+- 신규 검사는 양쪽 공동 스냅샷, 모드→월드→UI 순서, 상대 영역 생성/제거, 신규 UI의 같은 프레임 렌더 허용, 교차 전달 재진입·실패 후 가드 복구, 월드→UI 순서와 렌더 중 교차 소유 변경 거부, Level 시작/UI 준비 실패 정리, 양쪽 정리 오류 보존, 실제 Engine.run의 월드/UI draw 실패 정리, 모의 2배 DPI/0출력 입력·UI anchor·저장 좌표 보존을 확인한다.
+- 최초 제한 실행의 Git status는 공유 경로 접근 제한으로 실패했고 사용자 지정 경로의 확장 실행은 승인되어 성공했다. 이후 공유 경로 쓰기·검사는 승인된 확장 실행을 사용한다. 우회 checkout은 만들지 않았다.
+
+architecture/progress/P5 plan을 공동 수명·갱신·두 패스 연결의 구현 상태에 맞췄다. 통합 데모·실제 창·전체 SC 판정·converge는 아직 미완료다. 새 게임 규칙·아트·의존성을 추가하지 않았다. 시스템·아트 문서는 이 증분에 영향 없다.

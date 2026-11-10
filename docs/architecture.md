@@ -52,6 +52,10 @@
 
 ### 책임과 소유
 
+P5 공동 수명·갱신 연결을 구현하고 자동 검사했다. `LevelScene(level, canvas=None, camera_center=(0,0), view_height=10)`은 Canvas를 선택적으로 소유하며 기존 월드 전용 호출을 유지한다. 진입 시 Level 열기와 UI 변환 준비를 수행하고 어느 쪽 실패에도 양쪽 정리를 시도한다. exit는 Level→Canvas 순으로 모든 정리를 시도하고 복수 오류를 BaseExceptionGroup으로 보존하며 렌더 목록·engine 참조를 해제한다. 닫힌 Canvas를 재사용하는 대신 다음 화면에서 새 Canvas를 만든다.
+
+통합 update는 Level 등록순 tuple과 Canvas 전체 등록순 DFS tuple을 모든 콜백 전에 취득하고 모드→월드 객체→UI 순으로 전달한다. 양쪽 전달 가드를 전체 구간에 유지해 상대 영역으로 update/입력 재진입하는 것도 거부하며 생성·제거는 허용한다. 호출 직전 소속을 검사하므로 신규 대상은 다음 update부터, 제거 대상은 이후 호출부터 제외된다. `Renderer.draw(level, world_transform, canvas=None)`은 같은 viewport의 UI 변환으로 월드→UI를 연결하며 각 패스 동안 상대 소유 영역의 변경도 막는다. `event_to_ui`와 `ui_transform`을 제공하고 Canvas 없는 장면의 UI 입력 변환은 None이다. 통합 화면·실제 창 최종 검증은 진행 중이다.
+
 P4 경로는 `Canvas(reference_size)`, `UIElement(x=0, y=0, anchor=(0,0), visible=True, draw_order=0, bounds=None, opacity=1)`, `UITransform(viewport, reference_size)`, `Renderer.draw_ui(canvas, transform)`으로 구현했다. Canvas는 생성 직후 부착 가능하고 close 뒤 재사용하지 않는다. roots/children/parent/canvas는 읽기 전용 조회이며 새 노드만 한 번 부착한다. remove는 하위 트리 소속·연결을 먼저 모두 해제한 뒤 자식부터 on_destroy를 한 번씩 시도한다. close는 전체 목록을 한 번 분리한다. 복수 정리 오류는 BaseExceptionGroup으로 보존한다. update는 숨김과 무관한 등록순 전위 DFS 전체 스냅샷을 사용한다.
 
 `canvas.transform(viewport)`는 매 출력 상태의 UITransform을 만들며 scale/logical_size/bounds/point/inverse/length를 제공한다. reference_size는 필수 양수 제작 단위이고 게임의 최종 해상도를 고정하지 않는다. 루트 anchor는 0~1, 자식 anchor는 (0,0)만 허용한다. ui_items는 `(element, (x,y), opacity)` 목록이며 `element.draw(origin, transform, opacity)`로 자기 표현만 그린다. 형제 복사본 안정 정렬과 전위 DFS로 패널 하위 트리를 연속 표시한다. 부모 opacity/bounds 제외는 자식에 상속하지 않고 visible=false만 하위 트리를 숨긴다. 렌더 중 소유 API·뎁스 변경·update/렌더 재진입은 거부하고 실패 시에도 목록을 비운다. `framework_demo.py --ui`의 UIDemo는 Level/GameMode 없이 Canvas만 소유하며 마우스는 Engine.event_to_output→UITransform.inverse로 해석한다. 저장 좌표를 바꾸지 않고 매 출력 상태에서 기준점·배율을 다시 계산한다. 도형은 기존 draw_rect를 사용해 backend 알파/색 상태 복원을 재사용한다. 자동 검사와 실제 SDL 창·픽셀·이동/숨김/삭제·화면비/전체화면/최소화 검사를 통과했다. 장치/누락 리셋은 P3와 같이 명시 오류, 전달된 타깃 리셋은 한 세대씩 수용한다. LevelScene 공동 스냅샷·두 패스 연결은 P5 담당이다.

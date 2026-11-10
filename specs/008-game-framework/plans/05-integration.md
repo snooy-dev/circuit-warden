@@ -3,7 +3,7 @@
 **현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
 **Branch**: feature/world-rendering | **Date**: 2026-11-10 | **Spec**: [공통 명세](../spec.md)
-**Status**: 구현 승인 — 선행 조건 충족 시 실행
+**Status**: 공동 수명·스냅샷·렌더 연결 자동 검증 / 통합 화면·실제 창 검사 진행 중
 **Input**: [전체 계획](../plan.md), [기술 기준](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)
 
 ## Summary
@@ -13,12 +13,12 @@ Level·Canvas·Renderer와 가변 출력 엔진을 하나의 실행 화면에서
 Python 3.14 + Pico2D 1.5.1, Windows. 새 의존성·외부 에셋 생성 없음. 게임 검사에는 원본 저장소 .venv/Scripts/python.exe를 명시한다. 성능 목표 수치는 아직 미정이다.
 
 ## Constitution Check
-- [x] 계획 분리 요청과 기존 구현 보류를 구분했다. 이 문서는 구현 승인이 아니다.
+- [x] 2026-11-10 모든 계획 구현과 공유 경로 순차 인계 지시로 진행한다. 기술 기본값 구현과 게임 정책 확정은 구분한다.
 - [x] 공통 Spec Kit 명세/작업 체계 안에서 범위·제외·선행 계약·검증·docs 영향을 정의했다.
 - [x] 검증된 증분의 docs/verification 갱신·커밋과 PR 승인 경계를 유지한다.
 
 ## Scope & Dependencies
-선행 조건: P1~P4가 각 완료 조건을 충족한 뒤 진행한다.
+선행 조건: P1~P4 완료를 확인했다. P4 최종 인계 `0f4bc9f6151e1fac705499d737da01901c6b28f8`와 깨끗한 상태를 확인한 뒤 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`의 같은 `feature/world-rendering`을 순차 인계받았다. 기존 준비 브랜치 `feature/game-screen-integration`과 작업트리는 보존했고 문서/선행 커밋을 중복 병합하지 않았다.
 
 요구사항 담당: FR-001~010의 연결 동작, SC-001/SC-002/SC-DOC 전체 판정.
 
@@ -30,7 +30,7 @@ Python 3.14 + Pico2D 1.5.1, Windows. 새 의존성·외부 에셋 생성 없음.
 제외: 새 게임 규칙·새 렌더 기능·관리자 계층·최적화를 추가하지 않는다. 통합에 필요하다는 이유로 이전 계획의 미완료를 숨기지 않는다.
 
 ## Project Structure & Interfaces
-변경 대상: game_framework.py의 LevelScene 조합부, framework_demo.py, tests/test_framework_demo.py와 필요한 기존 회귀 테스트. 앞 계획의 오류는 해당 책임 코드에서 수정하고 검증을 갱신한다.
+변경 대상: game_framework.py의 LevelScene 조합부, framework_demo.py, tests/test_framework_demo.py·tests/test_scene_integration.py와 필요한 기존 회귀 테스트. 앞 계획의 오류는 해당 책임 코드에서 수정하고 검증을 갱신한다.
 
 인계 계약: P1~P4의 책임을 다시 구현하지 않는다. P3의 월드 전용 실행과 P4의 UI 단독 검사도 유지하며 통합 시 두 스냅샷 경계·정리·출력 프레임 상태를 맞춘다.
 
