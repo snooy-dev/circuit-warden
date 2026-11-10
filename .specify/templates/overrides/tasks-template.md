@@ -5,7 +5,7 @@ description: Circuit Warden tasks with mandatory docs maintenance
 # Tasks: [FEATURE NAME]
 
 **Input**: 이 기능의 spec.md, plan.md 및 참조된 docs
-**Implementation authorization**: [사용자의 구현 시작 지시 또는 보류]
+**Implementation authorization**: [개발 요청 범위·근거 또는 명시적 보류. PR 외 별도 승인 대기 없음]
 
 ## Rules
 
@@ -14,6 +14,7 @@ description: Circuit Warden tasks with mandatory docs maintenance
 - 비단순 게임 동작에는 자동 테스트가 필수다. 문서만 수정하면 문서 검증을 한다.
 - docs 작업을 선택적 polish로 미루지 않는다. 설계 결정 직후 기록하고 구현 후 다시 대조한다.
 - 증거 없이 체크하지 않는다. 구현 보류 상태에서는 구현·에셋 생성 작업을 시작하지 않는다.
+- 최소 실행 가능한 틀 → 기본 기능 → 확장 순으로 나누고 각 증분에 검증·docs/verification 갱신·관련 변경만 커밋하는 작업을 둔다. 완료 단계까지 문서·커밋을 미루지 않는다.
 
 ## Phase 1: Design & Documentation Readiness
 
@@ -23,10 +24,10 @@ description: Circuit Warden tasks with mandatory docs maintenance
 ## Phase 2: User Story 1 - [목표]
 
 - [ ] T003 [US1] [FR 요구사항]을 검증할 테스트를 [경로]에 작성/갱신하고 변경 전 결과를 확인한다.
-- [ ] T004 [US1] [승인된 기능]을 [실제 코드/에셋 경로]에 구현한다.
+- [ ] T004 [US1] [요청된 기능의 최소 증분]을 [실제 코드/에셋 경로]에 구현한다.
 - [ ] T005 [US1] 해당 자동 테스트와 필요한 Pico2D/에셋 검사를 실행한다.
 
-[필요한 시나리오만 반복. 무관한 웹/API/DB 기반 작업을 만들지 않는다.]
+[각 증분의 docs/verification 갱신·커밋 작업을 추가하고 뒤의 ID를 재번호한다. 필요한 시나리오만 반복하며 무관한 웹/API/DB 기반 작업을 만들지 않는다.]
 
 ## Phase 3: Documentation & Completion (mandatory)
 

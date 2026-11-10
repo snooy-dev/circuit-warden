@@ -9,7 +9,9 @@ edits:
     type: prompt
     integration: codex
     prompt: Read AGENTS.md, docs/README.md, docs/progress.md and the constitution.
-      Follow the user's scope and implementation hold. Read the relevant current docs.
+      Follow the user's requested scope and explicit holds. The development request
+      authorizes work within scope; do not add approval gates outside PR actions.
+      Read the relevant current docs and use a feature/ branch for feature work.
       Record only provided decisions and explicit unknowns in docs; do not invent
       game rules. Do not write game code or create game assets in this step.
 - insert_after: specify
@@ -19,7 +21,8 @@ edits:
     integration: codex
     prompt: Read the active feature spec and its Documentation Contract. Persist its
       design decisions and unresolved questions in the appropriate docs. Label proposed
-      changes as proposed; never overwrite approved rules without approval. Update
+      changes as proposed unless established by the user's request; do not invent
+      user approval or expand game scope. Update
       docs/progress.md where relevant. Keep current decisions and brief rationale,
       not an append-only decision history. Use Git for history. Do not implement.
 - insert_after: plan
@@ -28,9 +31,10 @@ edits:
     type: prompt
     integration: codex
     prompt: Read the active plan's Documentation Impact. Record lasting technical
-      decisions with approval status and brief rationale in docs/architecture.md,
-      and update docs/progress.md. Preserve the distinction between approved design
-      and implemented behavior. Do not implement.
+      decisions with scope evidence, assumptions and brief rationale in docs/architecture.md,
+      and update docs/progress.md. Preserve the distinction between requested design
+      and implemented behavior. Plan small runnable increments with verification,
+      docs updates and commits. Do not implement in this documentation step.
 - insert_before: implement
   step:
     id: analyze
@@ -42,13 +46,15 @@ edits:
     type: prompt
     integration: codex
     prompt: Complete the active feature's mandatory documentation tasks. Reconcile
-      affected docs with approved intent, code and real test evidence; do not rewrite
+      affected docs with requested intent, explicit user decisions, code and real test evidence; do not rewrite
       intent to excuse bugs. Write verification.md with actual commands/results, failures,
       skipped checks, docs changed or justified no-impact findings, and remaining
       work. Update docs/progress.md. Leave incomplete tasks unchecked. Never claim
       success for unrun tests or missing evidence. Replace stale content with current
       state and remove resolved questions; do not append changelogs or session logs.
-      Use Git for history. Never delete uncommitted evidence to reduce document size.
+      Use Git for history. Commit each verified increment with related docs and
+      evidence; preserve unrelated user changes. Continue within scope without new
+      approval gates except PR actions. Never delete uncommitted evidence to reduce document size.
 - insert_after: implement
   step:
     id: converge

@@ -1,10 +1,10 @@
 # Feature Specification: [FEATURE NAME]
 
 **Created**: [DATE]
-**Status**: Draft / Approved / Superseded
+**Status**: Draft / Ready / Approved / Superseded
 **Input**: $ARGUMENTS
-**Design approval**: [사용자 결정 근거 또는 미승인]
-**Implementation authorization**: [시작 지시의 범위 또는 보류]
+**Design approval**: [실제 승인 근거 또는 별도 승인 없음. Ready는 사용자 승인 의미가 아님]
+**Implementation authorization**: [개발 요청 범위·근거 또는 명시적 보류. PR 외 별도 승인 대기 없음]
 
 ## Intent & Scope
 
