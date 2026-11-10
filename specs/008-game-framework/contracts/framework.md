@@ -2,7 +2,7 @@
 
 이 문서는 최종 결합 모델의 제안이다. [분리 계획](../plan.md)의 각 범위가 해당 데이터/API를 도입한다. P1부터 모든 형식이나 빈 연결점을 구현하지 않는다.
 
-**상태**: P1 객체·레벨·규칙 구현·검증 / 나머지는 후속 구현의 목표 계약. [architecture](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)가 세부 순서·비용의 기준이다. 기존 Scene 콜백과 기본 Engine 실행 호출은 유지하되 Engine의 크기/전체화면 설정·출력 조회·필요한 SDL 이벤트 처리는 확장하는 제안이다.
+**상태**: P1 객체·레벨·규칙과 P2 출력 기반 검증 커밋 통합 / P3 구현 중 / P4·P5는 목표 계약. [architecture](../../../docs/architecture.md#게임프레임워크-계약-제안-미구현)가 세부 순서·비용의 기준이다. 기존 Scene 콜백과 기본 Engine 실행 호출은 유지하되 Engine의 크기/전체화면 설정·출력 조회·필요한 SDL 이벤트 처리는 P2 구현 계약을 따른다.
 
 - LevelScene(level, canvas)은 Level·Canvas·Renderer를 연결한다. UI 항목을 화면이 직접 소유하는 ui_items API는 두지 않는다.
 - P1 공개 API: Level(mode=None), 읽기 전용 mode/objects, get(id). GameMode는 생성 시 해당 Level에 연결되고 다른 Level에서 재사용하지 않는다. GameObject의 level/id는 읽기 전용이다. Level.on_open()에서 새 객체로 초기 배치를 구성한 뒤 mode.on_start()를 호출한다.

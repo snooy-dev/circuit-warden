@@ -2,7 +2,7 @@
 
 **현재 실행 근거**: 2026-11-10 사용자가 P1~P5의 새 채팅 구현과 독립 계획의 별도 워크트리 병렬 작업을 지시했다. 이전 구현 보류는 해제됐다. 상세 기술 선택과 사용자 게임 정책 확정은 구분한다.
 
-**상태**: P1 구현·자동 검증 완료. 전체 프레임워크 완료 아님.
+**상태**: P1/P2 검증 커밋 통합, P3 구현 진행. 전체 프레임워크 완료 아님.
 **P1 브랜치**: `feature/gameplay-core`
 **기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
 **P1 구현 커밋**: `d3c4ed06f2efa199c41a15f525b161d9e894f7b3` (코드·검사·docs·명세·검증 포함). 후속 인계 문서 커밋까지 포함한 `feature/gameplay-core` 브랜치를 통합하면 된다.
@@ -12,8 +12,8 @@
 | 계획 | 이 작업트리의 상태 | 실제 근거 / 다음 단계 |
 |---|---|---|
 | P1 객체·규칙 | 구현·자동 검증 완료 | 새 core 검사 16개 + 기존 16개 통과. FR-001~004의 월드 소유·규칙·전달 수명 담당 범위 충족 |
-| P2 창·출력 | 별도 워크트리 담당 / 여기서 미검증 | P1과 독립. 기존 001 검사는 가변 출력 성공 근거가 아님 |
-| P3 월드 렌더링 | P1 통합·검사 준비 / P2 커밋 대기 | `feature/world-rendering`에서 P1 최종 커밋 merge. P2는 커밋 거부로 아직 통합 불가 |
+| P2 창·출력 | 검증 커밋 통합 | 별도 27개 자동·실제 SDL 검증 근거 보존 |
+| P3 월드 렌더링 | 구현 진행 | P1/P2 검증 커밋 통합 완료 |
 | P4 Canvas UI | 선행 결과 대기 | P3 후 구현 |
 | P5 통합 | 선행 결과 대기 | P1~P4 후 SC-001/002/DOC 전체 판정 |
 
@@ -50,14 +50,24 @@ analyze에서 P1은 렌더/Canvas/SDL 없이 FR-001~004의 담당 범위를 구�
 
 P1은 창 없는 core 계획이므로 새 실제 창·UI 자동 조작·사용자 직접 확인은 수행하지 않았다. P2~P5의 실제 출력·렌더·Canvas·복합 장면 검증을 대체하지 않는다. 실제 게임 규모·성능 예산은 미정이며 새 성능 주장을 하지 않는다. 오류 traceback이나 외부 변수가 잡고 있는 참조의 즉시 메모리 해제는 보장하지 않는다.
 
-## 다음 단계
 
-P3 담당은 P1 구현 커밋과 별도 P2 검증 커밋을 통합한 뒤 월드 렌더링을 진행한다. 이 문서의 P2~P5 상태는 이 작업트리에서 확인한 범위이며 다른 워크트리의 최신 결과는 해당 검증 커밋에서 가져온다.
+## P2 통합과 검증 근거
 
-## P3 준비와 선행 차단 조건
 
-전용 작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`, 브랜치 `feature/world-rendering`에서 기준 커밋을 확인하고 P1 최종 커밋 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`를 Git merge했다. P2 채팅 `01a1c41a-3137-7f90-9330-4a9370e0b7ce`는 자동 27개·실제 SDL 검사 통과를 보고했으나 자동 승인 검토가 로컬 커밋을 두 번 거부해 사용자 승인을 요청한 채 종료했다. P2 브랜치는 아직 기준 커밋이며 P3 선행 조건을 충족하지 않는다. P2 미커밋 작업을 복사하거나 다른 워크트리를 수정하지 않았다.
+- 기준 커밋: `1940dd423daf423a84637b9ccec7d23eb92d722f`, 브랜치: `feature/display-management`.
+- 명령: `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v`
+- 결과: **27개 통과**, 기존 16개 회귀 포함. 모의 SDL로 window/output/viewport, 2배 DPI 좌표·휠 제외, 최소화/0 크기 update·종료 유지, 프레임 중 크기 변경 표시 생략, 리셋 이벤트/누적 세대, 전환 지연·실패 정리·창 크기 복귀를 검사했다. 실제 ctypes SDL_Event를 채워 창/마우스/키 반복 필터/두 종류 리셋 전달과 출력 조회 오류도 검사했다.
+- 실제 SDL 명령: `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/display_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c41a-3137-7f90-9330-4a9370e0b7ce`
+- 결과: 종료 0, `PASS: resize/fullscreen/restore/minimize/mouse/render`. 640×480 → 960×540 → 1536×864 보더리스 → 960×540 복귀를 실제 window/output 조회와 assert로 확인했다. 최소화 상태 output_valid=False, draw 수 불변, 복구 후 SDL_WarpMouseInWindow에서 실제 이동 이벤트를 받아 출력 좌표 일치까지 확인했다. SDL_RenderReadPixels/IMG_SavePNG로 저장한 p2-stage-1/2/3/6.png를 직접 열어 도형·출력 경계·마우스 표시를 관찰했다. 자원 생성/이미지 복구는 P3 범위다.
+- 자동 UI 도구로 main.py의 기본 창·도형을 관찰했다. F6 자동 키 입력 뒤 크기 변화는 확인하지 못했고 원인을 단정하지 않는다. 이후 실제 SDL 검사는 위 별도 스크립트에서 앱 내부 API로 수행했다. 사용자 직접 확인은 받지 않았다.
+- 실제 window/output 비율은 1:1이었다. 모의 2배 DPI는 자동 검사로 통과했으나 실물 DPI 배율 변경·다른 모니터 이동·직접 키 조작/테두리 드래그는 미확인이다. 이 한계를 실물 검증 성공으로 표시하지 않는다.
+- 정적 검증: `git diff --check` 통과, 변경된 Markdown 13개의 로컬 파일 링크 대상 존재 검사 통과. 최종 자동 검사 27개와 실제 SDL 검사도 재실행하여 모두 통과했다.
 
-`drafts/test_world_rendering.py.txt`에 P3 좌표·안정 정렬·이미지별 범위·렌더 중 변경 금지·오류 참조 해제·실제 SDL 소프트웨어 렌더러의 픽셀/알파 상태 복원 검사를 준비했다. 최초 `tests/test_world_rendering.py`에서 게임 Python의 `-m py_compile tests/test_world_rendering.py`를 통과한 뒤 자동 검사에 미구현 API 오류가 섞이지 않도록 초안 경로로 옮겼다. 이 초안에 대응하는 P3 런타임은 아직 작성하지 않았고 P3 검사는 실행하지 않았다. 현재 작업트리에서 `& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v`는 기존·P1 전체 32개 통과, `git diff --check`는 통과했다. 명시 `SPECIFY_FEATURE_DIRECTORY`를 사용한 `check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks`도 통과했다. 독립 읽기 전용 계약 검토는 Luna/high로 수행했으며 실행 성공 근거와 구분한다.
 
-P2 커밋 승인·완료 후 `wait_threads`로 최종 SHA를 확인하고 merge·회귀 검증·P3 구현을 이어간다. 준비만으로 T010~T013 완료나 P3 검증 성공을 표시하지 않는다.
+P2 구현 커밋 `6c92565bfe726d50458f1e6eeca64494258073f4`, 최종 인계 커밋 `c3eef90`을 Git merge했다. 이전 커밋 차단은 해결됐다. P1 최종 인계 `d23d1dbf0f990d260b72ce5e270fa20c9da9eb1b`도 포함한다.
+
+## P3 현재 작업
+
+브랜치 `feature/world-rendering`, 작업트리 `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`. 두 선행 검증 커밋 통합 후 회귀 검사와 월드 렌더링 구현을 진행한다. 준비한 검사 초안은 구현과 대조해 활성 검사로 옮긴다. P3 종료 후 P4, P4 종료 후 P5가 동일 작업트리/브랜치를 순차 재사용한다. 동시 쓰기·기존 브랜치/워크트리 삭제·아카이브는 하지 않는다. PR 승인은 별도다.
+
+통합 후 게임 Python의 unittest discover 전체 43개(P1 16 + P2/기존 27) 통과. 충돌 표식 검색과 git diff --check도 통과했다. 코드 충돌은 없었으며 공통 상태 문서에는 두 계획의 근거를 함께 보존했다.
