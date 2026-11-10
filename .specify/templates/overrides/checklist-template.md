@@ -1,5 +1,7 @@
 # Checklist: [FEATURE NAME]
 
+> 적용 범위: 게임 기능 개발용. 반복 스프라이트 생성·보정에는 이 템플릿이나 Spec Kit 문서화 흐름을 사용하지 않는다.
+
 **Purpose**: 요구사항과 문서 계약의 품질 검토
 **Created**: [DATE]
 **Feature**: [spec link]

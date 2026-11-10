@@ -7,7 +7,9 @@
 1. [진행 상태](progress.md): 목표, 구현 허가 여부, 다음 작업.
 2. [게임 설계](game-design.md), [시스템 설계](systems/README.md): 의도와 규칙.
 3. [기술 구조](architecture.md), [아트 기준](art-direction.md): 필요한 부분만.
-4. 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`.
+4. 게임 기능 개발일 때만 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`.
+
+반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다.
 
 ## 운영 원칙
 

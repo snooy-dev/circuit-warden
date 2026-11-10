@@ -9,6 +9,9 @@ edits:
     type: prompt
     integration: codex
     prompt: Read AGENTS.md, docs/README.md, docs/progress.md and the constitution.
+      This workflow is for game feature development, not repeated sprite generation or correction.
+      Do not invoke it or create/update Spec Kit documents for sprite-only iterations;
+      follow the lightweight exception in docs/workflow.md and report checks in chat.
       Follow the user's requested scope and explicit holds. The development request
       authorizes work within scope; do not add approval gates outside PR actions.
       Read the relevant current docs and use a feature/ branch for independent feature development.

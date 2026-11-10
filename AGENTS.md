@@ -1,5 +1,9 @@
 # Circuit Warden 작업 규칙
 
+## 반복 스프라이트 작업 예외
+
+반복 스프라이트 생성·재생성·동작 변형·색상/명암/비율 보정은 Spec Kit 문서화 워크플로우에서 제외한다. 새 specs나 spec·plan·tasks·analysis·checklist·verification 문서를 만들거나 기존 작업 문서를 반복 갱신하지 않는다. 요청 → 제작·보정 → 필요한 검사 → 결과 보고로 처리하며, 검사 결과와 미확인 사항은 채팅에 보고한다. 채택·보류 상태나 장기 아트 기준이 바뀔 때만 기존 아트 기준·진행 상태를 짧게 갱신한다. 게임 규칙·코드·런타임 통합 변경에는 기존 Spec Kit 흐름을 적용한다. 아래 일반 문서·검증 기록 규칙보다 이 예외를 우선한다. 제작 스킬의 일반 문서 요구도 이 예외를 따른다.
+
 ## 시작과 권한
 
 1. `docs/README.md`, `docs/progress.md`, `.specify/memory/constitution.md`를 읽는다.
