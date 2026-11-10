@@ -1,8 +1,14 @@
 # 검증 상태: 게임프레임워크
 
-## 최신 검증: 엔진/게임 API 경계 정리 (2026-11-11)
+## 소스 기준 동기화 검증 (2026-11-11)
 
-사용자 승인 범위: game-facing API를 game_framework에 두고 내부 실행을 engine 패키지로 분리하며 demos·tests/unit·integration·smoke를 분류한다. 상태: FR-011~013/SC-003/004 및 T023~T031 완료. 실행 폴더는 C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden, 브랜치는 feature/game-framework다. 다른 작업트리·PR·병합은 수정 범위가 아니다.
+사용자가 feature/engine을 각 소스 브랜치로 가져와 충돌을 해결하는 것을 명시 승인했다. 기준은 a32333c964be1e81a3da30024efc094184c3e7c5이며 대상 브랜치 자체는 변경하지 않는다. docs README/progress·008 plan/tasks의 문서 충돌만 해결했다. 최신 대상의 정책·아트 기준·제작 스크립트는 그대로 보존하고 아래 검증된 공통 구조를 유지한다.
+
+`git diff e3a0029 -- engine game_framework demos main.py framework_demo.py tests requirements.txt`가 비어 있어 런타임·검사·의존성이 동일하다. docs/workflow.md의 검사 실행 범위와 과도한 검사 방지 사용자 지시에 따라 기존 90개 자동 검사·독점 SDL16 결과를 재사용하고 재실행하지 않았다. feature/engine 대비 PR에서 변경한 문서의 링크·작업 ID·충돌 표식·diff 검사와 feature/engine 포함 관계·merge-tree 충돌 없음을 확인했다. 대상에서 그대로 가져온 art-direction의 로컬 원화 링크는 이 코드 작업트리에 비추적 art 파일이 없어 전체 링크 검사에서 제외했다. 원화나 대상 아트 문서 내용을 임의로 바꾸지 않았다. 다른 소스도 동일한 최종 트리를 사용하므로 브랜치마다 상충하는 현재 문서를 만들지 않는다.
+
+## 엔진/게임 API 경계 정리 검증 (2026-11-11)
+
+사용자 승인 범위: game-facing API를 game_framework에 두고 내부 실행을 engine 패키지로 분리하며 demos·tests/unit·integration·smoke를 분류한다. 상태: FR-011~013/SC-003/004 및 T023~T032 완료. 실행 폴더는 C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden, 브랜치는 feature/game-framework다. 다른 작업트리·PR·대상 브랜치 수정은 범위 밖이다. 소스 브랜치로의 기준 병합은 아래 최신 명시 승인 범위다.
 
 | 검사 | 실제 명령·방법 | 결과 |
 |---|---|---|
@@ -26,9 +32,19 @@ README·docs README/architecture/progress·008 spec/plan/tasks/quickstart를 현
 ## P1~P5 검증 기반
 
 **상태**: P1~P5 구현·자동 검사·실제 SDL 창 검증 완료. 상세 게임 규칙·아트·성능 목표의 확정은 아니다.
-**실행 근거**: 2026-11-10 사용자가 모든 계획의 구현·검증 증분 커밋과 독립 P1/P2 병렬·P3→P4→P5 동일 경로 순차 진행을 지시했다. PR 생성·게시·병합은 범위 밖이다.
-**현재 브랜치/작업트리**: `feature/world-rendering`, `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`
-**기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
+**P1~P5 실행 근거**: 2026-11-10 사용자가 모든 계획의 구현·검증 증분 커밋과 독립 P1/P2 병렬·P3→P4→P5 동일 경로 순차 진행을 지시했다. PR 생성·게시·병합은 범위 밖이다.
+**현재 통합 브랜치/작업트리**: `feature/engine`, `C:/Users/Developer/.codex/worktrees/engine-integration/circuit-warden`
+**P1~P5 원본 검증 작업트리**: `feature/world-rendering`, `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`
+**감사 실행 기준**: `bda35a8b42333ee5148167272f3f98abc6b4586e`
+**계획 분리 기준 커밋**: `1940dd423daf423a84637b9ccec7d23eb92d722f`
+
+## feature/engine 통합 검증
+
+2026-11-10 사용자가 엔진 기능을 feature/engine에 통합하도록 지시했다. latest main 47b721e와 P1~P5 bda35a8을 합치며 docs/README.md·docs/progress.md 충돌은 최신 아트/정책과 엔진 완료 결과를 함께 보존한다. 기존 준비 브랜치는 다시 병합하지 않는다. 원본 D:/GitHub/circuit-warden의 미커밋 변경 7개는 이 통합에 포함하지 않는다.
+
+감사에서 bda35a8의 `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m unittest discover -s tests -v`는 85개/0.047초 통과했다. 같은 Python의 `tests/integration_smoke.py <출력 폴더>`는 실제 SDL 16단계/종료 0이며 p5-resized.png를 열어 겹침/출력 배치를 관찰했다. 출력은 `C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c5e8-30ea-72d0-bce6-3073464ac646`에 있다. 코드 독립 검토와 창 없는 수명 경계 검사 3개에서도 재현 결함을 발견하지 못했다. 이후 실행 코드·테스트·의존성은 변경하지 않으므로 같은 검사를 반복하지 않는다.
+
+`git diff feature/world-rendering -- engine.py game_framework.py framework_demo.py main.py tests requirements.txt`는 차이 없음이다. `git diff main -- docs/art-direction.md AGENTS.md .specify scripts`도 차이 없음으로 최신 커밋된 아트·정책·제작 스크립트를 보존했다. 변경 Markdown 9개의 로컬 링크 대상·충돌 표식과 `git diff --check`가 통과했다. 당시 analyze/converge 대조에서 새 런타임 변경·필수 미완료·문서 충돌은 없었으며 당시 통합 작업을 완료했다. 두 선행 브랜치의 커밋을 보존하는 merge commit으로 기록한다. 실제 게임·실물 DPI·물리 키 조작·성능 한계는 여전히 미확인이다. 테스트 삭제는 제안만 하며 실행 파일은 보존한다.
 
 ## 계획별 결과·커밋
 
@@ -44,7 +60,7 @@ P1/P2 검증 커밋은 `e229bf2`에서 Git merge했고 이후 P3/P4/P5는 같은
 
 ## P1~P5 구현 검증 명령·결과
 
-명령은 위 공유 작업트리에서 원본 게임 Python으로 실행했다. 실제 창 검사는 동시에 실행하지 않았다.
+아래 P1~P5 명령은 원본 검증 작업트리에서 원본 게임 Python으로 실행했다. 실제 창 검사는 동시에 실행하지 않았다.
 
 | 명령·검사 | 결과 |
 |---|---|
@@ -94,4 +110,4 @@ README·docs README/workflow/architecture/progress와 spec/plan/tasks/data-model
 - 이번 008에서 사용자 직접 확인·물리 키 조작·테두리 드래그·실물 고DPI/다른 모니터 이동은 수행하지 않았다. 실제 window/output 비율은 1:1이고 2배 DPI는 모의 자동 검사다. SDL 입력 큐/API 검사를 자동 UI 입력 성공이나 사용자 확인으로 표시하지 않는다. 앞 계획에서 일반 창 자동 키 입력은 반응을 확인하지 못했고 원인은 미확정이다.
 - 전달된 타깃 리셋은 일반 그림 재그리기와 한 세대 갱신을 허용한다. 장치 리셋·누락 세대는 명시 오류·양쪽 정리로 종료하며 자동 자원 재업로드는 없다. TARGET texture는 복구 로더가 없어 명시 오류로 거부한다.
 - 게임 규모·성능 예산·게임 규칙·실제 HUD/메뉴·공통 UI 영속성은 미정이다. 물리·UI 입력 소비/포커스·자동 레이아웃·reparent·공간 인덱스·정렬 캐시를 추가하지 않았다. 실제 플레이 판단·성능 보증은 하지 않는다.
-- PR 생성·게시·병합은 하지 않았다. 기존 준비 브랜치/작업트리는 보존한다. 필수 기능 미완료는 없으며 위 환경·제품 범위 한계와 구분한다.
+- P1~P5 구현 당시에는 PR 생성·게시·병합을 하지 않았다. 현재 엔진 브랜치 통합은 위 별도 지시를 따른다. 기존 준비 브랜치/작업트리는 보존한다. 필수 기능 미완료는 없으며 위 환경·제품 범위 한계와 구분한다.

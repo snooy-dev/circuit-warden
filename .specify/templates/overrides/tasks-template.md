@@ -1,4 +1,6 @@
 ---
+
+> 적용 범위: 게임 기능 개발용. 반복 스프라이트 생성·보정에는 이 템플릿이나 Spec Kit 문서화 흐름을 사용하지 않는다.
 description: Circuit Warden tasks with mandatory docs maintenance
 ---
 

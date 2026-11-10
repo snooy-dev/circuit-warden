@@ -7,7 +7,11 @@
 1. [진행 상태](progress.md): 목표, 구현 허가 여부, 다음 작업.
 2. [게임 설계](game-design.md), [시스템 설계](systems/README.md): 의도와 규칙.
 3. [기술 구조](architecture.md), [아트 기준](art-direction.md): 필요한 부분만.
-4. 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`. 008의 plan.md는 다섯 하위 계획의 범위·의존 관계 안내이며 P1/P2 검증 커밋 통합과 P3→P4→P5 동일 작업트리 순차 구현·검증을 마쳤다. 기본 통합 화면과 --world/--ui 독립 모드의 실행·한계는 quickstart와 verification에 있다. 승인된 엔진/게임 API 경계와 demos·tests 분류는 architecture의 코드 폴더 구조를 따른다.
+4. 게임 기능 개발일 때만 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`.
+
+반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다.
+
+엔진 통합 브랜치는 `feature/engine`이다. [008 계획](../specs/008-game-framework/plan.md)의 P1~P5 구현·검증을 통합했으며, 실행 방법과 한계는 [quickstart](../specs/008-game-framework/quickstart.md)와 [검증 결과](../specs/008-game-framework/verification.md)를 따른다. 실제 게임 규칙·아트 통합은 별도 범위다. 승인된 엔진/게임 API 경계와 demos·tests 분류는 [기술 구조](architecture.md#코드-폴더-구조)를 따른다.
 
 ## 운영 원칙
 

@@ -1,6 +1,6 @@
 # Circuit Warden
 
-기본 실행 기반과 게임프레임워크 P1~P5의 구현·자동/실제 SDL 검증을 완료했습니다. 상세 게임 규칙·아트는 아직 정하지 않았습니다. [진행 상태](docs/progress.md)를 참조하세요.
+기본 실행 기반과 게임프레임워크 P1~P5의 구현·자동/실제 SDL 검증을 완료했습니다. 현재 엔진 통합 브랜치는 `feature/engine`이며 실제 게임 규칙은 아직 구현하지 않았습니다. 아트 상태는 [아트 기준](docs/art-direction.md)을 따릅니다. [진행 상태](docs/progress.md)를 참조하세요.
 작업을 시작할 때 [프로젝트 문서](docs/README.md), [진행 상태](docs/progress.md), [작업 규칙](AGENTS.md)을 읽습니다.
 Spec Kit 개발 흐름과 설치된 에셋 도구의 사용 방법은 [워크플로우](docs/workflow.md)와 [도구 구성](docs/tooling.md)에 기록합니다.
 

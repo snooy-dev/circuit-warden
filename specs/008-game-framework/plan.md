@@ -1,8 +1,8 @@
 # Implementation Plan: 게임프레임워크 — 분리 계획 안내
 
-2026-11-10 최신 인계: 독립 P1/P2만 별도 브랜치·워크트리에서 병렬 진행한다. P2 브랜치는 feature/display-management다. P3는 P1/P2 검증 커밋을 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden의 feature/world-rendering에 통합한다. 이후 P4와 P5는 별도 브랜치를 만들지 않고 같은 워크트리/브랜치를 P3 → P4 → P5 순서로 재사용한다. 선행 종료 전에 다음 쓰기를 시작하지 않으며 기존 브랜치·워크트리는 보존한다.
+2026-11-10 현재 통합: 사용자가 실제 게임 구현 전의 엔진 기능을 feature/engine에 모으도록 지시했다. feature/world-rendering의 검증된 P1~P5 결과와 최신 main의 아트·정책을 이 브랜치에 통합한다. 기존 준비 브랜치와 원본 미커밋 작업은 보존한다.
 
-**현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
+**P1~P5 구현 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
 **Branch**: feature/game-framework | **Date**: 2026-11-11 | **Spec**: [spec.md](spec.md)
 **Status**: P1/P2 통합·P3/P4/P5 동일 작업트리 순차 구현·검증 완료
@@ -68,3 +68,7 @@ P2는 출력/리셋 정보를 제공하고 P3가 자신의 그리기 자원을 �
 승인된 후속 범위로 engine.py를 engine/{loop,scene,display,events}.py와 engine/rendering/{renderer,drawing}.py로 분리한다. 창 조회/모드 관련 메서드는 내부 Display 클래스로 이동하고 Engine은 이를 사용한다. engine/__init__.py는 Engine·Scene·기존 상수·poll_events를 재노출한다. game_framework/world.py와 level_scene.py가 본 구현이며 core.py/scene.py는 직전 import 경로 호환을 유지한다. 게임 쪽 drawing은 값 검사·좌표 투영을 수행하고 엔진에는 출력 사각형·texture만 전달한다. game_framework/rendering.py는 RenderItem·소유 객체 수집·트리 순회·가드를 유지하고 엔진 실행 함수에 정렬·그리기를 위임한다. 엔진은 게임 타입을 import하지 않는다.
 예제는 demos/check.py와 demos/framework.py로 묶는다. 월드/UI/통합은 같은 검사용 Block·패널을 공유하므로 파일을 추가로 잘게 나누지 않는다. main.py/framework_demo.py는 실행 호환 진입점이다. tests/unit·integration은 __init__.py로 unittest 탐색을 유지하고 창 smoke는 tests/smoke로 옮겨 프로젝트 경로 계산과 문서 명령을 수정한다. 기존 모의 패치 위치는 실제 구현 모듈로 맞춘다.
 analyze: FR-012→T027/T028, FR-013→T029, SC-004→T030, SC-DOC→T031로 대응한다. 게임 기능·새 의존성·다른 작업트리·PR은 범위 밖이다. game_framework 수명/수집 책임과 engine 실행 책임을 직접 분리하며 일반 리소스/렌더 관리자 계층은 추가하지 않는다.
+
+## Source Branch Base Synchronization
+2026-11-11 사용자가 각 소스 브랜치에 feature/engine을 가져와 PR 충돌을 줄이도록 명시 승인했다. a32333c의 최신 정책·아트·제작 스크립트를 보존하고 이미 검증된 공통 구조를 유지한다. 구조 담당 문서와 최신 기준 문서의 의미를 함께 반영하며 다른 소스에서도 동일한 최종 내용을 사용한다. 대상 feature/engine 자체는 변경하지 않는다.
+문서 영향: README/progress 및 008 spec/plan/tasks/verification에서 통합 기준·권한·검증 재사용 근거를 맞춘다. 런타임·검사·requirements가 e3a0029와 동일하면 기존 90개·SDL16 결과를 재사용하고 링크·diff·충돌·Git 포함 관계만 확인한다.

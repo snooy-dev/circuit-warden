@@ -1,8 +1,8 @@
 # Tasks: 게임프레임워크 — 계획별 작업
 
-2026-11-10 최신 인계: 독립 P1/P2만 별도 브랜치·워크트리에서 병렬 진행한다. P2 브랜치는 feature/display-management다. P3는 P1/P2 검증 커밋을 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden의 feature/world-rendering에 통합한다. 이후 P4와 P5는 별도 브랜치를 만들지 않고 같은 워크트리/브랜치를 P3 → P4 → P5 순서로 재사용한다. 선행 종료 전에 다음 쓰기를 시작하지 않으며 기존 브랜치·워크트리는 보존한다.
+2026-11-10 현재 통합: 사용자가 실제 게임 구현 전의 엔진 기능을 feature/engine에 모으도록 지시했다. feature/world-rendering의 검증된 P1~P5 결과와 최신 main의 아트·정책을 이 브랜치에 통합한다. 기존 준비 브랜치와 원본 미커밋 작업은 보존한다.
 
-**현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
+**P1~P5 구현 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
 **Input**: spec.md, plan.md, plans/01-core.md~05-integration.md, docs/architecture.md
 **Implementation authorization**: 2026-11-10 사용자가 각 계획의 새 채팅 구현과 독립 계획의 별도 워크트리 병렬 작업을 지시했다. P1/P2 즉시 착수, P3~P5는 선행 검증 커밋 통합 후 구현한다.
@@ -65,3 +65,6 @@ P1/P2의 독립 읽기 전용 검토는 병행할 수 있다. 실제 동시 구�
 - [X] T029 demos와 tests/unit·integration·smoke를 분류하고 기존 진입점/공개 import·검사 패치를 맞춘다 (FR-013).
 - [X] T030 중립 실행·일방 의존 검사, 전체 unittest, 실제 SDL 통합 smoke를 실행하고 실패를 해결한다 (SC-004).
 - [X] T031 architecture/progress/README/quickstart/verification을 현재 구조와 실제 근거로 갱신하고 링크·diff·converge 대조 후 커밋한다.
+
+## Phase 9: Source Branch Base Synchronization
+- [X] T032 사용자 명시 승인으로 feature/engine a32333c의 최신 정책·아트·제작 스크립트를 소스에 병합하고 공통 구조·검사 불변·문서 정합성·검증 재사용·대상과의 충돌 없음을 확인한다.

@@ -1,0 +1,398 @@
+{
+  "protectedPngs": 128,
+  "selectedSourceUnchanged": true,
+  "gaitAndPhysicsEqualToApprovedRun": true,
+  "exactPeriodic": true,
+  "allFramesConnected": 1.0,
+  "enclosedHolesPerFrame": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "footSamples": [
+    {
+      "frame": 0,
+      "near": true,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 7.25
+    },
+    {
+      "frame": 0,
+      "near": false,
+      "stance": false,
+      "targetY": 88.80685144563647,
+      "actualBottom": 89.0,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 1,
+      "near": true,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 7.25
+    },
+    {
+      "frame": 1,
+      "near": false,
+      "stance": false,
+      "targetY": 88.868483630397,
+      "actualBottom": 89.0,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 2,
+      "near": true,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 2,
+      "near": false,
+      "stance": false,
+      "targetY": 89.16156533382969,
+      "actualBottom": 89.25,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 3,
+      "near": true,
+      "stance": false,
+      "targetY": 91.26722813352252,
+      "actualBottom": 91.25,
+      "lowerWidth": 7.25
+    },
+    {
+      "frame": 3,
+      "near": false,
+      "stance": false,
+      "targetY": 89.38392933392487,
+      "actualBottom": 89.5,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 4,
+      "near": true,
+      "stance": false,
+      "targetY": 89.37446819570388,
+      "actualBottom": 89.5,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 4,
+      "near": false,
+      "stance": false,
+      "targetY": 89.00318317713817,
+      "actualBottom": 89.0,
+      "lowerWidth": 6.5
+    },
+    {
+      "frame": 5,
+      "near": true,
+      "stance": false,
+      "targetY": 89.12114578798925,
+      "actualBottom": 89.25,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 5,
+      "near": false,
+      "stance": false,
+      "targetY": 90.28931612466259,
+      "actualBottom": 90.5,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 6,
+      "near": true,
+      "stance": false,
+      "targetY": 89.37871345827523,
+      "actualBottom": 89.5,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 6,
+      "near": false,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 6.5
+    },
+    {
+      "frame": 7,
+      "near": true,
+      "stance": false,
+      "targetY": 88.98122399747255,
+      "actualBottom": 89.0,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 7,
+      "near": false,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 6.5
+    },
+    {
+      "frame": 8,
+      "near": true,
+      "stance": false,
+      "targetY": 88.80685144563647,
+      "actualBottom": 89.0,
+      "lowerWidth": 7.25
+    },
+    {
+      "frame": 8,
+      "near": false,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 9,
+      "near": true,
+      "stance": false,
+      "targetY": 88.868483630397,
+      "actualBottom": 89.0,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 9,
+      "near": false,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 10,
+      "near": true,
+      "stance": false,
+      "targetY": 89.16156533382969,
+      "actualBottom": 89.25,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 10,
+      "near": false,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 11,
+      "near": true,
+      "stance": false,
+      "targetY": 89.38392933392487,
+      "actualBottom": 89.5,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 11,
+      "near": false,
+      "stance": false,
+      "targetY": 91.26722813352252,
+      "actualBottom": 91.25,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 12,
+      "near": true,
+      "stance": false,
+      "targetY": 89.00318317713817,
+      "actualBottom": 89.0,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 12,
+      "near": false,
+      "stance": false,
+      "targetY": 89.37446819570388,
+      "actualBottom": 89.5,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 13,
+      "near": true,
+      "stance": false,
+      "targetY": 90.28931612466259,
+      "actualBottom": 90.5,
+      "lowerWidth": 7.25
+    },
+    {
+      "frame": 13,
+      "near": false,
+      "stance": false,
+      "targetY": 89.12114578798925,
+      "actualBottom": 89.25,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 14,
+      "near": true,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 14,
+      "near": false,
+      "stance": false,
+      "targetY": 89.37871345827523,
+      "actualBottom": 89.5,
+      "lowerWidth": 6.25
+    },
+    {
+      "frame": 15,
+      "near": true,
+      "stance": true,
+      "targetY": 92.0,
+      "actualBottom": 92.0,
+      "lowerWidth": 7.0
+    },
+    {
+      "frame": 15,
+      "near": false,
+      "stance": false,
+      "targetY": 88.98122399747255,
+      "actualBottom": 89.0,
+      "lowerWidth": 6.25
+    }
+  ],
+  "currentChangedPixelsPerFrame": [
+    45,
+    40,
+    37,
+    30,
+    25,
+    30,
+    31,
+    31,
+    33,
+    34,
+    33,
+    33,
+    29,
+    35,
+    40,
+    42
+  ],
+  "physicsChangedPixelsPerFrame": [
+    715,
+    446,
+    370,
+    418,
+    699,
+    479,
+    409,
+    481,
+    469,
+    368,
+    407,
+    340,
+    548,
+    345,
+    693,
+    728
+  ],
+  "currentDirections": [
+    {
+      "path": "near-ear",
+      "direction": "tip-to-base",
+      "observedBrightHeadArcFractions": [
+        0.19101715533142546,
+        0.7917553115888142
+      ]
+    },
+    {
+      "path": "far-ear",
+      "direction": "tip-to-base",
+      "observedBrightHeadArcFractions": [
+        0.18567238040445053,
+        0.7846037565545195
+      ]
+    },
+    {
+      "path": "forehead",
+      "direction": "back-to-front",
+      "observedBrightHeadArcFractions": [
+        0.19709590896234028,
+        0.8014769746449187
+      ]
+    },
+    {
+      "path": "chin",
+      "direction": "front-to-back",
+      "observedBrightHeadArcFractions": [
+        0.20578220122023266,
+        0.8064365442109552
+      ]
+    },
+    {
+      "path": "torso",
+      "direction": "upper-front-to-lower-back",
+      "observedBrightHeadArcFractions": [
+        0.1974595909865433,
+        0.8049564040893613
+      ]
+    },
+    {
+      "path": "tail",
+      "direction": "root-to-tip",
+      "observedBrightHeadArcFractions": [
+        0.20269236501194005,
+        0.802456031002807
+      ]
+    }
+  ],
+  "physics": {
+    "cloth": {
+      "rootMaxAbs": 0.0,
+      "tipPeakToPeak": 10.014925615779262,
+      "seamMaxError": 5.551115123125783e-15,
+      "middleTipMaxDifference": 6.268418363467452
+    },
+    "tail": {
+      "rootMaxAbs": 0.0,
+      "tipPeakToPeak": 1.6094909116535359,
+      "seamMaxError": 3.3306690738754696e-16,
+      "middleTipMaxDifference": 0.17565570104686948
+    },
+    "near-ear": {
+      "rootMaxAbs": 0.0,
+      "tipPeakToPeak": 0.9517362162897858,
+      "seamMaxError": 5.551115123125783e-16,
+      "middleTipMaxDifference": 0.13389592953425386
+    },
+    "far-ear": {
+      "rootMaxAbs": 0.0,
+      "tipPeakToPeak": 0.8116239540202541,
+      "seamMaxError": 2.220446049250313e-16,
+      "middleTipMaxDifference": 0.12716831839766513
+    }
+  },
+  "gifFrames": 16,
+  "gifMs": 480,
+  "sheetsEqualFrames": true
+}
