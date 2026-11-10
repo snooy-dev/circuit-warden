@@ -37,3 +37,5 @@ idle은 reference/master-source.png를 사용하고, 걷기와 Run은 walk-hibit
 게임 실행·모니터 색 관리·GIF별 색 변환은 검사하지 않았다. PNG 자체의 차이를 확인하는 데 게임 테스트는 필요하지 않다.
 
 문서 상대 링크 4개가 존재하며 `git diff --check`는 종료 코드 0이다. 기존 파일의 LF→CRLF 안내만 출력됐다.
+
+사용자 후속 복원 요청은 [009](../specs/009-warden-shading-restore/spec.md)에서 진행한다. 초기 명암 복원과 이후 몸/머리 각도 후보를 구분하며 최신 후보의 귀·팔 비율은 미완료다. [최신 비율 검사](../specs/009-warden-shading-restore/proportion-verification.md) 참조.
