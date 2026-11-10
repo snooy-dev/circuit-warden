@@ -1,5 +1,24 @@
 # 검증 상태: 게임프레임워크
 
+## 최신 검증: 패키지 구조 정리 (2026-11-11)
+
+사용자 요청 범위: feature/game-framework에서 단일 모듈과 폴더 구조 정리. 상태: FR-011/SC-003 및 T023~T026 완료. P1~P5 구현은 아래 기존 증거를 보존한다. 이번 실행 폴더는 C:/Users/Developer/.codex/worktrees/game-framework/circuit-warden이다.
+
+| 검사 | 실제 명령·방법 | 결과 |
+|---|---|---|
+| 통합 기준 회귀 | D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -q | 분리 전 85개 통과 |
+| 구현 본문 보존 | Python ast.parse/ast.dump로 분리 전후 모든 최상위 클래스·함수 대응 비교 | 19개 정의 동일, 누락 없음 |
+| 분리 후 회귀/API | 같은 unittest 명령 | 87개 통과, 공개 이름 12개 동일 객체 및 7개 하위 모듈 새 프로세스 import 포함 |
+| 실제 SDL 통합 | D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/integration_smoke.py C:/Users/Developer/.codex/visualizations/2026/11/10/01a1c61f-5a75-7843-b6ce-610dc3aecc4c/framework-refactor | 종료 0, snapshots/order/alpha/input/camera/resize/fullscreen/minimize/roundtrip/escape PASS |
+| 실제 화면 관찰 | 위 산출물의 p5-initial.png·p5-resized.png 열기 | 월드/UI 겹침·크기 변경 배치 관찰 |
+| 문서·diff | 변경 Markdown의 로컬 링크 검사, git diff --check | 통과 |
+
+analyze: FR-011→T023/T024, SC-003→T025, 문서 완료 조건→T026 대응 확인. 독립 읽기 전용 코드 검토에서 순환 import·patch 경로 차단 문제 없음. converge: 책임별 파일·루트 API·본문 보존·검증·현재 docs를 대조해 이번 범위 잔여 작업 없음. 새 게임 규칙·엔진/데모 재설계·의존성 추가 없음.
+
+architecture/progress와 기존 spec/plan/tasks를 갱신했다. 초기 하위 계획의 game_framework.py 표기는 당시 구현 단위를 가리키며 현재 위치는 architecture의 패키지 표를 따른다. 게임 설계·아트·실행 명령은 변경하지 않았다. 독립 월드/UI smoke는 이번에 재실행하지 않았고 전체 자동 회귀와 복합 SDL smoke로 분리 영향을 검사했다. 사용자 직접 조작·실물 DPI는 미확인이다. 클래스 __module__은 새 경로이며 pickle 영속 호환성은 보증하지 않는다.
+
+## P1~P5 검증 기반
+
 **상태**: P1~P5 구현·자동 검사·실제 SDL 창 검증 완료. 상세 게임 규칙·아트·성능 목표의 확정은 아니다.
 **실행 근거**: 2026-11-10 사용자가 모든 계획의 구현·검증 증분 커밋과 독립 P1/P2 병렬·P3→P4→P5 동일 경로 순차 진행을 지시했다. PR 생성·게시·병합은 범위 밖이다.
 **현재 브랜치/작업트리**: `feature/world-rendering`, `C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden`
@@ -17,7 +36,7 @@
 
 P1/P2 검증 커밋은 `e229bf2`에서 Git merge했고 이후 P3/P4/P5는 같은 브랜치에서 순차 진행했다. P5는 P4 완료 채팅·최종 인계·깨끗한 작업트리를 확인한 뒤 쓰기를 시작했다. 기존 준비 브랜치 `feature/game-screen-integration`의 커밋은 보존하고 필요한 문장만 검토해 반영했다. 준비 브랜치 전체 merge·동일 선행 결과 중복 merge·새 checkout·기존 작업트리 삭제/아카이브는 하지 않았다. 원본 D:/GitHub 작업과 다른 작업트리의 미커밋 변경은 건드리지 않았다.
 
-## 최신 실제 명령·결과
+## P1~P5 구현 검증 명령·결과
 
 명령은 위 공유 작업트리에서 원본 게임 Python으로 실행했다. 실제 창 검사는 동시에 실행하지 않았다.
 

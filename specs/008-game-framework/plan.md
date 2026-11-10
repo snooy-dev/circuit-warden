@@ -4,7 +4,7 @@
 
 **현재 실행 근거**: 2026-11-10 사용자가 각 계획을 새 채팅에서 구현하고 독립 계획을 별도 워크트리에서 병렬 진행하도록 지시했다. 이전 검토 대기는 해제됐다. P1/P2부터 착수하고 P3는 P1/P2, P4는 P3, P5는 P1~P4의 검증된 커밋에 의존한다. 상세 기술 선택은 제안 기본값으로 구현하며 별도 사용자 확정으로 과장하지 않는다.
 
-**Branch**: feature/world-rendering | **Date**: 2026-11-10 | **Spec**: [spec.md](spec.md)
+**Branch**: feature/game-framework | **Date**: 2026-11-11 | **Spec**: [spec.md](spec.md)
 **Status**: P1/P2 통합·P3/P4/P5 동일 작업트리 순차 구현·검증 완료
 
 ## Summary
@@ -48,7 +48,7 @@ Python 3.14 + Pico2D 1.5.1, Windows와 기존 게임 .venv 유지. 기존 001 �
 ## Shared Design & Interfaces
 [architecture](../../docs/architecture.md#게임프레임워크-계약-제안-미구현)가 현재 구현 계약과 기술 기본값, [research](research.md)가 조사 근거, [data-model](data-model.md)과 [contracts](contracts/framework.md)가 최종 결합 모델이다. 이 문서들에 모든 형식이 함께 등장해도 P1에서 미래 Canvas/Renderer/카메라까지 구현하라는 뜻이 아니다. 각 하위 계획이 도입하는 범위만 구현한다. 기존 자료 구조·좌표·반투명 제안은 분할 때문에 변경하지 않는다.
 
-P2는 출력/리셋 정보를 제공하고 P3가 자신의 그리기 자원을 관리한다. LevelScene은 canvas=None 월드 전용 호출과 P5의 선택적 Canvas 결합을 모두 지원한다. P4의 Canvas 단독 검사에는 Level/GameMode를 강제하지 않는다. game_framework.py는 필요한 클래스가 단계별로 추가되며 새 패키지 계층을 미리 만들지 않는다.
+P2는 출력/리셋 정보를 제공하고 P3가 자신의 그리기 자원을 관리한다. LevelScene은 canvas=None 월드 전용 호출과 P5의 선택적 Canvas 결합을 모두 지원한다. P4의 Canvas 단독 검사에는 Level/GameMode를 강제하지 않는다. 초기 단계는 단일 파일로 구현했고, 후속 Package Refactoring Plan에 따라 현재는 game_framework 패키지로 분리한다.
 
 ## Documentation Impact (mandatory)
 각 계획 완료까지 docs·검증·커밋을 미루지 않는다. 검증된 증분마다 담당 코드와 architecture/progress/verification을 갱신·커밋한다. quickstart/README는 실제 가능한 실행만 안내한다. 전체 spec과 연구 근거는 008에 유지하고 tasks.md를 유일한 작업 목록으로 사용한다. verification.md는 계획별 상태를 갱신하며 실행 로그를 누적하지 않는다.
@@ -59,3 +59,7 @@ P2는 출력/리셋 정보를 제공하고 P3가 자신의 그리기 자원을 �
 ## Branch & Worktree Execution
 
 사용자 수정 지시: 계획 번호를 브랜치명에 쓰지 않고 기능명으로 표현한다. P1 feature/gameplay-core와 P2 feature/display-management만 별도 워크트리에서 병렬 실행한다. P3는 feature/world-rendering의 C:/Users/Developer/.codex/worktrees/cbb2/circuit-warden에 두 결과를 통합한다. P4와 P5는 이 같은 브랜치/워크트리를 순차 인계받으며 별도 분기·중복 병합을 하지 않는다. 선행 완료·깨끗한 커밋 확인 전 공유 쓰기는 금지한다. 기존 feature/canvas-ui와 feature/game-screen-integration의 준비 커밋/미커밋 변경은 보존하고 필요한 부분만 인계한다. 현재 해당 워크트리 삭제·아카이브는 하지 않았다.
+
+## Package Refactoring Plan
+2026-11-11 요청에 따라 기존 단일 파일 방침을 대체한다. game_framework.py를 같은 이름의 패키지로 옮긴다. core.py는 객체·모드·레벨, transforms.py는 두 좌표 변환, ui.py는 UIElement·Canvas, rendering.py는 RenderItem·Renderer, drawing.py는 SDL 그리기, scene.py는 LevelScene, _validation.py는 공유 값 검사를 담당한다. __init__.py는 기존 공개 12개 이름만 재노출한다. 내부에서는 패키지 루트를 거치지 않고 담당 모듈을 직접 import해 순환을 피한다.
+메서드/함수 본문은 그대로 옮기며 추상화·새 의존성은 추가하지 않는다. engine.py, main.py, framework_demo.py와 기존 테스트의 공개 import는 유지한다. AST 대조로 구현 본문 보존을 확인하고 전체 자동 검사 및 기존 integration_smoke.py를 실행한다. architecture/progress와 최신 verification을 갱신한다. 원본 작업 폴더·다른 브랜치·아트는 변경하지 않는다.

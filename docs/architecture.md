@@ -8,6 +8,23 @@
 
 현재 구현은 창·게임 루프·입력 전달·장면 전환과 요청된 P1~P5 게임프레임워크 범위다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI와 P5 공동 수명·갱신·렌더·통합 화면도 구현·검증했다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
 
+## 코드 폴더 구조
+
+2026-11-11 구조 정리로 단일 game_framework.py를 같은 이름의 패키지로 대체했다. 기존 `from game_framework import ...` 공개 API와 동작은 유지한다.
+
+| 경로 | 책임 |
+|---|---|
+| `game_framework/__init__.py` | 기존 공개 API 12개 재노출 |
+| `game_framework/core.py` | GameObject·GameMode·Level 수명과 전달 |
+| `game_framework/transforms.py` | WorldTransform·UITransform 좌표 변환 |
+| `game_framework/ui.py` | UIElement·Canvas 트리 소유와 업데이트 |
+| `game_framework/rendering.py` | RenderItem·Renderer 수집·정렬·두 패스 |
+| `game_framework/drawing.py` | Pico2D/SDL 그리기와 상태 복원 |
+| `game_framework/scene.py` | LevelScene의 엔진·레벨·Canvas 연결 |
+| `game_framework/_validation.py` | 내부 공유 값 검사 |
+
+내부 모듈은 패키지 루트를 import하지 않는다. scene은 rendering/transforms/ui, ui는 transforms/_validation, rendering과 drawing은 _validation에 의존한다. core에는 SDL 의존이 없다. 다만 패키지 루트는 기존처럼 Pico2D를 로드한다. engine.py와 두 실행 진입점 main.py/framework_demo.py, tests/ 배치는 유지한다. 새 추상화·게임 동작은 추가하지 않았다.
+
 ## 실행과 장면 계약
 
 - engine.py의 Engine.run(initial_scene)이 창 수명과 루프를 소유한다. main.py는 실행 검사 화면이다. Pico2D가 전역 창 하나를 사용하므로 동시 엔진 실행은 지원하지 않는다.
@@ -96,7 +113,7 @@ UI는 루트 목록에 여러 트리를 담는 형태다. 별도 UI ID 조회 �
 
 ### Level 생성·삭제·순회
 
-P1 구현: `game_framework.py`의 GameObject·Level·GameMode. `Level(mode=None)`은 독립 기본 모드를 만들거나 전달받은 모드를 해당 Level 수명 내내 연결하며 다른 Level에서 공유·재사용하지 않는다. `mode.level`, `obj.level`, `obj.id`는 읽기 전용이다. `Level.objects`는 등록순 tuple, `Level.get(id)`는 현재 객체 또는 None을 돌려준다.
+P1 구현: `game_framework/core.py`의 GameObject·Level·GameMode. `Level(mode=None)`은 독립 기본 모드를 만들거나 전달받은 모드를 해당 Level 수명 내내 연결하며 다른 Level에서 공유·재사용하지 않는다. `mode.level`, `obj.level`, `obj.id`는 읽기 전용이다. `Level.objects`는 등록순 tuple, `Level.get(id)`는 현재 객체 또는 None을 돌려준다.
 
 `Level.on_open()`에서 매번 새 객체로 초기 배치를 만들고 이어 `GameMode.on_start()`를 호출한다. 열기 실패 시 `on_end()`도 시도해 부분 모드 자원을 정리한다. 닫기는 반복해도 무해하며 다시 열 수 있지만 ID는 초기화하지 않는다. 닫힌 상태의 입력/update는 무시한다. 전달 중 닫기는 이후 객체 호출을 중단하며 같은 전달 안의 재열기는 거부한다. 정리 콜백 중 등록과 재열기도 거부한다. 단일 오류는 그대로 전달하고 복수 초기화/정리 오류는 BaseExceptionGroup으로 보존한다. 위치·게임 상태는 구체 객체가 보유하며 빈 렌더 필드는 추가하지 않았다.
 

@@ -52,3 +52,9 @@ P1/P2의 독립 읽기 전용 검토는 병행할 수 있다. 실제 동시 구�
 
 ## Implementation Strategy
 각 계획에서 최소 기능·검사·docs를 함께 진행하고 검증된 증분마다 커밋한다. 계획 전체 또는 P5까지 커밋을 미루지 않는다. 계획별 완료와 전체 프레임워크 완료를 구분한다. 승인된 각 계획 범위로 implement·검증·docs 갱신·converge를 진행한다. 선행 계획의 미완료를 건너뛰지 않는다.
+
+## Phase 7: Package Refactoring
+- [X] T023 FR-011/SC-003의 범위·계획·호출자·문서 영향을 대조하고 기존 85개 검사를 확인한다.
+- [X] T024 game_framework 패키지로 구현 본문을 보존해 이동하고 공개 API 및 개별 모듈 import 검사를 추가한다.
+- [X] T025 전체 자동/SDL 통합 검사와 AST 본문 보존을 검사한다.
+- [X] T026 architecture/progress/verification을 갱신하고 링크·diff·converge 대조 후 커밋한다.
