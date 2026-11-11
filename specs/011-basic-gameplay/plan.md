@@ -52,3 +52,13 @@ constitution/workflow/tooling은 정책·도구 환경 변화가 없어 수정�
 ## Verification & Risks
 
 첫 증분은 기존 이동 검사와 구체 모드 단일 전달을 확인한다. 두 번째는 공격 중 재클릭·키 해제/반대키/양키·포커스·종료 재공격·첫 프레임과 잘못된 loop를 검사한다. 실제 창 smoke는 양 방향 공격·종료 복귀를 관찰 가능한 PNG로 캡처한다. 좌측 공격은 반전 임시 표현이며 해부학적 손 표현·기존 공격 프레임의 형태 흔들림은 최종 아트 품질 승인이 아니다. 별도 좌측 원화 제작은 제외한다.
+
+## 후속 증분: 720p·공격/베기 연결
+
+기존 브랜치 fetch·origin/main merge 결과 Already up to date, 작업 트리 깨끗함. 새 공격은 attack-sword-v6/bundle-outlined/sheet.png, 효과는 provisional-approved/sword-trail-electric-v4/trail-sheet.png를 바이트 보존 복사한다. pixelfx MIT 고지는 licenses/pixelfx-LICENSE.txt 한 곳에 보관한다. 게임·자산 README에 별도 제작 도구 사용 문구를 추가하지 않는다. 사용자 지시에 따라 에셋별 라이선스 파일을 만들지 않는다.
+
+game/scene.py의 DEFAULT_SIZE만 (1280,720), Engine(*DEFAULT_SIZE)로 전달해 범용 엔진의 기본값과 view_height=600을 분리한다. F6 대체 크기는 기존 (1024,720)을 유지한다. 호출부 tests/smoke/character_smoke.py와 통합 검사의 window_size를 맞춘다.
+
+game/effects.py에 단발 SwordTrail(GameObject)을 추가한다. 공격 시작에 level.spawn, 좌표·방향·배율 고정, 기존 SpritePlayer로 700ms 뒤 destroy. 레벨 스냅샷 규칙으로 생성 프레임은 update 없이 0초에서 보인다. 바닥(-2)→효과(-1)→캐릭터(0) 순서로 그려 원본 behind character를 유지한다. Character는 독립 검사에서도 쓰이므로 level이 있을 때만 효과를 spawn한다. 재공격마다 독립 객체를 사용해 남은 잔상을 자르지 않는다.
+
+호출부/검사: load_clips와 animations.json에 sword_trail 단발 추가, 기존 단위 fixture는 레벨 없이 이동 검사를 유지한다. 통합 검사 하나에서 효과의 첫 프레임·방향 고정·이동 후 잔존·재공격 공존·소멸·장면 종료를 검증한다. 기존 SDL smoke에서 해상도·양 방향 합성과 잔여 효과를 확인한다. 전체 엔진 회귀는 필요 없다. docs/art-direction·architecture·systems·progress, README·assets 출처·검증을 갱신해 한 증분으로 커밋한다.

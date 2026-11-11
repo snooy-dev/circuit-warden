@@ -11,7 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import pico2d.pico2d as pico
 
 from engine import Engine
-from game.scene import CharacterScene
+from game.scene import CharacterScene, DEFAULT_SIZE
+from game.effects import SwordTrail
 
 
 def push_key(symbol, kind=pico.SDL_KEYDOWN):
@@ -61,6 +62,7 @@ class CharacterSmoke(CharacterScene):
 
     def exercise(self):
         actor = self.character
+        assert self.engine.window_size == (1280, 720)
         idle, left, right = (actor.clips[name] for name in ('idle', 'run_left', 'run_right'))
         assert actor.player.clip is idle and actor.player.elapsed > 0 and actor.x == 0
         self.capture('idle')
@@ -89,18 +91,22 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert actor.state == 'attack' and actor.x == stopped_x and actor.facing == -1
+        trail = next(obj for obj in self.level.objects if isinstance(obj, SwordTrail))
+        assert trail.position[0] == stopped_x and trail.facing == -1
         self.capture('attack-left')
         push_key(pico.SDLK_d)
         push_click()
         yield
 
         assert actor.state == 'run' and actor.x > stopped_x and actor.facing == 1
+        assert trail.level is self.level and trail.position[0] == stopped_x and trail.facing == -1
         self.capture('attack-resume-right')
         attack_x = actor.x
         push_click()
         yield
 
         assert actor.state == 'attack' and actor.x == attack_x and actor.facing == 1
+        assert trail.level is None
         self.capture('attack-right')
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_click()
@@ -157,7 +163,7 @@ if __name__ == '__main__':
     if not output.is_dir() or output.is_relative_to(Path(__file__).resolve().parents[2]):
         parser.error('프로젝트 밖의 기존 출력 폴더를 지정해야 합니다.')
     scene = CharacterSmoke(output)
-    Engine().run(scene)
+    Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
     print('PASS: idle/run-right/opposite/run-left/attack-left/resume/attack-right/release/focus-loss/resize/fullscreen/escape/cleanup',

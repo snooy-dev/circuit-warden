@@ -33,3 +33,13 @@
 ## Dependencies & Execution Order
 
 T001→T002→T003→T004→T005가 첫 플레이 가능한 증분이다. T006→T007→T008→T009→T010→T011이 공격 증분이다. 주 에이전트만 쓰므로 파일 경합 없음. 독립 감사는 읽기 전용 서브에이전트가 수행한다. US1/US2 구현은 공통 파일이므로 순차 실행하고, 소스 검토와 문서/에셋 읽기만 병렬 가능하다.
+
+## Phase 5: User Story 3 - 720p·공격/베기 연결
+
+- [x] T012 [US3] specs/011-basic-gameplay/spec.md·plan.md에 후속 요청 범위와 FR-007/008·SC-004 및 현재 원본을 대조한다.
+- [x] T013 [US3] game/scene.py의 게임 기본 크기와 assets/warden의 공격·베기·출처와 licenses/pixelfx-LICENSE.txt 공통 라이선스를 갱신한다.
+- [x] T014 [US3] game/effects.py와 game/character.py에 공격 동기화·독립 수명·뒤쪽 레이어를 연결한다.
+- [x] T015 [US3] tests/integration/test_character_scene.py와 tests/smoke/character_smoke.py에서 크기·첫 프레임·양 방향·중첩/소멸·자원 정리를 확인한다.
+- [x] T016 docs·README·assets/warden/README.md와 specs/011-basic-gameplay/verification.md를 현재 결과로 맞추고 converge·링크·공백 검사 후 로컬 커밋한다.
+
+T012→T013→T014→T015→T016 순서. 신규 게임 아트 생성·피해 규칙 변경 없음.

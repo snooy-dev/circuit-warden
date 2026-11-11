@@ -38,8 +38,35 @@ FR-001→T001, FR-002/003→T003/004, FR-004/005→T006~009, FR-006→T007/008, 
 - FR-006: bool loop 및 클립 정책 검증, 진입 실패·종료 이미지 정리. 게임은 assets만 사용하며 원본 art에 의존하지 않는다.
 - FR-DOC·SC-DOC: README·docs/README·game-design·systems·architecture·art-direction·progress·assets README·tests README·011 문서를 현 구현과 대조했다. constitution/workflow/tooling은 정책·도구 환경 변화가 없어 영향 없음. 과거 009/010 검증 근거 보존.
 
-## Converge와 한계
+## 초기 구현 Converge와 한계
 
 구현 후 spec/plan/tasks의 기능 요구 7개·성공 기준 4개·사용자 수용 시나리오 5개·작업 11개와 실제 코드를 대조했다. 입력 소유·명시적 player·의존성·자산 보존·상태 전이·화면·수명·문서·증분 커밋 계획을 충족하며 추가 구현 작업 없음. 통합 전 첫 증분은 c2a5ab3에 보존했다.
 
-전체 회귀·다른 세 smoke는 공통 엔진을 바꾸지 않아 선택하지 않았다. 타이틀 모드·적/피해·콤보·물리·VFX·새 아트는 요청 범위 밖이다. 왼쪽 공격은 수평 반전이며 공격 원본의 알려진 형태 흔들림은 그대로다. idle/Run 이동 경계를 유지하므로 화면 끝에서 검·공격 여백 일부가 잘릴 수 있다. 사용자 직접 확인 전 009 임시 자료를 삭제하지 않는다.
+전체 회귀·다른 세 smoke는 공통 엔진을 바꾸지 않아 선택하지 않았다. 초기 구현 당시 타이틀 모드·적/피해·콤보·물리·VFX·새 아트는 범위 밖이었다. 베기 VFX는 아래 후속 요청으로 포함했다. 왼쪽 공격은 수평 반전이며 공격 원본의 알려진 형태 흔들림은 그대로다. idle/Run 이동 경계를 유지하므로 화면 끝에서 검·공격 여백 일부가 잘릴 수 있다. 사용자 직접 확인 전 009 임시 자료를 삭제하지 않는다.
+
+## 후속 증분: 720p·아웃라인 공격·베기 VFX
+
+사용자 후속 요청으로 FR-007/008·SC-004와 US3를 명세·계획·T012~016에 연결하고 analyze 대조했다. 추가 요구 2개 모두 작업/검증에 대응, 충돌 없음. 기존 제외 범위 중 베기 VFX만 이번 요청으로 대체했다. 시작 시 작업 트리는 깨끗했으며 기존 구현/아트 기록은 이미 커밋됐다. `git fetch origin` 후 `git merge --no-commit origin/main`: Already up to date.
+
+게임 기본 창은 game/scene.py에서 Engine(1280,720)으로 지정한다. 공통 엔진 기본값과 논리 높이 600은 보존한다. attack.png는 v6 아웃라인 있음 원본으로 교체했고 전기 베기 v4를 복사했다. 사용자 후속 지시에 따라 pixelfx 라이선스는 licenses/pixelfx-LICENSE.txt에서 공통 관리한다. 원본 파일은 수정하지 않았다. 공통 라이선스·고지를 보존하며 게임·자산 README에는 별도 제작 도구 사용 문구를 두지 않는다. 새 라이브러리 설치·이미지 생성 없음.
+
+### 선택한 검증과 실제 결과
+
+게임 `.venv/Scripts/python.exe`로 아래 4개를 한 번 실행해 모두 통과했다(`-B -m unittest <아래 메서드 4개> -v`).
+
+- `tests.integration.test_character_scene.CharacterSceneTests.test_sword_trails_keep_attack_position_and_expire_independently`: 효과 생성 0초·14×50ms·뒤쪽 레이어·좌측 반전·공격 후 이동과 방향 변화에도 위치/방향 고정·후속 효과 공존·700ms 개별 제거·장면 종료 시 이미지 해제.
+- `tests.integration.test_character_scene.CharacterSceneTests.test_real_asset_draw_and_fresh_scene_lifetime`: 실제 새 PNG 로딩·출력·장면 이미지 수명.
+- `tests.integration.test_character_scene.CharacterSceneTests.test_window_commands_and_resize_bounds`: 변경한 기본 창의 F6/F11·경계 보정.
+- `tests.unit.test_character.CharacterTests.test_attack_starts_at_first_frame_ignores_clicks_and_resumes_held_key`: 기존 공격 정지·첫 프레임·유지 키 복귀 보존.
+
+`-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/720p-trail` → 종료 0/PASS. 실제 창 1280×720, 좌우 공격·잔상 잔존/소멸, focus-loss·F6/F11·Escape·자원 정리 확인.
+
+위 폴더의 character-attack-left.png·character-attack-right.png·character-attack-resume-right.png를 열어 양 방향 외곽선 공격·캐릭터 뒤 전기 베기·이동 후 남은 잔상을 관찰했다. 출력 1280×720을 확인했으며 아트 목업이 아닌 실제 SDL 렌더 캡처다.
+
+pathlib/hashlib/struct 대조로 공격 원본/복사 SHA-256 `e7a9a24a46feff5d20ffb20f032b57b9bbd67754c0263e8f5fb162458b7891e6`, 베기 `379ebfc70867974cdb0afdf4b37bb5c5a5f5ccd931479d04857f887f1d48dc30` 일치. 셀 192², 공격 7열·350ms/베기 14열·700ms, 기준점 (96,120) 보존. 공통 pixelfx 라이선스는 원본 CREDITS의 MIT License 절과 텍스트 일치. 에셋별 라이선스 사본·제작 도구 사용 문구 없음. 문서만 정리했으므로 게임 검사는 재실행하지 않고 위 결과를 재사용한다. 변경 Markdown 로컬 링크 누락 0, `git diff --check` 통과.
+
+### 최종 문서 대응·Converge
+
+FR-007→DEFAULT_SIZE/실제 창, FR-008→SwordTrail/독립 수명·합성·자산, SC-004→해시·창 캡처·표적 검사. spec/plan/tasks의 총 9개 기능 요구·5개 성공 기준·16개 작업을 대조해 미구현 필수 항목 없음. 후속 변경은 docs/architecture·systems/basic-gameplay·art-direction·progress·README·assets 출처 및 011 문서에 반영했다. 게임 규칙 본체와 기존 350ms 공격 잠금은 유지한다.
+
+원본 베기는 검끝을 추종하지 않는 고정 호이고 v6에서도 이를 보존했다. 왼쪽은 수평 반전, 화면 가장자리에서는 효과 일부가 잘릴 수 있다. 전체 회귀·다른 smoke는 공통 엔진 변경이 없어 선택하지 않았다. 사용자 직접 조작·최종 미술 품질, 피해 판정·새 아트 제작은 이번 검증/구현 범위 밖이다.

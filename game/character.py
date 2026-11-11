@@ -8,6 +8,8 @@ from transitions import Machine
 
 from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
 
+from .effects import SwordTrail
+
 
 GROUND_Y = -180
 SPEED = 180
@@ -47,11 +49,11 @@ def load_clips(images):
     except ValueError as error:
         raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
     clips = {}
-    for name in ('idle', 'run_left', 'run_right', 'attack'):
+    for name in ('idle', 'run_left', 'run_right', 'attack', 'sword_trail'):
         try:
             clips[name] = _load_clip(images, animations[name])
-            if clips[name].loop != (name != 'attack'):
-                raise ValueError('loop는 idle/Run에서 true, attack에서 false여야 합니다.')
+            if clips[name].loop != (name in ('idle', 'run_left', 'run_right')):
+                raise ValueError('loop는 idle/Run에서 true, attack/sword_trail에서 false여야 합니다.')
         except (KeyError, TypeError, ValueError, OverflowError) as error:
             raise ValueError(f'애니메이션 설정 오류: {path} ({name}): {error}') from error
     return clips
@@ -144,6 +146,9 @@ class Character(GameObject):
                     self.x = min(max(self.x, left + idle_left), right - idle_right)
 
         if self.state == 'attack':
+            if started and self.level is not None:
+                self.level.spawn(SwordTrail(self.clips['sword_trail'], (self.x, GROUND_Y),
+                                           self.facing, DISPLAY_SCALE))
             return
         if clip is self.clips['idle']:
             if self.state == 'run':
