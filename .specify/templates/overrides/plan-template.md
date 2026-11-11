@@ -13,7 +13,7 @@
 - **Language/Dependencies**: Python + Pico2D; 현재 requirements.txt 확인.
 - **Runtime**: 게임 .venv/, 도구 .local-tools/python/.
 - **Platform/Performance**: [확정 목표 또는 미정. 임의 수치 확정 금지.]
-- **Testing**: [Python 자동 테스트와 실제 Pico2D 검사의 범위·명령.]
+- **Testing**: [해당 동작의 직접 확인 또는 필요한 개별 자동 검사. 선택 이유·명령만 기재; 전체 검사를 기본값으로 넣지 않는다.]
 
 ## Constitution Check
 
@@ -42,4 +42,4 @@ docs/progress.md에 현재 목표·활성 작업·미결 사항을 갱신한다.
 
 ## Verification & Risks
 
-[자동 테스트·Pico2D 실행·에셋 검사·사람의 플레이 판단을 구분. 미실행을 통과로 쓰지 않는다.]
+[선택한 최소 확인 방법·구체적 위험·결과 재사용 여부. 작은 기능은 직접 확인으로 충분하며 자동 테스트는 필요할 때만 선택한다. 관련 없는 미실행은 완료를 막지 않는다.]

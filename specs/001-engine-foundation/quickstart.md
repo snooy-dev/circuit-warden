@@ -1,5 +1,7 @@
 # 실행·검증 안내
 
+> 과거 구현 당시의 실행 기록이다. 초기 도형 데모 진입점은 010 후속 정리에서 제거했고 필요한 장면을 tests/fixtures로 옮겼다. 당시 코드는 Git 이력에 보존한다. 현재 실행법은 [게임 안내](../../README.md)와 [검사 안내](../../tests/README.md)를 따른다.
+
 프로젝트 루트 PowerShell, 기존 .venv와 requirements.txt 환경을 사용한다.
 
 ```powershell

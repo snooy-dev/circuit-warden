@@ -11,6 +11,8 @@
 
 반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다.
 
+엔진 통합 브랜치는 `feature/engine`이다. [008 계획](../specs/008-game-framework/plan.md)의 P1~P5 구현·검증을 통합했으며, 과거 구현 근거는 [008 검증 결과](../specs/008-game-framework/verification.md), 현재 실행·검사는 [tests 안내](../tests/README.md)를 따른다. 게임 브랜치에는 idle·Run 기반 표시·이동이 연결돼 있으며 최종 게임 규칙은 별도다. 승인된 엔진/게임 API 경계와 game·tests 분류는 [기술 구조](architecture.md#코드-폴더-구조)를 따른다.
+
 ## 운영 원칙
 
 - docs는 현재 기준, specs는 진행 중인 변경의 작업 문서다. 변경 이력은 Git 로그·diff로 확인한다.
@@ -22,3 +24,7 @@
 - 완료 specs의 정리 조건과 미커밋 근거 보호는 [작업 규칙](../AGENTS.md)을 따른다.
 
 [워크플로우](workflow.md), [도구 구성](tooling.md), [AGENTS.md](../AGENTS.md), [Constitution](../.specify/memory/constitution.md)를 함께 따른다.
+
+스프라이트 표시·재생·이미지 수명은 [009 명세](../specs/009-sprite-runtime/spec.md)와 [통합 검증](../specs/009-sprite-runtime/verification.md)을 따른다.
+
+캐릭터 출력·좌우 이동은 [010 명세](../specs/010-character-movement/spec.md)·[실행법](../specs/010-character-movement/quickstart.md)·[검증](../specs/010-character-movement/verification.md)을 따른다.

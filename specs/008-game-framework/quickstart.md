@@ -1,0 +1,72 @@
+# 게임프레임워크 검사 계획
+
+> 과거 구현 당시의 실행 기록이다. 초기 도형 데모 진입점은 010 후속 정리에서 제거했고 필요한 장면을 tests/fixtures로 옮겼다. 당시 코드는 Git 이력에 보존한다. 현재 실행법은 [게임 안내](../../README.md)와 [검사 안내](../../tests/README.md)를 따른다.
+
+모든 계획의 구현이 승인됐다. [분리 계획](plan.md)에 따라 P1 core·P2 출력·P3 월드·P4 독립 UI를 구현·검증했으며 P5 통합도 구현·자동/실제 SDL 검증했다. framework_demo.py는 기본 통합 모드, --world 월드 전용, --ui 독립 UI 모드를 제공한다.
+
+작업 폴더의 PowerShell에서 실행한다. 기존 저장소의 게임 환경을 재사용한다.
+
+```powershell
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest discover -s tests -v
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe framework_demo.py
+```
+
+도형이 시간에 따라 이동한다. 왼쪽 클릭은 클릭 위치에 객체 생성, 오른쪽 클릭은 가장 최근 객체 제거, Space 또는 마우스 가운데 버튼은 검사 레벨 왕복, 방향키는 카메라 이동, D는 첫 객체의 뎁스 변경, F6는 창 크기, F11은 전체화면/복귀, Escape 또는 창 닫기는 종료다. 전환 후 이전 객체를 정리하고 새 레벨 초기 배치로 돌아간다. 빨간 몸·노란 무기 사이에 파란 반투명 그림을 교차 정렬하며 보라색 도형은 중심이 화면 밖이지만 일부가 보인다. 초록 도형은 화면 밖에서 이동해 들어온다. 기존 main.py 검사도 유지한다. 실제 게임 규칙이나 아트는 아니다.
+
+자동 검사는 서로 다른 레벨의 규칙 격리, 입력 후 업데이트·업데이트 후 렌더링, 이동의 단일 적용, 렌더링 전후 상태 불변도 확인했다.
+
+겹치는 도형으로 서로 다른 뎁스·동률 안정성·한 객체의 여러 이미지 사이에 다른 객체 이미지 끼우기·실시간 뎁스 변경을 확인한다. 자동 검사에서 렌더 정렬 전후 객체 업데이트 순서 불변을 확인했다. 통합 검사에서 큰 월드 뎁스 위에도 UI가 남는 것을 확인했다.
+
+Canvas 검사는 두 겹친 패널과 각 자식 도형으로 한다. 뒤 패널 자식의 형제 뎁스를 크게 해도 앞 패널보다 뒤에 있어야 한다. 부모 이동은 자식 위치에 합산되고, 숨김은 하위 트리만 그리지 않으며, 제거는 하위 트리 전체를 다음 호출/렌더에서 제외해야 한다. UI 정렬은 update 등록순을 바꾸지 않아야 한다. 자동 검사와 실제 UI 창 검사에서 위 동작을 확인했다.
+
+월드의 경계 진입·중심 밖 부분 그림·카메라 이동·반투명 겹침과 공유 이미지 opacity·실패 뒤 상태 복원은 검증했다. 고정 UI 기준점·부모 그림 밖/자식 안·UI 반투명 합성은 P4에서 검사했다. 월드 위 반투명 UI 결합도 P5 실제 SDL 픽셀 검사와 출력 관찰로 확인했다.
+
+가변 출력 검사는 같은 화면비의 다른 크기, 다른 화면비, 가능한 DPI 환경, 창/보더리스 전체화면 전환·복귀·최소화로 수행한다. 월드 좌표 불변·UI 루트 기준점/그림 크기·마우스 위치 일치·화면 밖 판정과 복귀 후 자원 표시를 확인한다. P2 도형 검사는 아래 F6/F11 조작과 실제 SDL 자동 검사로 확인했다. 월드와 독립 UI는 각각 실제 SDL 창에서 검증했으며 P5 통합 화면도 같은 출력 변경을 실제 SDL 창에서 검증했다.
+
+## P2 독립 검사
+
+`& D:/GitHub/circuit-warden/.venv/Scripts/python.exe main.py`를 실행한다. F6는 두 검사 창 크기를 왕복하고 F11은 보더리스 전체화면/창 모드 복귀다. 창 테두리 드래그와 최소화/복구 뒤 마우스 표시와 도형을 확인한다. Space/마우스/Escape 계약은 유지한다. 실제/모의 DPI 증거는 verification에서 구분한다.
+
+실제 창을 자동 검사하고 출력 PNG를 저장하려면 기존 폴더를 인자로 준다. 약 5초 뒤 자동 종료한다.
+
+```powershell
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/smoke/display_smoke.py <기존-출력-폴더>
+```
+
+이 검사는 실제 SDL 크기/모드/최소화/복구와 마우스 이벤트를 검사하며 물리 키보드 입력이나 다른 DPI 모니터 이동을 대신하지 않는다.
+
+## P3 실제 월드 검사
+
+기존 출력 폴더를 인자로 주면 실제 SDL 입력 큐로 생성·삭제·카메라·레벨 왕복을 실행하고 실제 출력 픽셀과 PNG를 검사한 뒤 자동 종료한다. 검사용 2×2 texture는 메모리에서 만들고 레벨 종료 때 정리하며 에셋 파일은 만들지 않는다.
+
+```powershell
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/smoke/world_smoke.py <기존-출력-폴더>
+```
+
+실제 창의 640×480→960×540→보더리스 전체화면→창 복귀와 도형/이미지 source-over, 화면 밖 이동·카메라·A→B→A 정리를 검사했다. 타깃 리셋 후 도형과 일반 이미지는 다시 그린다. 장치 리셋·누락된 리셋 세대는 명시 오류로 종료·정리한다. 복구 로더가 필요한 렌더 타깃 texture는 draw_image에서 명시 오류로 거부한다. 실물 DPI 변경·물리 키 조작을 대신하지 않는다. 자동 UI Space 입력의 전환은 확인하지 못했고 사용자 입력 감지로 추가 자동 조작을 중단했으며 원인은 미확정이다.
+
+## P4 독립 UI 검사
+
+```powershell
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe framework_demo.py --ui
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/smoke/ui_smoke.py <기존-출력-폴더>
+```
+
+Level/GameMode 없이 겹친 빨간 뒤 패널·노란 고뎁스 자식·파란 반투명 앞 패널을 표시한다. 방향키로 뒤 부모 이동, H로 하위 트리 숨김/표시, Delete로 하위 트리 삭제, D로 패널 형제 순서 변경, R로 새 UI 장면 초기화다. 앞 패널의 초록 자식은 부모 opacity를 상속하지 않는다. 왼쪽 아래 초록 표시는 자기 부모 그림이 밖이어도 자식은 표시됨을 검사한다. 오른쪽 위 보라색 표시는 anchor=(1,0) 기준점이다. 마우스는 좌표 역변환 표시이며 UI 입력 소비·포커스·버튼은 없다. F6/F11/Escape는 기존 출력 조작이다. 제작 기준 (800,600)은 검사 전용이며 게임 최종 해상도가 아니다.
+
+ui_smoke는 실제 SDL 입력 큐로 이동/숨김/삭제, 실제 마우스 이동, 640×480→960×540→보더리스→복귀→최소화/복구와 화면 픽셀을 검사하고 약 6초 후 자동 종료한다. p4-initial/moved/hidden/deleted/resized/fullscreen.png를 저장하며 종료 후 트리와 렌더 참조도 확인한다. 물리 키보드·테두리 드래그·실물 DPI 변경을 대신하지 않는다.
+
+## P5 통합 검사
+
+기본 `framework_demo.py`는 월드와 반투명 UI를 함께 실행한다. 월드 생성/삭제·시간 이동·카메라·뎁스 조작은 위와 같다. H는 초록 뒤 UI 패널 하위 트리 숨김/표시, Delete는 그 하위 트리 삭제다. 마우스 흰색 표시는 UI 논리 좌표이고 Space/가운데 버튼 왕복은 월드·Canvas를 모두 새 초기 배치로 만든다. UI를 숨겨도 update는 유지한다. UI 입력 소비·포커스·게임 HUD 규칙은 없다. 이전 월드 전용 실행은 --world로 유지한다.
+
+```powershell
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe framework_demo.py
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe framework_demo.py --world
+& D:/GitHub/circuit-warden/.venv/Scripts/python.exe tests/smoke/integration_smoke.py <기존-출력-폴더>
+```
+
+integration_smoke는 약 7초 동안 실제 SDL 입력 큐로 생성/삭제·큰 월드 뎁스·카메라·UI 숨김/삭제·A→B→A·Escape 종료를 실행한다. 640×480→960×540→보더리스→복귀→최소화/복구, 마우스 역변환, 반투명 UI/월드 source-over 픽셀과 anchor를 assert한다. p5-initial/boundary-entry/ui-over-high-world/camera-shift/resized/fullscreen/hidden/deleted/level-B/return-A.png를 저장하고 모든 화면의 Level·Canvas·renderer·engine 참조 정리를 확인한다. 일반 자동 UI 키 입력 성공이나 사용자 직접 확인으로 표시하지 않으며 실물 DPI·물리 키 조작은 미확인이다.
+
+## 책임별 구조
+게임 API는 game_framework, 엔진 내부 실행은 engine, 예제 구현은 demos에 둔다. main.py/framework_demo.py는 기존 실행 명령을 유지한다. tests/unit·integration은 기존 unittest discover 명령으로 함께 실행하며 별도 실제 창 검사는 위 tests/smoke 경로를 사용한다. core/scene의 직전 하위 모듈 import는 world/level_scene 재노출로 유지한다. Python __module__ 경로는 변경되며 저장된 pickle 호환은 보증하지 않는다.

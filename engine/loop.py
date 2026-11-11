@@ -4,31 +4,28 @@ from time import perf_counter, sleep
 
 import pico2d.pico2d as pico
 
-WIDTH, HEIGHT = 800, 600
+from .display import Display, WIDTH, HEIGHT
+from .events import poll_events
+from .scene import Scene
+
 FRAME_SECONDS = 1 / 60
 MAX_DT = 0.1
 _active_engine = None
 
 
-class Scene:
-    def enter(self, engine: 'Engine') -> None:
-        pass
-
-    def handle_event(self, event) -> None:
-        pass
-
-    def update(self, dt: float) -> None:
-        pass
-
-    def draw(self) -> None:
-        pass
-
-    def exit(self) -> None:
-        pass
-
-
-class Engine:
-    def __init__(self):
+class Engine(Display):
+    def __init__(self, width=WIDTH, height=HEIGHT, *, fullscreen=False):
+        self._validate_size(width, height)
+        self._windowed_size = (width, height)
+        self._requested_fullscreen = bool(fullscreen)
+        self._display_request = None
+        self.window_size = (width, height)
+        self.output_size = (0, 0)
+        self.viewport = (0, 0, 0, 0)
+        self.fullscreen = False
+        self.output_valid = False
+        self.render_resets = ()
+        self.reset_generation = 0
         self._running = False
         self._scene = None
         self._pending = None
@@ -55,10 +52,15 @@ class Engine:
         pico.window = pico.renderer = None
         pico.audio_on = False
         try:
-            pico.open_canvas(WIDTH, HEIGHT)
+            pico.open_canvas(*self._windowed_size)
             if not pico.window or not pico.renderer:
                 raise RuntimeError('Pico2D 창 또는 렌더러를 생성하지 못했습니다.')
             pico.hide_lattice()
+            pico.SDL_SetWindowResizable(pico.window, pico.SDL_TRUE)
+            self.fullscreen = False
+            self._display_request = True
+            self._apply_display()
+            self._refresh_display()
             self._scene = initial_scene
             self._scene.enter(self)
             previous = None
@@ -66,7 +68,14 @@ class Engine:
                 started = perf_counter()
                 dt = 0.0 if previous is None else min(started - previous, MAX_DT)
                 previous = started
-                for event in pico.get_events():
+                self._apply_display()
+                events = poll_events()
+                # 이벤트 펌프가 반영한 크기를 입력 전달 전에 확정한다.
+                frame_display = self._refresh_display()
+                self.render_resets = tuple(event.type for event in events if event.type in (
+                    pico.SDL_RENDER_TARGETS_RESET, pico.SDL_RENDER_DEVICE_RESET))
+                self.reset_generation += len(self.render_resets)
+                for event in events:
                     if event.type == pico.SDL_QUIT or (
                         event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_ESCAPE
                     ):
@@ -80,11 +89,13 @@ class Engine:
                 self._scene.update(dt)
                 if not self._running:
                     break
-                pico.clear_canvas()
-                self._scene.draw()
-                if not self._running:
-                    break
-                pico.update_canvas()
+                if self.output_valid and self._query_display() == frame_display:
+                    pico.clear_canvas()
+                    self._scene.draw()
+                    if not self._running:
+                        break
+                    if self._query_display() == frame_display:
+                        pico.update_canvas()
                 if self._pending is not None:
                     next_scene, self._pending = self._pending, None
                     self._leave_scene()
@@ -97,6 +108,7 @@ class Engine:
                     sleep(max(0.0, FRAME_SECONDS - (perf_counter() - started)))
         finally:
             self._running = False
+            self.output_valid = False
             try:
                 self._leave_scene()
             finally:
