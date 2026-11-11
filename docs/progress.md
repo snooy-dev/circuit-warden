@@ -4,26 +4,23 @@
 
 ## 현재 단계
 
-- 기본 실행 기반과 008 게임 프레임워크는 구현되어 있다. `feature/engine`의 패키지 구조에 009 스프라이트 표시·재생·이미지 수명을 통합했다. 자동 검사 106개와 실제 PNG·SDL 8단계가 통과했으며 [Draft PR #2](https://github.com/snooy-dev/circuit-warden/pull/2)를 생성했다. [009 명세](../specs/009-sprite-runtime/spec.md)·[계획](../specs/009-sprite-runtime/plan.md)·[검증](../specs/009-sprite-runtime/verification.md)을 따른다.
-- 2026-11-11 사용자가 미구현 기반 보완 → `feature/engine → main` PR 생성 → 별도 게임 브랜치 구현 순서를 지시했다. PR 생성은 요청 범위이며 main 병합은 수행하지 않는다.
-- 게임 브랜치 이름은 사용자가 **`feature/character-movement`**를 선택했다. idle v7·Run v4 시트를 버전 없는 게임 에셋 이름으로 복사하고 `.gitattributes`를 추가한 뒤 표시·이동·정지/달리기 전환을 구현한다. 이 작업은 엔진 PR 생성 후 시작한다.
-- 이전 009 임시 출력의 사용자 직접 확인과 확인 후 임시 자료 정리는 미완료다. 이번 진행 지시를 과거 화면 확인 완료로 간주하지 않으며 기존 임시 자료를 삭제하지 않는다.
+- 엔진 패키지·스프라이트 통합은 자동 106개와 실제 PNG·SDL 8단계 검사를 통과했고 [Draft PR #2](https://github.com/snooy-dev/circuit-warden/pull/2)를 생성했다. main은 병합하지 않았다.
+- 사용자 요청·중단 후 계속 지시에 따라 `feature/character-movement`에서 캐릭터 표시·좌우 이동을 구현 중이다. [010 명세](../specs/010-character-movement/spec.md)·[계획](../specs/010-character-movement/plan.md)·[검증](../specs/010-character-movement/verification.md)을 따른다.
+- idle v7·Run v4 좌우 시트를 버전 없는 assets/warden 이름으로 복사했고 3개 SHA-256·규격·시간이 원본과 일치했다. `.gitattributes`에 PNG binary를 명시했다. 원본 art를 수정하지 않았다.
 
-## 확정 사항
+## 확정 범위와 가정
 
-- Python + Pico2D와 기존 `.venv/`를 유지한다. 엔진 내부 실행은 `engine/`, 게임 조작 API는 `game_framework/`, 검사 예제는 `demos/`에 있다. [기술 구조](architecture.md)를 따른다.
-- Spec Kit로 기능의 명세·계획·작업·검증을 연결한다. PR 외 추가 승인 대기를 만들지 않으며 검증된 증분을 커밋한다. 커밋 말머리는 영어, 요약·본문 설명은 한국어로 작성한다.
-- `art/`는 제작 원본, `assets/`는 실제 사용 자산이다. 원본을 수정하지 않고 필요한 시트만 복사한다. 이번 엔진 변경에는 영구 게임 에셋을 포함하지 않는다.
-- idle·걷기·Run v4·공격 v5의 잠정 승인 상태는 [아트 기준](art-direction.md)을 따른다. 게임 초기 검사는 idle v7·Run v4만 사용하며 전투·VFX는 포함하지 않는다.
-- 원본 main 작업 폴더의 미커밋 정책·도구 변경과 별도 커밋 메시지 정비 작업은 이번 변경에 섞지 않는다.
+- Python + Pico2D, 기존 engine/game_framework API를 재사용한다. 표시·키 유지 이동·정지·idle/Run 전환·방향·경계·포커스 정리를 검사한다.
+- 이동 축·키·속도·배율·바닥선은 [기술 구조](architecture.md#캐릭터-이동-검사)의 검사 기본값이며 최종 게임 규칙이 아니다. 전투·VFX·충돌·물리·추가 아트 생성은 포함하지 않는다.
+- 원본 main 작업 폴더의 미커밋 정책·도구 변경을 보존하고 별도 파일 사본에서 검증하며 원격 예상 head를 확인해 게시한다.
 
 ## 미결 사항
 
-- 엔진 Draft PR #2의 검토·별도 병합 결정.
-- 009의 이전 사용자 직접 출력 확인·임시 자료 정리.
-- 게임의 이동 키·속도·이동 축·경계 처리 등은 검사 장면의 기술 기본값과 게임 규칙 확정을 구분한다.
-- 실물 고DPI·모니터 이동·대량 객체 성능·장치 리셋 자동 복구는 검증/구현 범위 밖이다.
+- 010의 코드·자동/실제 창 검사와 문서 대조·커밋.
+- 009의 이전 사용자 직접 확인·확인 후 임시 자료 정리(T013/T014/T016). 해당 자료는 보존한다.
+- 엔진 PR 병합, 게임 PR 생성·병합은 별도 결정이다.
+- 최종 이동감·시각적 품질의 사용자 직접 확인, 실물 고DPI·대량 객체 성능·리셋 자동 복구는 미확인이다.
 
 ## 다음 작업
 
-009 엔진 통합과 Draft PR #2 생성을 마쳤다. 해당 엔진 결과를 기준으로 `feature/character-movement`에서 캐릭터 검사 장면을 구현한다. main PR 병합과 사용자 직접 플레이 확인은 별도 상태로 보고한다.
+에셋 증분을 커밋하고 game 패키지의 표시·입력·이동을 구현·검증한 뒤 관련 docs와 010 검증 근거를 함께 커밋한다.
