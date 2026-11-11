@@ -33,7 +33,8 @@
 | Run | [복원·경계 수정 v4](../art/warden/provisional-approved/run-v4/review.html) 잠정 승인 | 청색 명암·짧은 귀와 팔·골반 연동·꼬리와 다리 경계 보존, 전류·천·귀·꼬리 관성 유지. 128×104, 방향별 16프레임·480ms |
 | 기존 Run v3 | [보존본](../art/warden/provisional-approved/run-v3/README.md) 이전 후보로 강등 | 2026-11-10 사용자 결정으로 잠정 승인에서 제외. 프레임과 과거 승인 기록 보존 |
 | 이전 달리기 | [review-v2](../art/warden/run-hibit/review-v2/both.gif) 보류 | 잠정 승인에 포함하지 않음 |
-| 공격 | [복부·양다리 보정 v5](../art/warden/provisional-approved/attack-v5/review.html) 잠정 승인 | 오른손 한손 검 7프레임·350ms, hibit 16색·192×192. 채택한 동작·바라보는 방향·팔과 검의 원근을 기준으로 복부의 분리 경계를 없애고 양다리 부피를 보정했다. 5번의 남은 경계는 생성한 국소 패치를 합성했고 바깥 픽셀·흰 문양·알파 보존을 검사했다. idle 방식 이동 전류와 귀/천/꼬리 관성 유지. 6번 자동 머리 비율 실패·몸통 이동·1→2 전환 경고는 검사 자료에 유지한다. 실제 재생의 매끄러움은 미확인. 이전 후보·반려본은 보존하며 검 소환 VFX는 보류 |
+| 공격 | [복부·양다리 보정 v5 — 아웃라인 없음](../art/warden/provisional-approved/attack-v5/review.html) 잠정 승인 | 오른손 한손 검 7프레임·350ms, hibit 16색·192×192. 채택한 동작·바라보는 방향·팔과 검의 원근을 기준으로 복부의 분리 경계를 없애고 양다리 부피를 보정했다. 5번의 남은 경계는 생성한 국소 패치를 합성했고 바깥 픽셀·흰 문양·알파 보존을 검사했다. idle 방식 이동 전류와 귀/천/꼬리 관성 유지. 6번 자동 머리 비율 실패·몸통 이동·1→2 전환 경고는 검사 자료에 유지한다. 실제 재생의 매끄러움은 미확인. 이전 후보·반려본은 보존하며 검 소환 VFX는 보류 |
+| 공격 검 교체 후보 | [v6 아웃라인 없음](../art/warden/attack-sword-v6/bundle-no-outline/review.html) · [v6 아웃라인 있음](../art/warden/attack-sword-v6/bundle-outlined/review.html) 검토 대기 | 2026-11-11 사용자 요청으로 기존 v5를 “아웃라인 없음”으로 명명하고 보존했다. [새 검 기준](../art/warden/attack-sword-v6/reference/new-sword-reference.png)의 긴 칼날·불꽃형 기부를 두 후보에 동일하게 적용했다. 7프레임·350ms·192×192·16색 유지, 외곽선은 팔레트의 짙은 남색(#020816) 1px. 검 교체 영역 밖의 원본 픽셀과 이동 전류·관성은 보존하며, 5번의 칼날에 가려진 몸만 생성 패치로 복원했다. 신규 후보는 미승인·게임 미통합 |
 
 [잠정 승인 보관 목록](../art/warden/provisional-approved/README.md)의 현재 승인 프레임은 135개 PNG다. 공격은 2026-11-11 사용자의 잠정 승인 지시에 따라 v5의 7프레임을 변경 없이 복사했고 SHA-256 일치를 확인했다. Run은 사용자가 검토한 [run-review-v4](../art/warden/shading-restore/run-review-v4/review.html)를 변경 없이 복사했으며 이전 Run 32개 PNG와 원화도 보존한다. 잠정 승인 자체는 게임 통합 승인이 아니며 현재 통합 범위는 아래 사용 자산과 별도 개발 요청을 따른다. 걷기·공격에 복원본의 최신 자세를 적용하는 작업은 아직 수행하지 않았다.
 
