@@ -1,9 +1,12 @@
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import pico2d.pico2d as pico
+
 import engine.loop as engine
-from game_framework import Canvas, GameMode, GameObject, Level, LevelScene, RenderItem, UIElement
+from game_framework import Canvas, GameMode, GameObject, ImageStore, Level, LevelScene, RenderItem, UIElement
 
 
 def app():
@@ -15,6 +18,55 @@ def app():
 
 
 class SceneIntegrationTests(unittest.TestCase):
+    def test_images_close_after_objects_and_ui_despite_errors(self):
+        log = []
+        images = SimpleNamespace(closed=False)
+        def close_images():
+            if not images.closed:
+                images.closed = True
+                log.append('images')
+                raise ValueError('image-clean')
+        images.close = close_images
+        level, canvas = Level(), Canvas((800, 600))
+        scene = LevelScene(level, canvas, images=images)
+        scene.enter(app())
+        obj, node = level.spawn(GameObject()), canvas.add(UIElement())
+        def fail_world():
+            log.append('world')
+            raise ValueError('world-clean')
+        obj.on_destroy = fail_world
+        node.on_destroy = lambda: log.append('ui')
+        with self.assertRaises(BaseExceptionGroup) as caught:
+            scene.exit()
+        self.assertEqual(log, ['world', 'ui', 'images'])
+        self.assertEqual([str(e) for e in caught.exception.exceptions],
+                         ['world-clean', 'image-clean'])
+        scene.exit()
+        self.assertEqual(log, ['world', 'ui', 'images'])
+        self.assertIsNone(scene.engine)
+        with self.assertRaises(RuntimeError):
+            scene.enter(app())
+
+    def test_partial_load_failure_closes_images_before_canvas_shutdown(self):
+        store = ImageStore(Path(__file__).parent)
+        raw = SimpleNamespace(texture=object(), w=2, h=2)
+        log = []
+        level = Level()
+        def start():
+            store.load('test_scene_integration.py')
+            store.load('nonexistent-sprite.png')
+        level.on_open = start
+        scene = LevelScene(level, images=store)
+        with patch.object(pico, 'renderer', object(), create=True), \
+                patch.object(pico, 'load_image', return_value=raw), \
+                patch.object(pico, 'SDL_DestroyTexture', side_effect=lambda t: log.append('image')):
+            with self.assertRaisesRegex(OSError, 'nonexistent-sprite.png'):
+                scene.enter(app())
+            scene.exit()
+        self.assertEqual(log, ['image'])
+        self.assertIsNone(raw.texture)
+        self.assertTrue(store.closed)
+
     def scene(self):
         scene = LevelScene(Level(), Canvas((800, 600)))
         scene.enter(app())

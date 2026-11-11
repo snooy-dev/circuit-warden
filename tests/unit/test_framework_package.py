@@ -18,6 +18,7 @@ class FrameworkPackageTests(unittest.TestCase):
             'rendering': ('RenderItem', 'Renderer'),
             'drawing': ('draw_rect', 'draw_image'),
             'level_scene': ('LevelScene',),
+            'sprites': ('ImageRef', 'ImageStore', 'SpriteFrame', 'SpriteClip', 'SpritePlayer', 'draw_sprite'),
         }
         self.assertEqual(set(game_framework.__all__),
                          {name for names in exports.values() for name in names})
@@ -27,8 +28,14 @@ class FrameworkPackageTests(unittest.TestCase):
                 with self.subTest(name=name):
                     self.assertIs(getattr(game_framework, name), getattr(implementation, name))
 
+    def test_preview_sprite_imports_share_public_objects(self):
+        sprites = importlib.import_module('sprites')
+        for name in sprites.__all__:
+            self.assertIs(getattr(sprites, name), getattr(game_framework, name))
+
     def test_submodules_import_in_fresh_processes(self):
-        for module in ('world', 'core', 'transforms', 'ui', 'rendering', 'drawing', 'level_scene', 'scene', '_validation'):
+        for module in ('world', 'core', 'transforms', 'ui', 'rendering', 'drawing',
+                       'level_scene', 'scene', 'sprites', '_validation'):
             with self.subTest(module=module):
                 result = subprocess.run(
                     [sys.executable, '-c', f'import game_framework.{module}'],

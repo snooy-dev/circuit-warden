@@ -6,7 +6,7 @@
 
 ## 범위와 환경
 
-현재 구현은 창·게임 루프·입력 전달·장면 전환과 요청된 P1~P5 게임프레임워크 범위다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI와 P5 공동 수명·갱신·렌더·통합 화면도 구현·검증했다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
+현재 구현은 창·게임 루프·입력 전달·장면 전환과 요청된 P1~P5 게임프레임워크 범위다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI와 P5 공동 수명·갱신·렌더·통합 화면도 구현·검증했다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·장면 간 공유 리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
 
 ## 코드 폴더 구조
 
@@ -255,3 +255,17 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 - `window_to_output(x,y)`는 좌상단 창 좌표를 좌상단 출력 픽셀로 변환한다. `event_to_output(event)`는 마우스 이동/버튼에만 적용하고 휠·무효 출력은 None이다. Scene의 event.x/y와 콜백 시그니처는 유지한다. Pico2D 그림의 y 뒤집기는 출력 높이로 한 번 수행한다.
 - `render_resets`는 현재 프레임 SDL_RENDER_TARGETS_RESET/SDL_RENDER_DEVICE_RESET 종류 tuple이다. 입력/업데이트 전에 확정하며 해당 이벤트도 Scene에 전달한다. `reset_generation`은 누적 증가하므로 최소화로 draw를 건너뛰어도 P3는 마지막 복구 세대와 비교할 수 있다. 자원 복구는 P3 책임이다.
 - Pico2D 설치 파일·resize_canvas는 수정/호출하지 않는다. 프로젝트 poll_events가 키 반복 필터와 마우스/휠 필드를 유지하며 창 이벤트(event/data1/data2)와 렌더 리셋을 추가 보존한다.
+
+
+## 스프라이트와 이미지 수명
+
+009의 기존 구현을 현재 패키지 구조에 통합했다. `game_framework`의 공개 API인 ImageStore/ImageRef, SpriteFrame/SpriteClip/SpritePlayer, draw_sprite는 `game_framework/sprites.py`가 구현한다. 루트 `sprites.py`는 기존 임시 화면의 import 호환만 제공한다.
+
+- ImageStore(root)는 실제 경로별 이미지를 장면당 한 번 로딩한다. 생성은 SDL 작업 없이 가능하고 load는 활성 렌더러가 필요하다. 닫힌 저장소·이미지와 다른 렌더러 세션의 사용은 거부한다.
+- SpriteFrame.rect는 좌상단 기준 정수 `(left, top, width, height)`, pivot은 셀 내부 0~1 기준점이다. SpriteClip은 프레임별 양수 초와 반복 여부를 가진다. SpritePlayer만 개체별 시간을 갖는다. 같은 clip은 이어 재생하고 명시 restart 또는 다른 clip은 처음부터 시작한다. 단발은 마지막 프레임을 유지한다.
+- `draw_image(..., source=None, flip_x=False)`의 영역 검증·좌표 투영은 `game_framework/drawing.py`, Pico2D 클리핑과 alpha/blend 상태 복원은 `engine/rendering/drawing.py`가 맡는다. 출력 크기를 명시해 시트 전체 크기로 늘어나는 기본값을 피한다. 전체 이미지 기존 경로는 유지한다. engine은 게임 API를 import하지 않는다.
+- `draw_sprite`는 월드/UI의 축 방향과 수평 반전 기준점을 반영해 bounds를 계산한다. RenderItem의 순서·숨김·컬링 계약은 유지한다. 정확한 bounds를 제공하지 못하면 None을 사용한다.
+- LevelScene의 선택적 images는 장면이 소유한다. exit는 Level → Canvas → images 순으로 모든 정리를 시도하며 렌더러 종료 전에 texture를 해제한다. 부분 진입 실패와 반복 종료도 같은 계약을 따른다.
+- Pico2D clip의 native 오류 반환 미노출과 장치 리셋 시 명시 오류 종료는 남은 한계다. 자동 복구·범용 메타데이터 임포터·게임 이동 정책은 추가하지 않는다.
+
+엔진 변경에는 실제 게임용 시트를 포함하지 않는다. idle v7·Run v4 자산 배치와 조작은 `feature/character-movement`의 별도 변경이며, 현재 검사·사용자 직접 확인 상태는 [009 검증](../specs/009-sprite-runtime/verification.md)을 따른다.

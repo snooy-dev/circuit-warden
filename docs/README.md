@@ -24,3 +24,5 @@
 - 완료 specs의 정리 조건과 미커밋 근거 보호는 [작업 규칙](../AGENTS.md)을 따른다.
 
 [워크플로우](workflow.md), [도구 구성](tooling.md), [AGENTS.md](../AGENTS.md), [Constitution](../.specify/memory/constitution.md)를 함께 따른다.
+
+스프라이트 표시·재생·이미지 수명은 [009 명세](../specs/009-sprite-runtime/spec.md)와 [통합 검증](../specs/009-sprite-runtime/verification.md)을 따른다.

@@ -21,9 +21,30 @@ def draw_rect(transform, bounds, color, opacity=1):
         backend.draw_rect(_output_rect(transform, bounds), color, opacity)
 
 
-def draw_image(image, transform, bounds, opacity=1):
-    """호출자가 소유하는 Pico2D Image를 게임 좌표에 그린다."""
+def _image_source(image, source):
+    source = tuple(source)
+    if len(source) != 4 or any(type(value) is not int for value in source):
+        raise ValueError('source는 정수 left/top/width/height여야 합니다.')
+    left, top, width, height = source
+    if (min(left, top) < 0 or min(width, height) <= 0 or
+            left + width > image.w or top + height > image.h):
+        raise ValueError('source 영역은 이미지 안의 양수 크기여야 합니다.')
+    return source
+
+
+def draw_image(image, transform, bounds, opacity=1, *, source=None, flip_x=False):
+    """호출자가 소유하는 Pico2D Image의 전체 또는 지정 영역을 논리 좌표에 그린다."""
     _opacity(opacity)
-    if transform.valid:
-        rect = _output_rect(transform, bounds)
+    if type(flip_x) is not bool:
+        raise TypeError('flip_x는 bool이어야 합니다.')
+    if flip_x and source is None:
+        source = (0, 0, image.w, image.h)
+    if source is not None:
+        source = _image_source(image, source)
+    if not transform.valid:
+        return
+    rect = _output_rect(transform, bounds)
+    if source is None:
         backend.draw_image(image.texture, rect, opacity)
+    else:
+        backend.draw_image(image.texture, rect, opacity, image=image, source=source, flip_x=flip_x)

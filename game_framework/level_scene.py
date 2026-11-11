@@ -9,9 +9,10 @@ from .ui import _ui_snapshot
 
 
 class LevelScene(Scene):
-    def __init__(self, level, canvas=None, *, camera_center=(0, 0), view_height=10):
+    def __init__(self, level, canvas=None, *, camera_center=(0, 0), view_height=10, images=None):
         camera = WorldTransform((0, 0, 0, 0), camera_center, view_height)
         self.level, self.canvas = level, canvas
+        self.images = images
         self.camera_center, self.view_height = camera.center, camera.view_height
         self.renderer = Renderer()
         self.engine = None
@@ -32,6 +33,8 @@ class LevelScene(Scene):
     def enter(self, engine):
         if self.engine is not None or (self.canvas is not None and self.canvas._closed):
             raise RuntimeError('이미 진입했거나 닫힌 Canvas를 가진 장면입니다.')
+        if self.images is not None and self.images.closed:
+            raise RuntimeError('닫힌 이미지 저장소를 가진 장면은 재진입할 수 없습니다.')
         self.engine = engine
         self._reset_generation = engine.reset_generation
         try:
@@ -82,7 +85,7 @@ class LevelScene(Scene):
             self.level._dispatching = self.canvas._dispatching = False
 
     def draw(self):
-        # shortcut: 장치/누락 리셋은 오류로 종료, 자원 로더 도입 때 재업로드로 확장한다.
+        # shortcut: 장치/누락 리셋은 오류로 종료, 자동 복구가 필요해지면 재업로드로 확장한다.
         if self.engine.reset_generation != self._reset_generation:
             raise RuntimeError('렌더 리셋으로 그리기 자원을 다시 만들어야 합니다.')
         self.renderer.draw(self.level, self.transform, self.canvas)
@@ -93,7 +96,7 @@ class LevelScene(Scene):
             self.canvas._check_rendering()
         errors = []
         try:
-            for owner in (self.level, self.canvas):
+            for owner in (self.level, self.canvas, self.images):
                 if owner is not None:
                     try:
                         owner.close()

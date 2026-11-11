@@ -26,7 +26,7 @@ def draw_rect(rect, color, opacity):
             _sdl(pico.SDL_SetRenderDrawBlendMode(pico.renderer, blend.value))
 
 
-def draw_image(texture, rect, opacity):
+def draw_image(texture, rect, opacity, *, image=None, source=None, flip_x=False):
     rect = pico.SDL_FRect(*rect)
     access = c_int()
     _sdl(pico.SDL_QueryTexture(texture, None, byref(access), None, None))
@@ -38,7 +38,17 @@ def draw_image(texture, rect, opacity):
     try:
         _sdl(pico.SDL_SetTextureBlendMode(texture, pico.SDL_BLENDMODE_BLEND))
         _sdl(pico.SDL_SetTextureAlphaMod(texture, int(opacity * 255)))
-        _sdl(pico.SDL_RenderCopyF(pico.renderer, texture, None, rect))
+        if source is None:
+            _sdl(pico.SDL_RenderCopyF(pico.renderer, texture, None, rect))
+        else:
+            left, top, width, height = source
+            bottom = image.h - top - height
+            x, y = rect.x + rect.w / 2, pico.canvas_height - rect.y - rect.h / 2
+            # shortcut: Pico2D가 SDL 복사 반환값을 버림, native 실패 검출이 필요해지면 직접 SDL 경로로 확장.
+            if flip_x:
+                image.clip_composite_draw(left, bottom, width, height, 0, 'h', x, y, rect.w, rect.h)
+            else:
+                image.clip_draw(left, bottom, width, height, x, y, rect.w, rect.h)
     finally:
         try:
             _sdl(pico.SDL_SetTextureAlphaMod(texture, alpha.value))

@@ -39,3 +39,5 @@ Space로 두 검사 장면을 전환하고 마우스로 표시를 이동합니�
 게임에서 쓰는 Level·Canvas·좌표 변환·그리기 API는 `game_framework/`, 창·루프·이벤트·렌더 실행은 `engine/`에 있습니다. 검사 화면 구현은 `demos/`에 있고 `main.py`와 `framework_demo.py` 실행 명령은 유지합니다.
 
 `tests/unit/`은 모의 단위 검사, `tests/integration/`은 장면/데모 조합과 SDL 소프트웨어 그리기 검사입니다. 기존 `python -m unittest discover -s tests -v`로 둘 다 탐색합니다. 실제 창 smoke는 `tests/smoke/`에 있으며 실행은 [008 quickstart](specs/008-game-framework/quickstart.md)를 따릅니다.
+
+스프라이트는 `game_framework`의 ImageStore·SpriteFrame·SpriteClip·SpritePlayer·draw_sprite로 사용합니다. 영역 클리핑·기준점·반전·장면 이미지 정리가 연결돼 있으며 [009 검증](specs/009-sprite-runtime/verification.md)에 최신 검사와 이전 사용자 확인 미완료를 구분했습니다. 이 브랜치에는 게임 에셋이나 이동 규칙이 포함되지 않습니다.
