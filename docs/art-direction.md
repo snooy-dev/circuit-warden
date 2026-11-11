@@ -12,7 +12,9 @@
 | 원화 | 역할 | 현재 로컬 참조 위치 (프로젝트 루트 기준) |
 |---|---|---|
 | `master-source.png` (첫 번째 첨부) | 워든의 기본 외형과 전기로 이루어진 신체 표현 | [art/warden/reference/master-source.png](../art/warden/reference/master-source.png) |
-| `energy-sword-grip-fixed-v12.png` (두 번째 첨부) | 워든이 에너지 검을 든 모습과 무기 외형 | [art/warden/reference/energe-sword-grip.png](../art/warden/reference/energe-sword-grip.png) |
+| `energy-sword-grip-fixed-v12.png` (두 번째 첨부) | 워든이 에너지 검을 든 모습·기존 검 외형 보존 | [art/warden/reference/energe-sword-grip.png](../art/warden/reference/energe-sword-grip.png) |
+
+2026-11-11 사용자 결정: [energy-sword-master-v2.png](../art/warden/reference/energy-sword-master-v2.png)를 앞으로 사용할 **검 원화 기준**으로 채택한다. 사용자 첨부 `ChatGPT 이미지 2026년 11월 11일 오후 10_50_08.png`의 변경 없는 보관본이다. 가늘고 길게 뾰족해지는 청록색 칼날, 불꽃형 기부, 흰 중심 전류와 분기, 가는 에너지 손잡이를 기준으로 삼는다. 검 디자인은 기존 무장 원화보다 이 기준을 우선하며 기존 캐릭터 신체 기준은 유지한다.
 
 원화에 보이는 신체의 **흰 무늬는 몸에 전기가 흐르는 모습의 일부**를 보여준다. 단순한 장식 무늬로 해석하지 않는다. 전류는 장식 무늬가 아닌 방향성 흐름으로 표현한다.
 
