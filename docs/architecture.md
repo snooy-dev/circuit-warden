@@ -10,7 +10,7 @@
 
 ## 코드 폴더 구조
 
-2026-11-11 승인된 책임 경계에 따라 게임의 조작 API는 game_framework, 창·루프·SDL 실행은 engine 패키지에 둔다. engine은 game_framework와 demos를 import하지 않는다. 기존 `from engine import Engine, Scene`과 `from game_framework import ...` 공개 이름·동작은 유지한다.
+2026-11-11 승인된 책임 경계에 따라 게임의 조작 API는 game_framework, 창·루프·SDL 실행은 engine 패키지에 둔다. engine은 game_framework·game·tests를 import하지 않는다. 기존 `from engine import Engine, Scene`과 `from game_framework import ...` 공개 이름·동작은 유지한다.
 
 | 경로 | 책임 |
 |---|---|
@@ -21,7 +21,7 @@
 | `engine/events.py` | 원본 SDL 이벤트 보존과 입력 수집 |
 | `engine/rendering/renderer.py` | 수집된 중립 목록의 안정 정렬·그리기 실행 |
 | `engine/rendering/drawing.py` | 출력 픽셀/texture SDL 그리기와 공유 상태 복원 |
-| `game_framework/__init__.py` | 기존 공개 API 12개 재노출 |
+| `game_framework/__init__.py` | 공개 게임 API 재노출 |
 | `game_framework/world.py` | GameObject·GameMode·Level 수명과 전달 |
 | `game_framework/transforms.py` | WorldTransform·UITransform 게임 좌표 변환 |
 | `game_framework/ui.py` | UIElement·Canvas 트리 소유와 업데이트 |
@@ -30,17 +30,17 @@
 | `game_framework/level_scene.py` | LevelScene의 엔진·레벨·Canvas 연결 |
 | `game_framework/_validation.py` | 게임 API 공유 값 검사 |
 | `game_framework/core.py`, `scene.py` | 직전 패키지 import 경로의 재노출 호환 |
-| `demos/check.py`, `demos/framework.py` | 기본 검사·월드·UI·통합 검사 예제 |
-| `main.py`, `framework_demo.py` | 기존 실행 명령을 유지하는 얇은 진입점 |
+| `tests/fixtures/framework_scenes.py` | 회귀 검사 전용 월드·UI·통합 장면 |
+| `main.py`, `game/` | 게임 진입·캐릭터 상태·레벨/장면 구현 |
 | `tests/unit/`, `tests/integration/`, `tests/smoke/` | 모의 단위 검사·조합/실제 SDL 소프트웨어 검사·별도 실제 창 검사 |
 
 게임 Renderer는 지연 render_items 순회·UI 트리 수집·수명 잠금·실패 시 목록 해제를 소유한다. engine의 execute는 게임 타입 없이 준비된 목록과 그리기 콜백을 받으며 참조를 저장하지 않는다. drawing API는 검증된 출력 사각형/texture만 SDL backend로 전달한다. 내부 모듈은 담당 모듈을 직접 import하고 패키지 루트를 거치지 않는다. world에는 SDL 의존이 없지만 공개 루트 import는 기존처럼 Pico2D를 로드한다.
 
-월드/UI/통합 예제는 작은 검사용 Block·패널을 공유하므로 demos/framework.py에 묶어 중복을 피한다. 새로운 게임 동작·의존성·관리자 계층은 추가하지 않았다.
+월드/UI/통합 예제는 작은 검사용 Block·패널을 공유하므로 tests/fixtures/framework_scenes.py에 묶어 중복을 피한다. 새로운 게임 동작·의존성·관리자 계층은 추가하지 않았다.
 
 ## 실행과 장면 계약
 
-- engine/loop.py의 Engine.run(initial_scene)이 창 수명과 루프를 소유한다. main.py는 demos/check.py 검사 화면의 진입점이다. Pico2D가 전역 창 하나를 사용하므로 동시 엔진 실행은 지원하지 않는다.
+- engine/loop.py의 Engine.run(initial_scene)이 창 수명과 루프를 소유한다. main.py는 game.scene.main을 호출하는 게임 진입점이다. Pico2D가 전역 창 하나를 사용하므로 동시 엔진 실행은 지원하지 않는다.
 - Scene의 enter(engine), handle_event(event), update(dt), draw(), exit()가 연결 지점이다. 기본 메서드는 아무 동작도 하지 않는다. 필요한 메서드만 재정의한다.
 - 활성 장면 하나만 실행한다. 입력 묶음 → update → clear/draw/present → 전환 → 남은 시간 대기 순서다.
 - Engine.change_scene(scene)은 요청만 저장한다. 같은 프레임의 마지막 요청을 프레임 끝에 적용하고 이전 exit → 새 enter 순서로 호출한다. 새 장면의 첫 갱신은 다음 프레임이다. 전환 콜백이 만든 후속 요청은 다음 경계까지 보류한다.
@@ -60,9 +60,9 @@
 | 반복 상한 목표 | 60 FPS | 과도한 CPU 사용 방지; 성능 보증 아님 |
 | 갱신 시간 | 단조 시계의 초 단위 dt, 최대 0.1초 | 장시간 멈춤 후 큰 점프 방지 |
 | 첫 갱신·전환 직후 갱신 | dt = 0 | 창/장면 준비 시간을 시뮬레이션에서 제외 |
-| 검사 입력 | Space: 장면 전환, F6: 창 크기, F11: 전체화면, 마우스 이동: 표시 이동, Escape: 종료 | 입력·전환·종료 확인 |
+| 게임 입력 | A/D·좌우 방향키: 이동, F6: 창 크기, F11: 전체화면, Escape: 종료 | 현재 캐릭터 검사 기본값 |
 
-검사 화면의 움직이는 사각형은 시간 갱신을, 두 색/위치의 장면은 전환을, 마우스 표시 사각형은 입력 전달을 확인한다. 게임 에셋은 사용하지 않는다.
+초기 사각형 검사 화면은 폐기했다. 시간·장면 전환·입력 전달 계약은 엔진 회귀 검사로, 실제 캐릭터 출력·이동은 game과 캐릭터 smoke로 확인한다. 회귀 검사 선택은 [tests 안내](../tests/README.md)를 따른다.
 
 ## 테스트와 도구 분리
 
@@ -84,15 +84,15 @@
 
 P5 공동 수명·갱신 연결을 구현하고 자동 검사했다. `LevelScene(level, canvas=None, camera_center=(0,0), view_height=10)`은 Canvas를 선택적으로 소유하며 기존 월드 전용 호출을 유지한다. 진입 시 Level 열기와 UI 변환 준비를 수행하고 어느 쪽 실패에도 양쪽 정리를 시도한다. exit는 Level→Canvas 순으로 모든 정리를 시도하고 복수 오류를 BaseExceptionGroup으로 보존하며 렌더 목록·engine 참조를 해제한다. 닫힌 Canvas를 재사용하는 대신 다음 화면에서 새 Canvas를 만든다.
 
-통합 update는 Level 등록순 tuple과 Canvas 전체 등록순 DFS tuple을 모든 콜백 전에 취득하고 모드→월드 객체→UI 순으로 전달한다. 양쪽 전달 가드를 전체 구간에 유지해 상대 영역으로 update/입력 재진입하는 것도 거부하며 생성·제거는 허용한다. 호출 직전 소속을 검사하므로 신규 대상은 다음 update부터, 제거 대상은 이후 호출부터 제외된다. `Renderer.draw(level, world_transform, canvas=None)`은 같은 viewport의 UI 변환으로 월드→UI를 연결하며 각 패스 동안 상대 소유 영역의 변경도 막는다. `event_to_ui`와 `ui_transform`을 제공하고 Canvas 없는 장면의 UI 입력 변환은 None이다. 기본 FrameworkDemo와 --world/--ui 독립 모드를 제공한다. 전체 자동 검사 85개와 실제 통합·월드·UI SDL 창 검사를 통과했다. 실물 DPI·물리 키 조작·사용자 직접 확인은 이번 008의 성공 근거가 아니다.
+통합 update는 Level 등록순 tuple과 Canvas 전체 등록순 DFS tuple을 모든 콜백 전에 취득하고 모드→월드 객체→UI 순으로 전달한다. 양쪽 전달 가드를 전체 구간에 유지해 상대 영역으로 update/입력 재진입하는 것도 거부하며 생성·제거는 허용한다. 호출 직전 소속을 검사하므로 신규 대상은 다음 update부터, 제거 대상은 이후 호출부터 제외된다. `Renderer.draw(level, world_transform, canvas=None)`은 같은 viewport의 UI 변환으로 월드→UI를 연결하며 각 패스 동안 상대 소유 영역의 변경도 막는다. `event_to_ui`와 `ui_transform`을 제공하고 Canvas 없는 장면의 UI 입력 변환은 None이다. 독립 월드/UI와 결합 장면은 tests/fixtures의 회귀 검사 자료로 유지한다. 전체 자동 검사 85개와 실제 통합·월드·UI SDL 창 검사를 통과했다. 실물 DPI·물리 키 조작·사용자 직접 확인은 이번 008의 성공 근거가 아니다.
 
 P4 경로는 `Canvas(reference_size)`, `UIElement(x=0, y=0, anchor=(0,0), visible=True, draw_order=0, bounds=None, opacity=1)`, `UITransform(viewport, reference_size)`, `Renderer.draw_ui(canvas, transform)`으로 구현했다. Canvas는 생성 직후 부착 가능하고 close 뒤 재사용하지 않는다. roots/children/parent/canvas는 읽기 전용 조회이며 새 노드만 한 번 부착한다. remove는 하위 트리 소속·연결을 먼저 모두 해제한 뒤 자식부터 on_destroy를 한 번씩 시도한다. close는 전체 목록을 한 번 분리한다. 복수 정리 오류는 BaseExceptionGroup으로 보존한다. update는 숨김과 무관한 등록순 전위 DFS 전체 스냅샷을 사용한다.
 
-`canvas.transform(viewport)`는 매 출력 상태의 UITransform을 만들며 scale/logical_size/bounds/point/inverse/length를 제공한다. reference_size는 필수 양수 제작 단위이고 게임의 최종 해상도를 고정하지 않는다. 루트 anchor는 0~1, 자식 anchor는 (0,0)만 허용한다. ui_items는 `(element, (x,y), opacity)` 목록이며 `element.draw(origin, transform, opacity)`로 자기 표현만 그린다. 형제 복사본 안정 정렬과 전위 DFS로 패널 하위 트리를 연속 표시한다. 부모 opacity/bounds 제외는 자식에 상속하지 않고 visible=false만 하위 트리를 숨긴다. 렌더 중 소유 API·뎁스 변경·update/렌더 재진입은 거부하고 실패 시에도 목록을 비운다. `framework_demo.py --ui`의 UIDemo는 Level/GameMode 없이 Canvas만 소유하며 마우스는 Engine.event_to_output→UITransform.inverse로 해석한다. 저장 좌표를 바꾸지 않고 매 출력 상태에서 기준점·배율을 다시 계산한다. 도형은 기존 draw_rect를 사용해 backend 알파/색 상태 복원을 재사용한다. 자동 검사와 실제 SDL 창·픽셀·이동/숨김/삭제·화면비/전체화면/최소화 검사를 통과했다. 장치/누락 리셋은 P3와 같이 명시 오류, 전달된 타깃 리셋은 한 세대씩 수용한다. LevelScene 공동 스냅샷·두 패스는 P5 연결을 사용한다.
+`canvas.transform(viewport)`는 매 출력 상태의 UITransform을 만들며 scale/logical_size/bounds/point/inverse/length를 제공한다. reference_size는 필수 양수 제작 단위이고 게임의 최종 해상도를 고정하지 않는다. 루트 anchor는 0~1, 자식 anchor는 (0,0)만 허용한다. ui_items는 `(element, (x,y), opacity)` 목록이며 `element.draw(origin, transform, opacity)`로 자기 표현만 그린다. 형제 복사본 안정 정렬과 전위 DFS로 패널 하위 트리를 연속 표시한다. 부모 opacity/bounds 제외는 자식에 상속하지 않고 visible=false만 하위 트리를 숨긴다. 렌더 중 소유 API·뎁스 변경·update/렌더 재진입은 거부하고 실패 시에도 목록을 비운다. `tests/fixtures/framework_scenes.py`의 UIDemo는 Level/GameMode 없이 Canvas만 소유하며 마우스는 Engine.event_to_output→UITransform.inverse로 해석한다. 저장 좌표를 바꾸지 않고 매 출력 상태에서 기준점·배율을 다시 계산한다. 도형은 기존 draw_rect를 사용해 backend 알파/색 상태 복원을 재사용한다. 자동 검사와 실제 SDL 창·픽셀·이동/숨김/삭제·화면비/전체화면/최소화 검사를 통과했다. 장치/누락 리셋은 P3와 같이 명시 오류, 전달된 타깃 리셋은 한 세대씩 수용한다. LevelScene 공동 스냅샷·두 패스는 P5 연결을 사용한다.
 
 P3 월드 기본 경로는 구현·자동 검증했다. `WorldTransform(viewport, center=(0,0), view_height=10)`은 좌상단 출력 점·길이와 월드 역변환을 제공하며 0 크기에서 점 변환은 None이다. `RenderItem(drawable, draw_order=0, bounds=None, visible=True, opacity=1)`은 불변 값이며 drawable은 `(transform, opacity)`로 호출한다. `Renderer.draw(level, transform)`은 매번 등록순에서 수집해 안정 정렬하고 마지막에 참조를 비운다. 컬링은 실제 bounds에 출력 1픽셀의 여유를 두고 Level update는 유지한다. 렌더 중 Level 수명·등록·삭제·전달 및 렌더 재진입은 거부한다.
 
-`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, canvas=None, camera_center=(0,0), view_height=10)`은 Canvas 생략 시 월드 전용 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 렌더 타깃 리셋은 도형·일반 이미지를 재그리며 세대를 갱신한다. 장치 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. draw_image는 내용 복구가 필요한 TARGET texture를 명시 오류로 거부한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. framework_demo.py --world와 실제 SDL 월드 검사를 통과했으며 결과·한계는 verification에 있다.
+`draw_rect(transform, bounds, color, opacity=1)`와 `draw_image(image, transform, bounds, opacity=1)`는 위치와 크기를 직접 SDL 출력 좌표로 변환하므로 Pico2D y 뒤집기를 중복 적용하지 않는다. RGB/opacity/bounds를 검사하고 표준 알파 합성을 적용한 뒤 texture alpha/blend 또는 renderer color/blend를 성공·실패 모두 복원한다. 이미지는 Pico2D Image의 texture를 빌리며 호출자가 자원을 소유한다. `LevelScene(level, canvas=None, camera_center=(0,0), view_height=10)`은 Canvas 생략 시 월드 전용 열기·입력·update·draw·닫기를 연결하며 `event_to_world`는 P2 입력 변환을 사용한다. 렌더 타깃 리셋은 도형·일반 이미지를 재그리며 세대를 갱신한다. 장치 리셋 또는 누락된 reset_generation 변화는 명시 오류로 전달하고 엔진 종료 경로에서 Level을 정리한다. draw_image는 내용 복구가 필요한 TARGET texture를 명시 오류로 거부한다. 자동 재업로드는 자원 로더가 생길 때 확장한다. `view_height=10`은 프레임워크 기본값이며 게임 정책 확정이 아니다. 독립 월드 fixture와 실제 SDL 월드 검사를 통과했으며 결과·한계는 verification에 있다.
 
 | 개념 | 제안 책임 | 경계 |
 |---|---|---|
@@ -245,7 +245,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 2. 업데이트: LevelScene이 Level·Canvas 스냅샷을 모두 취득한다. 모드→월드 객체→UI 노드 순으로 상태와 dt에 따른 이동을 갱신한다.
 3. 렌더링: 출력 viewport와 월드/UI 변환을 확정하고 현재 Level·Canvas에서 항목을 검사해 화면 밖/숨김/알파 0인 자기 그림을 제외한다. 월드 전역 정렬·UI 형제 정렬을 적용해 월드→UI를 뒤에서 앞으로 알파 합성한다.
 
-기존 Engine/Scene의 외부 API는 유지한다. 내부 Level._dispatch_snapshot과 Canvas._update_snapshot에 공동 취득한 스냅샷을 전달한다. 단독 Level/Canvas update도 같은 헬퍼를 사용한다. 물리·빈 simulate 단계는 없다. 기존 main.py를 유지하고 framework_demo.py의 통합/월드/독립 UI 화면으로 생성/삭제·이미지 교차·UI 하위 트리 순서·레벨 왕복을 검사했다.
+기존 Engine/Scene의 외부 API는 유지한다. 내부 Level._dispatch_snapshot과 Canvas._update_snapshot에 공동 취득한 스냅샷을 전달한다. 단독 Level/Canvas update도 같은 헬퍼를 사용한다. 물리·빈 simulate 단계는 없다. 회귀 검사 전용 통합/월드/독립 UI fixture와 smoke로 생성/삭제·이미지 교차·UI 하위 트리 순서·레벨 왕복을 검사한다.
 
 ### P2 실행 계약
 
@@ -272,6 +272,6 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-`feature/character-movement`에서 game/character.py·scene.py로 기존 LevelScene·GameObject·SpritePlayer를 연결했다. main.py는 게임 검사 진입점, 기존 도형 검사는 `python -m demos.check`로 보존한다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 전투·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+`feature/character-movement`에서 game/character.py·scene.py로 기존 LevelScene·GameObject·SpritePlayer를 연결했다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 전투·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
 
 검사 기술 기본값은 800×600 창, view_height 600, 시트 2배, 속도 180 논리 픽셀/초, 좌우 A/D·방향키, 고정 바닥선이다. 최종 게임 규칙이 아니다. 키 set은 같은 방향 별칭을 OR, 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 전체 시트를 보존하고 너무 좁으면 중앙에 둔다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.

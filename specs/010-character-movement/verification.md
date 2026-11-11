@@ -12,7 +12,7 @@ FR-001/006→T003/004, FR-002~005→T005~007, FR-DOC/SC-DOC→T002/008/009. 7개
 
 architecture·art-direction·progress·docs/README에 검사 범위/게임 복사본과 구현 중 상태를 반영했다. 실제 게임 코드 검증은 다음 증분이며 P1을 게임 동작 완료로 표시하지 않는다.
 
-## P2 표시·이동 검증
+## P2 표시·이동 검증 (정리 전 결과)
 
 | 명령·검사 | 실제 결과 |
 |---|---|
@@ -43,3 +43,32 @@ smoke의 첫 호출은 출력 폴더가 없어 사전 인자 검사로 종료 2�
 최종 게임 이동 속도·미술 품질·사용자 직접 조작은 확정하지 않았다. 좁은 창에서 프레임 전체가 물리적으로 들어가지 않으면 기준점을 중앙에 둔다. 장치 리셋 자동 복구·실물 고DPI/모니터 이동·대량 객체 성능은 범위 밖이다. 게임 PR 생성/병합과 main 병합은 수행하지 않는다.
 
 최종 주 에이전트 검사: 전체 116개 통과, 변경 문서 링크 누락 0개·공백 오류 0개, git diff --no-index --check 오류 출력 없음(변경 존재 종료 1), 원본/복사 PNG 3개 해시 불변. 원본 main 작업 폴더의 변경은 건드리지 않았다.
+
+## 테스트 정리·검사 정책 (현재)
+
+사용자는 작은 기능마다 수십 개 검사를 실행하는 흐름을 중단하고 현재 테스트를 정리하도록 지시했다. FR-007~010을 T010~014와 연결했다. 작은 기능은 직접 동작 확인을 기본으로 하며 복잡한 규칙·재발 버그 등 필요한 경우에만 개별 자동 검사를 선택한다. 전체 회귀·모든 smoke는 상시 완료 조건이 아니다.
+
+| 정리 대상 | 결과·보존 근거 |
+|---|---|
+| 초기 CheckScene·test_demo·display_smoke·공개 데모 진입점 | 폐기된 데모 검사 3개와 중복 출력 smoke 삭제. 실제 창 출력·입력·최소화는 필요 시 UI/통합 smoke로 검사 |
+| test_framework_package와 test_engine_package의 구조 확인 | 일회성 패키지 분리 검사 4개 삭제. 제품 테스트가 공개 API를 실제 사용. 렌더 안정 정렬·오류 전달 1개는 test_render_execution.py로 보존 |
+| test_framework_demo 및 중간 이름 test_framework_scenes | 검사용 장면 자체 검사 8개 삭제. 실제 제품 수명·오류 해제는 test_scene_integration/test_game_framework/test_world_rendering이 유지. fixture 고유 조작은 필요 시 실제 smoke가 사용 |
+| demos/framework.py | 실제 smoke에 필요한 장면만 tests/fixtures/framework_scenes.py로 이동. 모든 클래스 AST 동일, 공개 CLI 제거 |
+
+현재 자동 검사 수는 **101개**(기존 116에서 15개 삭제)이며 숫자 감소를 위해 서로 다른 제품 회귀 검사를 합치거나 숨기지 않았다.
+
+### 실제 수행과 재사용
+
+검사 Python은 D:/GitHub/circuit-warden/.venv/Scripts/python.exe, cwd는 .local-tools/work/character-movement다.
+
+- fixture 이동 직후 `-B -m unittest discover -s tests -q`: 113개 통과. 추가 12개 삭제와 정책 변경 전 결과이며 101개 전체를 새로 실행했다는 뜻이 아니다.
+- 같은 단계에서 `-B tests/smoke/world_smoke.py ../cleanup-preview/world`, ui_smoke.py→../cleanup-preview/ui, integration_smoke.py→../cleanup-preview/integration을 실제 절대 경로 출력 인자로 순차 실행: 모두 종료 0/PASS. 월드 10단계·독립 UI 12단계·통합 16단계의 SDL 출력/입력/수명 assertion 통과. 이후 smoke와 fixture를 바꾸지 않아 결과 재사용.
+- 최종 `-B -m unittest tests.unit.test_render_execution -q`: 이동한 검사 **1개 통과**. unittest.defaultTestLoader.discover('tests')로 실행 없이 101개 탐색·import 오류 0 확인.
+- pathlib 바이트 대조: 정리 전 사본과 engine/game_framework/game/assets/main.py/character_smoke 동일. character smoke는 재실행하지 않고 P2 결과 재사용. Python AST 파싱·삭제한 demos import 검색 통과.
+- 변경 문서 링크 누락 0·공백 오류 0. 활성 main 폴더에는 검사 정책만 덧붙여 다른 세션의 변경을 보존했다. 게임 브랜치에는 이번 정리와 정책만 함께 보존한다.
+
+### 문서 대응·Converge
+
+AGENTS·constitution 3.0.0·workflow·plan/tasks/checklist 템플릿·Spec Kit overlay의 자동 테스트 강제 문구를 제거하고 최소 검사 선택을 일치시켰다. README·tests 안내·architecture·progress·010 실행 안내도 같은 기준이며 001/008 quickstart는 과거 커밋 기록임을 표시했다. 코드·명세·작업과 현재 정책 사이 차단 충돌이 없다. 관련 없는 검사를 실행하지 않았다는 이유로 작업을 미완료 처리하지 않는다.
+
+게임 규칙·런타임·PNG는 변경하지 않았다. 사용자 직접 플레이 품질과 이전 009의 직접 확인/임시 자료 정리는 여전히 미확인이다. 이번 변경은 새 게임플레이 구현·PR 생성/병합을 포함하지 않는다.

@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from demos.framework import FrameworkDemo
+from tests.fixtures.framework_scenes import FrameworkDemo
 from world_smoke import push_button, push_key
 
 

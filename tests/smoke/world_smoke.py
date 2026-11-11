@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from demos.framework import WorldDemo
+from tests.fixtures.framework_scenes import WorldDemo
 from game_framework import GameObject, RenderItem, draw_image
 
 

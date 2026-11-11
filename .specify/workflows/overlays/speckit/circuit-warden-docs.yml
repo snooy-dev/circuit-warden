@@ -38,7 +38,12 @@ edits:
       decisions with scope evidence, assumptions and brief rationale in docs/architecture.md,
       and update docs/progress.md. Preserve the distinction between requested design
       and implemented behavior. Plan small runnable increments with verification,
-      docs updates and commits. Do not implement in this documentation step.
+      docs updates and commits. For small features, direct observation of the changed behavior
+      can be sufficient. Add automated tests only for concrete risks such as complex rules,
+      recurring bugs or resource cleanup; select individual checks before suites.
+      Never add full regression or all smoke runs as default per-feature or per-commit tasks.
+      Reuse valid results and do not block completion on unrelated unselected checks.
+      Do not implement in this documentation step.
 - insert_before: implement
   step:
     id: analyze

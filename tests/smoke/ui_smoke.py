@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import pico2d.pico2d as pico
 from engine import Engine
-from demos.framework import UIDemo
+from tests.fixtures.framework_scenes import UIDemo
 from world_smoke import push_key
 
 

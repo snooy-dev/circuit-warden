@@ -1,10 +1,8 @@
 """통합·월드 전용·독립 UI의 좌표·수명·뎁스·알파 검사 화면."""
 
-import argparse
-
 import pico2d.pico2d as pico
 
-from engine import Engine, Scene
+from engine import Scene
 from game_framework import GameMode, GameObject, Level, LevelScene, RenderItem, draw_rect, Canvas, UIElement, Renderer
 
 
@@ -237,12 +235,3 @@ class FrameworkDemo(WorldDemo):
             elif event.key == pico.SDLK_DELETE:
                 self.canvas.remove(self.panel)
         super().handle_event(event)
-
-
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    modes = parser.add_mutually_exclusive_group()
-    modes.add_argument('--ui', action='store_true', help='Level 없는 UI 단독 검사')
-    modes.add_argument('--world', action='store_true', help='Canvas 없는 월드 전용 검사')
-    args = parser.parse_args()
-    Engine().run(UIDemo() if args.ui else WorldDemo() if args.world else FrameworkDemo())
