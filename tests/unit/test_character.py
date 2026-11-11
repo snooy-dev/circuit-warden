@@ -30,26 +30,25 @@ class CharacterTests(unittest.TestCase):
         character.view_bounds = (-400, -300, 400, 300)
         return character
 
-    def test_aliases_repeat_and_opposite_keys(self):
+    def test_repeat_opposite_keys_and_release(self):
         actor = self.character
-        for symbol in (pico.SDLK_d, pico.SDLK_d, pico.SDLK_RIGHT):
-            actor.handle_event(key(symbol))
-        actor.handle_event(key(pico.SDLK_d, pico.SDL_KEYUP))
+        for symbol in (pico.SDLK_d, pico.SDLK_d, pico.SDLK_d):
+            actor.control(key(symbol))
         actor.update(.1)
         self.assertAlmostEqual(actor.x, 18)
         self.assertIs(actor.player.clip, self.clips['run_right'])
 
-        actor.handle_event(key(pico.SDLK_a))
+        actor.control(key(pico.SDLK_a))
         actor.update(.1)
         self.assertAlmostEqual(actor.x, 18)
         self.assertEqual(actor.facing, 1)
         self.assertIs(actor.player.clip, self.clips['idle'])
-        actor.handle_event(key(pico.SDLK_RIGHT, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
         actor.update(.1)
         self.assertAlmostEqual(actor.x, 0)
         self.assertEqual(actor.facing, -1)
         self.assertIs(actor.player.clip, self.clips['run_left'])
-        actor.handle_event(key(pico.SDLK_a, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_a, pico.SDL_KEYUP))
         actor.update(.1)
         self.assertAlmostEqual(actor.x, 0)
         self.assertEqual(actor.facing, -1)
@@ -58,7 +57,7 @@ class CharacterTests(unittest.TestCase):
     def test_same_elapsed_time_moves_same_distance(self):
         a, b = self.character, self.make_character()
         for actor in (a, b):
-            actor.handle_event(key(pico.SDLK_LEFT))
+            actor.control(key(pico.SDLK_a))
         a.update(.1)
         for _ in range(10):
             b.update(.01)
@@ -69,10 +68,10 @@ class CharacterTests(unittest.TestCase):
         actor = self.character
         for kind in (pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             with self.subTest(kind=kind):
-                actor.handle_event(key(pico.SDLK_a))
+                actor.control(key(pico.SDLK_a))
                 actor.update(.1)
                 before = actor.x
-                actor.handle_event(SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=kind))
+                actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=kind))
                 actor.update(.1)
                 self.assertEqual(actor.x, before)
                 self.assertFalse(actor.pressed)
@@ -83,19 +82,19 @@ class CharacterTests(unittest.TestCase):
         actor = self.character
         actor.update(.041)
         self.assertIs(actor.player.frame, self.clips['idle'].frames[1])
-        actor.handle_event(key(pico.SDLK_d))
+        actor.control(key(pico.SDLK_d))
         actor.update(.04)
         self.assertIs(actor.player.frame, self.clips['run_right'].frames[0])
         actor.update(.03)
         self.assertIs(actor.player.frame, self.clips['run_right'].frames[1])
-        actor.handle_event(key(pico.SDLK_d, pico.SDL_KEYUP))
-        actor.handle_event(key(pico.SDLK_LEFT))
+        actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_a))
         actor.update(.04)
         self.assertIs(actor.player.frame, self.clips['run_left'].frames[0])
 
     def test_bounds_include_idle_and_run_extents_and_center_when_narrow(self):
         actor = self.character
-        actor.handle_event(key(pico.SDLK_RIGHT))
+        actor.control(key(pico.SDLK_d))
         for _ in range(20):
             actor.update(.1)
         self.assertEqual(actor.x, 260)
@@ -116,14 +115,14 @@ class CharacterTests(unittest.TestCase):
     def test_draw_flips_idle_left_and_uses_dedicated_run_frames(self):
         actor = self.character
         transform = WorldTransform((0, 0, 800, 600), view_height=600)
-        actor.handle_event(key(pico.SDLK_LEFT))
+        actor.control(key(pico.SDLK_a))
         actor.update(.05)
         with patch('game.character.draw_sprite') as draw:
             actor.render_items()[0].drawable(transform, .8)
             self.assertIs(draw.call_args.args[0], self.clips['run_left'].frames[0])
             self.assertEqual(draw.call_args.args[3:5], ((256, 208), .8))
             self.assertFalse(draw.call_args.kwargs['flip_x'])
-            actor.handle_event(key(pico.SDLK_LEFT, pico.SDL_KEYUP))
+            actor.control(key(pico.SDLK_a, pico.SDL_KEYUP))
             actor.update(.05)
             actor.render_items()[0].drawable(transform, 1)
             self.assertIs(draw.call_args.args[0], self.clips['idle'].frames[0])

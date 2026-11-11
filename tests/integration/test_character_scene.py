@@ -7,6 +7,8 @@ from unittest.mock import Mock, patch
 import pico2d.pico2d as pico
 
 from game.scene import CharacterScene
+from game.mode import GameplayMode
+from game_framework import GameObject
 
 
 class CharacterSceneTests(unittest.TestCase):
@@ -96,6 +98,20 @@ class CharacterSceneTests(unittest.TestCase):
         scene.character.x = 200
         scene.update(.1)
         self.assertEqual(scene.character.x, 0)
+
+    def test_gameplay_mode_delivers_once_and_keeps_player_reference(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        actor = scene.character
+        scene.level.spawn(GameObject())
+        self.assertIs(scene.character, actor)
+        self.assertIsInstance(scene.level.mode, GameplayMode)
+        with patch.object(actor, 'control', wraps=actor.control) as control:
+            scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
+            control.assert_called_once()
+        scene.update(.1)
+        self.assertEqual(actor.x, 18)
 
     def test_malformed_pivot_reports_clip_and_closes_scene(self):
         scene = CharacterScene()

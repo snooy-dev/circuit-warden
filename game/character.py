@@ -11,8 +11,8 @@ from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, Spri
 GROUND_Y = -180
 SPEED = 180
 DISPLAY_SCALE = 2
-LEFT_KEYS = {pico.SDLK_a, pico.SDLK_LEFT}
-RIGHT_KEYS = {pico.SDLK_d, pico.SDLK_RIGHT}
+LEFT_KEYS = {pico.SDLK_a}
+RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS
 
 
@@ -78,7 +78,7 @@ class Character(GameObject):
         self._left_margin = max(left for left, _ in margins)
         self._right_margin = max(right for _, right in margins)
 
-    def handle_event(self, event):
+    def control(self, event):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()

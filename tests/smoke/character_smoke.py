@@ -78,7 +78,7 @@ class CharacterSmoke(CharacterScene):
 
         assert actor.player.clip is idle and actor.x == stopped_x and actor.facing == -1
         self.capture('idle-left')
-        push_key(pico.SDLK_LEFT)
+        push_key(pico.SDLK_a)
         yield
 
         assert actor.player.clip is left and actor.x < stopped_x

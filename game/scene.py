@@ -1,4 +1,4 @@
-"""캐릭터 검사 장면과 창 조작."""
+"""플레이 레벨 배치와 장면·창 조작."""
 
 from pathlib import Path
 
@@ -8,6 +8,7 @@ from engine import Engine, HEIGHT, WIDTH
 from game_framework import GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
 
 from .character import GROUND_Y, Character, load_clips
+from .mode import GameplayMode
 
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
@@ -24,28 +25,29 @@ class _Ground(GameObject):
         draw_rect(transform, (left, bottom, right, GROUND_Y), (74, 79, 93), opacity)
 
 
-class _CharacterLevel(Level):
+class GameplayLevel(Level):
     def __init__(self, images):
-        super().__init__()
+        super().__init__(GameplayMode())
         self.images = images
+        self.player = None
 
     def on_open(self):
         self.spawn(_Ground())
-        self.spawn(Character(load_clips(self.images)))
+        self.player = self.spawn(Character(load_clips(self.images)))
 
 
 class CharacterScene(LevelScene):
     def __init__(self):
         images = ImageStore(ASSETS)
-        super().__init__(_CharacterLevel(images), view_height=HEIGHT, images=images)
+        super().__init__(GameplayLevel(images), view_height=HEIGHT, images=images)
 
     @property
     def character(self):
-        return self.level.objects[-1]
+        return self.level.player
 
     def enter(self, engine):
         super().enter(engine)
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D or arrows | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | F6 / F11 | Esc')
 
     def handle_event(self, event):
         if event.type == pico.SDL_KEYDOWN:
@@ -62,5 +64,5 @@ class CharacterScene(LevelScene):
 
 
 def main():
-    print('캐릭터 검사: A/D 또는 좌우 방향키 이동 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
+    print('게임플레이: A/D 이동 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     Engine().run(CharacterScene())
