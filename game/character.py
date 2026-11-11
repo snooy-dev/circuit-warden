@@ -1,9 +1,10 @@
-"""캐릭터의 스프라이트와 좌우 이동."""
+"""Warden의 이동·단발 공격과 스프라이트 상태."""
 
 import json
 from pathlib import Path
 
 import pico2d.pico2d as pico
+from transitions import Machine
 
 from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
 
@@ -27,8 +28,8 @@ def _load_clip(images, animation):
     durations = animation['durationsMs']
     if len(durations) != count or any(type(value) not in (int, float) for value in durations):
         raise ValueError('durationsMs는 프레임마다 하나의 밀리초 값이 필요합니다.')
-    if animation['loop'] is not True:
-        raise ValueError('loop는 true여야 합니다.')
+    if type(animation['loop']) is not bool:
+        raise ValueError('loop는 bool이어야 합니다.')
     x, y = animation['pivot']
     if any(type(value) not in (int, float) for value in (x, y)):
         raise ValueError('pivot은 숫자 픽셀 좌표 두 개여야 합니다.')
@@ -36,7 +37,7 @@ def _load_clip(images, animation):
     image = images.load(filename)
     frames = tuple(SpriteFrame(image, (i % columns * width, i // columns * height, width, height), pivot)
                    for i in range(count))
-    return SpriteClip(frames, tuple(ms / 1000 for ms in durations))
+    return SpriteClip(frames, tuple(ms / 1000 for ms in durations), loop=animation['loop'])
 
 
 def load_clips(images):
@@ -46,9 +47,11 @@ def load_clips(images):
     except ValueError as error:
         raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
     clips = {}
-    for name in ('idle', 'run_left', 'run_right'):
+    for name in ('idle', 'run_left', 'run_right', 'attack'):
         try:
             clips[name] = _load_clip(images, animations[name])
+            if clips[name].loop != (name != 'attack'):
+                raise ValueError('loop는 idle/Run에서 true, attack에서 false여야 합니다.')
         except (KeyError, TypeError, ValueError, OverflowError) as error:
             raise ValueError(f'애니메이션 설정 오류: {path} ({name}): {error}') from error
     return clips
@@ -71,23 +74,49 @@ class Character(GameObject):
         self.x = 0.0
         self.facing = 1
         self.pressed = set()
+        self.attack_requested = False
+        self._machine = Machine(
+            states=('idle', 'run', 'attack'), initial='idle', auto_transitions=False,
+            transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
+                         ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle']],
+        )
         self.view_bounds = None
         self._idle_margins = _margins(clips['idle'])
+        # shortcut: 공격 끝부분은 화면에서 잘릴 수 있음, 검 전체 보존이 필요하면 경계 정책을 바꾼다.
         margins = (*(_margins(clips[name]) for name in ('run_left', 'run_right')),
                    self._idle_margins, self._idle_margins[::-1])
         self._left_margin = max(left for left, _ in margins)
         self._right_margin = max(right for _, right in margins)
 
+    @property
+    def state(self):
+        return self._machine.state
+
     def control(self, event):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()
+            self.attack_requested = False
         elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS:
             self.pressed.add(event.key)
         elif event.type == pico.SDL_KEYUP:
             self.pressed.discard(event.key)
+        elif (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT
+              and self.state != 'attack'):
+            self.attack_requested = True
 
     def update(self, dt):
+        started = self.attack_requested and self.view_bounds is not None
+        self.attack_requested = False
+        if started:
+            self._machine.attack()
+            self.player.play(self.clips['attack'], restart=True)
+        attacking = self.state == 'attack'
+        if attacking and not started:
+            self.player.update(dt)
+            if self.player.finished:
+                self._machine.finish()
+
         clip = self.clips['idle']
         if self.view_bounds is None:
             self.pressed.clear()
@@ -97,8 +126,12 @@ class Character(GameObject):
             if low <= high:
                 start = min(max(self.x, low), high)
                 direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
-                self.x = min(max(start + direction * SPEED * dt, low), high)
-                if self.x != start:
+                if self.state == 'attack':
+                    direction = 0
+                destination = min(max(start + direction * SPEED * dt, low), high)
+                # 공격 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
+                self.x = start if attacking else destination
+                if destination != start:
                     self.facing = direction
                     clip = self.clips['run_right' if direction > 0 else 'run_left']
             else:
@@ -110,6 +143,14 @@ class Character(GameObject):
                 if right - left >= idle_left + idle_right:
                     self.x = min(max(self.x, left + idle_left), right - idle_right)
 
+        if self.state == 'attack':
+            return
+        if clip is self.clips['idle']:
+            if self.state == 'run':
+                self._machine.stop()
+        elif self.state == 'idle':
+            self._machine.move()
+
         if clip is self.player.clip:
             self.player.update(dt)
         else:
@@ -118,7 +159,7 @@ class Character(GameObject):
     def _draw(self, transform, opacity):
         frame = self.player.frame
         width, height = frame.rect[2:]
-        flip_x = self.player.clip is self.clips['idle'] and self.facing < 0
+        flip_x = self.state != 'run' and self.facing < 0
         draw_sprite(frame, transform, (self.x, GROUND_Y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 

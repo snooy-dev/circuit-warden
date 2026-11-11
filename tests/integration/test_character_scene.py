@@ -58,7 +58,11 @@ class CharacterSceneTests(unittest.TestCase):
                     before = self.pixels()
                     scene.draw()
                     self.assertNotEqual(self.pixels(), before)
-                    refs = tuple(clip.frames[0].image for clip in (idle, left, right))
+                    attack = actor.clips['attack']
+                    self.assertFalse(attack.loop)
+                    self.assertEqual(attack.durations, (.05,) * 7)
+                    self.assertEqual(attack.frames[-1].rect, (1152, 0, 192, 192))
+                    refs = tuple(clip.frames[0].image for clip in actor.clips.values())
                 finally:
                     scene.exit()
                 self.assertTrue(all(ref.closed for ref in refs))
@@ -124,3 +128,16 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertTrue(scene.images.closed)
         self.assertIsNone(scene.engine)
         self.assertEqual(scene.level.objects, ())
+
+    def test_invalid_attack_loop_releases_loaded_images(self):
+        for loop in ('false', 0, True):
+            with self.subTest(loop=loop):
+                scene = CharacterScene()
+                metadata = json.loads((scene.images.root / 'animations.json').read_text(encoding='utf-8'))
+                metadata['attack']['loop'] = loop
+                with patch('game.character.json.loads', return_value=metadata):
+                    with self.assertRaisesRegex(ValueError, r'animations\.json.*attack.*loop'):
+                        scene.enter(self.app)
+                self.assertTrue(scene.images.closed)
+                self.assertIsNone(scene.engine)
+                self.assertEqual(scene.level.objects, ())

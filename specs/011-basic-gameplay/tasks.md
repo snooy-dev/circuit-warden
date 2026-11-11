@@ -20,15 +20,15 @@
 
 독립 검사: 양 방향 클릭 공격 중 정지·재클릭 무시·종료 후 유지 키 복귀와 첫 프레임.
 
-- [ ] T006 [US2] requirements.txt에 transitions를 추가하고 게임 .venv에 설치, assets/warden/attack.png·animations.json·README.md에 원본 공격을 보존한다.
-- [ ] T007 [US2] tests/unit/test_character.py와 tests/integration/test_character_scene.py에 공격 중 키 변경·재클릭·종료·loop 오류/자원 해제 검사를 추가한다.
-- [ ] T008 [US2] game/character.py에 단발 로더와 idle/run/attack 전이·방향 고정·종료 복귀를 구현한다.
-- [ ] T009 [US2] tests/smoke/character_smoke.py로 실제 양 방향 공격·복귀·접지를 캡처하고 표적 검사 결과를 specs/011-basic-gameplay/verification.md에 기록한다.
+- [x] T006 [US2] requirements.txt에 transitions를 추가하고 게임 .venv에 설치, assets/warden/attack.png·animations.json·README.md에 원본 공격을 보존한다.
+- [x] T007 [US2] tests/unit/test_character.py와 tests/integration/test_character_scene.py에 공격 중 키 변경·재클릭·종료·loop 오류/자원 해제 검사를 추가한다.
+- [x] T008 [US2] game/character.py에 단발 로더와 idle/run/attack 전이·방향 고정·종료 복귀를 구현한다.
+- [x] T009 [US2] tests/smoke/character_smoke.py로 실제 양 방향 공격·복귀·접지를 캡처하고 표적 검사 결과를 specs/011-basic-gameplay/verification.md에 기록한다.
 
 ## Phase 4: Documentation & Completion
 
-- [ ] T010 README.md·tests/README.md·docs/architecture.md·game-design.md·art-direction.md·systems/basic-gameplay.md·progress.md를 최종 구현과 맞춘다.
-- [ ] T011 specs/011-basic-gameplay/verification.md에 요구별 증거·미확인·docs 영향을 기록하고 링크·공백·converge 대조 후 두 번째 증분을 커밋한다.
+- [x] T010 README.md·tests/README.md·docs/architecture.md·game-design.md·art-direction.md·systems/basic-gameplay.md·progress.md를 최종 구현과 맞춘다.
+- [x] T011 specs/011-basic-gameplay/verification.md에 요구별 증거·미확인·docs 영향을 기록하고 링크·공백·converge 대조 후 두 번째 증분을 커밋한다.
 
 ## Dependencies & Execution Order
 

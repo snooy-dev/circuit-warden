@@ -272,12 +272,14 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-main의 game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 전투·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 피해 판정·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
 
-검사 기술 기본값은 800×600 창, view_height 600, 시트 2배, 속도 180 논리 픽셀/초, 좌우 A/D, 고정 바닥선이다. 최종 게임 규칙이 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 전체 시트를 보존하고 너무 좁으면 중앙에 둔다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
+검사 기술 기본값은 800×600 창, view_height 600, 시트 2배, 속도 180 논리 픽셀/초, 바닥선 y=-180이다. 수평 A/D 조작은 사용자 결정이고 속도·배율·바닥선은 최종 수치가 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 idle/Run 전체 셀을 보존하고 너무 좁으면 중앙에 둔다. 공격은 같은 이동 경계를 쓰므로 화면 끝에서 검·여백 일부가 잘릴 수 있다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
 
 ## 기본 게임플레이 연결
 
 입력·재생 감사 결과는 [011 research](../specs/011-basic-gameplay/research.md)를 따른다. 키·마우스 이벤트 수집, 모드→객체 방송, SpritePlayer 반복/단발·finished·restart는 기존 기능이다. 범용 입력 매핑·키 유지 관리자·애니메이션 상태 머신은 프레임워크에 없다. game이 규칙을 소유한다.
 
-GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. 공격 연결은 011 다음 증분에서 진행한다.
+GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. Character가 transitions.Machine의 idle/run/attack 명시 전이(auto_transitions=False)를 소유한다. SpritePlayer의 loop=False·finished를 재사용하며 로더는 정확한 bool loop와 클립별 반복 정책을 검사한다.
+
+공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 실제 검증은 [011 verification](../specs/011-basic-gameplay/verification.md)을 따른다.

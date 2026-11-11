@@ -28,6 +28,13 @@ def push_focus_loss():
     assert pico.SDL_PushEvent(byref(event)) == 1
 
 
+def push_click():
+    event = pico.SDL_Event()
+    event.type = pico.SDL_MOUSEBUTTONDOWN
+    event.button.button = pico.SDL_BUTTON_LEFT
+    assert pico.SDL_PushEvent(byref(event)) == 1
+
+
 class CharacterSmoke(CharacterScene):
     def __init__(self, output_dir):
         super().__init__()
@@ -78,6 +85,30 @@ class CharacterSmoke(CharacterScene):
 
         assert actor.player.clip is idle and actor.x == stopped_x and actor.facing == -1
         self.capture('idle-left')
+        push_click()
+        yield
+
+        assert actor.state == 'attack' and actor.x == stopped_x and actor.facing == -1
+        self.capture('attack-left')
+        push_key(pico.SDLK_d)
+        push_click()
+        yield
+
+        assert actor.state == 'run' and actor.x > stopped_x and actor.facing == 1
+        self.capture('attack-resume-right')
+        attack_x = actor.x
+        push_click()
+        yield
+
+        assert actor.state == 'attack' and actor.x == attack_x and actor.facing == 1
+        self.capture('attack-right')
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        push_click()
+        yield
+
+        assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1
+        stopped_x = actor.x
+        self.capture('attack-release-idle')
         push_key(pico.SDLK_a)
         yield
 
@@ -111,6 +142,8 @@ class CharacterSmoke(CharacterScene):
 
     def draw(self):
         super().draw()
+        if self.character.state == 'attack' and self.character.player.elapsed == 0:
+            self.capture('attack-first-' + ('right' if self.character.facing > 0 else 'left'))
         now = monotonic()
         if not self.passed and now - self.changed >= .25:
             next(self.steps)
@@ -127,5 +160,5 @@ if __name__ == '__main__':
     Engine().run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: idle/run-right/opposite/run-left/release/focus-loss/resize/fullscreen/escape/cleanup',
+    print('PASS: idle/run-right/opposite/run-left/attack-left/resume/attack-right/release/focus-loss/resize/fullscreen/escape/cleanup',
           flush=True)

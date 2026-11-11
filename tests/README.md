@@ -9,12 +9,12 @@
 자동 검사가 필요한 구체적 위험이 있으면 해당 메서드를 지정한다. 예를 들어 유지 키 처리 변경은 다음처럼 검사한다(매 기능 공통 명령이 아니다).
 
 ```powershell
-.\.venv\Scripts\python.exe -B -m unittest tests.unit.test_character.CharacterTests.test_aliases_repeat_and_opposite_keys -q
+.\.venv\Scripts\python.exe -B -m unittest tests.unit.test_character.CharacterTests.test_repeat_opposite_keys_and_release -q
 ```
 
 | 확인할 위험 | 선택할 위치 |
 |---|---|
-| 캐릭터 입력·이동·재생 | unit/test_character.py의 해당 메서드 |
+| 캐릭터 이동·공격 전이·재생 | unit/test_character.py의 해당 메서드 |
 | 이미지 로딩·실패/종료 해제 | integration/test_character_scene.py, test_scene_integration.py의 해당 메서드 |
 | 루프·이벤트·장면 수명 | unit/test_engine.py, test_game_framework.py의 해당 메서드 |
 | 좌표·컬링·알파·정렬 | unit/test_world_rendering.py, test_render_execution.py, integration/test_drawing.py의 해당 메서드 |
@@ -32,6 +32,8 @@
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |
 | 독립 UI·앵커·트리 | `.\.venv\Scripts\python.exe -B tests/smoke/ui_smoke.py $testOutput` |
 | 월드/UI 결합·장면 왕복 | `.\.venv\Scripts\python.exe -B tests/smoke/integration_smoke.py $testOutput` |
+
+character_smoke는 실제 GameplayMode를 통해 양 방향 공격·추가 클릭 무시·유지 키 복귀와 첫 프레임 캡처를 포함한다.
 
 SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 네 스크립트는 상시 통과 관문이 아니다.
 

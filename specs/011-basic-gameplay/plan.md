@@ -8,7 +8,7 @@ engine/game_framework를 그대로 사용하고 game에 구체 GameplayMode와 i
 
 ## Technical Context
 
-- **Language/Dependencies**: Python 3.14 + Pico2D 1.5.1, transitions 0.9.3 추가(설치 가능 여부 확인).
+- **Language/Dependencies**: Python 3.14 + Pico2D 1.5.1, transitions 0.9.3 추가(게임 .venv 설치 확인).
 - **Runtime**: 게임 .venv만 변경. 도구·전역 Python은 변경 없음.
 - **Platform/Performance**: Windows, 기존 dt 상한 100ms와 논리 좌표 유지. 새 성능 목표 없음.
 - **Testing**: 상태 전이·큰 dt의 첫 프레임 누락·입력 중복은 표적 unittest, 실제 PNG/자원 수명은 기존 통합 검사, 입력/렌더는 character_smoke를 확장한다. 전체 회귀는 불필요.
@@ -34,7 +34,7 @@ SpritePlayer의 loop=False/finished/play(restart=True)를 사용한다. 게임 �
 - game/scene.py: GameplayLevel(mode=GameplayMode), 명시적 player, 기존 CharacterScene 진입점 유지.
 - game/character.py: A/D, 공격 요청·상태 머신, 단발 로더·반전 출력.
 - assets/warden/attack.png·animations.json·README.md: 원본 시트·시간·root(96,120)·출처 해시.
-- requirements.txt, README.md, tests/unit/test_character.py, tests/integration/test_character_scene.py, tests/smoke/character_smoke.py: 호출부와 검증·실행 안내.
+- requirements.txt, README.md, docs/README.md, tests/unit/test_character.py, tests/integration/test_character_scene.py, tests/smoke/character_smoke.py: 호출부와 검증·실행 안내.
 - engine/game_framework/공개 exports·기존 fixtures: 수정 불필요.
 
 ## Documentation Impact (mandatory)

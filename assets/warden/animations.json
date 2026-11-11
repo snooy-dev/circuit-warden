@@ -126,5 +126,28 @@
       30
     ],
     "loop": true
+  },
+  "attack": {
+    "file": "attack.png",
+    "frameSize": [
+      192,
+      192
+    ],
+    "columns": 7,
+    "count": 7,
+    "pivot": [
+      96.0,
+      120.0
+    ],
+    "durationsMs": [
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50
+    ],
+    "loop": false
   }
 }

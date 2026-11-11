@@ -23,6 +23,7 @@ class CharacterTests(unittest.TestCase):
                                for x in (0, 128))
                 durations = (.041, .042) if name == 'idle' else (.03, .03)
                 self.clips[name] = SpriteClip(frames, durations)
+            self.clips['attack'] = SpriteClip(self.clips['idle'].frames, (.05, .05), loop=False)
         self.character = self.make_character()
 
     def make_character(self):
@@ -127,3 +128,68 @@ class CharacterTests(unittest.TestCase):
             actor.render_items()[0].drawable(transform, 1)
             self.assertIs(draw.call_args.args[0], self.clips['idle'].frames[0])
             self.assertTrue(draw.call_args.kwargs['flip_x'])
+
+    def test_attack_starts_at_first_frame_ignores_clicks_and_resumes_held_key(self):
+        actor = self.character
+        actor.control(key(pico.SDLK_d))
+        actor.update(.1)
+        start = actor.x
+        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+        actor.control(click)
+        actor.update(.1)
+        self.assertEqual(actor.state, 'attack')
+        self.assertEqual(actor.player.elapsed, 0)
+        self.assertEqual(actor.x, start)
+        actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_a))
+        actor.update(.05)
+        actor.control(click)
+        self.assertEqual(actor.player.elapsed, .05)
+        self.assertEqual(actor.facing, 1)
+        actor.update(.05)
+        self.assertEqual(actor.state, 'run')
+        self.assertEqual(actor.facing, -1)
+        self.assertEqual(actor.x, start)
+        actor.update(.1)
+        self.assertEqual(actor.x, start - 18)
+        actor.control(click)
+        actor.update(.1)
+        self.assertEqual(actor.state, 'attack')
+        self.assertEqual(actor.player.elapsed, 0)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(WorldTransform((0, 0, 800, 600), view_height=600), 1)
+            self.assertTrue(draw.call_args.kwargs['flip_x'])
+
+    def test_attack_release_opposite_keys_and_focus_return_to_idle(self):
+        for finish in ('release', 'opposite', 'focus'):
+            with self.subTest(finish=finish):
+                actor = self.make_character()
+                actor.control(key(pico.SDLK_a))
+                actor.update(.1)
+                actor.control(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+                actor.update(.1)
+                start = actor.x
+                if finish == 'release':
+                    actor.control(key(pico.SDLK_a, pico.SDL_KEYUP))
+                elif finish == 'opposite':
+                    actor.control(key(pico.SDLK_d))
+                else:
+                    actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST))
+                actor.update(.1)
+                self.assertEqual(actor.state, 'idle')
+                self.assertEqual(actor.x, start)
+                self.assertEqual(actor.facing, -1)
+
+    def test_right_click_and_pending_attack_on_focus_loss_or_invalid_output_are_ignored(self):
+        actor = self.character
+        actor.control(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_RIGHT))
+        actor.update(.1)
+        self.assertEqual(actor.state, 'idle')
+        for focus in (True, False):
+            actor.control(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+            if focus:
+                actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_MINIMIZED))
+            else:
+                actor.view_bounds = None
+            actor.update(.1)
+            self.assertEqual(actor.state, 'idle')
