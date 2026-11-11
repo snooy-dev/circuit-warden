@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- 기본 실행 기반과 008 게임 프레임워크는 구현되어 있다. `feature/engine`의 패키지 구조에 009 스프라이트 표시·재생·이미지 수명을 통합하고 검증 중이다. [009 명세](../specs/009-sprite-runtime/spec.md)·[계획](../specs/009-sprite-runtime/plan.md)·[검증](../specs/009-sprite-runtime/verification.md)을 따른다.
+- 기본 실행 기반과 008 게임 프레임워크는 구현되어 있다. `feature/engine`의 패키지 구조에 009 스프라이트 표시·재생·이미지 수명을 통합했다. 자동 검사 106개와 실제 PNG·SDL 8단계가 통과했으며 [Draft PR #2](https://github.com/snooy-dev/circuit-warden/pull/2)를 생성했다. [009 명세](../specs/009-sprite-runtime/spec.md)·[계획](../specs/009-sprite-runtime/plan.md)·[검증](../specs/009-sprite-runtime/verification.md)을 따른다.
 - 2026-11-11 사용자가 미구현 기반 보완 → `feature/engine → main` PR 생성 → 별도 게임 브랜치 구현 순서를 지시했다. PR 생성은 요청 범위이며 main 병합은 수행하지 않는다.
 - 게임 브랜치 이름은 사용자가 **`feature/character-movement`**를 선택했다. idle v7·Run v4 시트를 버전 없는 게임 에셋 이름으로 복사하고 `.gitattributes`를 추가한 뒤 표시·이동·정지/달리기 전환을 구현한다. 이 작업은 엔진 PR 생성 후 시작한다.
 - 이전 009 임시 출력의 사용자 직접 확인과 확인 후 임시 자료 정리는 미완료다. 이번 진행 지시를 과거 화면 확인 완료로 간주하지 않으며 기존 임시 자료를 삭제하지 않는다.
@@ -19,11 +19,11 @@
 
 ## 미결 사항
 
-- 엔진 패키지 통합의 최종 검사·게시·PR 생성.
+- 엔진 Draft PR #2의 검토·별도 병합 결정.
 - 009의 이전 사용자 직접 출력 확인·임시 자료 정리.
 - 게임의 이동 키·속도·이동 축·경계 처리 등은 검사 장면의 기술 기본값과 게임 규칙 확정을 구분한다.
 - 실물 고DPI·모니터 이동·대량 객체 성능·장치 리셋 자동 복구는 검증/구현 범위 밖이다.
 
 ## 다음 작업
 
-009 엔진 통합 검증 후 `feature/engine → main` PR을 만들고, 해당 엔진 결과를 기준으로 `feature/character-movement`에서 캐릭터 검사 장면을 구현한다. main PR 병합과 사용자 직접 플레이 확인은 별도 상태로 보고한다.
+009 엔진 통합과 Draft PR #2 생성을 마쳤다. 해당 엔진 결과를 기준으로 `feature/character-movement`에서 캐릭터 검사 장면을 구현한다. main PR 병합과 사용자 직접 플레이 확인은 별도 상태로 보고한다.

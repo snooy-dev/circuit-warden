@@ -55,3 +55,5 @@ game-design/systems/workflow/tooling은 정책·환경 변화가 없어 수정�
 - 결과: 종료 0. 실제 PNG 로딩/캐시·월드/UI·일시정지/한 프레임/클립 전환·반전·단발·1100×720↔900×600 크기 변경·재진입·모든 이미지 닫기·원본 해시 불변 8단계 PASS. smoke-4/6.png에서 클리핑·반전·투명 배경·기준점·기본/확대 표시를 관찰했다. SDL 이벤트 주입과 렌더러 PNG 관찰이며 실제 물리 키 입력·사용자 확인으로 기록하지 않는다.
 - docs: architecture·progress·README·docs/README 및 009 계획·실행 안내를 패키지 구조에 맞췄다. main 최신 커밋의 art-direction을 그대로 보존해 공격 v5 잠정 승인 상태를 되돌리지 않는다. game-design/systems/requirements는 정책·의존성 변화가 없어 변경하지 않는다.
 - 범위 대조: FR-001~011/FR-DOC와 현재 코드·검사·문서를 확인했다. 기존 사용자 확인·임시 정리 T013/T014/T016은 남으며 Draft PR에 그대로 명시한다. 새 게임 에셋·이동은 이 엔진 변경에 포함하지 않는다. 예전 임시 폴더는 수정·삭제하지 않았다.
+
+통합 커밋: 26f448d8. [Draft PR #2](https://github.com/snooy-dev/circuit-warden/pull/2)를 feature/engine → main으로 생성했다. main은 병합하지 않았다. 변경 문서 링크 누락 0개, git diff --no-index --check 공백 오류 0개(차이 존재로 종료 1), 단위·통합 검사 106개 통과. T020을 완료했으며 이전 T013/T014/T016은 유지한다.
