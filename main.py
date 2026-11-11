@@ -1,6 +1,6 @@
-"""기본 엔진 검사 실행 진입점."""
+"""캐릭터 검사 실행 진입점."""
 
-from demos.check import CheckScene, main
+from game.scene import main
 
 if __name__ == "__main__":
     main()

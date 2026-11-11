@@ -44,3 +44,7 @@ class CheckScene(Scene):
 def main():
     print('엔진 검사: Space = 장면 전환 / F6 = 창 크기 / F11 = 전체화면 / 마우스 = 표시 이동 / Escape = 종료', flush=True)
     Engine().run(CheckScene())
+
+
+if __name__ == '__main__':
+    main()

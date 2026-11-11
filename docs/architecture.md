@@ -272,6 +272,6 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-`feature/character-movement`에서 game/character.py·scene.py로 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 검사 진입점, 기존 도형 검사는 `python -m demos.check`로 보존한다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 전투·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+`feature/character-movement`에서 game/character.py·scene.py로 기존 LevelScene·GameObject·SpritePlayer를 연결했다. main.py는 게임 검사 진입점, 기존 도형 검사는 `python -m demos.check`로 보존한다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 전투·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
 
 검사 기술 기본값은 800×600 창, view_height 600, 시트 2배, 속도 180 논리 픽셀/초, 좌우 A/D·방향키, 고정 바닥선이다. 최종 게임 규칙이 아니다. 키 set은 같은 방향 별칭을 OR, 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 전체 시트를 보존하고 너무 좁으면 중앙에 둔다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
