@@ -31,7 +31,7 @@
 | Run | [복원·경계 수정 v4](../art/warden/provisional-approved/run-v4/review.html) 잠정 승인 | 청색 명암·짧은 귀와 팔·골반 연동·꼬리와 다리 경계 보존, 전류·천·귀·꼬리 관성 유지. 128×104, 방향별 16프레임·480ms |
 | 기존 Run v3 | [보존본](../art/warden/provisional-approved/run-v3/README.md) 이전 후보로 강등 | 2026-11-10 사용자 결정으로 잠정 승인에서 제외. 프레임과 과거 승인 기록 보존 |
 | 이전 달리기 | [review-v2](../art/warden/run-hibit/review-v2/both.gif) 보류 | 잠정 승인에 포함하지 않음 |
-| 공격 | 기존 모션 반려·재제작 필요. [전신 후보 v1](../art/warden/attack-fullbody-review-v1/bundle-v1/preview.gif)도 재검사 불합격 | 오른손 한손 검·전신 대각선 베기만 포함. 준비·종료·회수 제외. 기존 review-v6 및 전신 후보는 보존하며 채택하지 않음. 검 소환 VFX 보류 |
+| 공격 | [오른손 베기 재제작 후보](../art/warden/attack-right-slash-v2/bundle-v3/review.html) 사용자 검토 대기·미승인 | 오른손 한손 검·전신 대각선 베기 6프레임·300ms, hibit 16색·192×144. 준비·종료·회수 제외. 접지·전류·귀/천/꼬리 관성 반영. 자동 머리 비율 검출 실패·몸통 이동 경고는 검사 자료에 유지. 기존 review-v6·전신 후보 v1 및 중간 반려본 보존. 검 소환 VFX 보류 |
 
 [잠정 승인 보관 목록](../art/warden/provisional-approved/README.md)의 현재 승인 프레임은 128개 PNG다. Run은 사용자가 검토한 [run-review-v4](../art/warden/shading-restore/run-review-v4/review.html)를 변경 없이 복사했으며 이전 Run 32개 PNG와 원화도 보존한다. 잠정 승인은 최종 게임 사용·통합 승인이 아니다. 걷기·공격에 복원본의 최신 자세를 적용하는 작업은 아직 수행하지 않았다.
 
