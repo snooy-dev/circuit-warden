@@ -47,15 +47,15 @@ specify workflow resolve speckit
 
 ## FFmpeg와 생성 서비스
 
-FFmpeg는 현재 설치·필수 준비 항목에 포함하지 않는다. 영상 생성 AI가 아니라 영상 디코딩·프레임 추출·인코딩 도구다. `video2dsprite`의 영상 입력 처리와 pixelfx의 GIF/MP4 미리보기에는 필요하지만, 일반 스프라이트·PNG 시트 제작에는 필수가 아니다. 해당 영상 기능을 실제로 선택할 때 설치한다.
+FFmpeg 9.0.2 essentials를 `.local-tools/ffmpeg/ffmpeg-9.0.2-essentials_build/bin`에 설치했다. 공식 FFmpeg 다운로드 페이지가 안내하는 [Gyan 배포본](https://www.gyan.dev/ffmpeg/builds/)이며 ZIP과 게시된 SHA256 일치를 확인했다. 준비 스크립트가 현재 세션 PATH에만 추가한다. 게임 의존성과 전역 PATH는 변경하지 않았다. FFmpeg는 영상 생성 AI가 아닌 디코딩·프레임 추출·인코딩 도구다. 아트 작업에서의 사용 여부는 사용자 요청 범위에 맞춰 정하며 도구 사용만을 위해 계획 문서를 만들지 않는다.
 
-외부 영상 생성 서비스는 연결하지 않았다. 이미지 생성·편집 도구의 존재를 진단기에 알려 경로만 확인했으며 실제 이미지 생성, 서비스 인증, 비용 발생 여부를 검증한 것은 아니다. 설치가 게임 에셋 생성 요청을 의미하지 않는다.
+외부 영상 생성 서비스 인증은 미구성이다. 현재 아트 제작·채택 상태는 [아트 기준](art-direction.md#현재-제작-상태)을 따른다. 도구 설치가 새 생성 승인을 뜻하지 않는다. FFmpeg 기능 검사는 VP9 알파·H.264·PNG 지원을 확인했다. 임시 디렉터리 접근 오류는 검사 프로세스의 TEMP/TMP를 `.local-tools/tmp`로 지정해 해소했다.
 
 ## 검증 기준
 
 - Spec Kit: Codex만 등록, 스킬 누락·변경 없음. 실행 로그 제외를 추가한 `.specify/.gitignore`는 의도한 수정 1건으로 통합 검사에서 경고한다. 이를 없애려고 설치 명세의 해시를 조작하지 않는다. 프로젝트 템플릿이 기본 템플릿보다 우선한다.
 - workflow resolve: 문서 읽기 → specify → 설계 문서 반영 → spec 검토 → plan → 기술 문서 반영 → plan 검토 → tasks → analyze → implement → docs 동기화 → converge 순서를 확인한다. 이 명령은 흐름을 실행하지 않는다.
-- Forge: 171개 설치 파일 일치, NumPy·Pillow·SciPy 의존성, pixelfx 연결 검사를 통과했다. 전체 진단은 WARN이다. 여러 Python 경로가 보이므로 도구 준비 스크립트나 명시적 실행 경로를 사용한다. FFmpeg와 선택적 SVG 렌더러 resvg-py는 미설치여서 영상 처리·SVG 코드 아트는 사용할 수 없다. 일반 PNG 처리와 pixelfx는 별도로 확인했다.
+- Forge: 171개 설치 파일 일치, NumPy·Pillow·SciPy 의존성, pixelfx 연결 검사를 통과했다. 여러 Python 경로 경고가 있으므로 도구 준비 스크립트나 명시적 실행 경로를 사용한다. FFmpeg는 설치·기능 검사를 마쳤다. 선택적 SVG 렌더러 resvg-py와 영상 생성 서비스 인증은 미구성이다.
 - pixelfx: 원본의 `node tools/check.mjs fire/torch` 검사로 1 pass, 0 fail, 0 warn을 확인했다. 게임용 에셋은 만들지 않았다.
 - 도구 준비 스크립트: 경로 설정과 도구 미설치 시 오류 처리를 확인한다.
 - 문서: 링크·삭제된 결정 연표 참조·필수 docs 항목·Git 제외 범위를 확인한다.

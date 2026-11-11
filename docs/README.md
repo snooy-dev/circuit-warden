@@ -1,6 +1,6 @@
 # 프로젝트 문서
 
-이 폴더는 Circuit Warden의 장기 유지 문서다. 기본 실행 기반의 명세·계획은 사용자 승인을 받았고 코드 구현 및 자동 검사를 마쳤다. 실제 창과 사용자 키 조작 검사까지 완료했다.
+이 폴더는 Circuit Warden의 장기 유지 문서다. main에는 실행 기반·게임프레임워크·스프라이트 실행·캐릭터 표시와 좌우 이동 검사가 포함돼 있다. 초기 실행 기반의 사용자 키 조작 확인과 현재 캐릭터의 사용자 직접 조작·품질 미확인을 구분하며 [진행 상태](progress.md)를 따른다.
 
 ## 읽는 순서
 
@@ -9,9 +9,11 @@
 3. [기술 구조](architecture.md), [아트 기준](art-direction.md): 필요한 부분만.
 4. 게임 기능 개발일 때만 활성 기능의 `specs/<feature>/spec.md`, `plan.md`, `tasks.md`, `verification.md`.
 
+위 목록은 문서 탐색 순서다. 작업별 필수 문서는 [AGENTS.md](../AGENTS.md#작업-시작과-문서-선택)에서 선택한다.
+
 반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다.
 
-엔진 통합 브랜치는 `feature/engine`이다. [008 계획](../specs/008-game-framework/plan.md)의 P1~P5 구현·검증을 통합했으며, 과거 구현 근거는 [008 검증 결과](../specs/008-game-framework/verification.md), 현재 실행·검사는 [tests 안내](../tests/README.md)를 따른다. 게임 브랜치에는 idle·Run 기반 표시·이동이 연결돼 있으며 최종 게임 규칙은 별도다. 승인된 엔진/게임 API 경계와 game·tests 분류는 [기술 구조](architecture.md#코드-폴더-구조)를 따른다.
+엔진·게임 구현은 PR #3 병합 커밋 `1e3b6ad`를 통해 main에 포함됐다. [008 계획](../specs/008-game-framework/plan.md)의 P1~P5 구현·검증을 통합했으며, 과거 구현 근거는 [008 검증 결과](../specs/008-game-framework/verification.md), 현재 실행·검사는 [tests 안내](../tests/README.md)를 따른다. main에는 idle·Run 기반 표시·이동이 연결돼 있으며 최종 게임 규칙은 별도다. 승인된 엔진/게임 API 경계와 game·tests 분류는 [기술 구조](architecture.md#코드-폴더-구조)를 따른다.
 
 ## 운영 원칙
 

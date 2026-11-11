@@ -1,7 +1,7 @@
 # Circuit Warden
 
-`feature/character-movement`에서 워든의 표시·좌우 이동 검사 장면을 구현했습니다. 엔진 기반은 [Draft PR #2](https://github.com/snooy-dev/circuit-warden/pull/2)로 main 통합을 제안한 상태입니다. 최종 게임 규칙·전투는 아직 구현하지 않았습니다. 아트 상태는 [아트 기준](docs/art-direction.md)을 따릅니다. [진행 상태](docs/progress.md)를 참조하세요.
-작업을 시작할 때 [프로젝트 문서](docs/README.md), [진행 상태](docs/progress.md), [작업 규칙](AGENTS.md)을 읽습니다.
+`main`에 엔진 프레임워크·스프라이트 실행·워든 표시와 좌우 이동 검사 장면이 통합돼 있습니다. 최종 게임 규칙·전투는 아직 구현하지 않았으며 사용자 직접 이동감·품질 평가는 미확인입니다. 아트 상태는 [아트 기준](docs/art-direction.md), 현재 범위는 [진행 상태](docs/progress.md)를 참조하세요.
+작업을 시작할 때 [작업 규칙](AGENTS.md)과 [진행 상태](docs/progress.md)를 확인하고, 작업별 참고 문서는 [프로젝트 문서](docs/README.md)에서 찾습니다.
 Spec Kit 개발 흐름과 설치된 에셋 도구의 사용 방법은 [워크플로우](docs/workflow.md)와 [도구 구성](docs/tooling.md)에 기록합니다.
 
 ## 요구사항
@@ -33,7 +33,7 @@ A/D 또는 좌우 방향키를 누르고 있으면 이동하고, 놓으면 마�
 
 `tests/unit/`은 단위 검사, `tests/integration/`은 실제 PNG·SDL 소프트웨어 그리기와 장면 조합 검사입니다. `unittest discover`가 둘 다 탐색합니다. 실제 창 검사는 `tests/smoke/`, 검사 장면은 `tests/fixtures/`에 있습니다. 작은 기능은 바뀐 동작의 직접 확인을 기본으로 하며 자동·전체 검사는 필요한 때만 [검사 선택과 실행법](tests/README.md)에 따라 실행합니다.
 
-스프라이트는 `game_framework`의 ImageStore·SpriteFrame·SpriteClip·SpritePlayer·draw_sprite로 사용합니다. 영역 클리핑·기준점·반전·장면 이미지 정리가 연결돼 있으며 [009 검증](specs/009-sprite-runtime/verification.md)에 최신 검사와 이전 사용자 확인 미완료를 구분했습니다. 이 게임 브랜치는 `assets/warden/`의 idle·좌우 Run을 사용합니다. 원본 `art/`가 없어도 실행됩니다. [010 실행·검증](specs/010-character-movement/quickstart.md)을 참조하세요.
+스프라이트는 `game_framework`의 ImageStore·SpriteFrame·SpriteClip·SpritePlayer·draw_sprite로 사용합니다. 영역 클리핑·기준점·반전·장면 이미지 정리가 연결돼 있으며 [009 검증](specs/009-sprite-runtime/verification.md)에 최신 검사와 이전 사용자 확인 미완료를 구분했습니다. 현재 main은 `assets/warden/`의 idle·좌우 Run을 사용합니다. 원본 `art/`가 없어도 실행됩니다. [010 실행·검증](specs/010-character-movement/quickstart.md)을 참조하세요.
 
 ## 다음 게임 개발
 

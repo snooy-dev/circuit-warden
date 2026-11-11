@@ -62,7 +62,10 @@ edits:
       success for unrun tests or missing evidence. Replace stale content with current
       state and remove resolved questions; do not append changelogs or session logs.
       Use Git for history. Commit each verified increment with related docs and
-      evidence; preserve unrelated user changes. Continue within scope without new
+      evidence; preserve unrelated user changes. Use an English type/scope prefix
+      and Korean summary and body for every commit, including merge and revert
+      messages; preserve literal identifiers and commands. Inspect the saved message.
+      Continue within scope without new
       approval gates except PR actions. Never delete uncommitted evidence to reduce document size.
 - insert_after: implement
   step:
