@@ -43,3 +43,8 @@ T001→T002→T003→T004→T005가 첫 플레이 가능한 증분이다. T006�
 - [x] T016 docs·README·assets/warden/README.md와 specs/011-basic-gameplay/verification.md를 현재 결과로 맞추고 converge·링크·공백 검사 후 로컬 커밋한다.
 
 T012→T013→T014→T015→T016 순서. 신규 게임 아트 생성·피해 규칙 변경 없음.
+
+## Phase 6: 표시 배율 조정
+
+- [x] T017 game/character.py의 공통 배율과 tests/unit/test_character.py 기대값을 1배로 조정하고 표적 검사·실제 창으로 FR-009/SC-005를 확인한다.
+- [x] T018 docs/architecture.md·progress.md와 verification.md에 현재 배율·검증을 반영하고 정합성 확인 후 커밋한다.

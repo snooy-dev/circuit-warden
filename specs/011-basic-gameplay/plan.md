@@ -62,3 +62,7 @@ game/scene.py의 DEFAULT_SIZE만 (1280,720), Engine(*DEFAULT_SIZE)로 전달해 
 game/effects.py에 단발 SwordTrail(GameObject)을 추가한다. 공격 시작에 level.spawn, 좌표·방향·배율 고정, 기존 SpritePlayer로 700ms 뒤 destroy. 레벨 스냅샷 규칙으로 생성 프레임은 update 없이 0초에서 보인다. 바닥(-2)→효과(-1)→캐릭터(0) 순서로 그려 원본 behind character를 유지한다. Character는 독립 검사에서도 쓰이므로 level이 있을 때만 효과를 spawn한다. 재공격마다 독립 객체를 사용해 남은 잔상을 자르지 않는다.
 
 호출부/검사: load_clips와 animations.json에 sword_trail 단발 추가, 기존 단위 fixture는 레벨 없이 이동 검사를 유지한다. 통합 검사 하나에서 효과의 첫 프레임·방향 고정·이동 후 잔존·재공격 공존·소멸·장면 종료를 검증한다. 기존 SDL smoke에서 해상도·양 방향 합성과 잔여 효과를 확인한다. 전체 엔진 회귀는 필요 없다. docs/art-direction·architecture·systems·progress, README·assets 출처·검증을 갱신해 한 증분으로 커밋한다.
+
+## 표시 배율 조정
+
+DISPLAY_SCALE만 1로 변경한다. 기존 캐릭터 출력·이동 경계·SwordTrail 생성이 공통 값을 재사용하므로 새 옵션은 없다. tests/unit/test_character.py의 2배 기대값과 좁은 창 입력을 1배로 조정한다. 경계·출력 검사 2개 및 기존 실제 창 smoke로 발 기준점·베기 정렬을 확인하고 architecture·progress·verification을 맞춘다. 루트 README는 수정하지 않는다.

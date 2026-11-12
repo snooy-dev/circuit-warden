@@ -13,7 +13,7 @@ from .effects import SwordTrail
 
 GROUND_Y = -180
 SPEED = 180
-DISPLAY_SCALE = 2
+DISPLAY_SCALE = 1
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS

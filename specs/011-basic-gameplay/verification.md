@@ -70,3 +70,12 @@ pathlib/hashlib/struct 대조로 공격 원본/복사 SHA-256 `e7a9a24a46feff5d2
 FR-007→DEFAULT_SIZE/실제 창, FR-008→SwordTrail/독립 수명·합성·자산, SC-004→해시·창 캡처·표적 검사. spec/plan/tasks의 총 9개 기능 요구·5개 성공 기준·16개 작업을 대조해 미구현 필수 항목 없음. 후속 변경은 docs/architecture·systems/basic-gameplay·art-direction·progress·README·assets 출처 및 011 문서에 반영했다. 게임 규칙 본체와 기존 350ms 공격 잠금은 유지한다.
 
 원본 베기는 검끝을 추종하지 않는 고정 호이고 v6에서도 이를 보존했다. 왼쪽은 수평 반전, 화면 가장자리에서는 효과 일부가 잘릴 수 있다. 전체 회귀·다른 smoke는 공통 엔진 변경이 없어 선택하지 않았다. 사용자 직접 조작·최종 미술 품질, 피해 판정·새 아트 제작은 이번 검증/구현 범위 밖이다.
+
+## 표시 배율 1배 (2026-11-13)
+
+사용자 요청 FR-009/SC-005→T017/T018 대조, 충돌 없음. 기존 브랜치 fetch·merge 결과 Already up to date. DISPLAY_SCALE=1을 기존 출력·이동 경계·효과 생성이 공유한다. 기본 창의 최종 배율은 720/600=1.2: idle/Run 셀 153.6×124.8px, 공격/베기 셀 230.4×230.4px(투명 여백 포함). 이동 속도·시간·원본 PNG는 변경하지 않았다.
+
+게임 Python으로 `-B -m unittest tests.unit.test_character.CharacterTests.test_bounds_include_idle_and_run_extents_and_center_when_narrow tests.unit.test_character.CharacterTests.test_draw_flips_idle_left_and_uses_dedicated_run_frames -q` 실행: 2개 통과.
+`-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/scale-1` 실행: 종료 0/PASS. 실제 출력 character-idle.png·character-attack-right.png를 열어 축소 크기·발 접점·베기 정렬을 확인했다.
+
+architecture·progress·spec/plan/tasks와 코드의 현재 배율을 대조했고 Converge에서 추가 필수 작업 없음. 변경 문서 파일 링크·git diff --check 통과. 루트 README는 수정하지 않았다. 단순 배율 변경으로 전체 회귀는 생략했고 사용자 직접 크기 평가는 미확인이다.
