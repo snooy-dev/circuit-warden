@@ -76,3 +76,7 @@ idle 알파를 도구 Python/Pillow로 측정: 첫 프레임 (24,11,78,93), 프�
 입력 처리에서 공중 클릭/점프·공격 중 점프를 버린다. update 시작에서 유효한 점프를 먼저 소비해 같은 프레임 공격을 차단하고, 그 후 수평 이동·재생은 기존 경로를 사용한다. Character._draw의 y를 실제 좌표로 바꾼다. SwordTrail은 지상 공격만 가능하므로 기존 바닥 위치를 유지한다. game/scene.py 창 제목·실행 안내에 Space를 반영한다.
 
 호출부·검사: tests/unit/test_character.py에 정점/분할 dt/착지, 공중 A/D/클립, 반복 키/공격/포커스 경계를 검사한다. tests/smoke/character_smoke.py의 기존 시나리오 뒤에 제자리·달리기 점프를 추가한다. docs/systems/basic-gameplay·game-design·architecture·progress와 011 검증을 갱신한다. engine/game_framework/자산/루트 README는 영향 없어 수정하지 않는다. 선택한 표적 검사와 실제 창 확인 후 하나의 플레이 가능한 증분으로 커밋한다.
+
+## 측면 idle 교체
+
+좌우 48프레임의 RGBA가 정확한 수평 반전이므로 기존 idle.png와 반전 경로를 재사용한다. 오른쪽 원본을 복사하고 animations.json pivot x만 58→64, 실제 자산 통합 검사의 pivot 기대값을 수정한다. 좌측 원본 anchor=63은 픽셀 인덱스 반전 기준이며 런타임은 연속 좌표 pivot=64를 반전한다. 별도 좌측 시트/로더/상태를 추가하지 않는다. 새 알파 높이도 81~83px라 점프 상수는 유지한다. 출처·현재 아트/진행/구조 문서 갱신, 표적 PNG 검사와 기존 SDL smoke의 좌우 idle·복귀를 확인한다. 루트 README는 변경하지 않는다.

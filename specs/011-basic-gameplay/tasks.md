@@ -57,3 +57,10 @@ T012→T013→T014→T015→T016 순서. 신규 게임 아트 생성·피해 규
 - [x] T022 docs/game-design.md·architecture.md·progress.md·specs/011-basic-gameplay/verification.md를 구현과 맞추고 converge·문서 검사 후 커밋한다.
 
 T019→T020→T021→T022. FR-010~012·SC-006에 대응한다. 새 점프 아트·공중 공격·플랫폼은 범위 밖이다.
+
+## Phase 8: 측면 idle 교체
+
+- [x] T023 FR-013/SC-007과 원본을 대조하고 idle.png·animations.json·자산 출처·통합 검사 pivot을 교체한다.
+- [x] T024 표적 PNG 검사·SDL 캡처를 확인하고 현재 docs·verification을 갱신해 converge 후 커밋한다.
+
+T023→T024. Analyze 대조: 새 생성/게임 규칙 변경 없이 기존 재생 경로와 검증을 재사용하며 충돌 없음.

@@ -49,7 +49,7 @@ class CharacterSceneTests(unittest.TestCase):
                     self.assertEqual(right.durations, (.03,) * 16)
                     self.assertEqual(idle.frames[-1].rect, (896, 520, 128, 104))
                     self.assertEqual(tuple(clip.frames[0].pivot for clip in (idle, left, right)),
-                                     tuple((x / 128, 92 / 104) for x in (58, 63, 64)))
+                                     tuple((x / 128, 92 / 104) for x in (64, 63, 64)))
                     image = idle.frames[0].image
                     self.assertIsNot(image, previous)
                     self.assertTrue(all(frame.image is image for frame in idle.frames))

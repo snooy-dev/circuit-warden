@@ -109,3 +109,13 @@ game-design·systems/basic-gameplay·architecture·progress 및 011 spec/plan/ta
 ## 점프 높이 수치 조정
 
 2026-11-13 사용자 요청으로 높이 배수를 3→2로 변경했다(83×2=166 월드 단위). 상승 0.4초·전체 체공 약 0.8초는 유지한다. 관련 현재 문서와 기존 테스트의 배수 기대값·이름을 맞췄다. 사용자 지시로 테스트·실제 창 검사는 실행하지 않았다. 위 점프 검증은 변경 전 3배 결과이며 새 높이의 실행 검증으로 취급하지 않는다.
+
+## 측면 idle 교체 (2026-11-13)
+
+FR-013/SC-007→T023/T024를 원본·설계·구현·검증에 대조했다. 기존 브랜치 fetch/merge는 Already up to date. 오른쪽 시트를 idle.png에 바이트 보존 복사했고 pivot만 (58,92)→(64,92)로 변경했다. 좌우 48개 셀의 RGBA 수평 반전 일치, 1024×624 시트·128×104 셀·48프레임·2000ms를 확인했다. SHA-256은 `6cd0b5133576e6f73cb492a0f36e114c160371c33115bda0272d877f7735d506`. 알파 높이는 81~83px로 동일하여 점프 높이166을 유지한다. 좌측 원본의 픽셀 인덱스 anchor63 대신 기존 연속 좌표 pivot64 반전을 사용한다. 새 상태/로더/의존성은 없다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.integration.test_character_scene.CharacterSceneTests.test_real_asset_draw_and_fresh_scene_lifetime -v`: 1개 통과. 실제 PNG·시간·새 pivot·렌더·장면 수명 확인.
+- `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/side-idle`: 종료0/PASS. 이동·공격·복귀·제자리/달리기 점프·착지·창 전환·정리 확인.
+- 해당 폴더의 character-idle.png와 character-idle-left.png를 열어 새 측면 모습·좌우 방향·바닥 정렬을 관찰했다. 사용자 직접 플레이/최종 아트 품질 평가와 구분한다.
+
+assets 출처, docs/art-direction·architecture·progress 및 011 spec/plan/tasks를 현재 통합 상태에 맞췄다. 원본 아트·루트 README는 보존했다. Converge 대조에서 추가 필수 작업 없음. 변경 문서 링크와 git diff --check 확인. 전체 회귀는 자산/pivot 교체 범위를 넘어 실행하지 않았다.

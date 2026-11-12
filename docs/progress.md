@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **측면 idle 잠정 승인:** 2026-11-13 사용자 지시로 망토 바람 v2의 좌우 96프레임을 art/warden/provisional-approved/idle-side-wind-v2에 보관했다. 원본 복사 해시·48프레임/방향·2초 반복을 확인했다. 기존 idle v7과 게임 자산은 유지하며 신규 측면 idle은 미통합이다. [아트 기준](art-direction.md#현재-제작-상태).
+- **측면 idle 잠정 승인:** 2026-11-13 사용자 지시로 망토 바람 v2의 좌우 96프레임을 art/warden/provisional-approved/idle-side-wind-v2에 보관했다. 원본 복사 해시·48프레임/방향·2초 반복을 확인했다. 후속 사용자 교체 요청으로 오른쪽 시트를 게임 idle.png에 복사하고 기존 반전 재생을 유지했다. 기존 idle v7 원본은 보존한다. 실제 PNG 통합 검사 1개와 SDL smoke 통과, 좌우 idle 캡처에서 방향·접지를 확인했다. [아트 기준](art-direction.md#현재-제작-상태).
 
 - **점프 구현·검증:** 2026-11-13 사용자 요청으로 idle/Run을 재사용한 제자리·달리기 점프를 연결했다. 정점/착지·공중 A/D·공격/중복 입력 배제의 표적 검사와 실제 SDL 창 검사를 통과했다. 후속 요청으로 높이는 캐릭터 키의 2배로 낮췄으며 이번 수치 변경은 사용자 지시로 테스트를 실행하지 않았다. 이전 검사 결과는 3배 구현 당시 결과다. 공중 공격 제외는 사용자 결정이다. [기본 조작](systems/basic-gameplay.md)의 Space·체공 시간은 기술 기본안이다.
 
@@ -15,7 +15,7 @@
 - **기본 게임플레이 011 구현·검증 완료:** feature/basic-gameplay에서 GameplayMode, Warden A/D 이동·왼쪽 클릭 단발 공격을 연결했다. 공격 중 정지·방향 고정, 추가 클릭 무시, 종료 후 현재 유지 키 반영은 [기본 조작](systems/basic-gameplay.md)을 따른다. [명세](../specs/011-basic-gameplay/spec.md)·[계획](../specs/011-basic-gameplay/plan.md)·[검증](../specs/011-basic-gameplay/verification.md).
 - **검증:** 게임 상태·실제 PNG·수명 표적 15개 통과. 실제 SDL 창의 양 방향 공격·복귀·포커스·resize/fullscreen·종료 검사 통과. 첫 프레임과 발 접지를 캡처로 확인했다. 사용자 직접 조작감·미술 품질은 미확인이다.
 - **기반:** 엔진·프레임워크·스프라이트·캐릭터 이동은 PR #3 이후 main에 포함됐다. 이번 입력·재생 감사는 기존 기능을 재사용할 수 있다고 판단해 engine/game_framework를 수정하지 않았다.
-- **아트:** idle v7·좌우 Run v4·공격 v6 아웃라인 있음·전기 베기 v4 시트 5개가 assets/warden에 있다. 공격 원본 SHA-256·7프레임·350ms·기준점을 보존했다. 전기 베기 VFX v4는 2026-11-11 사용자 지시로 잠정 승인하고 art/warden/provisional-approved/sword-trail-electric-v4에 별도 보관했다(14프레임·700ms, 원본 해시 일치). 베기 VFX는 게임에 연결했고 걷기는 미통합이다. 공격의 알려진 형태·전환 한계는 [아트 기준](art-direction.md#현재-제작-상태)을 따른다.
+- **아트:** 측면 idle 망토 바람 v2·좌우 Run v4·공격 v6 아웃라인 있음·전기 베기 v4 시트 5개가 assets/warden에 있다. 공격 원본 SHA-256·7프레임·350ms·기준점을 보존했다. 전기 베기 VFX v4는 2026-11-11 사용자 지시로 잠정 승인하고 art/warden/provisional-approved/sword-trail-electric-v4에 별도 보관했다(14프레임·700ms, 원본 해시 일치). 베기 VFX는 게임에 연결했고 걷기는 미통합이다. 공격의 알려진 형태·전환 한계는 [아트 기준](art-direction.md#현재-제작-상태)을 따른다.
 
 - **공격 아트 파생본:** 2026-11-11 사용자 요청으로 기존 잠정 승인 v5를 “아웃라인 없음”으로 명명했다. 새 검 기준 v6 중 1px 아웃라인 있음 버전을 이번 사용자 요청으로 게임에 사용했다. 기존 승인 프레임·무외곽선 후보는 보존했다. [아트 기준](art-direction.md#현재-제작-상태)을 따르며 최종 미술 품질은 미확인이다.
 

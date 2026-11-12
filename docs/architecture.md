@@ -268,7 +268,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 - LevelScene의 선택적 images는 장면이 소유한다. exit는 Level → Canvas → images 순으로 모든 정리를 시도하며 렌더러 종료 전에 texture를 해제한다. 부분 진입 실패와 반복 종료도 같은 계약을 따른다.
 - Pico2D clip의 native 오류 반환 미노출과 장치 리셋 시 명시 오류 종료는 남은 한계다. 자동 복구·범용 메타데이터 임포터·게임 이동 정책은 추가하지 않는다.
 
-엔진 API와 게임 자산의 책임은 분리한다. 현재 main에는 idle v7·Run v4 자산과 캐릭터 조작도 포함돼 있다. 스프라이트 실행의 이전 확인 항목은 [009 검증](../specs/009-sprite-runtime/verification.md), 캐릭터 표시·이동 검증과 사용자 직접 확인 상태는 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
+엔진 API와 게임 자산의 책임은 분리한다. 현재 게임에는 측면 idle 망토 바람 v2·Run v4 자산과 캐릭터 조작도 포함돼 있다. 스프라이트 실행의 이전 확인 항목은 [009 검증](../specs/009-sprite-runtime/verification.md), 캐릭터 표시·이동 검증과 사용자 직접 확인 상태는 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
 
 ## 캐릭터 이동 검사
 
@@ -292,7 +292,7 @@ SwordTrail(GameObject)은 공격 시작 위치·방향·배율을 보관하고 S
 
 Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. idle/run/attack Machine은 기존 애니메이션 상태를 맡으며 점프를 별도 애니메이션 상태로 늘리지 않는다. 공중에서도 수평 이동 여부로 idle/Run을 선택하고 실제 y로 그린다.
 
-점프 높이는 BODY_HEIGHT×2이다. 현재 idle v7의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=166 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
+점프 높이는 BODY_HEIGHT×2이다. 현재 측면 idle 망토 바람 v2의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=166 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
 
 상승 시간 T=0.4초를 기술 기본값으로 두며 중력 g=2H/T², 초기 수직 속도 v=gT다. 매 update에서 y+=v·dt−g·dt²/2, v-=g·dt로 적분하고 하강 중 바닥 이하(반올림 오차 1e-9 포함)를 바닥/속도0으로 고정한다. 총 체공은 약 0.8초다. 엔진의 물리 단계·범용 충돌은 추가하지 않는다.
 
