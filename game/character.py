@@ -168,6 +168,7 @@ class Character(GameObject):
                 self.y, self.velocity_y = float(GROUND_Y), 0.0
                 self.air_dash_used = False
 
+        finished_dash = False
         if self.state == 'dash':
             step = min(dt, self.dash_remaining)
             if self.view_bounds is not None:
@@ -184,8 +185,9 @@ class Character(GameObject):
             if self.dash_remaining <= 1e-9:
                 self.dash_remaining = 0.0
                 self._machine.end_dash()
-                self.player.play(self.clips['idle'])
-            return
+                finished_dash = True
+            else:
+                return
 
         clip = self.clips['idle']
         if self.view_bounds is None:
@@ -199,8 +201,8 @@ class Character(GameObject):
                 if self.state == 'attack':
                     direction = 0
                 destination = min(max(start + direction * SPEED * dt, low), high)
-                # 공격 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
-                self.x = start if attacking else destination
+                # 공격/대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
+                self.x = start if attacking or finished_dash else destination
                 if destination != start:
                     self.facing = direction
                     clip = self.clips['run_right' if direction > 0 else 'run_left']
@@ -225,7 +227,8 @@ class Character(GameObject):
             self._machine.move()
 
         if clip is self.player.clip:
-            self.player.update(dt)
+            if not finished_dash:
+                self.player.update(dt)
         else:
             self.player.play(clip)
 

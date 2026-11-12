@@ -85,6 +85,10 @@ idle 알파를 도구 Python/Pillow로 측정: 첫 프레임 (24,11,78,93), 프�
 
 현재 변환은 screen=world×viewport_height/600이며 기본 시야 1066.67×600이다. DISPLAY_SCALE=1에서 알파 범위 최대 키83·폭62 월드 단위(망토 포함), 셀128×104는 여백 포함이다. DASH_DISTANCE=BODY_HEIGHT*2, DASH_SECONDS=.2로 정의하여 화면 픽셀과 분리한다.
 
-Character Machine에 dash와 종료 전이를 추가한다. 요청·잔여 시간·공중 소비 여부만 보관하고 기존 수직 적분 뒤 수평 대시를 처리한다. min(dt, 잔여 시간)만 이동해 초과 dt가 거리를 늘리지 않으며 기존 셀 경계로 clamp한다. 마지막 갱신에서는 일반 이동을 더하지 않고 다음 갱신부터 유지 키를 반영한다. Run 출력은 전용 좌우 클립이므로 dash에서 재반전하지 않는다. 지상 대시는 공중 횟수를 소비하지 않으며 착지가 회복한다.
+Character Machine에 dash와 종료 전이를 추가한다. 요청·잔여 시간·공중 소비 여부만 보관하고 기존 수직 적분 뒤 수평 대시를 처리한다. min(dt, 잔여 시간)만 이동해 초과 dt가 거리를 늘리지 않으며 기존 셀 경계로 clamp한다. 마지막 갱신에서는 유지 키에 맞는 클립을 선택하되 일반 이동을 더하지 않고 다음 갱신부터 이동한다. Run 출력은 전용 좌우 클립이므로 dash에서 재반전하지 않는다. 지상 대시는 공중 횟수를 소비하지 않으며 착지가 회복한다.
 
 영향: game/character.py, game/scene.py 안내, tests/unit/test_character.py와 기존 SDL smoke, docs/architecture·systems/basic-gameplay·game-design·progress, 011 문서. 엔진·자산·공개 API·루트 README는 그대로다. 표적 검사로 거리/분할/출력 독립성과 입력 경계·공중 회복을 확인하고 SDL에서 좌우 지상/공중 Run을 캡처한다.
+
+## 리뷰 수정
+
+대시가 끝나면 기존 이동/클립 선택 경로를 재사용한다. 종료 여부로 일반 이동과 SpritePlayer 중복 시간 진행만 막고, 동일 Run은 재시작하지 않는다. 별도 선택 함수를 만들지 않는다. 창 경계 검사는 폭180에서 x25, 폭120에서 중앙0을 확인한다. 표적 회귀와 기존 SDL smoke, 관련 현재 docs/verification을 갱신한다.

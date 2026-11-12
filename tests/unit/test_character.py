@@ -96,12 +96,43 @@ class CharacterTests(unittest.TestCase):
         actor.control(click)
         actor.update(.15)
         self.assertAlmostEqual(actor.x, -DASH_DISTANCE)
-        self.assertEqual(actor.facing, -1)
+        self.assertEqual(actor.facing, 1)
+        self.assertIs(actor.player.clip, self.clips['run_right'])
         self.assertTrue(actor.grounded)
         actor.update(.1)
         self.assertEqual(actor.state, 'run')
         self.assertEqual(actor.facing, 1)
         self.assertGreater(actor.x, -DASH_DISTANCE)
+
+    def test_dash_end_keeps_run_time_without_extra_movement(self):
+        for facing, symbol, clip_name in ((1, pico.SDLK_d, 'run_right'),
+                                          (-1, pico.SDLK_a, 'run_left')):
+            actor = self.make_character()
+            actor.facing = facing
+            actor.control(key(symbol))
+            actor.update(.01)
+            actor.player.update(.02)
+            start = actor.x
+            actor.control(key(pico.SDLK_LSHIFT))
+            actor.update(.1)
+            actor.update(.1)
+            self.assertAlmostEqual(actor.x, start + facing * DASH_DISTANCE)
+            self.assertEqual(actor.state, 'run')
+            self.assertIs(actor.player.clip, self.clips[clip_name])
+            self.assertAlmostEqual(actor.player.elapsed, .22 % .06)
+
+    def test_dash_end_selects_idle_when_keys_cancel_or_boundary_blocks(self):
+        for at_boundary in (False, True):
+            actor = self.make_character()
+            actor.control(key(pico.SDLK_d))
+            if at_boundary:
+                actor.x = 320
+            else:
+                actor.control(key(pico.SDLK_a))
+            actor.control(key(pico.SDLK_LSHIFT))
+            actor.update(.2)
+            self.assertEqual(actor.state, 'idle')
+            self.assertIs(actor.player.clip, self.clips['idle'])
 
     def test_dash_bounds_attack_and_focus_requests(self):
         actor = self.character

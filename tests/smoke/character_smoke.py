@@ -43,6 +43,7 @@ class CharacterSmoke(CharacterScene):
         self.output_dir = output_dir
         self.passed = False
         self.dash_captures = set()
+        self.previous_dash_clip = None
 
     def enter(self, engine):
         super().enter(engine)
@@ -162,10 +163,13 @@ class CharacterSmoke(CharacterScene):
         assert actor.grounded and actor.player.clip is idle
         stopped_x = actor.x
         self.capture('jump-landed')
+        push_key(pico.SDLK_a)
         push_key(pico.SDLK_LSHIFT)
         yield
 
-        assert actor.grounded and abs(actor.x - (stopped_x - DASH_DISTANCE)) < 1e-6
+        assert actor.grounded and actor.x <= stopped_x - DASH_DISTANCE + 1e-6
+        assert actor.player.clip is left
+        push_key(pico.SDLK_a, pico.SDL_KEYUP)
         push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
         push_key(pico.SDLK_d)
         yield
@@ -216,7 +220,13 @@ class CharacterSmoke(CharacterScene):
 
     def draw(self):
         super().draw()
+        if self.previous_dash_clip is not None and self.character.state != 'dash':
+            if pico.SDLK_a in self.character.pressed:
+                assert self.character.player.clip is self.previous_dash_clip
+                self.capture('dash-resume-left')
+            self.previous_dash_clip = None
         if self.character.state == 'dash':
+            self.previous_dash_clip = self.character.player.clip
             name = 'dash-' + ('ground' if self.character.grounded else 'air')
             name += '-right' if self.character.facing > 0 else '-left'
             if name not in self.dash_captures:

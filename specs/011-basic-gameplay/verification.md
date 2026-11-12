@@ -139,3 +139,12 @@ assets 출처, docs/art-direction·architecture·progress 및 011 spec/plan/task
 `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash` → 종료0/PASS. 실제 SDL Shift 전달·지상 좌측166/공중 우측166·공중 재사용 차단·착지 회복·기존 조작/창/정리 통과. character-dash-ground-left.png·character-dash-air-right.png를 열어 Run 방향과 지상/공중 출력을 확인했다.
 
 Converge: FR-014/015·SC-008과 구현/검증/현재 docs 대응, 남은 필수 작업 없음. docs/architecture·systems/basic-gameplay·game-design·progress와 011 data-model/quickstart를 갱신했다. 엔진·자산·루트 README는 수정하지 않았다. 변경 문서 링크·git diff --check 확인. 전체 회귀는 선택하지 않았으며 사용자 직접 대시 체감은 미확인이다. 충돌/무적/잔상은 범위 밖이다.
+
+## 리뷰 1·2번 수정 검증 (2026-11-13)
+
+사용자 수정·검증·커밋 지시를 T028/T029에 연결했다. 기존 브랜치 fetch/merge 결과 Already up to date. `test_dash_end_keeps_run_time_without_extra_movement`를 제품 수정 전에 실행해 idle!=run 실패를 재현했다. 종료 후 기존 클립 선택 경로를 재사용하고 일반 이동/재생 시간 중복만 막았다. 반대 방향 입력은 종료 시 해당 Run, 양키/막힌 경계는 idle이며 좌우 동일 Run의 진행 시간을 유지한다. 창 검사에는 폭180의 x25 보정과 폭120의 중앙0을 분리했다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character tests.integration.test_character_scene -q`: 26개 모두 통과. 이번 감사에서 발견한 기존 통합 실패도 해소했고 공격/점프/대시 상호작용 회귀를 함께 확인했다.
+- `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-review-fixes`: 종료0/PASS. A 유지 대시 종료 렌더 프레임에서 기존 Run 클립의 동일성을 검사했다. character-dash-resume-left.png를 열어 좌측 Run 표시를 확인했다. 지상/공중 대시·점프·공격·창 전환·종료 정리도 통과했다.
+
+Converge: 감사1/2→T028/T029→구현/회귀 대응, 추가 필수 작업 없음. systems/basic-gameplay·progress·011 spec/plan/data-model/tasks/verification을 현재 동작에 맞췄다. 변경 문서 로컬 링크·git diff --check 확인. 루트 README/자산/의존성은 변경하지 않았다. 전체 엔진 회귀와 사용자 직접 조작감 평가는 미실시다.

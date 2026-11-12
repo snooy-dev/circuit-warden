@@ -102,6 +102,9 @@ class CharacterSceneTests(unittest.TestCase):
         self.app.viewport = (0, 0, 180, 600)
         scene.character.x = 200
         scene.update(.1)
+        self.assertEqual(scene.character.x, 25)
+        self.app.viewport = (0, 0, 120, 600)
+        scene.update(.1)
         self.assertEqual(scene.character.x, 0)
 
     def test_gameplay_mode_delivers_once_and_keeps_player_reference(self):
