@@ -79,3 +79,29 @@ FR-007→DEFAULT_SIZE/실제 창, FR-008→SwordTrail/독립 수명·합성·자
 `-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/scale-1` 실행: 종료 0/PASS. 실제 출력 character-idle.png·character-attack-right.png를 열어 축소 크기·발 접점·베기 정렬을 확인했다.
 
 architecture·progress·spec/plan/tasks와 코드의 현재 배율을 대조했고 Converge에서 추가 필수 작업 없음. 변경 문서 파일 링크·git diff --check 통과. 루트 README는 수정하지 않았다. 단순 배율 변경으로 전체 회귀는 생략했고 사용자 직접 크기 평가는 미확인이다.
+
+## 점프 (2026-11-13)
+
+사용자 요청 FR-010~012·SC-006→US4/T019~022. Space·상승 0.4초·공중 A/D·동시 점프 우선은 기술 기본안, 키3배·제자리/달리기·idle/Run 재사용·공중 공격 제외는 사용자 결정으로 구분했다. analyze 대조에서 누락·충돌 없음. 기존 브랜치 fetch 후 origin/main merge: Already up to date.
+
+### 높이와 선택한 검사
+
+도구 Python `.local-tools/python/Scripts/python.exe`의 기존 Pillow로 assets/warden/idle.png를 128×104셀 48개로 읽어 알파 bbox 측정: 첫 프레임 (24,11,78,93), 높이 81~83, 전체 y 범위 [10,93). 런타임 의존성/PNG를 변경하지 않았다. 높이83×현재배율1×3=249, 기본 창에서 298.8 출력픽셀이다.
+
+게임 `.venv/Scripts/python.exe -B -m unittest`에 아래 메서드 5개를 지정했다. 정점·시간분할·입력 경계 위험에만 표적 검사를 선택했다.
+
+- `tests.unit.test_character.CharacterTests.test_jump_reaches_three_body_heights_and_lands_with_split_time`: 정점249, .4초와 40분할 동일, .8초 정확한 바닥 착지, 유지 키 재점프 방지·다시 누르기·큰 dt 착지.
+- `tests.unit.test_character.CharacterTests.test_running_jump_steers_and_draws_at_airborne_position`: 달리기 점프·공중 방향 변경·해제/idle·실제 y 출력.
+- `tests.unit.test_character.CharacterTests.test_airborne_inputs_are_not_buffered_and_attack_blocks_jump`: 동시 점프 우선, 공중 클릭/재점프 무시와 예약 없음, 지상 공격 중 점프 차단.
+- `tests.unit.test_character.CharacterTests.test_focus_loss_clears_pending_jump_but_airborne_character_lands`: 포커스 미시작 요청 정리, 무효 출력 신규점프 차단, 비행은 유지키 없이 착지.
+- `tests.unit.test_character.CharacterTests.test_attack_starts_at_first_frame_ignores_clicks_and_resumes_held_key`: 지상 공격 기존 전이 회귀.
+
+최초 실행은 4개 통과·1개 실패. 테스트의 합성 공격이 100ms인데 정확히 100ms 뒤에도 attack을 기대한 검사 오류였다. 공격 중 검사 시점을 50ms로 수정하고 해당 메서드만 재실행해 통과했다. 제품 코드는 바꾸지 않았고 나머지 4개의 결과를 재사용한다. 최종 선택 5개 모두 충족.
+
+`-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/jump` → 종료 0/PASS. 실제 SDL 입력 경로에서 제자리/달리기 점프·공중 방향 전환·클릭 차단·착지, 기존 공격·focus·창 크기/전체화면·종료 정리 확인. character-jump-idle.png·character-jump-run-right.png·character-jump-landed.png를 열어 기존 클립의 공중 표시와 바닥 복귀 관찰. 사람의 직접 플레이 체감과 구분한다.
+
+### 문서 영향·한계
+
+game-design·systems/basic-gameplay·architecture·progress 및 011 spec/plan/tasks/data-model/quickstart를 현 동작과 대조했다. engine/game_framework·이미지·루트 README는 변경 없음. 전체 회귀·다른 smoke는 공통 엔진 변경이 없어 선택하지 않았다. 점프 전용 모션·공중 공격·플랫폼 충돌·가변 높이·코요테 타임은 추가하지 않는다. 상승/체공 시간의 사용자 직접 감각은 미확인이다.
+
+독립 읽기 전용 리뷰에서도 진행 차단 결함 없음. 입력 두 순서×초기 dt 0/.1, 착지 직전 예약 차단, 최대100ms의 200개 시간 분할에서 정점/착지를 확인했다. 주 검증 5개에 합산하지 않는다. Converge에서 이번 FR-010~012·SC-006·US4 수용 시나리오3개·T019~022를 실제 코드/검증과 대조해 추가 필수 작업 없음. 변경 Markdown 파일 링크·git diff --check 통과.

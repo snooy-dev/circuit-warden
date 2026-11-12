@@ -7,3 +7,5 @@
 - 전이: move idle→run, stop run→idle, attack idle/run→attack, finish attack→idle. 완료 시 현재 입력/경계로 run 선택 가능. 공격 중 입력은 키 상태만 바꾸고 요청은 무시한다.
 
 - SwordTrail: 공격 시점 position/facing/scale 불변, 독립 SpritePlayer(sword_trail), 700ms 종료 시 level에서 제거. 여러 공격의 효과가 공존할 수 있다.
+
+- Character 점프: y(발 기준 월드 좌표), velocity_y(수직 속도), jump_requested(갱신 전 요청). grounded는 y=GROUND_Y와 velocity_y=0. Space는 pressed set에 포함하고 좌우 방향 계산에는 영향 없음. 공중에서도 state는 idle/run, attack 진입은 지상에서만 가능.

@@ -1,4 +1,4 @@
-"""Warden의 이동·단발 공격과 스프라이트 상태."""
+"""Warden의 이동·점프·단발 공격과 스프라이트 상태."""
 
 import json
 from pathlib import Path
@@ -14,6 +14,12 @@ from .effects import SwordTrail
 GROUND_Y = -180
 SPEED = 180
 DISPLAY_SCALE = 1
+# idle 48프레임의 알파 범위 중 최대 높이(귀 포함, 투명 여백 제외).
+BODY_HEIGHT = 83 * DISPLAY_SCALE
+JUMP_HEIGHT = BODY_HEIGHT * 3
+JUMP_APEX_SECONDS = .4
+GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
+JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS
@@ -74,9 +80,12 @@ class Character(GameObject):
         self.clips = clips
         self.player = SpritePlayer(clips['idle'])
         self.x = 0.0
+        self.y = float(GROUND_Y)
+        self.velocity_y = 0.0
         self.facing = 1
         self.pressed = set()
         self.attack_requested = False
+        self.jump_requested = False
         self._machine = Machine(
             states=('idle', 'run', 'attack'), initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
@@ -94,21 +103,33 @@ class Character(GameObject):
     def state(self):
         return self._machine.state
 
+    @property
+    def grounded(self):
+        return self.y == GROUND_Y and self.velocity_y == 0
+
     def control(self, event):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()
             self.attack_requested = False
-        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS:
+            self.jump_requested = False
+        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | {pico.SDLK_SPACE}:
+            if (event.key == pico.SDLK_SPACE and event.key not in self.pressed
+                    and self.grounded and self.state != 'attack'):
+                self.jump_requested = True
             self.pressed.add(event.key)
         elif event.type == pico.SDL_KEYUP:
             self.pressed.discard(event.key)
         elif (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT
-              and self.state != 'attack'):
+              and self.state != 'attack' and self.grounded):
             self.attack_requested = True
 
     def update(self, dt):
-        started = self.attack_requested and self.view_bounds is not None
+        if (self.jump_requested and self.grounded and self.state != 'attack'
+                and self.view_bounds is not None):
+            self.velocity_y = JUMP_SPEED
+        self.jump_requested = False
+        started = self.attack_requested and self.grounded and self.view_bounds is not None
         self.attack_requested = False
         if started:
             self._machine.attack()
@@ -118,6 +139,13 @@ class Character(GameObject):
             self.player.update(dt)
             if self.player.finished:
                 self._machine.finish()
+
+        if not self.grounded:
+            self.y += self.velocity_y * dt - .5 * GRAVITY * dt ** 2
+            self.velocity_y -= GRAVITY * dt
+            # 시간 분할의 반올림 오차로 착지가 한 프레임 늦어지지 않게 한다.
+            if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
+                self.y, self.velocity_y = float(GROUND_Y), 0.0
 
         clip = self.clips['idle']
         if self.view_bounds is None:
@@ -165,7 +193,7 @@ class Character(GameObject):
         frame = self.player.frame
         width, height = frame.rect[2:]
         flip_x = self.state != 'run' and self.facing < 0
-        draw_sprite(frame, transform, (self.x, GROUND_Y),
+        draw_sprite(frame, transform, (self.x, self.y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
     def render_items(self):

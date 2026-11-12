@@ -48,3 +48,12 @@ T012→T013→T014→T015→T016 순서. 신규 게임 아트 생성·피해 규
 
 - [x] T017 game/character.py의 공통 배율과 tests/unit/test_character.py 기대값을 1배로 조정하고 표적 검사·실제 창으로 FR-009/SC-005를 확인한다.
 - [x] T018 docs/architecture.md·progress.md와 verification.md에 현재 배율·검증을 반영하고 정합성 확인 후 커밋한다.
+
+## Phase 7: User Story 4 - 점프
+
+- [x] T019 [US4] specs/011-basic-gameplay/spec.md·plan.md에 요청/공중 공격 제외와 알파 높이 측정·공식·경계 정책을 기록하고 docs/systems/basic-gameplay.md에 반영한다.
+- [x] T020 [US4] game/character.py에 3배 높이 점프·입력 배제·y 출력을 연결하고 game/scene.py의 Space 안내를 갱신한다.
+- [x] T021 [US4] tests/unit/test_character.py·tests/smoke/character_smoke.py로 정점·시간 분할·착지·공중 A/D·공격/중복 점프 배제·포커스를 확인한다.
+- [x] T022 docs/game-design.md·architecture.md·progress.md·specs/011-basic-gameplay/verification.md를 구현과 맞추고 converge·문서 검사 후 커밋한다.
+
+T019→T020→T021→T022. FR-010~012·SC-006에 대응한다. 새 점프 아트·공중 공격·플랫폼은 범위 밖이다.

@@ -13,6 +13,7 @@ import pico2d.pico2d as pico
 from engine import Engine
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.effects import SwordTrail
+from game.character import GROUND_Y
 
 
 def push_key(symbol, kind=pico.SDL_KEYDOWN):
@@ -124,6 +125,42 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert actor.player.clip is idle and actor.x == stopped_x and not actor.pressed
+        push_key(pico.SDLK_SPACE)
+        yield
+
+        assert not actor.grounded and actor.y > GROUND_Y and actor.x == stopped_x
+        assert actor.player.clip is idle
+        self.capture('jump-idle')
+        push_click()
+        yield
+
+        assert not actor.grounded and actor.state == 'idle'
+        self.capture('jump-idle-descending')
+        yield
+        yield
+
+        assert actor.grounded and actor.x == stopped_x
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        push_key(pico.SDLK_d)
+        push_key(pico.SDLK_SPACE)
+        yield
+
+        assert not actor.grounded and actor.x > stopped_x and actor.player.clip is right
+        self.capture('jump-run-right')
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        push_key(pico.SDLK_a)
+        yield
+
+        assert not actor.grounded and actor.player.clip is left
+        self.capture('jump-run-left')
+        push_key(pico.SDLK_a, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield
+        yield
+
+        assert actor.grounded and actor.player.clip is idle
+        stopped_x = actor.x
+        self.capture('jump-landed')
         push_key(pico.SDLK_F6)
         yield
 
@@ -166,5 +203,5 @@ if __name__ == '__main__':
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: idle/run-right/opposite/run-left/attack-left/resume/attack-right/release/focus-loss/resize/fullscreen/escape/cleanup',
+    print('PASS: idle/run/attack/resume/focus-loss/jump-idle/jump-run/air-turn/land/resize/fullscreen/escape/cleanup',
           flush=True)

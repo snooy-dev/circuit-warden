@@ -272,7 +272,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 피해 판정·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 피해 판정·충돌·범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
 
 게임 기본 창은 사용자 요청에 따라 1280×720(16:9)이며, 기술 기본값은 view_height 600, 시트 1배, 속도 180 논리 픽셀/초, 바닥선 y=-180이다. 수평 A/D 조작은 사용자 결정이고 속도·배율·바닥선은 최종 수치가 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 idle/Run 전체 셀을 보존하고 너무 좁으면 중앙에 둔다. 공격은 같은 이동 경계를 쓰므로 화면 끝에서 검·여백 일부가 잘릴 수 있다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
 
@@ -287,3 +287,13 @@ GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 �
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 
 SwordTrail(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
+
+## Warden 점프
+
+Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. idle/run/attack Machine은 기존 애니메이션 상태를 맡으며 점프를 별도 애니메이션 상태로 늘리지 않는다. 공중에서도 수평 이동 여부로 idle/Run을 선택하고 실제 y로 그린다.
+
+점프 높이는 BODY_HEIGHT×3이다. 현재 idle v7의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=249 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
+
+상승 시간 T=0.4초를 기술 기본값으로 두며 중력 g=2H/T², 초기 수직 속도 v=gT다. 매 update에서 y+=v·dt−g·dt²/2, v-=g·dt로 적분하고 하강 중 바닥 이하(반올림 오차 1e-9 포함)를 바닥/속도0으로 고정한다. 총 체공은 약 0.8초다. 엔진의 물리 단계·범용 충돌은 추가하지 않는다.
+
+Space는 기존 pressed set으로 중복 KEYDOWN을 억제하고 지상에서만 요청한다. 공중·공격 중 Space와 공중 클릭은 버리며, 같은 갱신의 새 점프/공격은 점프를 우선한다. focus-loss/minimize는 미시작 점프·유지 키를 지우고 진행 중 수직 운동은 계속한다. 무효 출력에서 신규 점프를 받지 않는다. 정책은 [기본 게임플레이](systems/basic-gameplay.md), 검증은 [011](../specs/011-basic-gameplay/verification.md)을 따른다.

@@ -47,7 +47,7 @@ class CharacterScene(LevelScene):
 
     def enter(self, engine):
         super().enter(engine)
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Left click: attack | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | Left click: attack | F6 / F11 | Esc')
 
     def handle_event(self, event):
         if event.type == pico.SDL_KEYDOWN:
@@ -64,5 +64,5 @@ class CharacterScene(LevelScene):
 
 
 def main():
-    print('게임플레이: A/D 이동 / 왼쪽 클릭 공격 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
+    print('게임플레이: A/D 이동 / Space 점프 / 왼쪽 클릭 공격 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     Engine(*DEFAULT_SIZE).run(CharacterScene())

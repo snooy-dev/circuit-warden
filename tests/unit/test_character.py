@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import Character
+from game.character import Character, BODY_HEIGHT, GROUND_Y, JUMP_HEIGHT, JUMP_APEX_SECONDS
 from game_framework import ImageRef, SpriteClip, SpriteFrame, WorldTransform
 
 
@@ -30,6 +30,107 @@ class CharacterTests(unittest.TestCase):
         character = Character(self.clips)
         character.view_bounds = (-400, -300, 400, 300)
         return character
+
+    def test_jump_reaches_three_body_heights_and_lands_with_split_time(self):
+        whole, split = self.character, self.make_character()
+        for actor in (whole, split):
+            actor.control(key(pico.SDLK_SPACE))
+        whole.update(JUMP_APEX_SECONDS)
+        for _ in range(40):
+            split.update(JUMP_APEX_SECONDS / 40)
+        self.assertEqual(JUMP_HEIGHT, BODY_HEIGHT * 3)
+        for actor in (whole, split):
+            self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
+            self.assertAlmostEqual(actor.velocity_y, 0)
+            self.assertEqual(actor.x, 0)
+            self.assertIs(actor.player.clip, actor.clips['idle'])
+            self.assertFalse(actor.grounded)
+        whole.update(JUMP_APEX_SECONDS)
+        for _ in range(40):
+            split.update(JUMP_APEX_SECONDS / 40)
+        for actor in (whole, split):
+            self.assertTrue(actor.grounded)
+            actor.control(key(pico.SDLK_SPACE))
+            actor.update(.1)
+            self.assertTrue(actor.grounded)
+            actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
+            actor.control(key(pico.SDLK_SPACE))
+            actor.update(.1)
+            self.assertFalse(actor.grounded)
+            actor.update(2)
+            self.assertEqual(actor.y, GROUND_Y)
+            self.assertTrue(actor.grounded)
+
+    def test_running_jump_steers_and_draws_at_airborne_position(self):
+        actor = self.character
+        actor.control(key(pico.SDLK_d))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.1)
+        self.assertEqual(actor.x, 18)
+        self.assertIs(actor.player.clip, actor.clips['run_right'])
+        actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_a))
+        actor.update(.1)
+        self.assertEqual(actor.x, 0)
+        self.assertIs(actor.player.clip, actor.clips['run_left'])
+        actor.control(key(pico.SDLK_a, pico.SDL_KEYUP))
+        actor.update(.1)
+        self.assertIs(actor.player.clip, actor.clips['idle'])
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(WorldTransform((0, 0, 800, 600), view_height=600), 1)
+            self.assertEqual(draw.call_args.args[2], (actor.x, actor.y))
+        actor.update(.5)
+        self.assertTrue(actor.grounded)
+
+    def test_airborne_inputs_are_not_buffered_and_attack_blocks_jump(self):
+        actor = self.character
+        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+        actor.control(click)
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.1)
+        self.assertNotEqual(actor.state, 'attack')
+        velocity = actor.velocity_y
+        actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.control(click)
+        actor.update(0)
+        self.assertEqual(actor.velocity_y, velocity)
+        actor.update(.7)
+        actor.update(.1)
+        self.assertTrue(actor.grounded)
+        self.assertNotEqual(actor.state, 'attack')
+        actor.control(click)
+        actor.update(.01)
+        actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.05)
+        self.assertEqual(actor.state, 'attack')
+        self.assertTrue(actor.grounded)
+        actor.update(.1)
+        self.assertTrue(actor.grounded)
+
+    def test_focus_loss_clears_pending_jump_but_airborne_character_lands(self):
+        actor = self.character
+        lost = SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST)
+        actor.control(key(pico.SDLK_SPACE))
+        actor.control(lost)
+        actor.update(.1)
+        self.assertTrue(actor.grounded)
+        actor.control(key(pico.SDLK_SPACE))
+        actor.view_bounds = None
+        actor.update(.1)
+        self.assertTrue(actor.grounded)
+        actor.view_bounds = (-400, -300, 400, 300)
+        actor.control(key(pico.SDLK_d))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.1)
+        x = actor.x
+        actor.control(lost)
+        actor.view_bounds = None
+        actor.update(.7)
+        self.assertTrue(actor.grounded)
+        self.assertEqual(actor.x, x)
+        self.assertFalse(actor.pressed)
 
     def test_repeat_opposite_keys_and_release(self):
         actor = self.character

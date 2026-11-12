@@ -66,3 +66,13 @@ game/effects.py에 단발 SwordTrail(GameObject)을 추가한다. 공격 시작�
 ## 표시 배율 조정
 
 DISPLAY_SCALE만 1로 변경한다. 기존 캐릭터 출력·이동 경계·SwordTrail 생성이 공통 값을 재사용하므로 새 옵션은 없다. tests/unit/test_character.py의 2배 기대값과 좁은 창 입력을 1배로 조정한다. 경계·출력 검사 2개 및 기존 실제 창 smoke로 발 기준점·베기 정렬을 확인하고 architecture·progress·verification을 맞춘다. 루트 README는 수정하지 않는다.
+
+## 점프 증분
+
+기존 feature/basic-gameplay 동기화 결과 Already up to date. game/character.py에 y·수직 속도·미시작 점프 요청을 추가한다. grounded는 바닥 위치와 수직 속도 0으로 판정한다. Space 유지 상태는 기존 pressed set으로 KEYDOWN 중복을 막는다. 제자리·공중 A/D는 기존 idle/run Machine 전이를 재사용하며 별도 jump 애니메이션 상태나 물리 엔진은 만들지 않는다.
+
+idle 알파를 도구 Python/Pillow로 측정: 첫 프레임 (24,11,78,93), 프레임 높이 81~83, 전체 y 범위 10~93. BODY_HEIGHT=83, JUMP_HEIGHT=BODY_HEIGHT*DISPLAY_SCALE*3, 상승 시간 0.4초로 초기 속도·중력을 유도한다. 일정 가속도 식 y += v*dt - g*dt²/2, v -= g*dt를 사용하고 바닥을 넘으면 clamp한다. 부동소수점 착지 오차만 작은 허용 오차로 처리한다. 런타임 Pillow 의존성 없음.
+
+입력 처리에서 공중 클릭/점프·공격 중 점프를 버린다. update 시작에서 유효한 점프를 먼저 소비해 같은 프레임 공격을 차단하고, 그 후 수평 이동·재생은 기존 경로를 사용한다. Character._draw의 y를 실제 좌표로 바꾼다. SwordTrail은 지상 공격만 가능하므로 기존 바닥 위치를 유지한다. game/scene.py 창 제목·실행 안내에 Space를 반영한다.
+
+호출부·검사: tests/unit/test_character.py에 정점/분할 dt/착지, 공중 A/D/클립, 반복 키/공격/포커스 경계를 검사한다. tests/smoke/character_smoke.py의 기존 시나리오 뒤에 제자리·달리기 점프를 추가한다. docs/systems/basic-gameplay·game-design·architecture·progress와 011 검증을 갱신한다. engine/game_framework/자산/루트 README는 영향 없어 수정하지 않는다. 선택한 표적 검사와 실제 창 확인 후 하나의 플레이 가능한 증분으로 커밋한다.
