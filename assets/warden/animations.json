@@ -8,7 +8,7 @@
     "columns": 8,
     "count": 48,
     "pivot": [
-      58,
+      64,
       92
     ],
     "durationsMs": [
@@ -126,5 +126,58 @@
       30
     ],
     "loop": true
+  },
+  "attack": {
+    "file": "attack.png",
+    "frameSize": [
+      192,
+      192
+    ],
+    "columns": 7,
+    "count": 7,
+    "pivot": [
+      96,
+      120
+    ],
+    "durationsMs": [
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50
+    ],
+    "loop": false
+  },
+  "sword_trail": {
+    "file": "sword_trail.png",
+    "frameSize": [
+      192,
+      192
+    ],
+    "columns": 14,
+    "count": 14,
+    "pivot": [
+      96,
+      120
+    ],
+    "durationsMs": [
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50,
+      50
+    ],
+    "loop": false
   }
 }

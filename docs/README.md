@@ -30,3 +30,5 @@
 스프라이트 표시·재생·이미지 수명은 [009 명세](../specs/009-sprite-runtime/spec.md)와 [통합 검증](../specs/009-sprite-runtime/verification.md)을 따른다.
 
 캐릭터 출력·좌우 이동은 [010 명세](../specs/010-character-movement/spec.md)·[실행법](../specs/010-character-movement/quickstart.md)·[검증](../specs/010-character-movement/verification.md)을 따른다.
+
+현재 기본 조작은 [시스템 규칙](systems/basic-gameplay.md), 기능 브랜치의 구현·검증은 [011 명세](../specs/011-basic-gameplay/spec.md)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다. GameplayMode·A/D 이동·클릭 공격은 로컬 구현 상태이며 원격 게시/병합과 구분한다.

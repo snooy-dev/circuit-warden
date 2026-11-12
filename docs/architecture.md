@@ -268,10 +268,40 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 - LevelScene의 선택적 images는 장면이 소유한다. exit는 Level → Canvas → images 순으로 모든 정리를 시도하며 렌더러 종료 전에 texture를 해제한다. 부분 진입 실패와 반복 종료도 같은 계약을 따른다.
 - Pico2D clip의 native 오류 반환 미노출과 장치 리셋 시 명시 오류 종료는 남은 한계다. 자동 복구·범용 메타데이터 임포터·게임 이동 정책은 추가하지 않는다.
 
-엔진 API와 게임 자산의 책임은 분리한다. 현재 main에는 idle v7·Run v4 자산과 캐릭터 조작도 포함돼 있다. 스프라이트 실행의 이전 확인 항목은 [009 검증](../specs/009-sprite-runtime/verification.md), 캐릭터 표시·이동 검증과 사용자 직접 확인 상태는 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
+엔진 API와 게임 자산의 책임은 분리한다. 현재 게임에는 측면 idle 망토 바람 v2·Run v4 자산과 캐릭터 조작도 포함돼 있다. 스프라이트 실행의 이전 확인 항목은 [009 검증](../specs/009-sprite-runtime/verification.md), 캐릭터 표시·이동 검증과 사용자 직접 확인 상태는 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
 
 ## 캐릭터 이동 검사
 
-main의 game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 전투·충돌·물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 피해 판정·충돌·범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
 
-검사 기술 기본값은 800×600 창, view_height 600, 시트 2배, 속도 180 논리 픽셀/초, 좌우 A/D·방향키, 고정 바닥선이다. 최종 게임 규칙이 아니다. 키 set은 같은 방향 별칭을 OR, 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 전체 시트를 보존하고 너무 좁으면 중앙에 둔다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
+게임 기본 창은 사용자 요청에 따라 1280×720(16:9)이며, 기술 기본값은 view_height 600, 시트 1배, 속도 180 월드 단위/초, 바닥선 y=-180이다. 수평 A/D 조작은 사용자 결정이고 속도·배율·바닥선은 최종 수치가 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 idle/Run 전체 셀을 보존하고 너무 좁으면 중앙에 둔다. 공격은 같은 이동 경계를 쓰므로 화면 끝에서 검·여백 일부가 잘릴 수 있다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
+
+## 기본 게임플레이 연결
+
+입력·재생 감사 결과는 [011 research](../specs/011-basic-gameplay/research.md)를 따른다. 키·마우스 이벤트 수집, 모드→객체 방송, SpritePlayer 반복/단발·finished·restart는 기존 기능이다. 범용 입력 매핑·키 유지 관리자·애니메이션 상태 머신은 프레임워크에 없다. game이 규칙을 소유한다.
+
+GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. Character가 transitions.Machine의 idle/run/attack 명시 전이(auto_transitions=False)를 소유한다. SpritePlayer의 loop=False·finished를 재사용하며 로더는 정확한 bool loop와 클립별 반복 정책을 검사한다.
+
+공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 실제 검증은 [011 verification](../specs/011-basic-gameplay/verification.md)을 따른다.
+
+게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
+
+SwordTrail(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
+
+## Warden 점프
+
+Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. idle/run/attack Machine은 기존 애니메이션 상태를 맡으며 점프를 별도 애니메이션 상태로 늘리지 않는다. 공중에서도 수평 이동 여부로 idle/Run을 선택하고 실제 y로 그린다.
+
+점프 높이는 BODY_HEIGHT×2이다. 현재 측면 idle 망토 바람 v2의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=166 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
+
+상승 시간 T=0.4초를 기술 기본값으로 두며 중력 g=2H/T², 초기 수직 속도 v=gT다. 매 update에서 y+=v·dt−g·dt²/2, v-=g·dt로 적분하고 하강 중 바닥 이하(반올림 오차 1e-9 포함)를 바닥/속도0으로 고정한다. 총 체공은 약 0.8초다. 엔진의 물리 단계·범용 충돌은 추가하지 않는다.
+
+Space는 기존 pressed set으로 중복 KEYDOWN을 억제하고 지상에서만 요청한다. 공중·공격 중 Space와 공중 클릭은 버리며, 같은 갱신의 새 점프/공격은 점프를 우선한다. focus-loss/minimize는 미시작 점프·유지 키를 지우고 진행 중 수직 운동은 계속한다. 무효 출력에서 신규 점프를 받지 않는다. 정책은 [기본 게임플레이](systems/basic-gameplay.md), 검증은 [011](../specs/011-basic-gameplay/verification.md)을 따른다.
+
+## 월드 크기와 대시
+
+WorldTransform.scale=출력 viewport 높이/view_height이며 플레이 장면의 view_height=600이다. 기본1280×720에서 시야는1066.67×600 월드 단위, 1월드 단위=1.2출력px다. 원본 이미지 픽셀·출력 픽셀·월드 좌표는 서로 다른 단위다. 현재 draw 크기를 셀 크기×DISPLAY_SCALE로 지정하므로 1배에서 숫자만 원본과 일치한다.
+
+현재 idle 알파 범위는 폭61~62·키81~83 월드 단위, Run은 폭61~62·키82~83이다. 최대 키83·폭62(귀·망토 포함)는 보이는 형상의 범위이며 충돌 박스가 아니다. 여백 포함 셀은128×104 월드 단위이고 기존 화면 경계는 이 셀을 사용한다.
+
+DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_SECONDS=.2, 수평 속도830 월드 단위/초다. 기본 창에서는199.2출력px로 보이나 거리 계산에는 출력 픽셀을 사용하지 않는다. Character의 dash 상태·dash_remaining·air_dash_used로 남은 시간만 수평 적분하며 중력은 유지한다. Run 좌우 클립을 그대로 사용하고 dash에서는 추가 반전하지 않는다. 엔진/프레임워크에는 대시 규칙을 추가하지 않는다. [조작 규칙](systems/basic-gameplay.md#대시)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다.

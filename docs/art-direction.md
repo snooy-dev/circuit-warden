@@ -12,7 +12,9 @@
 | 원화 | 역할 | 현재 로컬 참조 위치 (프로젝트 루트 기준) |
 |---|---|---|
 | `master-source.png` (첫 번째 첨부) | 워든의 기본 외형과 전기로 이루어진 신체 표현 | [art/warden/reference/master-source.png](../art/warden/reference/master-source.png) |
-| `energy-sword-grip-fixed-v12.png` (두 번째 첨부) | 워든이 에너지 검을 든 모습과 무기 외형 | [art/warden/reference/energe-sword-grip.png](../art/warden/reference/energe-sword-grip.png) |
+| `energy-sword-grip-fixed-v12.png` (두 번째 첨부) | 워든이 에너지 검을 든 모습·기존 검 외형 보존 | [art/warden/reference/energe-sword-grip.png](../art/warden/reference/energe-sword-grip.png) |
+
+2026-11-11 사용자 결정: [energy-sword-master-v2.png](../art/warden/reference/energy-sword-master-v2.png)를 앞으로 사용할 **검 원화 기준**으로 채택한다. 사용자 첨부 `ChatGPT 이미지 2026년 11월 11일 오후 10_50_08.png`의 변경 없는 보관본이다. 가늘고 길게 뾰족해지는 청록색 칼날, 불꽃형 기부, 흰 중심 전류와 분기, 가는 에너지 손잡이를 기준으로 삼는다. 검 디자인은 기존 무장 원화보다 이 기준을 우선하며 기존 캐릭터 신체 기준은 유지한다.
 
 원화에 보이는 신체의 **흰 무늬는 몸에 전기가 흐르는 모습의 일부**를 보여준다. 단순한 장식 무늬로 해석하지 않는다. 전류는 장식 무늬가 아닌 방향성 흐름으로 표현한다.
 
@@ -24,18 +26,21 @@
 
 ## 현재 제작 상태
 
-2026-11-11 사용자 결정 기준이다. 게임 전체 아트 스타일·규격은 미정이며 아래 후보의 규격을 전체 게임 규격으로 확대하지 않는다. 게임 검사에 사용할 idle v7·좌우 Run v4 복사본을 assets/warden에 배치했다. 캐릭터 검사 장면에 표시·이동 연결을 구현하고 실제 PNG·SDL 출력을 확인했다. 사용자 직접 품질 평가는 미확인이다.
+2026-11-13 사용자 결정까지 반영했다. 게임 전체 아트 스타일·규격은 미정이며 아래 후보의 규격을 전체 게임 규격으로 확대하지 않는다. 게임에 사용할 측면 idle 망토 바람 v2·좌우 Run v4·공격 v6 아웃라인 있음·전기 베기 v4 복사본을 assets/warden에 배치했다. 기본 플레이 장면에 표시·이동·공격·베기 연결을 구현하고 실제 PNG·SDL 출력을 확인했다. 사용자 직접 품질 평가는 미확인이다.
 
 | 대상 | 현재 상태·결과 | 유지할 기준 |
 |---|---|---|
 | idle | [비무장 v7](../art/warden/provisional-approved/idle-unarmed-v7/unarmed/preview.gif) 잠정 승인 | idle 중 비발검, hibit·16색, 128×104, 48프레임·2초 |
+| 측면 idle | [망토 바람 v2](../art/warden/provisional-approved/idle-side-wind-v2/review.html) 잠정 승인 | 2026-11-13 사용자 결정. Run과 동일한 측면 원화·비무장·hibit 16색, 128×104, 방향별 48프레임·2초. 망토 끝으로 약한 바람 물결을 추가했다. 96개 프레임·시트를 원본과 해시가 같게 보관했다. 기존 idle v7의 승인·원본은 보존하고 후속 사용자 요청으로 게임 idle을 이 시트로 교체했다. 오른쪽 시트와 기존 런타임 반전을 사용한다. 코드 변형이며 천의 접힘·충돌은 미계산 |
 | 걷기 | [좌우 v4](../art/warden/provisional-approved/walk-v4/both.gif) 잠정 승인 | 짧은 다리·둥근 골반, 128×104, 방향별 24프레임·1초 |
 | Run | [복원·경계 수정 v4](../art/warden/provisional-approved/run-v4/review.html) 잠정 승인 | 청색 명암·짧은 귀와 팔·골반 연동·꼬리와 다리 경계 보존, 전류·천·귀·꼬리 관성 유지. 128×104, 방향별 16프레임·480ms |
 | 기존 Run v3 | [보존본](../art/warden/provisional-approved/run-v3/README.md) 이전 후보로 강등 | 2026-11-10 사용자 결정으로 잠정 승인에서 제외. 프레임과 과거 승인 기록 보존 |
 | 이전 달리기 | [review-v2](../art/warden/run-hibit/review-v2/both.gif) 보류 | 잠정 승인에 포함하지 않음 |
-| 공격 | [복부·양다리 보정 v5](../art/warden/provisional-approved/attack-v5/review.html) 잠정 승인 | 오른손 한손 검 7프레임·350ms, hibit 16색·192×192. 채택한 동작·바라보는 방향·팔과 검의 원근을 기준으로 복부의 분리 경계를 없애고 양다리 부피를 보정했다. 5번의 남은 경계는 생성한 국소 패치를 합성했고 바깥 픽셀·흰 문양·알파 보존을 검사했다. idle 방식 이동 전류와 귀/천/꼬리 관성 유지. 6번 자동 머리 비율 실패·몸통 이동·1→2 전환 경고는 검사 자료에 유지한다. 실제 재생의 매끄러움은 미확인. 이전 후보·반려본은 보존하며 검 소환 VFX는 보류 |
+| 공격 | [복부·양다리 보정 v5 — 아웃라인 없음](../art/warden/provisional-approved/attack-v5/review.html) 잠정 승인 | 오른손 한손 검 7프레임·350ms, hibit 16색·192×192. 채택한 동작·바라보는 방향·팔과 검의 원근을 기준으로 복부의 분리 경계를 없애고 양다리 부피를 보정했다. 5번의 남은 경계는 생성한 국소 패치를 합성했고 바깥 픽셀·흰 문양·알파 보존을 검사했다. idle 방식 이동 전류와 귀/천/꼬리 관성 유지. 6번 자동 머리 비율 실패·몸통 이동·1→2 전환 경고는 검사 자료에 유지한다. 실제 재생의 매끄러움은 미확인. 이전 후보·반려본은 보존하며 검 소환 VFX는 보류 |
+| 공격 검 교체 | [v6 아웃라인 없음](../art/warden/attack-sword-v6/bundle-no-outline/review.html) · [v6 아웃라인 있음](../art/warden/attack-sword-v6/bundle-outlined/review.html) 중 아웃라인 있음을 사용자 지시로 게임 사용 | 2026-11-11 사용자 요청으로 기존 v5를 “아웃라인 없음”으로 명명하고 보존했다. [새 검 기준](../art/warden/attack-sword-v6/reference/new-sword-reference.png)의 긴 칼날·불꽃형 기부를 두 후보에 동일하게 적용했다. 7프레임·350ms·192×192·16색 유지, 외곽선은 팔레트의 짙은 남색(#020816) 1px. 검 교체 영역 밖의 원본 픽셀과 이동 전류·관성은 보존하며, 5번의 칼날에 가려진 몸만 생성 패치로 복원했다. 사용자가 idle/Run과 맞춰 아웃라인 있음 버전을 사용하도록 지시해 게임에 연결했다. 아웃라인 없음 후보는 미채택이며 최종 미술 품질은 미확인 |
+| 베기 VFX | [전기 보강 v4](../art/warden/provisional-approved/sword-trail-electric-v4/review.html) 잠정 승인 | 192×192 투명 효과 14프레임·700ms, 기준점 (96,120). 공격 v5의 350ms 베기에 맞추고 6·7프레임의 왼쪽·왼쪽 위까지 이어진 뒤 소멸한다. 고정된 호에 이동 전류·분기 방전을 보강하며 검끝은 추종하지 않는다. 캐릭터와 별도 스프라이트. 사용자 후속 요청으로 v6 공격과 함께 게임에 연결했으며 원본대로 캐릭터 뒤에서 700ms 재생 |
 
-[잠정 승인 보관 목록](../art/warden/provisional-approved/README.md)의 현재 승인 프레임은 135개 PNG다. 공격은 2026-11-11 사용자의 잠정 승인 지시에 따라 v5의 7프레임을 변경 없이 복사했고 SHA-256 일치를 확인했다. Run은 사용자가 검토한 [run-review-v4](../art/warden/shading-restore/run-review-v4/review.html)를 변경 없이 복사했으며 이전 Run 32개 PNG와 원화도 보존한다. 잠정 승인은 최종 게임 사용·통합 승인이 아니다. 걷기·공격에 복원본의 최신 자세를 적용하는 작업은 아직 수행하지 않았다.
+[잠정 승인 보관 목록](../art/warden/provisional-approved/README.md)의 현재 승인 프레임은 캐릭터 231개와 베기 VFX 14개를 합한 245개 PNG다. 전기 보강 v4는 2026-11-11 사용자의 잠정 승인에 따라 프레임·시트를 변경 없이 보관하고 SHA-256 일치를 확인했다. 공격은 2026-11-11 사용자의 잠정 승인 지시에 따라 v5의 7프레임을 변경 없이 복사했고 SHA-256 일치를 확인했다. Run은 사용자가 검토한 [run-review-v4](../art/warden/shading-restore/run-review-v4/review.html)를 변경 없이 복사했으며 이전 Run 32개 PNG와 원화도 보존한다. 잠정 승인 자체는 게임 통합 승인이 아니며 현재 통합 범위는 아래 사용 자산과 별도 개발 요청을 따른다. 걷기·공격에 복원본의 최신 자세를 적용하는 작업은 아직 수행하지 않았다.
 
 측면 파생 이미지는 원화보다 시안 면적이 크고 중간 청색 명암이 줄어들었다. 같은 16색 팔레트를 쓴다는 사실만으로 색조·입체감 일치를 보장하지 않는다. 전류는 한 방향으로 흐르고 천·귀·꼬리는 관성을 표현한다. 기존 코드 애니메이션의 천 물리는 질점·스프링 근사이며 접힘·충돌·지면 마찰을 계산하지 않는다.
 
@@ -43,7 +48,7 @@
 
 
 - Agent Sprite Forge: 캐릭터·프롭·배경·애니메이션 제작과 후처리의 주요 도구.
-- pixelfx: VFX 제작의 주요 도구.
+- pixelfx: VFX 제작의 주요 도구. MIT 라이선스는 [공통 파일](../licenses/pixelfx-LICENSE.txt) 한 곳에서 관리하고 에셋마다 복제하지 않는다. 게임 화면·README·에셋별 문서에 별도 제작 도구 사용 문구를 요구하지 않는다.
 - AI 에이전트는 Codex. 외부 생성 서비스와 로컬 도구 사용 자체는 배제하지 않는다. 설치 상태는 새 생성·비용 지출·외부 전송·게임 통합의 승인이 아니다. 설치 위치와 사용 준비는 [도구 구성](tooling.md)을 따른다.
 
 
@@ -53,6 +58,8 @@
 - `assets/`: 실제 게임에서 사용할 리소스를 복사해 보관하는 폴더. 사용자가 2026-11-08 폴더명을 확정했다. 게임 사용 파일과 필요한 규격·출처 정보를 함께 Git으로 관리한다.
 - 사용자 지시에 따른 현재 잠정 승인 범위는 위 목록과 approval.json을 따른다. 과거 폴더 이름에 `approved`가 있다는 이유만으로 현재 승인으로 승계하지 않는다. 기존 자료는 삭제하지 않으며 게임 연결은 별도 승인이다. `art/`의 파일은 Git으로 복원할 수 없으므로 별도 백업이 필요하다.
 
-## 캐릭터 검사에 사용하는 게임 자산
+## 게임에서 사용하는 캐릭터 자산
 
-2026-11-11 사용자 요청에 따라 idle v7·Run v4의 PNG 시트 3장을 `assets/warden/idle.png`, `run_left.png`, `run_right.png`로 복사했다. 이름의 버전을 제거했으며 원본 PNG 바이트와 프레임별 시간·기준점을 보존했다. [게임 자산 출처](../assets/warden/README.md)에 원본 경로·SHA-256을, animations.json에 런타임 규격을 기록한다. .gitattributes는 PNG를 일반 Git 바이너리로 관리한다. 걷기·공격·VFX는 포함하지 않는다. 이 통합 요청은 위 자산의 잠정 승인 상태나 최종 게임 아트 규격을 바꾸지 않는다.
+2026-11-11 사용자 요청에 따라 idle v7·Run v4의 PNG 시트 3장을 `assets/warden/idle.png`, `run_left.png`, `run_right.png`로 복사했다. 이름의 버전을 제거했으며 원본 PNG 바이트와 프레임별 시간·기준점을 보존했다. [게임 자산 출처](../assets/warden/README.md)에 원본 경로·SHA-256을, animations.json에 런타임 규격을 기록한다. .gitattributes는 PNG를 일반 Git 바이너리로 관리한다. 후속 사용자 지시로 assets/warden/attack.png는 v6 아웃라인 있음 시트를 변경 없이 사용한다. 기존 v5 원본과 무외곽선 v6 후보를 보존한다. 7프레임·350ms·기준점 (96,120)을 보존하며 왼쪽은 런타임 수평 반전이다. 실제 SDL 첫 프레임·양 방향 출력·발 기준점을 확인했다. 전기 베기 v4는 assets/warden/sword_trail.png로 복사해 14프레임·700ms와 같은 기준점을 보존했다. MIT 고지는 licenses/pixelfx-LICENSE.txt 한 곳에서 공통 관리한다. 걷기는 포함하지 않는다. 이번 요청은 아웃라인 공격의 게임 사용 선택과 베기 통합 근거이며, 최종 게임 아트 규격·품질 승인으로 확대하지 않는다.
+
+2026-11-13 측면 idle 교체 요청으로 idle.png를 망토 바람 v2/idle_right/sheet.png로 대체했다. 48프레임·2초와 기준점 (64,92)을 사용한다. 좌측 원본은 우측의 정확한 수평 반전이므로 런타임 반전을 재사용한다. 기존 idle v7 원본은 보존한다.
