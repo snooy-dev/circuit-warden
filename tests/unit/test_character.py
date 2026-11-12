@@ -31,14 +31,14 @@ class CharacterTests(unittest.TestCase):
         character.view_bounds = (-400, -300, 400, 300)
         return character
 
-    def test_jump_reaches_three_body_heights_and_lands_with_split_time(self):
+    def test_jump_reaches_two_body_heights_and_lands_with_split_time(self):
         whole, split = self.character, self.make_character()
         for actor in (whole, split):
             actor.control(key(pico.SDLK_SPACE))
         whole.update(JUMP_APEX_SECONDS)
         for _ in range(40):
             split.update(JUMP_APEX_SECONDS / 40)
-        self.assertEqual(JUMP_HEIGHT, BODY_HEIGHT * 3)
+        self.assertEqual(JUMP_HEIGHT, BODY_HEIGHT * 2)
         for actor in (whole, split):
             self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
             self.assertAlmostEqual(actor.velocity_y, 0)

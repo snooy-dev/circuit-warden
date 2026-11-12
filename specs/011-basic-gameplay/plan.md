@@ -71,7 +71,7 @@ DISPLAY_SCALE만 1로 변경한다. 기존 캐릭터 출력·이동 경계·Swor
 
 기존 feature/basic-gameplay 동기화 결과 Already up to date. game/character.py에 y·수직 속도·미시작 점프 요청을 추가한다. grounded는 바닥 위치와 수직 속도 0으로 판정한다. Space 유지 상태는 기존 pressed set으로 KEYDOWN 중복을 막는다. 제자리·공중 A/D는 기존 idle/run Machine 전이를 재사용하며 별도 jump 애니메이션 상태나 물리 엔진은 만들지 않는다.
 
-idle 알파를 도구 Python/Pillow로 측정: 첫 프레임 (24,11,78,93), 프레임 높이 81~83, 전체 y 범위 10~93. BODY_HEIGHT=83, JUMP_HEIGHT=BODY_HEIGHT*DISPLAY_SCALE*3, 상승 시간 0.4초로 초기 속도·중력을 유도한다. 일정 가속도 식 y += v*dt - g*dt²/2, v -= g*dt를 사용하고 바닥을 넘으면 clamp한다. 부동소수점 착지 오차만 작은 허용 오차로 처리한다. 런타임 Pillow 의존성 없음.
+idle 알파를 도구 Python/Pillow로 측정: 첫 프레임 (24,11,78,93), 프레임 높이 81~83, 전체 y 범위 10~93. BODY_HEIGHT=83, JUMP_HEIGHT=BODY_HEIGHT*DISPLAY_SCALE*2, 상승 시간 0.4초로 초기 속도·중력을 유도한다. 일정 가속도 식 y += v*dt - g*dt²/2, v -= g*dt를 사용하고 바닥을 넘으면 clamp한다. 부동소수점 착지 오차만 작은 허용 오차로 처리한다. 런타임 Pillow 의존성 없음.
 
 입력 처리에서 공중 클릭/점프·공격 중 점프를 버린다. update 시작에서 유효한 점프를 먼저 소비해 같은 프레임 공격을 차단하고, 그 후 수평 이동·재생은 기존 경로를 사용한다. Character._draw의 y를 실제 좌표로 바꾼다. SwordTrail은 지상 공격만 가능하므로 기존 바닥 위치를 유지한다. game/scene.py 창 제목·실행 안내에 Space를 반영한다.
 

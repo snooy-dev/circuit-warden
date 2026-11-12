@@ -52,7 +52,7 @@ T012→T013→T014→T015→T016 순서. 신규 게임 아트 생성·피해 규
 ## Phase 7: User Story 4 - 점프
 
 - [x] T019 [US4] specs/011-basic-gameplay/spec.md·plan.md에 요청/공중 공격 제외와 알파 높이 측정·공식·경계 정책을 기록하고 docs/systems/basic-gameplay.md에 반영한다.
-- [x] T020 [US4] game/character.py에 3배 높이 점프·입력 배제·y 출력을 연결하고 game/scene.py의 Space 안내를 갱신한다.
+- [x] T020 [US4] game/character.py에 2배 높이 점프·입력 배제·y 출력을 연결하고 game/scene.py의 Space 안내를 갱신한다.
 - [x] T021 [US4] tests/unit/test_character.py·tests/smoke/character_smoke.py로 정점·시간 분할·착지·공중 A/D·공격/중복 점프 배제·포커스를 확인한다.
 - [x] T022 docs/game-design.md·architecture.md·progress.md·specs/011-basic-gameplay/verification.md를 구현과 맞추고 converge·문서 검사 후 커밋한다.
 
