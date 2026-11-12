@@ -119,3 +119,23 @@ FR-013/SC-007→T023/T024를 원본·설계·구현·검증에 대조했다. 기
 - 해당 폴더의 character-idle.png와 character-idle-left.png를 열어 새 측면 모습·좌우 방향·바닥 정렬을 관찰했다. 사용자 직접 플레이/최종 아트 품질 평가와 구분한다.
 
 assets 출처, docs/art-direction·architecture·progress 및 011 spec/plan/tasks를 현재 통합 상태에 맞췄다. 원본 아트·루트 README는 보존했다. Converge 대조에서 추가 필수 작업 없음. 변경 문서 링크와 git diff --check 확인. 전체 회귀는 자산/pivot 교체 범위를 넘어 실행하지 않았다.
+
+## 대시 (2026-11-13)
+
+사용자 답변으로 거리 키2배·지상/공중 사용·공중1회를 확정했다. FR-014/015·SC-008→T025~027을 대조하고 기존 브랜치 fetch/merge는 Already up to date. 명세/계획의 Shift·0.2초·중력 유지·동시 대시 우선은 기술 기본안으로 구분했다.
+
+도구 Python/Pillow로 idle·좌우Run 모든 셀 알파를 측정했다. idle 폭61~62/키81~83, Run 폭61~62/키82~83. Character 출력 배율1과 WorldTransform을 대조하여 최대 키83·폭62 월드 단위, 기본 시야1066.67×600과 화면 변환1.2를 확인했다. 거리166은 화면 픽셀과 분리해 BODY_HEIGHT×2로 계산한다.
+
+게임 `.venv/Scripts/python.exe -B -m unittest`로 아래 메서드6개를 지정해 모두 통과했다.
+- `tests.unit.test_character.CharacterTests.test_dash_world_distance_and_partition`: 좌우166, 단일/분할/초과dt, 720p/1080p 월드 거리 동일, 유지 키 재사용 차단.
+- `tests.unit.test_character.CharacterTests.test_air_dash_once_and_landing_restores_use`: 중력 유지·공중1회·착지 회복·재점프 후 대시.
+- `tests.unit.test_character.CharacterTests.test_dash_locks_inputs_and_uses_left_run`: 동시 요청 우선·좌측 Run 무반전·방향/행동 고정·종료 후 키 복귀.
+- `tests.unit.test_character.CharacterTests.test_dash_bounds_attack_and_focus_requests`: 공격 중 차단·미시작/진행 중 포커스·경계/좁은 창.
+- `tests.unit.test_character.CharacterTests.test_jump_reaches_two_body_heights_and_lands_with_split_time`: 기존 점프166·착지 회귀.
+- `tests.unit.test_character.CharacterTests.test_attack_starts_at_first_frame_ignores_clicks_and_resumes_held_key`: 기존 지상 공격 회귀.
+
+최초 검사 준비 스크립트는 인코딩 미지정(cp949)으로 쓰기 전에 중단돼 아직 없는 메서드4개 호출이 실패했다. UTF-8을 명시하는 패치로 작성 후 위6개를 실행했으며 제품 동작 검사 실패는 없었다.
+
+`.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash` → 종료0/PASS. 실제 SDL Shift 전달·지상 좌측166/공중 우측166·공중 재사용 차단·착지 회복·기존 조작/창/정리 통과. character-dash-ground-left.png·character-dash-air-right.png를 열어 Run 방향과 지상/공중 출력을 확인했다.
+
+Converge: FR-014/015·SC-008과 구현/검증/현재 docs 대응, 남은 필수 작업 없음. docs/architecture·systems/basic-gameplay·game-design·progress와 011 data-model/quickstart를 갱신했다. 엔진·자산·루트 README는 수정하지 않았다. 변경 문서 링크·git diff --check 확인. 전체 회귀는 선택하지 않았으며 사용자 직접 대시 체감은 미확인이다. 충돌/무적/잔상은 범위 밖이다.

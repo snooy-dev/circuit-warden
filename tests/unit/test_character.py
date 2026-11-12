@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pico2d.pico2d as pico
 
 from game.character import Character, BODY_HEIGHT, GROUND_Y, JUMP_HEIGHT, JUMP_APEX_SECONDS
+from game.character import DASH_DISTANCE, DASH_SECONDS
 from game_framework import ImageRef, SpriteClip, SpriteFrame, WorldTransform
 
 
@@ -30,6 +31,105 @@ class CharacterTests(unittest.TestCase):
         character = Character(self.clips)
         character.view_bounds = (-400, -300, 400, 300)
         return character
+
+    def test_dash_world_distance_and_partition(self):
+        self.assertEqual(DASH_DISTANCE, BODY_HEIGHT * 2)
+        for facing in (-1, 1):
+            for viewport in ((0, 0, 1280, 720), (0, 0, 1920, 1080)):
+                for steps in ((DASH_SECONDS,), (.07, .07, .2)):
+                    actor = self.make_character()
+                    actor.facing = facing
+                    actor.view_bounds = WorldTransform(viewport, view_height=600).bounds
+                    actor.control(key(pico.SDLK_LSHIFT))
+                    for dt in steps:
+                        actor.update(dt)
+                    self.assertAlmostEqual(actor.x, facing * DASH_DISTANCE)
+                    self.assertEqual(actor.state, 'idle')
+                    actor.control(key(pico.SDLK_LSHIFT))
+                    actor.update(.1)
+                    self.assertAlmostEqual(actor.x, facing * DASH_DISTANCE)
+
+    def test_air_dash_once_and_landing_restores_use(self):
+        actor = self.character
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.1)
+        before_y = actor.y
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(.1)
+        self.assertEqual(actor.state, 'dash')
+        self.assertGreater(actor.y, before_y)
+        self.assertTrue(actor.air_dash_used)
+        actor.update(.1)
+        actor.control(key(pico.SDLK_LSHIFT, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(.1)
+        self.assertEqual(actor.state, 'idle')
+        self.assertAlmostEqual(actor.x, DASH_DISTANCE)
+        actor.update(.4)
+        self.assertTrue(actor.grounded)
+        self.assertFalse(actor.air_dash_used)
+        actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.1)
+        actor.control(key(pico.SDLK_LSHIFT, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_RSHIFT))
+        actor.update(.05)
+        self.assertEqual(actor.state, 'dash')
+
+    def test_dash_locks_inputs_and_uses_left_run(self):
+        actor = self.character
+        actor.facing = -1
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.control(key(pico.SDLK_SPACE))
+        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+        actor.control(click)
+        actor.update(.05)
+        self.assertEqual(actor.state, 'dash')
+        self.assertTrue(actor.grounded)
+        self.assertIs(actor.player.clip, self.clips['run_left'])
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(object(), 1)
+        self.assertFalse(draw.call_args.kwargs['flip_x'])
+        actor.control(key(pico.SDLK_d))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.control(key(pico.SDLK_RSHIFT))
+        actor.control(click)
+        actor.update(.15)
+        self.assertAlmostEqual(actor.x, -DASH_DISTANCE)
+        self.assertEqual(actor.facing, -1)
+        self.assertTrue(actor.grounded)
+        actor.update(.1)
+        self.assertEqual(actor.state, 'run')
+        self.assertEqual(actor.facing, 1)
+        self.assertGreater(actor.x, -DASH_DISTANCE)
+
+    def test_dash_bounds_attack_and_focus_requests(self):
+        actor = self.character
+        actor.control(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+        actor.update(0)
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(.05)
+        self.assertEqual(actor.state, 'attack')
+        actor.update(.06)
+        self.assertEqual(actor.x, 0)
+        actor.control(key(pico.SDLK_LSHIFT, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_LSHIFT))
+        focus = SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST)
+        actor.control(focus)
+        actor.update(.1)
+        self.assertEqual(actor.x, 0)
+        actor.x = 320
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(.05)
+        self.assertEqual(actor.x, 330)
+        actor.control(focus)
+        actor.update(.15)
+        self.assertEqual(actor.x, 330)
+        self.assertEqual(actor.state, 'idle')
+        actor.view_bounds = (-20, -300, 20, 300)
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(.2)
+        self.assertEqual(actor.x, 0)
 
     def test_jump_reaches_two_body_heights_and_lands_with_split_time(self):
         whole, split = self.character, self.make_character()

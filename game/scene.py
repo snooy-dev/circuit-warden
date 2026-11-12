@@ -47,7 +47,7 @@ class CharacterScene(LevelScene):
 
     def enter(self, engine):
         super().enter(engine)
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | Left click: attack | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | Shift: dash | Left click: attack | F6 / F11 | Esc')
 
     def handle_event(self, event):
         if event.type == pico.SDL_KEYDOWN:

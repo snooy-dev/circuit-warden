@@ -13,7 +13,7 @@ import pico2d.pico2d as pico
 from engine import Engine
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.effects import SwordTrail
-from game.character import GROUND_Y
+from game.character import GROUND_Y, DASH_DISTANCE
 
 
 def push_key(symbol, kind=pico.SDL_KEYDOWN):
@@ -42,6 +42,7 @@ class CharacterSmoke(CharacterScene):
         super().__init__()
         self.output_dir = output_dir
         self.passed = False
+        self.dash_captures = set()
 
     def enter(self, engine):
         super().enter(engine)
@@ -161,6 +162,36 @@ class CharacterSmoke(CharacterScene):
         assert actor.grounded and actor.player.clip is idle
         stopped_x = actor.x
         self.capture('jump-landed')
+        push_key(pico.SDLK_LSHIFT)
+        yield
+
+        assert actor.grounded and abs(actor.x - (stopped_x - DASH_DISTANCE)) < 1e-6
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_d)
+        yield
+
+        assert actor.facing == 1
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE)
+        yield
+
+        stopped_x = actor.x
+        assert not actor.grounded
+        push_key(pico.SDLK_RSHIFT)
+        yield
+
+        assert actor.air_dash_used and abs(actor.x - (stopped_x + DASH_DISTANCE)) < 1e-6
+        push_key(pico.SDLK_RSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_RSHIFT)
+        stopped_x = actor.x
+        yield
+
+        assert actor.x == stopped_x
+        yield
+        assert actor.grounded and not actor.air_dash_used
+        assert self.dash_captures == {'dash-ground-left', 'dash-air-right'}
+        push_key(pico.SDLK_RSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
         push_key(pico.SDLK_F6)
         yield
 
@@ -185,6 +216,12 @@ class CharacterSmoke(CharacterScene):
 
     def draw(self):
         super().draw()
+        if self.character.state == 'dash':
+            name = 'dash-' + ('ground' if self.character.grounded else 'air')
+            name += '-right' if self.character.facing > 0 else '-left'
+            if name not in self.dash_captures:
+                self.capture(name)
+                self.dash_captures.add(name)
         if self.character.state == 'attack' and self.character.player.elapsed == 0:
             self.capture('attack-first-' + ('right' if self.character.facing > 0 else 'left'))
         now = monotonic()
@@ -203,5 +240,5 @@ if __name__ == '__main__':
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: idle/run/attack/resume/focus-loss/jump-idle/jump-run/air-turn/land/resize/fullscreen/escape/cleanup',
+    print('PASS: idle/run/attack/resume/focus-loss/jump/land/dash-ground/air-once/resize/fullscreen/escape/cleanup',
           flush=True)

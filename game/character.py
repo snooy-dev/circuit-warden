@@ -1,4 +1,4 @@
-"""Warden의 이동·점프·단발 공격과 스프라이트 상태."""
+"""Warden의 이동·점프·대시·단발 공격과 스프라이트 상태."""
 
 import json
 from pathlib import Path
@@ -14,12 +14,15 @@ from .effects import SwordTrail
 GROUND_Y = -180
 SPEED = 180
 DISPLAY_SCALE = 1
-# idle 48프레임의 알파 범위 중 최대 높이(귀 포함, 투명 여백 제외).
+# idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
 BODY_HEIGHT = 83 * DISPLAY_SCALE
 JUMP_HEIGHT = BODY_HEIGHT * 2
 JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
+DASH_DISTANCE = BODY_HEIGHT * 2
+DASH_SECONDS = .2
+DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS
@@ -86,10 +89,14 @@ class Character(GameObject):
         self.pressed = set()
         self.attack_requested = False
         self.jump_requested = False
+        self.dash_requested = False
+        self.dash_remaining = 0.0
+        self.air_dash_used = False
         self._machine = Machine(
-            states=('idle', 'run', 'attack'), initial='idle', auto_transitions=False,
+            states=('idle', 'run', 'attack', 'dash'), initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
-                         ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle']],
+                         ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle'],
+                         ['dash', ['idle', 'run'], 'dash'], ['end_dash', 'dash', 'idle']],
         )
         self.view_bounds = None
         self._idle_margins = _margins(clips['idle'])
@@ -113,23 +120,36 @@ class Character(GameObject):
             self.pressed.clear()
             self.attack_requested = False
             self.jump_requested = False
-        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | {pico.SDLK_SPACE}:
+            self.dash_requested = False
+        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE}:
             if (event.key == pico.SDLK_SPACE and event.key not in self.pressed
-                    and self.grounded and self.state != 'attack'):
+                    and self.grounded and self.state not in ('attack', 'dash')):
                 self.jump_requested = True
+            if (event.key in DASH_KEYS and not self.pressed & DASH_KEYS
+                    and self.state in ('idle', 'run')
+                    and (self.grounded or not self.air_dash_used)):
+                self.dash_requested = True
             self.pressed.add(event.key)
         elif event.type == pico.SDL_KEYUP:
             self.pressed.discard(event.key)
         elif (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT
-              and self.state != 'attack' and self.grounded):
+              and self.state not in ('attack', 'dash') and self.grounded):
             self.attack_requested = True
 
     def update(self, dt):
-        if (self.jump_requested and self.grounded and self.state != 'attack'
+        if (self.dash_requested and self.state in ('idle', 'run')
+                and (self.grounded or not self.air_dash_used) and self.view_bounds is not None):
+            self._machine.dash()
+            self.dash_remaining = DASH_SECONDS
+            self.air_dash_used = not self.grounded
+            self.player.play(self.clips['run_right' if self.facing > 0 else 'run_left'])
+        self.dash_requested = False
+        if (self.jump_requested and self.grounded and self.state not in ('attack', 'dash')
                 and self.view_bounds is not None):
             self.velocity_y = JUMP_SPEED
         self.jump_requested = False
-        started = self.attack_requested and self.grounded and self.view_bounds is not None
+        started = (self.attack_requested and self.grounded and self.state != 'dash'
+                   and self.view_bounds is not None)
         self.attack_requested = False
         if started:
             self._machine.attack()
@@ -146,6 +166,26 @@ class Character(GameObject):
             # 시간 분할의 반올림 오차로 착지가 한 프레임 늦어지지 않게 한다.
             if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
                 self.y, self.velocity_y = float(GROUND_Y), 0.0
+                self.air_dash_used = False
+
+        if self.state == 'dash':
+            step = min(dt, self.dash_remaining)
+            if self.view_bounds is not None:
+                left, _, right, _ = self.view_bounds
+                low, high = left + self._left_margin, right - self._right_margin
+                if low <= high:
+                    start = min(max(self.x, low), high)
+                    self.x = min(max(start + self.facing * DASH_DISTANCE / DASH_SECONDS * step,
+                                     low), high)
+                else:
+                    self.x = (left + right) / 2
+            self.player.update(step)
+            self.dash_remaining = max(0.0, self.dash_remaining - step)
+            if self.dash_remaining <= 1e-9:
+                self.dash_remaining = 0.0
+                self._machine.end_dash()
+                self.player.play(self.clips['idle'])
+            return
 
         clip = self.clips['idle']
         if self.view_bounds is None:
@@ -192,7 +232,7 @@ class Character(GameObject):
     def _draw(self, transform, opacity):
         frame = self.player.frame
         width, height = frame.rect[2:]
-        flip_x = self.state != 'run' and self.facing < 0
+        flip_x = self.state not in ('run', 'dash') and self.facing < 0
         draw_sprite(frame, transform, (self.x, self.y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 

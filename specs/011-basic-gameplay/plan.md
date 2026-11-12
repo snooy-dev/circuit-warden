@@ -80,3 +80,11 @@ idle 알파를 도구 Python/Pillow로 측정: 첫 프레임 (24,11,78,93), 프�
 ## 측면 idle 교체
 
 좌우 48프레임의 RGBA가 정확한 수평 반전이므로 기존 idle.png와 반전 경로를 재사용한다. 오른쪽 원본을 복사하고 animations.json pivot x만 58→64, 실제 자산 통합 검사의 pivot 기대값을 수정한다. 좌측 원본 anchor=63은 픽셀 인덱스 반전 기준이며 런타임은 연속 좌표 pivot=64를 반전한다. 별도 좌측 시트/로더/상태를 추가하지 않는다. 새 알파 높이도 81~83px라 점프 상수는 유지한다. 출처·현재 아트/진행/구조 문서 갱신, 표적 PNG 검사와 기존 SDL smoke의 좌우 idle·복귀를 확인한다. 루트 README는 변경하지 않는다.
+
+## 대시
+
+현재 변환은 screen=world×viewport_height/600이며 기본 시야 1066.67×600이다. DISPLAY_SCALE=1에서 알파 범위 최대 키83·폭62 월드 단위(망토 포함), 셀128×104는 여백 포함이다. DASH_DISTANCE=BODY_HEIGHT*2, DASH_SECONDS=.2로 정의하여 화면 픽셀과 분리한다.
+
+Character Machine에 dash와 종료 전이를 추가한다. 요청·잔여 시간·공중 소비 여부만 보관하고 기존 수직 적분 뒤 수평 대시를 처리한다. min(dt, 잔여 시간)만 이동해 초과 dt가 거리를 늘리지 않으며 기존 셀 경계로 clamp한다. 마지막 갱신에서는 일반 이동을 더하지 않고 다음 갱신부터 유지 키를 반영한다. Run 출력은 전용 좌우 클립이므로 dash에서 재반전하지 않는다. 지상 대시는 공중 횟수를 소비하지 않으며 착지가 회복한다.
+
+영향: game/character.py, game/scene.py 안내, tests/unit/test_character.py와 기존 SDL smoke, docs/architecture·systems/basic-gameplay·game-design·progress, 011 문서. 엔진·자산·공개 API·루트 README는 그대로다. 표적 검사로 거리/분할/출력 독립성과 입력 경계·공중 회복을 확인하고 SDL에서 좌우 지상/공중 Run을 캡처한다.
