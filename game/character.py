@@ -45,9 +45,12 @@ def _load_clip(images, animation):
     if any(type(value) not in (int, float) for value in (x, y)):
         raise ValueError('pivot은 숫자 픽셀 좌표 두 개여야 합니다.')
     pivot = (x / width, y / height)
+    indices = animation.get('frameIndices', range(count))
+    if len(indices) != count or any(type(i) is not int or i < 0 for i in indices):
+        raise ValueError('frameIndices는 프레임마다 하나의 비음수 정수여야 합니다.')
     image = images.load(filename)
     frames = tuple(SpriteFrame(image, (i % columns * width, i // columns * height, width, height), pivot)
-                   for i in range(count))
+                   for i in indices)
     return SpriteClip(frames, tuple(ms / 1000 for ms in durations), loop=animation['loop'])
 
 
@@ -58,7 +61,11 @@ def load_clips(images):
     except ValueError as error:
         raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
     clips = {}
-    for name in ('idle', 'run_left', 'run_right', 'attack', 'sword_trail'):
+    names = ('idle', 'run_left', 'run_right', 'attack', 'sword_trail') + tuple(
+        f'{phase}_{direction}' for phase in (
+            'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx')
+        for direction in ('left', 'right'))
+    for name in names:
         try:
             clips[name] = _load_clip(images, animations[name])
             if clips[name].loop != (name in ('idle', 'run_left', 'run_right')):

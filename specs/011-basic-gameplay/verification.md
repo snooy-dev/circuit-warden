@@ -148,3 +148,11 @@ Converge: FR-014/015·SC-008과 구현/검증/현재 docs 대응, 남은 필수 
 - `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-review-fixes`: 종료0/PASS. A 유지 대시 종료 렌더 프레임에서 기존 Run 클립의 동일성을 검사했다. character-dash-resume-left.png를 열어 좌측 Run 표시를 확인했다. 지상/공중 대시·점프·공격·창 전환·종료 정리도 통과했다.
 
 Converge: 감사1/2→T028/T029→구현/회귀 대응, 추가 필수 작업 없음. systems/basic-gameplay·progress·011 spec/plan/data-model/tasks/verification을 현재 동작에 맞췄다. 변경 문서 로컬 링크·git diff --check 확인. 루트 README/자산/의존성은 변경하지 않았다. 전체 엔진 회귀와 사용자 직접 조작감 평가는 미실시다.
+
+## 승인 대시 자산 준비 (진행 중)
+
+2026-11-13 사용자 요청으로 basic-gameplay 브랜치를 origin/main d64aa93으로 fast-forward했다. training-combat은 별도 브랜치로 보존한다. 원본 승인 메타데이터에 따라 캐릭터10개·효과2개 PNG를 바이트 보존 복사했고 재생 대상130프레임의 원본 RGBA와 일치를 확인했다. 개별 SHA-256은 assets/warden/README.md에 기록했다. 원본 dash 셀6은 중복 유지 이미지라 frameIndices로 제외하고 셀5를34ms 유지한다.
+
+`.venv/Scripts/python.exe -B -m unittest tests.integration.test_character_scene.CharacterSceneTests.test_dash_assets_preserve_frame_order_timing_and_pivots tests.integration.test_character_scene.CharacterSceneTests.test_invalid_dash_frame_indices_release_images -v`: 2개 통과. 실제 PNG 프레임 순서·기준점·100/200/167/367ms와 잘못된 인덱스/초기화 실패 자원 해제를 확인했다. git diff --check 통과.
+
+T030만 완료이며 T031/T032는 남아 있다. 준비·복귀의 행동 잠금 포함 여부를 사용자에게 질문했다. 현재 대시는 기존 Run을 사용하고 새 모션·효과의 실동작/SDL 검사는 아직 미완료다. 전체 통합 완료로 취급하지 않는다.

@@ -92,3 +92,7 @@ Character Machine에 dash와 종료 전이를 추가한다. 요청·잔여 시�
 ## 리뷰 수정
 
 대시가 끝나면 기존 이동/클립 선택 경로를 재사용한다. 종료 여부로 일반 이동과 SpritePlayer 중복 시간 진행만 막고, 동일 Run은 재시작하지 않는다. 별도 선택 함수를 만들지 않는다. 창 경계 검사는 폭180에서 x25, 폭120에서 중앙0을 확인한다. 표적 회귀와 기존 SDL smoke, 관련 현재 docs/verification을 갱신한다.
+
+## 승인 대시 자산 연결
+
+feature/basic-gameplay를 최신 origin/main(d64aa93)으로 fast-forward했다. training-combat의 미병합 전투 구현은 해당 브랜치에 보존한다. 원본 dash-eye-cape-v1의 10개 시트와 dash-fx-v1의 좌우 효과2개를 복사한다. dash의 원본 셀6은 중복 유지 이미지이므로 frameIndices [0..5,7..11]을 사용하고 5번을34ms 유지한다. 로더의 선택적 인덱스는 개수·정수·음수와 SpriteFrame 이미지 범위를 검사한다. 캐릭터128×104, 좌/우기준점(63,92)/(64,92), 효과384×128은 원본 JSON 기준점과 시간을 따른다. 효과는 기존 단발 객체 재생/수명 경로를 재사용한다. 독립 idle/Run은 교체하지 않는다. 루트 README·엔진 변경 없음.
