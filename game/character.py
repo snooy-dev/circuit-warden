@@ -8,7 +8,7 @@ from transitions import Machine
 
 from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
 
-from .effects import SwordTrail
+from .effects import SpriteEffect
 
 
 GROUND_Y = -180
@@ -98,6 +98,7 @@ class Character(GameObject):
         self.jump_requested = False
         self.dash_requested = False
         self.dash_remaining = 0.0
+        self.dash_phase = None
         self.air_dash_used = False
         self._machine = Machine(
             states=('idle', 'run', 'attack', 'dash'), initial='idle', auto_transitions=False,
@@ -146,10 +147,10 @@ class Character(GameObject):
     def update(self, dt):
         if (self.dash_requested and self.state in ('idle', 'run')
                 and (self.grounded or not self.air_dash_used) and self.view_bounds is not None):
+            entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
-            self.dash_remaining = DASH_SECONDS
+            self._play_dash_phase(entry)
             self.air_dash_used = not self.grounded
-            self.player.play(self.clips['run_right' if self.facing > 0 else 'run_left'])
         self.dash_requested = False
         if (self.jump_requested and self.grounded and self.state not in ('attack', 'dash')
                 and self.view_bounds is not None):
@@ -167,34 +168,13 @@ class Character(GameObject):
             if self.player.finished:
                 self._machine.finish()
 
-        if not self.grounded:
-            self.y += self.velocity_y * dt - .5 * GRAVITY * dt ** 2
-            self.velocity_y -= GRAVITY * dt
-            # 시간 분할의 반올림 오차로 착지가 한 프레임 늦어지지 않게 한다.
-            if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
-                self.y, self.velocity_y = float(GROUND_Y), 0.0
-                self.air_dash_used = False
-
-        finished_dash = False
-        if self.state == 'dash':
-            step = min(dt, self.dash_remaining)
-            if self.view_bounds is not None:
-                left, _, right, _ = self.view_bounds
-                low, high = left + self._left_margin, right - self._right_margin
-                if low <= high:
-                    start = min(max(self.x, low), high)
-                    self.x = min(max(start + self.facing * DASH_DISTANCE / DASH_SECONDS * step,
-                                     low), high)
-                else:
-                    self.x = (left + right) / 2
-            self.player.update(step)
-            self.dash_remaining = max(0.0, self.dash_remaining - step)
-            if self.dash_remaining <= 1e-9:
-                self.dash_remaining = 0.0
-                self._machine.end_dash()
-                finished_dash = True
-            else:
+        finished_dash = self.state == 'dash'
+        if finished_dash:
+            self._update_dash(dt)
+            if self.state == 'dash':
                 return
+        else:
+            self._advance_vertical(dt)
 
         clip = self.clips['idle']
         if self.view_bounds is None:
@@ -224,7 +204,7 @@ class Character(GameObject):
 
         if self.state == 'attack':
             if started and self.level is not None:
-                self.level.spawn(SwordTrail(self.clips['sword_trail'], (self.x, GROUND_Y),
+                self.level.spawn(SpriteEffect(self.clips['sword_trail'], (self.x, GROUND_Y),
                                            self.facing, DISPLAY_SCALE))
             return
         if clip is self.clips['idle']:
@@ -238,6 +218,74 @@ class Character(GameObject):
                 self.player.update(dt)
         else:
             self.player.play(clip)
+            if finished_dash:
+                # 복귀 마지막 자세 다음 프레임으로 이어간다. 반대 방향 전환은 첫 프레임이다.
+                if self.dash_phase == 'recover_idle' and clip is self.clips['idle']:
+                    self.player.update(clip.durations[0])
+                elif (self.dash_phase == 'recover_run' and self.facing == self.dash_facing
+                      and clip is not self.clips['idle']):
+                    self.player.update(sum(clip.durations[:15]))
+
+    def _advance_vertical(self, dt):
+        if not self.grounded:
+            self.y += self.velocity_y * dt - .5 * GRAVITY * dt ** 2
+            self.velocity_y -= GRAVITY * dt
+            if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
+                self.y, self.velocity_y = float(GROUND_Y), 0.0
+                self.air_dash_used = False
+
+    def _play_dash_phase(self, phase):
+        self.dash_phase = phase
+        self.dash_facing = self.facing
+        direction = 'right' if self.facing > 0 else 'left'
+        self.player.play(self.clips[f'{phase}_{direction}'], restart=True)
+        self.dash_remaining = sum(self.player.clip.durations)
+
+    def _update_dash(self, dt):
+        effect = None
+        remaining = dt
+        while self.state == 'dash':
+            step = min(remaining, self.dash_remaining)
+            self._advance_vertical(step)
+            can_continue = False
+            if self.view_bounds is not None:
+                left, _, right, _ = self.view_bounds
+                low, high = left + self._left_margin, right - self._right_margin
+                if low <= high:
+                    start = min(max(self.x, low), high)
+                    distance = DASH_DISTANCE / DASH_SECONDS * step if self.dash_phase == 'dash' else 0
+                    self.x = min(max(start + self.facing * distance, low), high)
+                    can_continue = self.x < high if self.facing > 0 else self.x > low
+                else:
+                    self.x = (left + right) / 2
+            self.player.update(step)
+            if effect is not None:
+                effect.update(step)
+            remaining = max(0.0, remaining - step)
+            self.dash_remaining = max(0.0, self.dash_remaining - step)
+            if self.dash_remaining > 1e-9:
+                return
+            if self.dash_phase.startswith('prepare_'):
+                self._play_dash_phase('dash')
+                if self.level is not None:
+                    direction = 'right' if self.facing > 0 else 'left'
+                    # shortcut: 고정 직선 잔상, 공중 궤적/벽 추종이 필요하면 효과 제작 방식을 바꾼다.
+                    effect = self.level.spawn(SpriteEffect(self.clips[f'dash_fx_{direction}'],
+                                                          (self.x, self.y), 1, DISPLAY_SCALE))
+            elif self.dash_phase == 'dash':
+                direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
+                self._play_dash_phase('recover_run' if direction == self.facing and can_continue
+                                      else 'recover_idle')
+            else:
+                self.dash_remaining = 0.0
+                self._machine.end_dash()
+                # 수평 일반 이동은 다음 갱신부터지만 중력 시간은 버리지 않는다.
+                self._advance_vertical(remaining)
+                if effect is not None:
+                    effect.update(remaining)
+                return
+            if remaining <= 1e-9:
+                return
 
     def _draw(self, transform, opacity):
         frame = self.player.frame

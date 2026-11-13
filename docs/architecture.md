@@ -286,7 +286,7 @@ GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 �
 
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 
-SwordTrail(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
+SpriteEffect(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
 
 ## Warden 점프
 
@@ -304,4 +304,10 @@ WorldTransform.scale=출력 viewport 높이/view_height이며 플레이 장면�
 
 현재 idle 알파 범위는 폭61~62·키81~83 월드 단위, Run은 폭61~62·키82~83이다. 최대 키83·폭62(귀·망토 포함)는 보이는 형상의 범위이며 충돌 박스가 아니다. 여백 포함 셀은128×104 월드 단위이고 기존 화면 경계는 이 셀을 사용한다.
 
-DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_SECONDS=.2, 수평 속도830 월드 단위/초다. 기본 창에서는199.2출력px로 보이나 거리 계산에는 출력 픽셀을 사용하지 않는다. Character의 dash 상태·dash_remaining·air_dash_used로 남은 시간만 수평 적분하며 중력은 유지한다. Run 좌우 클립을 그대로 사용하고 dash에서는 추가 반전하지 않는다. 엔진/프레임워크에는 대시 규칙을 추가하지 않는다. [조작 규칙](systems/basic-gameplay.md#대시)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다.
+DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_SECONDS=.2, 수평 속도830 월드 단위/초다. 기본 창에서는199.2출력px로 보이나 거리 계산에는 출력 픽셀을 사용하지 않는다. Character의 dash 상태 내부에 준비/이동/복귀 단계를 두고 남은 시간을 분할해 처리한다. 수평 적분은 이동 단계에만 적용하고 중력은 모든 단계에서 유지한다. 전용 좌우 클립과 효과에는 추가 반전을 적용하지 않는다. 엔진/프레임워크에는 대시 규칙을 추가하지 않는다. [조작 규칙](systems/basic-gameplay.md#대시)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다.
+
+### 전용 대시 모션·효과
+
+준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다. SpriteEffect는 기존 베기 효과 구현을 이름 변경해 함께 재사용한다.
+
+로더는 선택적 frameIndices를 검증하며 대시 시트의 중복셀6을 건너뛴11프레임과 셀5의34ms를 보존한다. 프레임 색/알파·시트 바이트는 변경하지 않는다. 원본의 연결 기준은 idle0/Run0 진입, idle0/Run14 복귀라 해당 복귀 후1/15번부터 재생한다. 임의 진입 위상과 독립 idle/Run의 눈 색 차이는 남아 있는 아트 연결 한계다.

@@ -156,3 +156,17 @@ Converge: 감사1/2→T028/T029→구현/회귀 대응, 추가 필수 작업 없
 `.venv/Scripts/python.exe -B -m unittest tests.integration.test_character_scene.CharacterSceneTests.test_dash_assets_preserve_frame_order_timing_and_pivots tests.integration.test_character_scene.CharacterSceneTests.test_invalid_dash_frame_indices_release_images -v`: 2개 통과. 실제 PNG 프레임 순서·기준점·100/200/167/367ms와 잘못된 인덱스/초기화 실패 자원 해제를 확인했다. git diff --check 통과.
 
 T030만 완료이며 T031/T032는 남아 있다. 준비·복귀의 행동 잠금 포함 여부를 사용자에게 질문했다. 현재 대시는 기존 Run을 사용하고 새 모션·효과의 실동작/SDL 검사는 아직 미완료다. 전체 통합 완료로 취급하지 않는다.
+
+## 전용 대시 동작 연결 (2026-11-13)
+
+사용자 답변: 준비100ms·이동200ms·복귀167ms 전체를 행동 잠금에 포함한다. T030의 자산 검증을 재사용하고 T031/T032를 완료했다. Analyze 대조에서 기존 Run 대체 정책은 전용 준비/복귀·원본 연결 프레임으로 갱신했고 거리166·공중1회·중력·동시 입력 우선은 유지했다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character tests.integration.test_character_scene -q`: 28개 통과. 전용 클립/단계 시간·분할dt·거리·방향·입력 잠금·복귀·공중회복·자산/잘못된 인덱스·기존 공격/점프/창/수명 확인.
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character.CharacterTests.test_release_during_run_recovery_returns_to_idle_start tests.integration.test_dash_animation -v`: 추가4개 통과. Run복귀 중 키해제의 idle 시작, 실제 자산으로 단일/분할dt의 공중 효과 생성 경계 위치·재생 동기화·367ms 소멸, 좌측 무반전·복귀 잠금·벽/장면종료를 확인했다. 앞28개 결과를 재사용하여 고유 검사32개를 확인했다.
+- `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-motion`: 종료0/PASS. 실제 지상 좌측 prepare_run/dash/recover_run과 공중 우측 prepare_idle/dash/recover_idle, 기존 조작·창 전환·종료 정리 통과. character-dash-ground-left-dash.png·character-dash-air-right-dash.png를 열어 새 자세와 전류 잔광의 방향/뒤쪽 합성을 확인했다.
+
+SpriteEffect는 기존 베기 단발 객체를 이름 변경해 재사용하며 별도 엔진/라이브러리를 추가하지 않았다. 단계 경계를 넘는 갱신에서도 효과는 이동 시작 위치에 생성하고 같은 갱신의 생성 이후 시간만 진행한다. 전용 복귀의 마지막 자세 이후 idle1/Run15로 이어가며 다른 상태/방향으로 바뀌면0부터 재생한다.
+
+Converge: FR-016/SC-009·T030~032를 코드/자산/검증과 대조해 남은 필수 항목 없음. docs/art-direction·architecture·game-design·systems/basic-gameplay·progress와 011 현재 문서를 동기화했다. 원본 자산/독립 idle·Run/루트 README/미병합 training-combat은 보존한다. 변경 Markdown 링크·git diff --check 확인. 푸시/PR은 수행하지 않는다.
+
+남은 한계: 원본 효과는 출발점 고정 직선166 경로이므로 공중 곡선/벽을 추종하지 않는다. 원본은 idle0/Run0 진입 위상만 제작 검토돼 임의 위상 진입과 독립 idle/Run 눈 색 연결은 최종 미술 품질 확인이 필요하다. 전체 엔진 회귀·사용자 직접 조작감은 미실시다.

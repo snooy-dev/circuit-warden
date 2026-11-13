@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import pico2d.pico2d as pico
 
 from game.scene import CharacterScene, DEFAULT_SIZE
-from game.effects import SwordTrail
+from game.effects import SpriteEffect
 from game.mode import GameplayMode
 from game_framework import GameObject
 
@@ -190,7 +190,7 @@ class CharacterSceneTests(unittest.TestCase):
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
         scene.handle_event(click)
         scene.update(.1)
-        first = next(obj for obj in scene.level.objects if isinstance(obj, SwordTrail))
+        first = next(obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
         self.assertEqual(first.player.elapsed, 0)
         self.assertEqual(first.player.clip.durations, (.05,) * 14)
         position = first.position
@@ -212,7 +212,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual((first.position, first.facing), (position, -1))
         scene.handle_event(click)
         scene.update(0)
-        trails = [obj for obj in scene.level.objects if isinstance(obj, SwordTrail)]
+        trails = [obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)]
         self.assertEqual(len(trails), 2)
         second = trails[-1]
         self.assertEqual(second.facing, 1)
