@@ -70,7 +70,7 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_LSHIFT))
         actor.update(.01)
         self.assertEqual(actor.state, 'idle')
-        actor.update(.3)
+        actor.update(.5)
         self.assertTrue(actor.grounded)
         self.assertFalse(actor.air_dash_used)
         actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
@@ -80,6 +80,26 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_RSHIFT))
         actor.update(.05)
         self.assertEqual(actor.state, 'dash')
+
+    def test_air_dash_holds_height_and_velocity_for_two_tenths(self):
+        for jump_age in (.1, .5):
+            actor = self.make_character()
+            actor.control(key(pico.SDLK_SPACE))
+            actor.update(jump_age)
+            actor.control(key(pico.SDLK_LSHIFT))
+            actor.update(.1)
+            height, velocity = actor.y, actor.velocity_y
+            for dt in (.07, .13):
+                actor.update(dt)
+                self.assertAlmostEqual(actor.y, height)
+                self.assertAlmostEqual(actor.velocity_y, velocity)
+            self.assertAlmostEqual(actor.x, DASH_DISTANCE)
+            actor.update(.167)
+            self.assertNotEqual(actor.y, height)
+            actor.update(1 - jump_age - .467 - .001)
+            self.assertFalse(actor.grounded)
+            actor.update(.001)
+            self.assertTrue(actor.grounded)
 
     def test_dash_phases_lock_inputs_and_select_recovery(self):
         actor = self.character

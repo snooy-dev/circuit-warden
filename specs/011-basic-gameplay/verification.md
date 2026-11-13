@@ -170,3 +170,13 @@ SpriteEffect는 기존 베기 단발 객체를 이름 변경해 재사용하며 
 Converge: FR-016/SC-009·T030~032를 코드/자산/검증과 대조해 남은 필수 항목 없음. docs/art-direction·architecture·game-design·systems/basic-gameplay·progress와 011 현재 문서를 동기화했다. 원본 자산/독립 idle·Run/루트 README/미병합 training-combat은 보존한다. 변경 Markdown 링크·git diff --check 확인. 푸시/PR은 수행하지 않는다.
 
 남은 한계: 원본 효과는 출발점 고정 직선166 경로이므로 공중 곡선/벽을 추종하지 않는다. 원본은 idle0/Run0 진입 위상만 제작 검토돼 임의 위상 진입과 독립 idle/Run 눈 색 연결은 최종 미술 품질 확인이 필요하다. 전체 엔진 회귀·사용자 직접 조작감은 미실시다.
+
+## 공중 대시 체공 보정 (2026-11-13)
+
+T033: 이동 단계에서만 수직 적분을 건너뛴다. 수평 거리·단계 시간·입력 잠금은 보존한다. 기존 브랜치 fetch/merge는 Already up to date.
+
+게임 Python으로 `-B -m unittest tests.unit.test_character.CharacterTests.test_air_dash_holds_height_and_velocity_for_two_tenths tests.unit.test_character.CharacterTests.test_air_dash_once_and_landing_restores_use tests.integration.test_dash_animation -q` 실행: 신규 상승/하강 체공·효과/단계3개는 통과, 기존 착지1개는 늘어난 체공을 반영하지 못해 실패했다. 해당 테스트의 대기만 .3→.5로 바꾸고 해당 메서드 재실행 통과. 최종 선택5개 충족. 신규 검사는 분할 이동200ms의 높이/속도 고정과 총999ms 미착지·1000ms 착지를 확인한다.
+
+`-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-hover`: 첫 실행은 변경한 대시 전의 양키 이동 검사에서 실패했다(원인 미확정). 코드 변경 없이 재실행하여 전체 시나리오 PASS/종료0. 공중 대시 캡처를 열어 높이를 유지한 모션과 잔상을 확인했다. 이 첫 실행 실패를 제품 결함으로 확정하거나 숨기지 않는다.
+
+현재 기본 조작·기술 구조·게임설계·진행 상태 및 011 문서를 갱신했다. 변경 링크/공백 확인. 전체 회귀·사용자 직접 체감 평가는 미실시이며 새로운 조작감의 채택 여부는 사용자 확인 대상이다.

@@ -13,3 +13,5 @@
 - Character 대시: dash_requested(미시작 요청), dash_remaining(현재 단계의 남은 초), dash_phase(준비/이동/복귀 클립 종류), dash_facing(복귀 연결 방향), air_dash_used(착지 전 공중 사용). dash 전이 idle/run→dash, end_dash 전이 dash→idle. 방향 고정·기존 중력 유지, 착지 시 air_dash_used 해제. 종료 갱신은 기존 입력/경계에 따라 idle/run을 선택하고 동일 Run 재생을 유지한다. 일반 이동·재생 시간을 중복 적용하지 않는다.
 
 - 대시 SpriteEffect: 이동 시작의 월드 x/y에 고정, 좌우 전용 dash_fx 클립·367ms·뒤쪽 레이어·독립 소멸. 베기에도 동일 클래스를 사용한다.
+
+- 공중 체공: dash_phase=dash인 동안 y/velocity_y를 그대로 보존한다. 다른 단계와 완료 후에는 기존 수직 적분으로 이어간다.

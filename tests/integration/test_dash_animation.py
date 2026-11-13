@@ -52,7 +52,7 @@ class DashAnimationTests(unittest.TestCase):
                 self.assertEqual(origin[0], 0)
                 self.assertAlmostEqual(origin[1], boundary_y)
                 self.assertLess(initial_y, origin[1])
-                self.assertLess(origin[1], actor.y)
+                self.assertAlmostEqual(origin[1], actor.y)
 
                 scene.update(.15)
                 self.assertIs(actor.player.clip, actor.clips['recover_idle_right'])

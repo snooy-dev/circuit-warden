@@ -246,7 +246,8 @@ class Character(GameObject):
         remaining = dt
         while self.state == 'dash':
             step = min(remaining, self.dash_remaining)
-            self._advance_vertical(step)
+            if self.dash_phase != 'dash':
+                self._advance_vertical(step)
             can_continue = False
             if self.view_bounds is not None:
                 left, _, right, _ = self.view_bounds
