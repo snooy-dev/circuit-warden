@@ -268,7 +268,7 @@ class Character(GameObject):
                 return
             if self.dash_phase.startswith('prepare_'):
                 self._play_dash_phase('dash')
-                if self.level is not None:
+                if self.level is not None and can_continue:
                     direction = 'right' if self.facing > 0 else 'left'
                     # shortcut: 고정 직선 잔상, 공중 궤적/벽 추종이 필요하면 효과 제작 방식을 바꾼다.
                     effect = self.level.spawn(SpriteEffect(self.clips[f'dash_fx_{direction}'],

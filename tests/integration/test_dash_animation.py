@@ -108,12 +108,34 @@ class DashAnimationTests(unittest.TestCase):
         self.assertGreater(actor.x, start_x - 166)
         self.assertTrue(actor.grounded)
 
-    def test_wall_uses_idle_recovery_and_scene_exit_releases_live_effect(self):
+    def test_blocked_dash_does_not_spawn_effect_but_inward_dash_does(self):
+        for edge_direction in (-1, 1):
+            for inward in (False, True):
+                scene = self.enter_scene()
+                actor = scene.character
+                scene.update(0)
+                left, _, right, _ = actor.view_bounds
+                actor.x = (right - actor._right_margin if edge_direction > 0
+                           else left + actor._left_margin)
+                actor.facing = -edge_direction if inward else edge_direction
+                direction = 'right' if actor.facing > 0 else 'left'
+                start = actor.x
+                self.key(scene, pico.SDLK_LSHIFT)
+                scene.update(.1)
+                self.assertEqual(len(self.effects(scene, direction)), int(inward))
+                scene.update(.2)
+                if not inward:
+                    self.assertEqual(actor.x, start)
+                    self.assertEqual(actor.dash_phase, 'recover_idle')
+                    self.assertEqual(self.effects(scene, direction), [])
+
+    def test_near_wall_uses_idle_recovery_and_scene_exit_releases_live_effect(self):
         scene = self.enter_scene()
         actor = scene.character
         self.key(scene, pico.SDLK_d)
         scene.update(3)
         edge = actor.x
+        actor.x -= 1
         self.key(scene, pico.SDLK_LSHIFT)
         scene.update(.3)
         self.assertIs(actor.player.clip, actor.clips['recover_idle_right'])
