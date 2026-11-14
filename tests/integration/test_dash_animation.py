@@ -32,7 +32,7 @@ class DashAnimationTests(unittest.TestCase):
                 scene = self.enter_scene()
                 actor = scene.character
                 self.key(scene, pico.SDLK_SPACE)
-                scene.update(.2)  # Finish the ground startup before entering the air dash.
+                scene.update(.12)  # Finish the ground startup before entering the air dash.
                 scene.update(.05)
                 initial_y = actor.y
                 boundary_y = initial_y + actor.velocity_y * .1 - .5 * GRAVITY * .1 ** 2
@@ -71,7 +71,7 @@ class DashAnimationTests(unittest.TestCase):
                 self.assertEqual(actor.jump_phase, 'rise')
                 self.assertAlmostEqual(actor.x, 166)
 
-    def test_left_dash_draws_baked_direction_and_ignores_actions_through_recovery(self):
+    def test_left_dash_draws_baked_direction_and_early_recovery_actions_expire(self):
         scene = self.enter_scene()
         actor = scene.character
         self.key(scene, pico.SDLK_a)

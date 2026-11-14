@@ -99,7 +99,6 @@ class CharacterSmoke(CharacterScene):
         assert trail.position[0] == stopped_x and trail.facing == -1
         self.capture('attack-left')
         push_key(pico.SDLK_d)
-        push_click()
         yield
 
         assert actor.state == 'run' and actor.x > stopped_x and actor.facing == 1
@@ -113,7 +112,6 @@ class CharacterSmoke(CharacterScene):
         assert trail.level is None
         self.capture('attack-right')
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
-        push_click()
         yield
 
         assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1

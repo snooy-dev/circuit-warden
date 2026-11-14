@@ -23,6 +23,11 @@ GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
+INPUT_BUFFER_SECONDS = .1
+# 10ms 프레임 기준: 착지 6~8번의 압축 자세 → 시작 4번 자세.
+LAND_CROUCH_START = .06
+LAND_CROUCH_END = .09
+JUMP_CROUCH_START = .04
 DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
@@ -97,6 +102,8 @@ class Character(GameObject):
         self.velocity_y = 0.0
         self.facing = 1
         self.pressed = set()
+        self.buffered_action = None
+        self.buffer_remaining = 0.0
         self.attack_requested = False
         self.jump_requested = False
         self.jump_phase = None
@@ -132,26 +139,66 @@ class Character(GameObject):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()
+            self.buffered_action = None
             self.attack_requested = False
             self.jump_requested = False
             self.dash_requested = False
         elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE}:
-            if (event.key == pico.SDLK_SPACE and event.key not in self.pressed
-                    and self.grounded and self.state in ('idle', 'run')):
-                self.jump_requested = True
-            if (event.key in DASH_KEYS and not self.pressed & DASH_KEYS
-                    and (self.state in ('idle', 'run') or
-                         self.state == 'jump' and self.jump_phase in ('rise', 'fall'))
-                    and (self.grounded or not self.air_dash_used)):
-                self.dash_requested = True
+            if event.key == pico.SDLK_SPACE and event.key not in self.pressed:
+                self._queue_action('jump')
+            if event.key in DASH_KEYS and not self.pressed & DASH_KEYS:
+                self._queue_action('dash')
             self.pressed.add(event.key)
         elif event.type == pico.SDL_KEYUP:
             self.pressed.discard(event.key)
-        elif (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT
-              and self.state in ('idle', 'run') and self.grounded):
-            self.attack_requested = True
+        elif event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT:
+            self._queue_action('attack')
+
+    def _queue_action(self, action):
+        self.buffered_action = action
+        self.buffer_remaining = INPUT_BUFFER_SECONDS
+
+    def _link_landing_jump(self):
+        if (self.buffered_action == 'jump' and self.state == 'jump'
+                and self.jump_phase == 'land' and self.grounded and self.view_bounds is not None
+                and LAND_CROUCH_START - 1e-9 <= self.jump_elapsed < LAND_CROUCH_END - 1e-9):
+            self.buffered_action = None
+            self.jump_phase, self.jump_elapsed = 'start', JUMP_CROUCH_START
+            return True
+        return False
+
+    def _consume_action(self):
+        if self._link_landing_jump():
+            return True
+        action = self.buffered_action
+        free = self.state in ('idle', 'run')
+        allowed = free and self.grounded
+        if action == 'dash':
+            allowed = (free or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
+                self.grounded or not self.air_dash_used)
+        if action is None or not allowed or self.view_bounds is None:
+            return False
+        setattr(self, f'{action}_requested', True)
+        self.buffered_action = None
+        return True
 
     def update(self, dt):
+        if self.view_bounds is None:
+            self.buffered_action = None
+        self._consume_action()
+        # 만료 시점을 넘는 갱신도 오래된 입력을 실행하지 않도록 나눈다.
+        step = min(dt, self.buffer_remaining) if self.buffered_action else dt
+        self._update(step)
+        if self.buffered_action:
+            self.buffer_remaining -= step
+            if self._consume_action():
+                self._update(0)
+            elif self.buffer_remaining <= 1e-9:
+                self.buffered_action = None
+        if dt > step:
+            self._update(dt - step)
+
+    def _update(self, dt):
         if (self.dash_requested and (self.state in ('idle', 'run') or
                 self.state == 'jump' and self.jump_phase in ('rise', 'fall'))
                 and (self.grounded or not self.air_dash_used) and self.view_bounds is not None):
@@ -251,12 +298,17 @@ class Character(GameObject):
             if self.jump_phase in ('start', 'land'):
                 direction = 'right' if self.facing > 0 else 'left'
                 duration = sum(self.clips[f'jump_{self.jump_phase}_{direction}'].durations)
+                if (self.jump_phase == 'land' and self.buffered_action == 'jump'
+                        and self.view_bounds is not None and self.jump_elapsed < LAND_CROUCH_START):
+                    duration = LAND_CROUCH_START
                 step = min(remaining, max(0, duration - self.jump_elapsed))
                 self.jump_elapsed += step
                 remaining = max(0.0, remaining - step)
                 if duration - self.jump_elapsed > 1e-9:
                     break
                 if self.jump_phase == 'land':
+                    if self._link_landing_jump():
+                        continue
                     self.jump_phase = None
                     self._machine.end_jump()
                     break

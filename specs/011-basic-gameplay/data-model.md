@@ -4,7 +4,7 @@
 - GameplayMode: level에 종속, on_event는 player.control로 단일 전달.
 - Character: x/facing/pressed/view_bounds, attack_requested, Machine(state=idle|run|attack|dash|jump), SpritePlayer. 이동·공격 상태는 객체별이다.
 - Clip: 기존 SpriteClip. loop는 정확한 bool, durations는 기존 양수 유한 초 검증, 공격 7개 프레임과 root 보존.
-- 전이: move idle→run, stop run→idle, attack idle/run→attack, finish attack→idle. 완료 시 현재 입력/경계로 run 선택 가능. 공격 중 입력은 키 상태만 바꾸고 요청은 무시한다.
+- 전이: move idle→run, stop run→idle, attack idle/run→attack, finish attack→idle. 완료 시 현재 입력/경계로 run 선택 가능. 공격 중 새 행동은 buffered_action에 마지막1개만 저장하고 buffer_remaining100ms 안에 가능하면 소비한다. 포커스 상실·만료·무효 출력에서 지운다.
 
 - SpriteEffect: 공격 시점 position/facing/scale 불변, 독립 SpritePlayer(sword_trail), 700ms 종료 시 level에서 제거. 여러 공격의 효과가 공존할 수 있다.
 
@@ -15,3 +15,5 @@
 - 대시 SpriteEffect: 이동 시작의 월드 x/y에 고정, 좌우 전용 dash_fx 클립·367ms·뒤쪽 레이어·독립 소멸. 베기에도 동일 클래스를 사용한다.
 
 - 공중 체공: dash_phase=dash인 동안 y/velocity_y를 그대로 보존한다. 다른 단계와 완료 후에는 기존 수직 적분으로 이어간다.
+
+- 착지 연결: land60~90ms에서 유효 buffered_action=jump면 start/jump_elapsed=.04로 전환하고 예약을 지운다. airborne 속도는 남은 시작80ms 종료 때 설정한다.

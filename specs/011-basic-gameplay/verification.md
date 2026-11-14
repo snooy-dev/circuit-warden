@@ -203,3 +203,28 @@ FR-017/SC-010·T035~037. 사용자 요청으로 basic-gameplay를 재사용하�
 - `-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/jump-motion`: 종료0/PASS. 실제 SDL 시작·상승·낙하·착지와 공중 방향 전환·대시·공격·창 전환·정리 통과. character-jump-rise.png·character-jump-fall.png·character-jump-land.png를 열어 전용 자세·방향·바닥 정렬을 관찰했다.
 
 Converge: 요구/작업/자산/코드/검증 대응, 추가 필수 작업 없음. docs의 현재 점프 규칙·구조·아트·게임설계·진행 상태와 011 문서를 갱신했다. 루트 README/원본/독립 idle·Run/사용자 tmp와 PPTX 잠금 파일은 편집하지 않았다. 변경 링크/공백 확인. 전체 엔진 회귀·사용자 직접 조작감·최종 연결 미술 품질은 미실시다.
+
+## 입력 반응성 시험 (2026-11-14)
+
+사용자 요청으로 준비120ms·착지180ms, 마지막 행동100ms 선입력을 적용했다. 기존 branch 작업을 이어가며 사용자 수정 PNG8개와 tmp를 보존했다. 커밋/스테이징하지 않았다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character tests.integration.test_jump_animation tests.integration.test_dash_animation`: 29개 통과. 시간 기대값/동시 입력의 마지막 행동 정책을 갱신했다.
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_input_buffer -q`: 5개 통과. 실행1회/마지막 행동/만료 경계를 넘는 긴 갱신/공중 공격 금지/착지 후 공격 예약/포커스 상실/공중 대시1회. 최초 실행은 fixture 시간이 바뀌기 전이라3개 실패했고 fixture .12/.18 동기화 후 모두 통과했다.
+- `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/input-buffer`: PASS/종료0. 최초 시도는 출력 디렉터리 부재로 실행 전 거부되어 폴더 생성 후 재실행했다. 기존 추가 클릭 무시 시나리오는 새 정책과 달라 제거하고 선입력은 위 표적 검사로 확인했다. 실제 SDL 조작/점프 단계/대시/창 전환/정리 통과, 시작 캡처를 열어 표시 확인.
+
+Converge: FR-018/T038~039 대응, 현재 규칙·구조·진행 상태·data-model·quickstart 갱신. 공백 확인. 전체 엔진 회귀는 범위 밖이라 미실시. 사람이 느끼는 모션 속도·선입력 조작감은 미확인이다. 선입력 소비는 update 경계이므로 실제 잠금 해제보다 최대 한 프레임 늦을 수 있다.
+
+## 착지 웅크림 연속 점프 (2026-11-14)
+
+실제 게임 start/land 오른쪽 전 프레임 비교에서 land6~8/start4를 선택했다. PNG/설정 시간은 추가 수정하지 않았다. 유효한 점프 예약에만 착지 회복 생략을 적용한다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.integration.test_jump_animation tests.unit.test_input_buffer -q`: 11개 통과. 좌우 연결의 실제4번 프레임·좌표/방향 유지·80ms 후 이륙·높이166·키 유지 반복 방지·긴/분할 갱신 동일 결과·늦은 입력의 일반 준비·예약 만료/공중 제한을 검증했다.
+- `.venv/Scripts/python.exe -B C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/input-buffer/check_landing_link.py`: 실제 SDL 연속 점프 PASS/종료0. 착지→시작 웅크림→두 번째 이륙→일반 착지/idle 완료 확인. 같은 폴더의 character-land-before-link.png와 character-linked-start-crouch.png를 캡처했다.
+
+Converge: FR-019/T040 구현·검사·현재 규칙/구조/진행 상태/quickstart/data-model 대응 완료. 공백 확인. 커밋·스테이징하지 않았다. 전체 회귀와 사람의 조작감/연결 미술 평가는 미실시다. 웅크림 이후 입력은 자세 역행을 피하기 위해 일반 점프 경로를 사용한다.
+
+## 커밋·PR 준비 (2026-11-15)
+
+사용자 후속 지시로 커밋·main 대상 PR을 진행한다. fetch origin 후 HEAD..origin/main은 비어 있고 merge --no-commit origin/main은 Already up to date였다. 기존 PR4는 병합되어 새 PR로 준비한다. 별도 미커밋 점프 PNG8개와 tmp는 제외한다.
+
+PR에 실제 포함되는 HEAD의 PNG를 git show로 임시 폴더에 추출하고 현재 animations.json을 복사한 뒤 game.scene.ASSETS를 그 경로로 대체해 게임 Python unittest를 실행했다. tests.unit.test_character, tests.integration.test_jump_animation, tests.integration.test_dash_animation, tests.unit.test_input_buffer 총36개 통과. 원본 작업 폴더 PNG는 쓰지 않았다. 기존 SDL 검사 결과는 보존하며 이번에는 전체 창 검사를 반복하지 않았다. diff 공백 확인. 전체 엔진 회귀·사람의 조작감 평가는 범위 밖이다.
