@@ -290,7 +290,7 @@ SpriteEffect(GameObject)은 공격 시작 위치·방향·배율을 보관하고
 
 ## Warden 점프
 
-Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. idle/run/attack Machine은 기존 애니메이션 상태를 맡으며 점프를 별도 애니메이션 상태로 늘리지 않는다. 공중에서도 수평 이동 여부로 idle/Run을 선택하고 실제 y로 그린다.
+Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. Machine의 jump 상태와 jump_phase(start/rise/fall/land)로 전용 모션을 선택한다. grounded는 물리적 접지를 나타내며 시작/착지 잠금 중에도 true이므로 행동 허용은 state/phase까지 확인한다.
 
 점프 높이는 BODY_HEIGHT×2이다. 현재 측면 idle 망토 바람 v2의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=166 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
 
@@ -311,3 +311,7 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다. SpriteEffect는 기존 베기 효과 구현을 이름 변경해 함께 재사용한다.
 
 로더는 선택적 frameIndices를 검증하며 대시 시트의 중복셀6을 건너뛴11프레임과 셀5의34ms를 보존한다. 프레임 색/알파·시트 바이트는 변경하지 않는다. 원본의 연결 기준은 idle0/Run0 진입, idle0/Run14 복귀라 해당 복귀 후1/15번부터 재생한다. 임의 진입 위상과 독립 idle/Run의 눈 색 차이는 남아 있는 아트 연결 한계다.
+
+### 전용 점프 모션 연결
+
+시작200ms 후 이륙하고 착지300ms 동안 잠근다. _update_jump는 시작/정점/바닥/착지완료 경계로 dt를 나누고 공중에 해당하는 시간만 수평 이동에 반영한다. 원본 상승300ms는 물리 상승400ms로 시간 매핑하고 낙하600ms는 반복한다. 재생 시각은 수직 속도에서 산출해 방향전환/대시 체공·복귀에도 유지한다. 대시중 착지는 land로 표시해 두고 대시 종료 후 착지 모션을 진행하며 갱신의 남은 시간도 소비한다. 좌우 전용 클립을 사용해 추가 수평 반전하지 않는다. 엔진·자산 원본·독립 idle/Run은 그대로다.

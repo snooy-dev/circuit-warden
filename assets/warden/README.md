@@ -21,6 +21,14 @@
 | recover_run_right.png | art/warden/provisional-approved/dash-eye-cape-v1/recover_run_right/sheet.png | ed84e01c515aa0e9bae1c5a366f5ca3778a5454c95ef12490c26c3e78773e7df |
 | dash_fx_left.png | art/warden/provisional-approved/dash-fx-v1/fx-left.png | 345f616ad5ec2ea87ed213e8af12fc1f09826e2e681a4a4e061a3658797e98c4 |
 | dash_fx_right.png | art/warden/provisional-approved/dash-fx-v1/fx-right.png | 32f69612131cd7a13f8a2d117693972dfb69ad08bd7345536b88ef144724fc89 |
+| jump_start_left.png | art/warden/provisional-approved/jump-v13-hibit-v2/start_left/sheet.png | 5362c314b8aac9eb5335fca316d40dd17ee5e51b805a314974cbc5a5d9942641 |
+| jump_start_right.png | art/warden/provisional-approved/jump-v13-hibit-v2/start_right/sheet.png | c03721fd24ab68c2e6e8947dc3236630ded081697e43c6870e601e38a0f8282e |
+| jump_rise_left.png | art/warden/provisional-approved/jump-v13-hibit-v2/rise_left/sheet.png | d218895475f8aebc4cd22db6f51a0d0bc8ad009c4c15c2a29f279ecacfd47f69 |
+| jump_rise_right.png | art/warden/provisional-approved/jump-v13-hibit-v2/rise_right/sheet.png | 04a4ef139f0efdd3cb584d765cf11c37e4eedcc0cc0c54d1c1f4a93313fdbc60 |
+| jump_fall_left.png | art/warden/provisional-approved/jump-v13-hibit-v2/fall_left/sheet.png | ec97e7e81b4e8593bd68fe85f4ea0f057e2354821651f5c2fa37dd69dda0f027 |
+| jump_fall_right.png | art/warden/provisional-approved/jump-v13-hibit-v2/fall_right/sheet.png | 914f60b2995b10e1943e20dfb13a284562a4cada1b817b12cee408840bb2bf0d |
+| jump_land_left.png | art/warden/provisional-approved/jump-v13-hibit-v2/land_left/sheet.png | 856193b396eca31e6e3dc12af755d9fa332198cb8c3dc44af24368b714b2a570 |
+| jump_land_right.png | art/warden/provisional-approved/jump-v13-hibit-v2/land_right/sheet.png | 369ef148eb7d7435d0c163476d9c41db72c19c979fd99c13998ca79fce159141 |
 
 프레임은 좌상단부터 행 우선이다. animations.json의 기준점은 셀 좌상단 픽셀, 시간은 밀리초다. 제작용 이벤트·previewSpeed는 게임 규칙으로 가져오지 않았다.
 

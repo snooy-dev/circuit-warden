@@ -44,6 +44,7 @@ class CharacterSmoke(CharacterScene):
         self.passed = False
         self.dash_captures = set()
         self.previous_dash_clip = None
+        self.jump_captures = set()
 
     def enter(self, engine):
         super().enter(engine)
@@ -131,13 +132,15 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert not actor.grounded and actor.y > GROUND_Y and actor.x == stopped_x
-        assert actor.player.clip is idle
+        assert actor.player.clip is actor.clips['jump_rise_left']
         self.capture('jump-idle')
         push_click()
         yield
 
-        assert not actor.grounded and actor.state == 'idle'
-        self.capture('jump-idle-descending')
+        assert not actor.grounded and actor.state == 'jump'
+        self.capture('jump-idle-rising')
+        yield
+        yield
         yield
         yield
 
@@ -147,16 +150,18 @@ class CharacterSmoke(CharacterScene):
         push_key(pico.SDLK_SPACE)
         yield
 
-        assert not actor.grounded and actor.x > stopped_x and actor.player.clip is right
+        assert not actor.grounded and actor.x > stopped_x and actor.player.clip is actor.clips['jump_rise_right']
         self.capture('jump-run-right')
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_key(pico.SDLK_a)
         yield
 
-        assert not actor.grounded and actor.player.clip is left
+        assert not actor.grounded and actor.player.clip is actor.clips['jump_rise_left']
         self.capture('jump-run-left')
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield
+        yield
         yield
         yield
 
@@ -216,6 +221,7 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert not self.engine.fullscreen and self.engine.window_size == (1024, 720)
+        assert {'start', 'rise', 'fall', 'land'} <= self.jump_captures
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield
@@ -226,6 +232,11 @@ class CharacterSmoke(CharacterScene):
 
     def draw(self):
         super().draw()
+        if self.character.state == 'jump':
+            phase = self.character.jump_phase
+            if phase not in self.jump_captures and self.character.player.elapsed >= .04:
+                self.capture('jump-' + phase)
+                self.jump_captures.add(phase)
         if self.previous_dash_clip is not None and self.character.state != 'dash':
             if pico.SDLK_a in self.character.pressed:
                 assert self.character.player.clip is self.character.clips['run_left']

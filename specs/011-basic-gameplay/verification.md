@@ -188,3 +188,18 @@ T033: 이동 단계에서만 수직 적분을 건너뛴다. 수평 거리·단�
 `.venv/Scripts/python.exe -B -m unittest tests.integration.test_dash_animation -v`: 4개 모두 통과. 실제 자산/소프트웨어 SDL 장면에서 좌우 바깥 방향 무생성, 안쪽 방향 생성, 경계1단위 전 생성과 도달 후 idle복귀, 공중 동기화·367ms 소멸·장면 정리를 확인했다. 모션·잠금·체공·거리 수치는 변경하지 않았다.
 
 기본 조작·progress·011 명세/계획/작업을 현재 규칙에 맞췄다. 링크/공백 확인. 이번에는 실제 창·전체 회귀를 재실행하지 않았으며 생성 유무는 장면 통합 검사로 직접 검증했다. 향후 장애물 충돌은 현재 화면 경계만 존재하는 구현 범위 밖이다.
+
+## 전용 점프 모션 통합 (2026-11-14)
+
+FR-017/SC-010·T035~037. 사용자 요청으로 basic-gameplay를 재사용하고 fetch/merge 결과 Already up to date. 원본 jump-v13-hibit-v2의8개 시트/168프레임 바이트·승인 SHA-256·RGBA·행우선 순서를 대조했다. 임베디드 review-only 표기는 제작 당시 메타데이터이며 최상위 approval.json과 사용자 게임 연결 요청을 적용했다. 개별 해시는 assets/warden/README.md에 보관한다.
+
+사용자 답변에 따라 시작200ms 후 이륙·착지300ms를 잠근다. 기존 높이166·상승400ms/하강400ms는 유지하고 상승300ms 클립의 재생 시간만 매핑한다. 공중 방향 변경·대시 종료 시 수직 속도 기반으로 모션 위상을 유지한다. 대시 중 착지한 경우 마지막 대시 갱신에서 남은 시간부터 착지 모션을 진행하고 방향 잠금을 유지한다.
+
+게임 .venv Python의 실제 검사:
+- `-B -m unittest tests.unit.test_character tests.integration.test_dash_animation`: 25개 통과. 새 시작/착지 시점과 전용 클립에 맞춘 기존 점프/대시·공격/이동 회귀.
+- `-B -m unittest tests.integration.test_jump_animation -v`: 최초 imported TestCase 때문에 기존장면9개와 신규3개가 함께 실행돼12개 통과했다. 수집을 module import로 정리했고 대시중 착지 사례를 추가했다.
+- `-B -m unittest tests.integration.test_jump_animation tests.integration.test_dash_animation -q`: 8개 통과. 실제 점프 자산4종의 좌우프레임/시간/기준점, 시작/공중/착지 잠금, 단일1.3초와13분할의 동일 이동144, 공중대시복귀·포커스·대시중 착지와 효과 수명 확인.
+- `-B -m unittest tests.integration.test_jump_animation.JumpAnimationTests.test_landing_during_dash_waits_for_dash_and_keeps_landing_direction -q`: 갱신 남은33ms를 착지에 반영하는 경계 기대값을 강화해 재실행 통과. 위 결과의 중복 실행은 고유 검사 수에 합산하지 않는다.
+- `-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/jump-motion`: 종료0/PASS. 실제 SDL 시작·상승·낙하·착지와 공중 방향 전환·대시·공격·창 전환·정리 통과. character-jump-rise.png·character-jump-fall.png·character-jump-land.png를 열어 전용 자세·방향·바닥 정렬을 관찰했다.
+
+Converge: 요구/작업/자산/코드/검증 대응, 추가 필수 작업 없음. docs의 현재 점프 규칙·구조·아트·게임설계·진행 상태와 011 문서를 갱신했다. 루트 README/원본/독립 idle·Run/사용자 tmp와 PPTX 잠금 파일은 편집하지 않았다. 변경 링크/공백 확인. 전체 엔진 회귀·사용자 직접 조작감·최종 연결 미술 품질은 미실시다.

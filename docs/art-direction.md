@@ -30,7 +30,7 @@
 
 | 대상 | 현재 상태·결과 | 유지할 기준 |
 |---|---|---|
-| 점프 | [v13 hibit v2](../art/warden/provisional-approved/jump-v13-hibit-v2/review.html) 잠정 승인 | 2026-11-14 사용자 결정. 128×104·공통16색·좌우168프레임, 신체는 동작별6포즈. 시작200ms·상승300ms·낙하600ms 반복·착지300ms, 전류 주기600ms. Start→Rise·Rise→Fall 출력 실루엣 차이0픽셀과 연속 전류를 유지한다. 전체 연결·좌우·프레임 검토를 포함해 별도 보관했으며 원본 복사 해시가 일치한다. 게임 통합은 미승인·미실행이고 기존 후보와 폐기 v1~v12는 보존한다. |
+| 점프 | [v13 hibit v2](../art/warden/provisional-approved/jump-v13-hibit-v2/review.html) 잠정 승인 | 2026-11-14 사용자 결정. 128×104·공통16색·좌우168프레임, 신체는 동작별6포즈. 시작200ms·상승300ms·낙하600ms 반복·착지300ms, 전류 주기600ms. Start→Rise·Rise→Fall 출력 실루엣 차이0픽셀과 연속 전류를 유지한다. 전체 연결·좌우·프레임 검토를 포함해 별도 보관했으며 원본 복사 해시가 일치한다. 후속 사용자 요청으로 게임에 연결했다. 시작200ms·착지300ms를 행동 잠금에 포함하고 상승 원본300ms는 기존 정점400ms에 맞춰 재생한다. 기존 후보와 폐기 v1~v12는 보존한다. |
 | idle | [비무장 v7](../art/warden/provisional-approved/idle-unarmed-v7/unarmed/preview.gif) 잠정 승인 | idle 중 비발검, hibit·16색, 128×104, 48프레임·2초 |
 | 측면 idle | [망토 바람 v2](../art/warden/provisional-approved/idle-side-wind-v2/review.html) 잠정 승인 | 2026-11-13 사용자 결정. Run과 동일한 측면 원화·비무장·hibit 16색, 128×104, 방향별 48프레임·2초. 망토 끝으로 약한 바람 물결을 추가했다. 96개 프레임·시트를 원본과 해시가 같게 보관했다. 기존 idle v7의 승인·원본은 보존하고 후속 사용자 요청으로 게임 idle을 이 시트로 교체했다. 오른쪽 시트와 기존 런타임 반전을 사용한다. 코드 변형이며 천의 접힘·충돌은 미계산 |
 | 걷기 | [좌우 v4](../art/warden/provisional-approved/walk-v4/both.gif) 잠정 승인 | 짧은 다리·둥근 골반, 128×104, 방향별 24프레임·1초 |

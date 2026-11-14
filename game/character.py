@@ -1,6 +1,7 @@
 """Warden의 이동·점프·대시·단발 공격과 스프라이트 상태."""
 
 import json
+from math import sqrt
 from pathlib import Path
 
 import pico2d.pico2d as pico
@@ -63,13 +64,15 @@ def load_clips(images):
     clips = {}
     names = ('idle', 'run_left', 'run_right', 'attack', 'sword_trail') + tuple(
         f'{phase}_{direction}' for phase in (
-            'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx')
+            'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx',
+            'jump_start', 'jump_rise', 'jump_fall', 'jump_land')
         for direction in ('left', 'right'))
     for name in names:
         try:
             clips[name] = _load_clip(images, animations[name])
-            if clips[name].loop != (name in ('idle', 'run_left', 'run_right')):
-                raise ValueError('loop는 idle/Run에서 true, attack/sword_trail에서 false여야 합니다.')
+            if clips[name].loop != (name in ('idle', 'run_left', 'run_right',
+                                            'jump_fall_left', 'jump_fall_right')):
+                raise ValueError('loop는 idle/Run/점프 낙하에서만 true여야 합니다.')
         except (KeyError, TypeError, ValueError, OverflowError) as error:
             raise ValueError(f'애니메이션 설정 오류: {path} ({name}): {error}') from error
     return clips
@@ -96,15 +99,18 @@ class Character(GameObject):
         self.pressed = set()
         self.attack_requested = False
         self.jump_requested = False
+        self.jump_phase = None
+        self.jump_elapsed = 0.0
         self.dash_requested = False
         self.dash_remaining = 0.0
         self.dash_phase = None
         self.air_dash_used = False
         self._machine = Machine(
-            states=('idle', 'run', 'attack', 'dash'), initial='idle', auto_transitions=False,
+            states=('idle', 'run', 'attack', 'dash', 'jump'), initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
                          ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle'],
-                         ['dash', ['idle', 'run'], 'dash'], ['end_dash', 'dash', 'idle']],
+                         ['dash', ['idle', 'run', 'jump'], 'dash'], ['end_dash', 'dash', 'idle'],
+                         ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle']],
         )
         self.view_bounds = None
         self._idle_margins = _margins(clips['idle'])
@@ -131,32 +137,35 @@ class Character(GameObject):
             self.dash_requested = False
         elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE}:
             if (event.key == pico.SDLK_SPACE and event.key not in self.pressed
-                    and self.grounded and self.state not in ('attack', 'dash')):
+                    and self.grounded and self.state in ('idle', 'run')):
                 self.jump_requested = True
             if (event.key in DASH_KEYS and not self.pressed & DASH_KEYS
-                    and self.state in ('idle', 'run')
+                    and (self.state in ('idle', 'run') or
+                         self.state == 'jump' and self.jump_phase in ('rise', 'fall'))
                     and (self.grounded or not self.air_dash_used)):
                 self.dash_requested = True
             self.pressed.add(event.key)
         elif event.type == pico.SDL_KEYUP:
             self.pressed.discard(event.key)
         elif (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT
-              and self.state not in ('attack', 'dash') and self.grounded):
+              and self.state in ('idle', 'run') and self.grounded):
             self.attack_requested = True
 
     def update(self, dt):
-        if (self.dash_requested and self.state in ('idle', 'run')
+        if (self.dash_requested and (self.state in ('idle', 'run') or
+                self.state == 'jump' and self.jump_phase in ('rise', 'fall'))
                 and (self.grounded or not self.air_dash_used) and self.view_bounds is not None):
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
             self._play_dash_phase(entry)
             self.air_dash_used = not self.grounded
         self.dash_requested = False
-        if (self.jump_requested and self.grounded and self.state not in ('attack', 'dash')
+        if (self.jump_requested and self.grounded and self.state in ('idle', 'run')
                 and self.view_bounds is not None):
-            self.velocity_y = JUMP_SPEED
+            self._machine.jump()
+            self.jump_phase, self.jump_elapsed = 'start', 0.0
         self.jump_requested = False
-        started = (self.attack_requested and self.grounded and self.state != 'dash'
+        started = (self.attack_requested and self.grounded and self.state in ('idle', 'run')
                    and self.view_bounds is not None)
         self.attack_requested = False
         if started:
@@ -169,10 +178,16 @@ class Character(GameObject):
                 self._machine.finish()
 
         finished_dash = self.state == 'dash'
+        move_dt = dt
         if finished_dash:
-            self._update_dash(dt)
+            remaining = self._update_dash(dt)
             if self.state == 'dash':
                 return
+            if self.jump_phase is not None:
+                self._machine.jump()
+                self._update_jump(remaining)
+        elif self.state == 'jump':
+            move_dt = self._update_jump(dt)
         else:
             self._advance_vertical(dt)
 
@@ -185,9 +200,10 @@ class Character(GameObject):
             if low <= high:
                 start = min(max(self.x, low), high)
                 direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
-                if self.state == 'attack':
+                if (self.state == 'attack' or self.jump_phase in ('start', 'land')
+                        and (move_dt == 0 or finished_dash)):
                     direction = 0
-                destination = min(max(start + direction * SPEED * dt, low), high)
+                destination = min(max(start + direction * SPEED * move_dt, low), high)
                 # 공격/대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
                 self.x = start if attacking or finished_dash else destination
                 if destination != start:
@@ -206,6 +222,9 @@ class Character(GameObject):
             if started and self.level is not None:
                 self.level.spawn(SpriteEffect(self.clips['sword_trail'], (self.x, GROUND_Y),
                                            self.facing, DISPLAY_SCALE))
+            return
+        if self.state == 'jump':
+            self._show_jump()
             return
         if clip is self.clips['idle']:
             if self.state == 'run':
@@ -226,6 +245,48 @@ class Character(GameObject):
                       and clip is not self.clips['idle']):
                     self.player.update(sum(clip.durations[:15]))
 
+    def _update_jump(self, dt):
+        remaining, airborne_time = dt, 0.0
+        while self.state == 'jump':
+            if self.jump_phase in ('start', 'land'):
+                direction = 'right' if self.facing > 0 else 'left'
+                duration = sum(self.clips[f'jump_{self.jump_phase}_{direction}'].durations)
+                step = min(remaining, max(0, duration - self.jump_elapsed))
+                self.jump_elapsed += step
+                remaining = max(0.0, remaining - step)
+                if duration - self.jump_elapsed > 1e-9:
+                    break
+                if self.jump_phase == 'land':
+                    self.jump_phase = None
+                    self._machine.end_jump()
+                    break
+                self.jump_phase, self.jump_elapsed = 'rise', 0.0
+                self.velocity_y = JUMP_SPEED
+            else:
+                if self.velocity_y > 1e-9:
+                    boundary = self.velocity_y / GRAVITY
+                else:
+                    boundary = (self.velocity_y + sqrt(self.velocity_y ** 2 +
+                                2 * GRAVITY * max(0, self.y - GROUND_Y))) / GRAVITY
+                step = min(remaining, max(0.0, boundary))
+                self._advance_vertical(step)
+                airborne_time += step
+                remaining = max(0.0, remaining - step)
+            if remaining <= 1e-9:
+                break
+        return airborne_time
+
+    def _show_jump(self):
+        direction = 'right' if self.facing > 0 else 'left'
+        clip = self.clips[f'jump_{self.jump_phase}_{direction}']
+        elapsed = self.jump_elapsed
+        if self.jump_phase == 'rise':
+            elapsed = (JUMP_SPEED - self.velocity_y) / GRAVITY / JUMP_APEX_SECONDS * sum(clip.durations)
+        elif self.jump_phase == 'fall':
+            elapsed = max(0.0, -self.velocity_y / GRAVITY)
+        self.player.play(clip, restart=True)
+        self.player.update(elapsed)
+
     def _advance_vertical(self, dt):
         if not self.grounded:
             self.y += self.velocity_y * dt - .5 * GRAVITY * dt ** 2
@@ -233,6 +294,10 @@ class Character(GameObject):
             if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
                 self.y, self.velocity_y = float(GROUND_Y), 0.0
                 self.air_dash_used = False
+                if self.jump_phase in ('rise', 'fall'):
+                    self.jump_phase, self.jump_elapsed = 'land', 0.0
+            elif self.jump_phase in ('rise', 'fall'):
+                self.jump_phase = 'rise' if self.velocity_y > 1e-9 else 'fall'
 
     def _play_dash_phase(self, phase):
         self.dash_phase = phase
@@ -281,17 +346,18 @@ class Character(GameObject):
                 self.dash_remaining = 0.0
                 self._machine.end_dash()
                 # 수평 일반 이동은 다음 갱신부터지만 중력 시간은 버리지 않는다.
-                self._advance_vertical(remaining)
+                if self.jump_phase is None:
+                    self._advance_vertical(remaining)
                 if effect is not None:
                     effect.update(remaining)
-                return
+                return remaining
             if remaining <= 1e-9:
                 return
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
         width, height = frame.rect[2:]
-        flip_x = self.state not in ('run', 'dash') and self.facing < 0
+        flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
         draw_sprite(frame, transform, (self.x, self.y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
