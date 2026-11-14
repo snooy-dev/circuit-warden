@@ -30,7 +30,7 @@
 
 | 대상 | 현재 상태·결과 | 유지할 기준 |
 |---|---|---|
-| 점프 | hibit v1 보류·[동작 수정 원화 검토](../art/warden/jump-new-v13/motion-fix-v2/review.html) | 사용자 지적에 따라 Start 얼굴 크기·Rise 몸 움직임·Fall 연결을 수정했다. 코드 원화 조각 고정은 사용자 허용, 연결부는 imagegen으로 복원했다. Start 얼굴 폭182~183px, Rise 눈 위치1px·발끝3px 변동. Start6=Rise1·Rise6=Fall1은 같은 원화 셀이다. 최종 자연스러움·팔/어깨 전환은 사용자 검토가 남는다. 수정 원화 승인 후 기존 공통16색 hibit·Run 방향성 전류를 재적용한다. 기존 후보와 폐기 v1~v12는 보존하며 게임 통합은 미실행이다. |
+| 점프 | 수정 원화 후처리 승인·[hibit v2 검토 후보](../art/warden/jump-new-v13/hibit-v2/review.html) | 2026-11-14 사용자 지시로 수정 원화에 스킬 hibit과 기존 Run 이동 전류를 재적용했다. 128×104·공통16색·좌우168프레임, 신체는 동작별6포즈. 시작200ms·상승300ms·낙하600ms 반복·착지300ms, 전류 주기600ms는 검토 기본값이다. Start→Rise·Rise→Fall의 출력 실루엣 차이0픽셀, 전류는 이어진다. 정상/0.25배 전체 연결·낙하1/3회·좌우·프레임 이동을 제공한다. 원화·출력 형식·전류 경로·GIF와 조작 로직을 검사했다. 실재생 미술 품질·최종 후보 채택은 미확인, 게임 통합은 미실행이다. 이전 후보와 폐기 v1~v12는 보존한다. |
 | idle | [비무장 v7](../art/warden/provisional-approved/idle-unarmed-v7/unarmed/preview.gif) 잠정 승인 | idle 중 비발검, hibit·16색, 128×104, 48프레임·2초 |
 | 측면 idle | [망토 바람 v2](../art/warden/provisional-approved/idle-side-wind-v2/review.html) 잠정 승인 | 2026-11-13 사용자 결정. Run과 동일한 측면 원화·비무장·hibit 16색, 128×104, 방향별 48프레임·2초. 망토 끝으로 약한 바람 물결을 추가했다. 96개 프레임·시트를 원본과 해시가 같게 보관했다. 기존 idle v7의 승인·원본은 보존하고 후속 사용자 요청으로 게임 idle을 이 시트로 교체했다. 오른쪽 시트와 기존 런타임 반전을 사용한다. 코드 변형이며 천의 접힘·충돌은 미계산 |
 | 걷기 | [좌우 v4](../art/warden/provisional-approved/walk-v4/both.gif) 잠정 승인 | 짧은 다리·둥근 골반, 128×104, 방향별 24프레임·1초 |
