@@ -4,7 +4,7 @@
 
 ## Summary
 
-기존 GameplayLevel에 전하 객체를 배치하고 CharacterScene의 event_to_world로 선택한다. GameplayMode가 공격보다 전하 선택을 먼저 처리하고 Character.teleport가 모든 행동을 낙하/idle로 전환한다. 승인된 전하 전환·400ms 연결식을 Python으로 재사용한다.
+기존 GameplayLevel에 전하 객체를 배치하고 CharacterScene의 event_to_world로 선택한다. GameplayMode가 공격보다 전하 선택을 먼저 처리하고 Character.teleport가 모든 행동을 낙하/idle로 전환한다. 승인된 전하 전환·400ms 원본 연결식을100ms 재생으로 압축해 Python으로 재사용한다.
 
 ## Technical Context
 
@@ -27,7 +27,7 @@
 ## Project Structure & Interfaces
 
 - game/charge.py: 전하 상태·공유 위상·거리·픽셀 합성 및 장면 수명 자원.
-- game/teleport_link.py: 승인 v4 끝점 생성식·400ms 일회 효과. game/effects.py의 GameObject/RenderItem 패턴 재사용.
+- game/teleport_link.py: 승인 v4 끝점 생성식·100ms 시험 재생의 일회 효과. game/effects.py의 GameObject/RenderItem 패턴 재사용.
 - game/character.py: 중심·유효 도착·행동 취소. 기존 _advance_vertical/_show_jump 재사용.
 - game/mode.py, game/scene.py: 선택 우선순위, 화면→월드, 전하 배치와 공유 이미지 수명.
 - assets/charge/: 이미 승인된 상태 v5·전환 v2 파일. 사용자 점프 PNG·tmp 및 루트 README 변경 제외.
@@ -47,3 +47,5 @@
 ## Verification & Risks
 
 [quickstart.md](quickstart.md)의 표적 검사와 SDL smoke를 수행한다. alpha 보간·부호 뒤집힘·상태 취소 누락·resize 오선택·종료 누수가 구체적 위험이다. 기존 jump/dash 선입력 관련 검사는 변경 영향이 있는 항목만 재사용/실행한다. 활성 거리/배치/재사용·조작감은 사용자 플레이 전이다. 전체 회귀는 선택하지 않는다.
+
+후속 입력 규칙: GameplayMode가 진행 중 TeleportLink와 마지막 예약 전하를 보관한다. 활성 기준점은 진행 중 효과의 도착점이며 시작 이벤트에서 즉시 전하 상태를 갱신한다. CharacterScene은 Level 갱신 후 모드의 예약 실행을 호출해 효과 종료와 같은 프레임에 다음 이동을 시작한다. 첫 프레임 시간은 생성 시점과 최초 출력 여부를 반영한다. 논리 활성과 승인 상태 보간은 분리한다.

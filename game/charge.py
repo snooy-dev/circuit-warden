@@ -22,27 +22,31 @@ def _pixels(data):
 
 
 def _blend(first, second, value):
-    result = {i: tuple(c * (1 - value) for c in pixel) for i, pixel in first.items()}
-    for i, pixel in second.items():
-        old = result.get(i, (0, 0, 0, 0))
-        result[i] = tuple(a + b * value for a, b in zip(old, pixel))
+    inverse = 1 - value
+    result = {i: (r * inverse, g * inverse, b * inverse, a * inverse)
+              for i, (r, g, b, a) in first.items()}
+    for i, (r, g, b, a) in second.items():
+        pr, pg, pb, pa = result.get(i, (0, 0, 0, 0))
+        result[i] = (pr + r * value, pg + g * value, pb + b * value, pa + a * value)
     return result
 
 
 def compose(inactive, active, pulse_a, pulse_b, value, fraction, bob):
     """premultiplied 보간 후 파동을 source-over; 마지막에만 straight RGBA로 복원."""
     base = _blend(inactive, active, value)
-    for i, pixel in _blend(pulse_a, pulse_b, fraction).items():
+    for i, (r, g, b, a) in _blend(pulse_a, pulse_b, fraction).items():
         i += bob * SIZE * 4
         if 0 <= i < SIZE * SIZE * 4:
-            old = base.get(i, (0, 0, 0, 0))
-            base[i] = tuple(a + b * (1 - pixel[3] / 255) for a, b in zip(pixel, old))
+            pr, pg, pb, pa = base.get(i, (0, 0, 0, 0))
+            inverse = 1 - a / 255
+            base[i] = (r + pr * inverse, g + pg * inverse, b + pb * inverse, a + pa * inverse)
     data = bytearray(SIZE * SIZE * 4)
     for i, (r, g, b, a) in base.items():
         if a > 0:
-            data[i:i + 4] = bytes((min(255, floor(r * 255 / a + .5)),
-                                   min(255, floor(g * 255 / a + .5)),
-                                   min(255, floor(b * 255 / a + .5)), min(255, floor(a + .5))))
+            data[i] = int(r * 255 / a + .5)
+            data[i + 1] = int(g * 255 / a + .5)
+            data[i + 2] = int(b * 255 / a + .5)
+            data[i + 3] = int(a + .5)
     return bytes(data)
 
 
@@ -79,7 +83,16 @@ class ChargeArt:
     def __init__(self):
         self.frames = {name: _load_frames(ASSETS / f'{name}.png', columns, count)
                        for name, columns, count in (('inactive', 9, 72), ('active', 9, 72), ('pulse', 4, 10))}
-        self.pixels = {name: [_pixels(frame) for frame in frames] for name, frames in self.frames.items()}
+        self._pixels = {}
+        self._composites = {}
+
+    def pixels(self, name, index):
+        key = (name, index)
+        if key not in self._pixels:
+            if len(self._pixels) >= 16:
+                self._pixels.pop(next(iter(self._pixels)))
+            self._pixels[key] = _pixels(self.frames[name][index])
+        return self._pixels[key]
 
     def frame(self, elapsed, value):
         index = floor(elapsed * 24) % 72
@@ -88,9 +101,16 @@ class ChargeArt:
         phase = value * 9
         lower = floor(phase)
         bob = floor(sin(elapsed / 3 * 2 * pi) * 1.2 + .5)
-        return compose(self.pixels['inactive'][index], self.pixels['active'][index],
-                       self.pixels['pulse'][lower], self.pixels['pulse'][min(9, lower + 1)],
-                       value, phase - lower, bob)
+        key = (index, value, bob)
+        # 같은 시각·전환 상태의 여러 전하는 픽셀 합성을 공유한다.
+        if key not in self._composites:
+            if len(self._composites) >= 16:
+                self._composites.pop(next(iter(self._composites)))
+            self._composites[key] = compose(
+                self.pixels('inactive', index), self.pixels('active', index),
+                self.pixels('pulse', lower), self.pixels('pulse', min(9, lower + 1)),
+                value, phase - lower, bob)
+        return self._composites[key]
 
 
 class Charge(GameObject):
@@ -108,21 +128,22 @@ class Charge(GameObject):
         if not self.texture:
             raise RuntimeError(f'전하 텍스처 생성 실패: {pico.SDL_GetError()!r}')
         _sdl(pico.SDL_SetTextureScaleMode(self.texture, pico.SDL_ScaleModeNearest))
-        self.active = self.in_range(self.level.player)
+        self.active = self.in_range(self.level.mode.activation_origin)
 
     def on_destroy(self):
+        self.art = None
         texture, self.texture = self.texture, None
         if texture:
             pico.SDL_DestroyTexture(texture)
 
-    def in_range(self, player):
-        x, y = player.center
+    def in_range(self, origin):
+        x, y = origin
         return hypot(self.position[0] - x, self.position[1] - y) <= ACTIVATION_DISTANCE
 
     def update(self, dt):
         if not isfinite(dt) or dt < 0:
             raise ValueError('dt는 유한한 비음수 초여야 합니다.')
-        self.active = self.in_range(self.level.player)
+        self.active = self.in_range(self.level.mode.activation_origin)
         if dt == 0:
             return
         self.elapsed = (self.elapsed + dt) % 3

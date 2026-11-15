@@ -69,6 +69,7 @@ class CharacterScene(LevelScene):
     def update(self, dt):
         self.character.view_bounds = self.transform.bounds
         super().update(dt)
+        self.level.mode.after_update()
 
 
 def main():

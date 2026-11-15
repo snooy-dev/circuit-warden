@@ -60,16 +60,16 @@ class ChargeTeleportTests(unittest.TestCase):
     def test_distance_boundary_and_transition_reversal_partition(self):
         center = self.character.center
         charge = Charge(None, (center[0] + ACTIVATION_DISTANCE, center[1]))
-        self.assertTrue(charge.in_range(self.character))
+        self.assertTrue(charge.in_range(self.character.center))
         self.character.x -= .0001
-        self.assertFalse(charge.in_range(self.character))
+        self.assertFalse(charge.in_range(self.character.center))
         results = []
         for hz in (48, 144):
             charge = Charge(None, (0, 0))
-            actor = SimpleNamespace(center=(0, 0))
-            charge._level = SimpleNamespace(player=actor)
+            mode = SimpleNamespace(activation_origin=(0, 0))
+            charge._level = SimpleNamespace(mode=mode)
             for active, duration in ((True, .125), (False, .125), (True, .25), (False, .5)):
-                actor.center = (0, 0) if active else (1000, 0)
+                mode.activation_origin = (0, 0) if active else (1000, 0)
                 previous = charge.value, charge.velocity
                 charge.update(0)
                 self.assertEqual((charge.value, charge.velocity), previous)

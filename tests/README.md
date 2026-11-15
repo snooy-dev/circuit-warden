@@ -28,6 +28,7 @@
 
 | 변경 범위 | 선택 명령 |
 |---|---|
+| 전하 선택·취소·연결·창 좌표 | `.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOutput` |
 | 캐릭터 출력·입력 | `.\.venv\Scripts\python.exe -B tests/smoke/character_smoke.py --output-dir $testOutput` |
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |
 | 독립 UI·앵커·트리 | `.\.venv\Scripts\python.exe -B tests/smoke/ui_smoke.py $testOutput` |
@@ -35,7 +36,7 @@
 
 character_smoke는 실제 GameplayMode를 통해 양 방향 공격·추가 클릭 무시·유지 키 복귀와 첫 프레임 캡처를 포함한다.
 
-SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 네 스크립트는 상시 통과 관문이 아니다.
+SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 각 스크립트는 상시 통과 관문이 아니다.
 
 ## 넓은 통합 변경에만 전체 회귀
 
@@ -46,3 +47,5 @@ SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다�
 ```
 
 같은 코드와 환경에서 통과한 결과는 재사용한다. 문서 수정만으로 게임 검사를 반복하지 않는다. 과거 001/008 실행 기록은 당시 커밋 기준이다.
+
+전하의 거리·상태 취소·선입력·알파 보간은 tests.unit.test_charge_teleport, 승인 v4 RGBA·전류 수명은 tests.unit.test_teleport_link, 실제 자산·좌표·장면 해제는 tests.integration.test_charge_scene을 선택한다. charge_smoke는 SDL 클릭으로10회 순간이동하며 목표 기준 활성화·100ms 진행 중 선입력·가로/세로/대각 연결·F6/F11·종료와 화면 캡처를 확인한다. 사용자 조작감 평가는 별도다.

@@ -1,0 +1,14 @@
+{
+  "status": "2026-11-15 승인 v4 형태 연결. 후속 사용자 요청으로 짧은100ms 시험 재생 적용",
+  "source": "art/charge/approved-teleport-link-v4/link.js",
+  "sourceSha256": "1c0d35e8f766c0c64455af2ad1cd0fff8864988d35137d813782a87adc252d09",
+  "runtime": "game/teleport_link.py",
+  "durationSeconds": 0.1,
+  "loop": false,
+  "sampling": "승인 원본12프레임을100ms에 시간 매핑. 프레임 형상·밝기 보존, 화면 갱신에 따라 샘플 선택",
+  "coordinates": "고정 world 끝점, CPU raster에서만 Y-down으로 변환",
+  "license": "licenses/pixelfx-LICENSE.txt",
+  "techniqueSource": "https://www.spritefusion.com/pixel-art-vfx/lightning",
+  "sourceDurationSeconds": 0.4,
+  "sourceFps": 30
+}
