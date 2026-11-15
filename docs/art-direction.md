@@ -8,7 +8,7 @@
 
 2026-11-15 사용자 요청으로 `Circuit_Warden_GameDesign.pptx` 19쪽의 원화를 기본 적 1종의 기준으로 사용한다. 짙은 먼지 몸체, 녹슨 구리 띠와 각진 다리, 작은 금속 구슬을 유지한다. 사용자 후속 지시에 따라 원화 기반 hibit 처리를 적용한다.
 
-게임용 파일은 [metal_dust.png](../assets/enemies/metal_dust.png), 규격·출처·해시는 [metal_dust.json](../assets/enemies/metal_dust.json)에 보관한다. ImageGen으로 원화의 면을 단순화한 뒤 Agent Sprite Forge의 hibit 다수결 축소·16색 팔레트·1px 외곽선 처리를 적용했다. 128×96 셀, 보이는 높이55px, 피벗(76,80), 좌측은 반전이다. 이진 알파·팔레트 밖 색0·잘림 없음을 검사했다. 실제 SDL 게임 화면에서 워든 옆의 크기·접지·피격 표시를 확인했다.
+게임용 파일은 [metal_dust.png](../assets/enemies/metal_dust.png), 규격·출처·해시는 [metal_dust.json](../assets/enemies/metal_dust.json)에 보관한다. 사용자 후속 요청으로 적의 디테일 수준과 픽셀 크기를 워든에 맞춘다. 원화를 단순화했던55px 자산을 대체해, ImageGen으로 먼지층·구리 녹·금속 구슬을 살린 투명 배경 파생본을 만들고 Agent Sprite Forge의 hibit 다수결 축소·16색 팔레트·1px 외곽선 처리를 적용했다. 128×104 셀, 보이는 높이78px·폭115px, 피벗(64,92), 좌측은 반전이다. 워든과 같은 원본1px=1월드 단위이며 완성 스프라이트를 확대하지 않는다. 이진 알파·팔레트 밖 색0·잘림 없음을 검사하고 실제 SDL에서 크기·접지·양방향 표시를 확인했다. 기존 자산과 [동일 배율 비교](../art/enemies/metal-dust-detail-v2/comparison.png)는 로컬에 보존한다.
 
 현재는 단일 자세의 시험 자산이다. 관절 보행이나 별도 공격 시트는 없으며 런타임의 위치·표시 변형으로 예고와 돌진을 표현한다. 최종 미술 품질은 사용자 직접 확인 전이고 이번 값을 게임 전체 아트 규격으로 확대하지 않는다. 원화·생성 마스터·후처리 결과는 로컬 `art/enemies/`에 보존한다.
 

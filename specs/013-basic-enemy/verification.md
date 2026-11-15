@@ -4,6 +4,16 @@
 
 2026-11-15: 원화 기반 hibit 적 1종의 양방향 전투 구현·선택한 검증 완료. 사용자 직접 조작감과 최종 미술 판단은 미확인이다.
 
+## 크기·디테일 보정 자산 통합 후속 검증
+
+사용자의 적 크기·원화 디테일 보정 및 워든과 같은 픽셀 크기 요청에 따라 새 hibit 자산을 연결했다. 로더의 셀·피벗과 몸통 판정을 맞췄으며 공격 경계·돌진 접촉 시각·공중 회피 검사의 배치를 새 판정 크기에 맞게 이동했다. 전투 규칙 코드는 판정 크기 외에 변경하지 않았다.
+
+- `git fetch origin` 후 `git log --oneline HEAD..origin/main`은 비어 있었고 `git merge --no-commit origin/main`은 Already up to date였다.
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy -q`: **19개 통과**. 활성 구간·접촉 경계·점프 높이·실제 PNG 양방향 출력·수명을 확인했다.
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir art/enemies/verification-detail-v2`: **PASS**. 실제 SDL의 점프 회피·피격·사망·R·양방향 타격·처치·창 크기 변경을 확인했다. 초기 캡처에서 워든과 적의 크기·접지·체력바 미표시를 관찰했다.
+- 자산 크기128×104·알파 범위(6,14,121,92)·16색·팔레트 밖0·이진 알파·메타데이터/해시 일치를 확인했다. `git diff --check`와 새 로컬 참조 경로를 확인했다. 원본1px=1월드 단위이며 예고·돌진의 기존 자세 변형은 유지한다.
+- `docs/art-direction.md`, `docs/systems/basic-enemy.md`, `docs/progress.md`와 FR-001·계획·T017을 동기화했다. 엔진 구조·입력·API는 바뀌지 않아 architecture·검사 안내 수정은 필요 없다. 전체 회귀는 재실행하지 않았으며 단일 자세·사용자 직접 미술 평가 미확인은 남는다.
+
 ## 체력바 제거 후속 검증
 
 사용자 요청으로 워든과 적의 체력바 그리기·미사용 함수를 제거했다. 내부 체력·피해·처치·재시작은 유지했다.

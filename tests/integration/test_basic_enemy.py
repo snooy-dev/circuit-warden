@@ -40,8 +40,8 @@ class BasicEnemySceneTests(unittest.TestCase):
                 enemy = scene.level.enemy
                 image = enemy.frame.image
                 self.assertIsNot(image, previous)
-                self.assertEqual(enemy.frame.rect, (0, 0, 128, 96))
-                self.assertEqual(enemy.frame.pivot, (76 / 128, 80 / 96))
+                self.assertEqual(enemy.frame.rect, (0, 0, 128, 104))
+                self.assertEqual(enemy.frame.pivot, (64 / 128, 92 / 104))
                 enemy.facing = facing
                 scene.update(0)
                 pico.SDL_SetRenderDrawColor(pico.renderer, 20, 30, 40, 255)

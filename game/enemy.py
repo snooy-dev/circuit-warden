@@ -8,9 +8,9 @@ from .character import GROUND_Y
 
 
 IMAGE_PATH = Path(__file__).resolve().parents[1] / 'assets' / 'enemies' / 'metal_dust.png'
-WIDTH, HEIGHT = 128, 96
-BODY_HEIGHT = 55
-HURT_HALF_WIDTH = 30
+WIDTH, HEIGHT = 128, 104
+BODY_HEIGHT = 78
+HURT_HALF_WIDTH = 42
 SPAWN_X = 220.0
 IDLE_SECONDS = .18
 APPROACH_SPEED = 100
@@ -31,7 +31,7 @@ POSE_SCALE = {'windup': (1.12, .76), 'charge': (1.15, .90), 'recover': (1.04, .8
 
 def load_enemy_frame(images):
     image = images.load(IMAGE_PATH)
-    return SpriteFrame(image, (0, 0, WIDTH, HEIGHT), (76 / WIDTH, 80 / HEIGHT))
+    return SpriteFrame(image, (0, 0, WIDTH, HEIGHT), (64 / WIDTH, 92 / HEIGHT))
 
 
 class Enemy(GameObject):

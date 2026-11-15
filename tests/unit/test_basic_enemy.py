@@ -58,7 +58,7 @@ class BasicEnemyTests(CombatFixture):
     def test_direction_and_strict_contact_edges(self):
         for facing, x, y, expected in ((-1, -70, GROUND_Y, 2),
                                         (-1, 70, GROUND_Y, 3),
-                                        (1, 115, GROUND_Y, 3),
+                                        (1, 127, GROUND_Y, 3),
                                         (1, 70, GROUND_Y + 70, 3)):
             with self.subTest(facing=facing, x=x, y=y):
                 self.actor.facing = facing
@@ -118,7 +118,7 @@ class EnemyChargeTests(CombatFixture):
         self.start_charge()
         self.level.update(.14)
         self.assertEqual(self.actor.hp, 4)
-        self.assertAlmostEqual(self.actor.invulnerability_remaining, .75 - (.14 - 16 / 350))
+        self.assertAlmostEqual(self.actor.invulnerability_remaining, .75 - (.14 - 4 / 350))
         self.actor.invulnerability_remaining = 0
         self.level.update(.16)
         self.assertEqual((self.enemy.state, self.actor.hp), ('recover', 4))
@@ -137,7 +137,7 @@ class EnemyChargeTests(CombatFixture):
                 self.actor, self.enemy = self.level.player, self.level.enemy
                 self.enemy.x = 70
                 if airborne:
-                    self.actor.y += 56
+                    self.actor.y += 79
                 with patch.object(self.actor, 'update'):
                     self.level.update(enemy_rules.IDLE_SECONDS + enemy_rules.WINDUP_SECONDS
                                       + enemy_rules.CHARGE_SECONDS + .05)
@@ -191,13 +191,13 @@ class EnemyChargeTests(CombatFixture):
 
     def test_enemy_entering_at_sword_window_end_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = 132.5, -1
+        self.enemy.x, self.enemy.facing = 144.5, -1
         self.level.update(.1)
         self.assertEqual(self.enemy.hp, 3)
 
     def test_enemy_entering_after_sword_active_window_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = 140, -1
+        self.enemy.x, self.enemy.facing = 152, -1
         self.level.update(.1)
         self.assertEqual(self.enemy.hp, 3)
 
@@ -211,7 +211,7 @@ class EnemyChargeTests(CombatFixture):
     def test_charge_contact_ending_before_protection_expires_is_not_hit(self):
         self.actor.invulnerability_remaining = .05
         self.enemy.state, self.enemy.state_remaining = 'charge', enemy_rules.CHARGE_SECONDS
-        self.enemy.x, self.enemy.facing = -53, -1
+        self.enemy.x, self.enemy.facing = -65, -1
         self.level.update(.1)
         self.assertEqual(self.actor.hp, 5)
 

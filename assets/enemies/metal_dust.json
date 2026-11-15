@@ -11,46 +11,46 @@
   "model": "도구가 별도 모델명을 반환하지 않음",
   "estimateUsd": null,
   "file": "metal_dust.png",
-  "sha256": "25ee0d0b471aa24901fefa44128056659f1e62adde27b16253e7fd77c3a4add9",
+  "sha256": "ec7579a7057e29497d4f9e08ceb1d128a84760ea7bc7966730c0ef08735031c2",
   "frameSize": [
     128,
-    96
+    104
   ],
   "pivot": [
-    76,
-    80
+    64,
+    92
   ],
   "visibleBounds": [
-    37,
-    25,
-    114,
-    80
+    6,
+    14,
+    121,
+    92
   ],
   "facing": "right",
   "flipLeft": true,
   "finish": "hibit",
   "palette": "metal_dust.palette.json",
   "paletteColors": 16,
-  "usedColors": 15,
+  "usedColors": 16,
   "binaryAlpha": true,
   "displayScale": 1,
   "process": {
     "tool": "Agent Sprite Forge finish_frames.py hibit 0.5.0",
-    "targetHeight": 55,
+    "targetHeight": 78,
     "colors": 15,
     "outline": "auto",
     "supersample": 8,
     "coverage": 0.45,
     "canvas": [
       128,
-      96
+      104
     ],
     "canvasAnchor": [
-      64,
-      80
+      45,
+      92
     ],
-    "pivotNote": "실루엣 중심으로 런타임 X 기준점을 76으로 지정. 픽셀 이동 없음."
+    "pivotNote": "실루엣 중심으로 런타임 X 기준점을64로 지정. 픽셀 이동 없음."
   },
-  "provenance": "PPT 원화 참조 → 내장 ImageGen 단순화 → 마스터 정렬 → hibit 팔레트·다수결 축소·1px 외곽선. generation-prompt는 metal_dust.prompt.txt.",
-  "review": "원화의 먼지·금속 띠·다리 형태와 크기 확인. 사용자 최종 미술 평가는 미확인. 단일 자세이며 관절 보행 애니메이션은 없음."
+  "provenance": "PPT 원화 참조 → 내장 ImageGen으로 원화 디테일을 유지한 투명 배경 파생본 → hibit 16색 다수결 축소·1px 외곽선. generation-prompt는 metal_dust.prompt.txt.",
+  "review": "워든과 같은 원본1px=1월드 단위·16색을 적용. 보이는 높이78px·폭115px로 먼지층·구리 띠·금속 구슬을 보강했다. 사용자 최종 미술 평가는 미확인. 단일 자세이며 관절 보행 애니메이션은 없음."
 }
