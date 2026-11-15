@@ -72,13 +72,13 @@ class ChargeSceneTests(unittest.TestCase):
         self.click(first.position)
         link = scene.level.mode.teleport_link
         origin = first.position
-        first.position = (1000, 0)
         nearest.position = (origin[0] + 40, origin[1])
         last.position = (origin[0] + 80, origin[1])
         self.click(last.position)
         actor.x = last.position[0]
         self.click(last.position, pico.SDL_BUTTON_RIGHT)
         self.assertIs(scene.level.mode.pending_charge, nearest)
+        self.assertIs(scene.level.mode.last_charge, first)
         self.assertIs(scene.level.mode.teleport_link, link)
         self.click(last.position)
         self.assertIs(scene.level.mode.pending_charge, last)
@@ -86,8 +86,48 @@ class ChargeSceneTests(unittest.TestCase):
         scene.update(0)
         scene.update(.1)
         self.assertEqual(actor.center, nearest.position)
+        self.assertIs(scene.level.mode.last_charge, nearest)
         self.assertIsNone(scene.level.mode.pending_charge)
         self.assertIsNone(actor.buffered_action)
+
+    def test_right_click_exclusion_changes_only_on_arrival_and_clears_on_exit(self):
+        scene = self.open_scene()
+        first, second = scene.level.charges[2:4]
+        for charge in scene.level.charges:
+            charge.position = (1000, 0)
+        first.position, second.position = (100, 0), (160, 0)
+        self.click(first.position)
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertIs(scene.level.mode.last_charge, first)
+        self.assertIs(scene.level.mode.pending_charge, second)
+        scene.update(0)
+        scene.update(.1)
+        self.assertIs(scene.level.mode.last_charge, second)
+        scene.update(.1)
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertEqual(scene.character.center, first.position)
+        self.assertIs(scene.level.mode.last_charge, first)
+        scene.exit()
+        self.assertIsNone(scene.level.mode.last_charge)
+
+    def test_right_click_only_last_target_is_noop_but_left_click_still_selects(self):
+        scene = self.open_scene()
+        first = scene.level.charges[2]
+        self.click(first.position)
+        for charge in scene.level.charges:
+            if charge is not first:
+                charge.position = (1000, 0)
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertIsNone(scene.level.mode.pending_charge)
+        scene.update(0)
+        scene.update(.1)
+        before = scene.character.center, scene.character.velocity_y
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertEqual((scene.character.center, scene.character.velocity_y), before)
+        self.assertIsNone(scene.level.mode.teleport_link)
+        self.click(first.position)
+        self.assertEqual(scene.character.center, first.position)
+        self.assertIs(scene.level.mode.last_charge, first)
 
     def test_right_click_same_position_does_not_create_link(self):
         scene = self.open_scene()

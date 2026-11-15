@@ -81,6 +81,13 @@ class ChargeSmoke(CharacterScene):
         yield .19
         assert actor.jump_phase == 'fall' and actor.center[1] > self.charges[2].position[1]
         self.capture('charge-lift-fall')
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .06
+        assert actor.x == self.charges[3].position[0]
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .2
+        assert actor.x == self.charges[2].position[0]
+        self.capture('charge-right-chain')
         for index in (4, 1, 0):
             self.click((self.charges[index].position[0] - 44, self.charges[index].position[1]))
             yield .08
@@ -125,7 +132,7 @@ class ChargeSmoke(CharacterScene):
             yield .12
             actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
             count = self.teleports
-            self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+            self.click((self.charges[2].position[0] + 44, self.charges[2].position[1]))
             yield .06
             assert self.teleports == count + 1 and actor.x == 140
             self.capture('charge-' + name)

@@ -15,6 +15,7 @@ class GameplayMode(GameMode):
         self.event_to_world = None
         self.teleport_link = None
         self.pending_charge = None
+        self.last_charge = None
 
     @property
     def activation_origin(self):
@@ -28,9 +29,10 @@ class GameplayMode(GameMode):
                 or not player.can_teleport(charge.position)):
             return
         start = player.center
-        if player.teleport(charge.position) and hypot(
-                start[0] - player.center[0], start[1] - player.center[1]) > 1e-6:
-            self.teleport_link = self.level.spawn(TeleportLink(start, player.center, self.level.link_art))
+        if player.teleport(charge.position):
+            self.last_charge = charge
+            if hypot(start[0] - player.center[0], start[1] - player.center[1]) > 1e-6:
+                self.teleport_link = self.level.spawn(TeleportLink(start, player.center, self.level.link_art))
         for candidate in self.level.charges:
             candidate.active = candidate.in_range(self.activation_origin)
 
@@ -50,7 +52,7 @@ class GameplayMode(GameMode):
 
     def on_end(self):
         self.level.link_art = None
-        self.pending_charge = self.teleport_link = None
+        self.pending_charge = self.teleport_link = self.last_charge = None
 
     def on_event(self, event):
         player = self.level.player
@@ -70,6 +72,7 @@ class GameplayMode(GameMode):
                     candidates = [(hypot(point[0] - charge.position[0], point[1] - charge.position[1]),
                                    index, charge) for index, charge in enumerate(self.level.charges)
                                   if charge.level is self.level and charge.in_range(self.activation_origin)
+                                  and (not automatic or charge is not self.last_charge)
                                   and player.can_teleport(charge.position)]
                     if candidates:
                         distance, _, charge = min(candidates)

@@ -32,16 +32,16 @@ PASS: 순간이동10회·선입력2회·공격/점프/대시 취소·상승/낙�
 
 화면 위쪽 여유가 작으면 기존 제한 때문에 상승량/시간이 줄어든다. 상승 강화의 최종 조작감은 사용자 확인 전이다. 새 아트·의존성·엔진·공용 프레임워크·README 변경 및 PR 게시는 하지 않았다.
 
-## 우클릭 자동 선택 검증
+## 우클릭 마지막 도착 제외 검증
 
-시작 시 작업 트리는 깨끗했으며 git fetch origin 및 git merge --no-commit origin/main 결과 Already up to date였다. FR-009에 따라 활성 기준점 최근접/동률 배치 순·대상 없음 무동작·동일 위치 포함·기존 선입력을 구현했다. 기존 좌클릭 선택 분기를 공유하고 우클릭만 커서 좌표/클릭 반경을 생략한다.
+사용자 후속 요청에 따라 FR-009에서 마지막 성공 도착 전하를 우클릭 후보에서 제외했다. 좌클릭 선택·기존 예약 규칙은 유지한다. 시작 시 사용자 미커밋 변경은 없었으며 fetch/merge 결과 Already up to date였다. 마지막 도착은 GameplayMode.last_charge에 기록하고 예약/실패로 바꾸지 않으며 다른 전하 도착 성공 때 교체하고 on_end에서 해제한다. 과거 자동 선택 검증은 9cd420c에 보존한다.
 
 ```powershell
-D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_nearest_ignores_cursor_and_filters_invalid_targets tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_without_target_or_valid_output_does_nothing tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_shares_last_valid_buffer_and_destination_origin tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_same_position_does_not_create_link tests.integration.test_charge_scene.ChargeSceneTests.test_selection_priority_overlap_reuse_and_inactive_fallback tests.integration.test_charge_scene.ChargeSceneTests.test_buffer_clears_on_focus_invalid_output_or_invalid_destination
+D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_shares_last_valid_buffer_and_destination_origin tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_exclusion_changes_only_on_arrival_and_clears_on_exit tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_only_last_target_is_noop_but_left_click_still_selects tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_nearest_ignores_cursor_and_filters_invalid_targets tests.integration.test_charge_scene.ChargeSceneTests.test_buffer_clears_on_focus_invalid_output_or_invalid_destination
 ```
 
-6개 통과. 최초 실행에서 무효 출력 검사가 좌표 변환 도우미의 None을 풀어 쓰다 실패했다. 무효 출력 상황에는 원시 마우스 이벤트를 전달하도록 검사 코드를 수정했고 같은6개를 재실행해 통과했다. FR-009의 커서 독립·동률·범위 밖/도착 불가/파괴된 대상 제외·대상 없음·무효 출력·동일 위치·좌우 클릭 예약 교체·진행 중 도착점 기준을 검증했다. FR-002/008의 기존 선택·예약 취소도 유지됐다.
+5개 통과. FR-009: 마지막 전하 제외·다음 최근접 선택·진행 중/효과 종료 후 제외 유지·예약만으로 제외 대상이 바뀌지 않음·다음 도착 시 교체·이전 전하 재사용·장면 종료 해제를 확인했다. 유일한 전하가 제외 대상이면 위치/수직 속도/예약을 유지하고 좌클릭 직접 선택은 가능하다. 동률·무효 대상 제외·FR-008 혼합 예약/무효 예약 취소도 통과했다.
 
-위 SDL 명령을 수정한 smoke로 재실행해 순간이동10회(우클릭3회)·선입력2회·상승/낙하·F6/F11·종료를 통과했다. max draw=0.3ms, median draw=0.1ms. 우클릭 커서는 전하와 떨어진 (-400,200)에 두었고 캐릭터 최근접 전하로 이동했다. character-charge-attack-cancel.png를 열어 공격 취소 후 도착·전류 연결을 관찰했다. 실제 사용자 직접 조작감 평가는 아니다.
+위 SDL 명령을 수정한 smoke로 실행해 순간이동12회·선입력3회, 우클릭으로 전하2→3→2 연속 이동, 공격/점프/대시 취소·상승/낙하·F6/F11 선택·종료를 통과했다. max draw=0.3ms, median draw=0.1ms. character-charge-right-chain.png를 열어 연속 이동 후 전하2 위의 캐릭터를 확인했다. 자동 입력·화면 관찰이며 사용자 직접 플레이 평가는 아니다.
 
-Converge: FR-009/SC-004와 T024~T026을 mode/scene·검사·시스템/basic-gameplay/architecture/game-design/progress 및 012 spec/plan/contracts/quickstart와 대조했으며 남은 필수 작업은 없다. 추가/수정한 문서 상대 링크와 git diff --check를 통과했다. 문서 전체 링크 검사에서는 기존 progress의 로컬 아트 review.html 참조가 이 워크트리에 없어 실패했으며, 이번 변경의 링크만 구분해 재검사했다. 기존 로컬 아트 참조는 수정하지 않았다. 새 자산·엔진·물리·의존성·README 변경은 없고 전체 회귀는 입력 선택의 제한된 변경이므로 선택하지 않았다. 같은 위치/직전 도착 전하도 최근접이면 다시 선택되므로 다음 전하로 자동 순환하는 기능은 아니다. PR 게시·사용자 플레이 평가는 미실시다.
+Converge: FR-009/T027~T028과 mode·표적/smoke·시스템/progress/architecture 및 012 spec/plan/contracts/quickstart를 대조했으며 남은 필수 작업은 없다. 변경 문서 링크·git diff --check를 통과했다. 기본 조작·게임 의도·장면 조작 안내는 우클릭 최근접 선택을 이미 설명하므로 변경하지 않았다. 물리·엔진·자산·의존성·README는 범위 밖이다. 전체 회귀·PR 게시·사용자 직접 조작감 평가는 미실시다. 제외 대상은 시간/착지로 해제하지 않고 다음 성공 도착이나 장면 종료로 갱신한다.

@@ -329,3 +329,5 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 전하·전류 이미지 모두 최근접 필터를 명시하며 게임 중 픽셀 생성·프레임 업로드·개별 텍스처 생성은 없다. 효과 종료 시 프레임/아트 참조를 제거하고 모드 종료 때 공유 전류 참조를 비운 뒤 ImageStore가 텍스처를 해제한다. 현재 플레이어 전류는 재시작 금지 규칙으로 겹치지 않는다. 전체 효과 PNG는13.095MiB, 비압축 RGBA는59.74MiB이며 실제 프로세스/GPU 메모리 최대값과는 다르다. 전하·전류 규칙과 최신 성능·시각 차이·실제 SDL 검증은 [014 검증](../specs/014-baked-effects/verification.md)을 따른다.
 
 전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
+
+GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 교체하고 on_end에서 해제한다.
