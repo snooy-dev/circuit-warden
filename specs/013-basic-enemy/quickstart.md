@@ -1,6 +1,6 @@
 # Quickstart: 기본 적 전투 검증
 
-1. 작업트리에서 게임용 `.venv`의 Python을 사용한다. 게임 환경이 주 체크아웃에 있으면 해당 경로를 명시한다.
-2. `.\.venv\Scripts\python.exe -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy tests.integration.test_character_scene tests.integration.test_jump_animation tests.integration.test_dash_animation tests.unit.test_character tests.unit.test_input_buffer`로 표적 검사를 실행한다.
-3. `.\.venv\Scripts\python.exe -m tests.smoke.basic_enemy_smoke`로 실제 SDL 창에서 기본 전투를 검사한다.
-4. 필요하면 `.\.venv\Scripts\python.exe main.py`로 화면을 직접 열어 양쪽에서 베기, 제자리 점프 회피, 워든 체력 0 및 R 재시작을 확인한다. 화면 관찰과 사용자 직접 조작은 별도로 기록한다.
+1. 작업트리 루트에서 게임 Python을 지정한다. 이 작업트리는 `D:/GitHub/circuit-warden/.venv/Scripts/python.exe`를 재사용한다. 별도 설치에서 `.venv`가 있으면 그 경로를 사용한다.
+2. 전투 규칙은 `& 'D:/GitHub/circuit-warden/.venv/Scripts/python.exe' -B -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy -q`로 확인한다. 입력·점프·대시 검사 범위는 실제 변경 위험에 따라 선택하며 실행 결과는 [verification](verification.md)에 기록한다.
+3. 실제 창은 `& 'D:/GitHub/circuit-warden/.venv/Scripts/python.exe' -B -m tests.smoke.basic_enemy_smoke --output-dir art/enemies/verification`으로 검사한다.
+4. 직접 플레이는 `& 'D:/GitHub/circuit-warden/.venv/Scripts/python.exe' main.py`로 실행한다. A/D 이동, Space 점프, Shift 대시, 왼쪽 클릭 공격, R 전투 재시작이다. 자동 SDL 관찰과 사용자 직접 조작은 따로 기록한다.

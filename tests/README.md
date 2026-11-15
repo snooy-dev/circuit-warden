@@ -14,6 +14,7 @@
 
 | 확인할 위험 | 선택할 위치 |
 |---|---|
+| 기본 적의 타격·돌진·피격 보호·재시작 | unit/test_basic_enemy.py, integration/test_basic_enemy.py |
 | 캐릭터 이동·공격 전이·재생 | unit/test_character.py의 해당 메서드 |
 | 이미지 로딩·실패/종료 해제 | integration/test_character_scene.py, test_scene_integration.py의 해당 메서드 |
 | 루프·이벤트·장면 수명 | unit/test_engine.py, test_game_framework.py의 해당 메서드 |
@@ -28,6 +29,7 @@
 
 | 변경 범위 | 선택 명령 |
 |---|---|
+| 기본 적의 양방향 전투·회피·체력·재시작 | `.\.venv\Scripts\python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir $testOutput` |
 | 캐릭터 출력·입력 | `.\.venv\Scripts\python.exe -B tests/smoke/character_smoke.py --output-dir $testOutput` |
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |
 | 독립 UI·앵커·트리 | `.\.venv\Scripts\python.exe -B tests/smoke/ui_smoke.py $testOutput` |
@@ -35,7 +37,7 @@
 
 character_smoke는 실제 GameplayMode를 통해 양 방향 공격·추가 클릭 무시·유지 키 복귀와 첫 프레임 캡처를 포함한다.
 
-SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 네 스크립트는 상시 통과 관문이 아니다.
+SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 이 스크립트들은 상시 통과 관문이 아니다.
 
 ## 넓은 통합 변경에만 전체 회귀
 

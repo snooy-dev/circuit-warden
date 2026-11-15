@@ -9,6 +9,7 @@ from transitions import Machine
 
 from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
 
+from .combat import draw_health
 from .effects import SpriteEffect
 
 
@@ -96,6 +97,8 @@ def _margins(clip):
 
 
 class Character(GameObject):
+    MAX_HP = 5
+
     def __init__(self, clips):
         super().__init__()
         self.clips = clips
@@ -104,6 +107,8 @@ class Character(GameObject):
         self.y = float(GROUND_Y)
         self.velocity_y = 0.0
         self.facing = 1
+        self.hp = self.MAX_HP
+        self.invulnerability_remaining = 0.0
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
@@ -140,6 +145,15 @@ class Character(GameObject):
     @property
     def grounded(self):
         return self.y == GROUND_Y and self.velocity_y == 0
+
+    @property
+    def hurt_box(self):
+        return self.x - 24, self.y, self.x + 24, self.y + BODY_HEIGHT
+
+    def take_hit(self):
+        if self.hp > 0 and self.invulnerability_remaining == 0:
+            self.hp -= 1
+            self.invulnerability_remaining = .75
 
     def control(self, event):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (
@@ -189,6 +203,7 @@ class Character(GameObject):
         return True
 
     def update(self, dt):
+        self.invulnerability_remaining = max(0.0, self.invulnerability_remaining - dt)
         self.active_attack = None
         if self.view_bounds is None:
             self.buffered_action = None
@@ -199,13 +214,13 @@ class Character(GameObject):
         if self.buffered_action:
             self.buffer_remaining -= step
             if self._consume_action():
-                self._update(0)
+                self._update(0, offset=step)
             elif self.buffer_remaining <= 1e-9:
                 self.buffered_action = None
         if dt > step:
-            self._update(dt - step)
+            self._update(dt - step, offset=step)
 
-    def _update(self, dt):
+    def _update(self, dt, offset=0):
         if (self.dash_requested and (self.state in ('idle', 'run') or
                 self.state == 'jump' and self.jump_phase in ('rise', 'fall'))
                 and (self.grounded or not self.air_dash_used) and self.view_bounds is not None):
@@ -231,10 +246,13 @@ class Character(GameObject):
         if attacking and not started:
             previous = self.player.elapsed
             self.player.update(dt)
-            if previous < ATTACK_ACTIVE_END and self.player.elapsed >= ATTACK_ACTIVE_START:
+            if (self.active_attack is None and previous < ATTACK_ACTIVE_END
+                    and self.player.elapsed >= ATTACK_ACTIVE_START):
                 end = self.x + self.attack_facing * ATTACK_REACH
-                self.active_attack = (self.attack_id,
-                                      (min(self.x, end), self.y + 8, max(self.x, end), self.y + 70))
+                box = min(self.x, end), self.y + 8, max(self.x, end), self.y + 70
+                start = offset + min(dt, max(0, ATTACK_ACTIVE_START - previous))
+                stop = offset + ATTACK_ACTIVE_END - previous
+                self.active_attack = self.attack_id, box, (start, stop)
             if self.player.finished:
                 self._machine.finish()
 
@@ -424,8 +442,15 @@ class Character(GameObject):
         frame = self.player.frame
         width, height = frame.rect[2:]
         flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
+        if self.hp == 0 or (self.invulnerability_remaining > 0
+                            and int(self.invulnerability_remaining / .0625) % 2 == 0):
+            opacity *= .35
         draw_sprite(frame, transform, (self.x, self.y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
+    def _draw_health(self, transform, opacity):
+        draw_health(transform, self.x, self.y + BODY_HEIGHT + 8, self.hp / self.MAX_HP,
+                    (86, 204, 227), opacity)
+
     def render_items(self):
-        return (RenderItem(self._draw),)
+        return RenderItem(self._draw), RenderItem(self._draw_health, draw_order=1)

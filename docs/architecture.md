@@ -323,3 +323,7 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 `game/enemy.py`의 금속 먼지 적은 기존 GameObject와 SpriteFrame을 사용한다. `GameplayLevel`이 적 한 마리와 워든의 전투 수명을 소유하며 `CharacterScene`의 ImageStore가 `assets/enemies/metal_dust.png`도 관리한다. 워든 자산 루트·로더와 공통 엔진은 유지한다. 적 리소스의 절대 경로는 모듈 위치를 기준으로 계산해 실행 디렉터리와 무관하게 읽는다.
 
 `feature/training-combat`의 `e343742`·`ebcad98`에서 검의 활성 구간·전방 상자·공격당 한 번 피해와 적 체력 표시를 가져온다. 현재 선입력 업데이트에서는 활성 구간을 지난 당시의 스윙 ID와 상자를 보존하여 다음 공격과 명중 기록이 섞이지 않게 한다. 피해 수치와 돌진 규칙은 [기본 적 전투](systems/basic-enemy.md)가 소유하며 실제 결과는 [013 검증](../specs/013-basic-enemy/verification.md)에 기록한다.
+
+전투 입력은 GameplayMode가 살아 있는 워든에만 전달하며 R의 반복 KEYDOWN을 억제한다. GameplayLevel.reset_combat는 기존 클립·이미지를 재사용하고 두 캐릭터와 일회성 효과를 정리한 뒤 새 캐릭터를 배치한다. 같은 장면 안의 재시작에서는 텍스처를 닫지 않고 장면 종료 시 ImageStore가 해제한다. 워든 체력 0에서는 레벨 갱신을 멈추지만 R·창 크기·전체화면·종료 입력은 유지한다. 두 캐릭터의 체력 바와 AABB 비교는 `game/combat.py`의 작은 함수를 공유한다.
+
+검 판정은 활성 스윙 ID·상자·시간 구간을 적의 단계별 이동 기록과 교차한다. 돌진은 양측의 같은 시각 상대 위치에서 첫 접촉을 구해 그 시각의 보호 상태를 확인한다. 워든의 프레임 안 경로는 시작/끝 위치 사이 선형 근사이며 행동별 세부 경로 계산은 하지 않는다. 엔진 시간 처리와 기존 행동·입력 버퍼는 유지한다.

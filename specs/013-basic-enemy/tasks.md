@@ -19,17 +19,17 @@
 
 ## Phase 3: User Story 2 - 돌진을 회피하고 다시 도전
 
-- [ ] T008 [US2] FR-003의 대기·접근·예고·돌진·회복과 예고 시 방향 고정 및 돌진당 최대 1회 피해를 `game/enemy.py`, `game/scene.py`에 연결한다.
-- [ ] T009 [US2] FR-004의 초기 워든 체력 5·하한 0·피해 1·피격 보호 0.75초와 체력 0에서 일반 입력과 적 행동 정지를 `game/character.py`, `game/scene.py`, `game/mode.py`에 연결한다.
-- [ ] T010 [US2] FR-005의 R로 체력·위치·행동·피격 보호와 공격 중복 판정 기록 초기화를 `game/scene.py`, `game/mode.py`에 연결한다.
-- [ ] T011 [US2] FR-003~006 및 SC-003의 실제 접촉, 점프 회피, 보호, 대시 중 피격, 사망 및 R과 기존 조작을 `tests/unit/test_basic_enemy.py`, `tests/integration/test_basic_enemy.py`, `tests/integration/test_character_scene.py`, `tests/integration/test_jump_animation.py`, `tests/integration/test_dash_animation.py`, `tests/unit/test_character.py`, `tests/unit/test_input_buffer.py`에서 확인한다.
-- [ ] T012 [US2] SC-002의 이미지 정렬·예고·돌진·회복·피해·점프 회피·사망·R을 `tests/smoke/basic_enemy_smoke.py`로 실제 SDL 창에서 확인한다.
-- [ ] T013 [US2] 돌진 및 재시작 증분의 규칙·구조·검증을 `docs/systems/basic-enemy.md`, `docs/architecture.md`, `specs/013-basic-enemy/verification.md`에 맞추고 검증된 증분을 커밋한다.
+- [x] T008 [US2] FR-003의 대기·접근·예고·돌진·회복과 예고 시 방향 고정 및 돌진당 최대 1회 피해를 `game/enemy.py`, `game/scene.py`에 연결한다.
+- [x] T009 [US2] FR-004의 초기 워든 체력 5·하한 0·피해 1·피격 보호 0.75초와 체력 0에서 일반 입력과 적 행동 정지를 `game/character.py`, `game/scene.py`, `game/mode.py`에 연결한다.
+- [x] T010 [US2] FR-005의 R로 체력·위치·행동·피격 보호와 공격 중복 판정 기록 초기화를 `game/scene.py`, `game/mode.py`에 연결한다.
+- [x] T011 [US2] FR-003~006 및 SC-003의 실제 접촉, 점프 회피, 보호, 대시 중 피격, 사망 및 R과 기존 조작을 `tests/unit/test_basic_enemy.py`, `tests/integration/test_basic_enemy.py`, `tests/integration/test_character_scene.py`, `tests/integration/test_jump_animation.py`, `tests/integration/test_dash_animation.py`, `tests/unit/test_character.py`, `tests/unit/test_input_buffer.py`에서 확인한다.
+- [x] T012 [US2] SC-002의 이미지 정렬·예고·돌진·회복·피해·점프 회피·사망·R을 `tests/smoke/basic_enemy_smoke.py`로 실제 SDL 창에서 확인한다.
+- [x] T013 [US2] 돌진 및 재시작 증분의 규칙·구조·검증을 `docs/systems/basic-enemy.md`, `docs/architecture.md`, `specs/013-basic-enemy/verification.md`에 맞추고 검증된 증분을 커밋한다.
 
 ## Phase 4: Documentation & Completion (mandatory)
 
-- [ ] T014 SC-DOC의 기획·아트·검사 안내·진행 상태를 `docs/game-design.md`, `docs/art-direction.md`, `tests/README.md`, `docs/progress.md`에 동기화하고 `specs/013-basic-enemy/verification.md`에 실제 명령·결과·미실행 항목을 기록한다.
-- [ ] T015 `specs/013-basic-enemy/tasks.md`, `specs/013-basic-enemy/verification.md`, `docs/progress.md`를 실제 코드 및 실행 결과와 대조한다. converge 누락을 해결하고 완료 작업을 표시한다.
+- [x] T014 SC-DOC의 기획·아트·검사 안내·진행 상태를 `docs/game-design.md`, `docs/art-direction.md`, `tests/README.md`, `docs/progress.md`에 동기화하고 `specs/013-basic-enemy/verification.md`에 실제 명령·결과·미실행 항목을 기록한다.
+- [x] T015 `specs/013-basic-enemy/tasks.md`, `specs/013-basic-enemy/verification.md`, `docs/progress.md`를 실제 코드 및 실행 결과와 대조한다. converge 누락을 해결하고 완료 작업을 표시한다.
 
 ## Dependencies & Execution Order
 

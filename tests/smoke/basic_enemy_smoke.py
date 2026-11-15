@@ -27,19 +27,70 @@ class BasicEnemySmoke(CharacterScene):
         self.refs = (*[clip.frames[0].image for clip in self.character.clips.values()],
                      self.level.enemy.frame.image)
         self.previous_hp = self.level.enemy.hp
+        self.previous_player_hp = self.character.hp
+
+    def wait_until(self, condition):
+        while not condition():
+            yield .02
 
     def exercise(self):
-        enemy = self.level.enemy
-        assert enemy.hp == 3
+        actor, enemy = self.character, self.level.enemy
+        assert actor.hp == 5 and enemy.hp == 3
         self.capture('enemy-initial')
-        self.character.x = enemy.x - 60
-        self.character.facing = 1
+        yield from self.wait_until(lambda: enemy.state == 'approach')
+        self.capture('enemy-approach')
+        yield from self.wait_until(lambda: enemy.state == 'windup')
+        self.capture('enemy-windup')
+        push_key(pico.SDLK_SPACE)
+        yield from self.wait_until(lambda: enemy.state == 'charge')
+        self.capture('enemy-charge-jump')
+        yield from self.wait_until(lambda: enemy.state == 'recover')
+        assert actor.hp == 5, '예고를 보고 점프했지만 돌진 피해를 받음'
+        self.capture('enemy-jump-evaded')
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: actor.hp == 0)
+        self.capture('enemy-player-defeated')
+        stopped = actor.x, actor.y, enemy.x, enemy.state, enemy.state_remaining
+        push_key(pico.SDLK_a)
+        push_key(pico.SDLK_SPACE)
+        push_key(pico.SDLK_LSHIFT)
+        push_click()
+        yield .2
+        assert stopped == (actor.x, actor.y, enemy.x, enemy.state, enemy.state_remaining)
+        push_key(pico.SDLK_a, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_r)
+        yield .05
+        assert self.character is not actor and self.level.enemy is not enemy
+        assert self.character.hp == 5 and self.level.enemy.hp == 3
+        assert not self.character.pressed
+        push_key(pico.SDLK_r, pico.SDL_KEYUP)
+        self.capture('enemy-restarted')
+
+        actor, enemy = self.character, self.level.enemy
+        actor.x, actor.facing = enemy.x - 60, 1
         for hp in (2, 1, 0):
+            actor.facing = 1 if enemy.x >= actor.x else -1
             push_click()
             yield .4
             assert enemy.hp == hp, (enemy.hp, hp)
         assert enemy.level is None
         self.capture('enemy-defeated')
+        push_key(pico.SDLK_r)
+        yield .05
+        push_key(pico.SDLK_r, pico.SDL_KEYUP)
+        actor, enemy = self.character, self.level.enemy
+        assert enemy.hp == 3 and actor.hp == 5
+        enemy.state, enemy.state_remaining = 'recover', 10.0
+        actor.x, actor.facing = enemy.x + 60, -1
+        push_click()
+        yield .4
+        assert enemy.hp == 2
+        self.capture('enemy-left-hit')
+        push_key(pico.SDLK_F6)
+        yield .1
+        self.capture('enemy-resized')
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield .1
@@ -54,6 +105,9 @@ class BasicEnemySmoke(CharacterScene):
         if 0 < hp < self.previous_hp:
             self.capture(f'enemy-hit-{hp}')
         self.previous_hp = hp
+        if self.character.hp < self.previous_player_hp:
+            self.capture(f'player-hit-{self.character.hp}')
+        self.previous_player_hp = self.character.hp
         if not self.passed and monotonic() >= self.next_step:
             self.next_step = monotonic() + next(self.steps)
 
@@ -67,4 +121,4 @@ if __name__ == '__main__':
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: enemy/render/three-hits/health/death/cleanup', flush=True)
+    print('PASS: enemy/render/windup/charge/recover/jump-evade/player-hit/death/reset/left-right-hit/resize/cleanup', flush=True)

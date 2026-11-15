@@ -66,18 +66,46 @@ class BasicEnemySceneTests(unittest.TestCase):
                 actor, enemy = scene.character, scene.level.enemy
                 actor.x = enemy.x - facing * 60
                 actor.facing = facing
-                with patch.object(enemy, 'update'):
+                enemy.state = 'recover'
+                enemy.state_remaining = 10.0
+                scene.update(0)
+                for hp in (2, 1, 0):
+                    scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
+                                                       button=pico.SDL_BUTTON_LEFT))
                     scene.update(0)
-                    for hp in (2, 1, 0):
-                        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
-                                                           button=pico.SDL_BUTTON_LEFT))
-                        scene.update(0)
-                        scene.update(.15)
-                        self.assertEqual(enemy.hp, hp)
-                        scene.update(.02)
-                        self.assertEqual(enemy.hp, hp)
-                        scene.update(.23)
+                    scene.update(.15)
+                    self.assertEqual(enemy.hp, hp)
+                    scene.update(.02)
+                    self.assertEqual(enemy.hp, hp)
+                    scene.update(.23)
                 self.assertIsNone(enemy.level)
                 self.assertNotIn(enemy, scene.level.objects)
             finally:
                 scene.exit()
+
+    def test_restart_during_attack_keeps_textures_and_removes_old_effects(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        try:
+            scene.update(0)
+            actor, enemy = scene.character, scene.level.enemy
+            image = enemy.frame.image
+            scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
+                                               button=pico.SDL_BUTTON_LEFT))
+            scene.update(0)
+            self.assertGreater(len(scene.level.objects), 3)
+            actor.take_hit()
+            enemy.take_hit()
+            old_objects = scene.level.objects[1:]
+            scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r, repeat=0))
+            scene.update(0)
+            self.assertTrue(all(obj.level is None for obj in old_objects))
+            self.assertEqual(len(scene.level.objects), 3)
+            self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
+            self.assertEqual(scene.character.invulnerability_remaining, 0)
+            self.assertIs(scene.level.enemy.frame.image, image)
+            self.assertFalse(image.closed)
+            scene.draw()
+        finally:
+            scene.exit()
+        self.assertTrue(image.closed)
