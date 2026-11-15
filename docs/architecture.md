@@ -320,7 +320,7 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 
 ## 기본 적 전투
 
-`game/enemy.py`의 금속 먼지 적은 기존 GameObject와 SpriteFrame을 사용한다. `GameplayLevel`이 적 한 마리와 워든의 전투 수명을 소유하며 `CharacterScene`의 ImageStore가 `assets/enemies/metal_dust.png`도 관리한다. 워든 자산 루트·로더와 공통 엔진은 유지한다. 적 리소스의 절대 경로는 모듈 위치를 기준으로 계산해 실행 디렉터리와 무관하게 읽는다.
+`game/enemy.py`의 금속 먼지 적은 기존 GameObject·SpriteClip·SpritePlayer를 사용한다. `GameplayLevel`이 적 한 마리와 워든의 전투 수명을 소유하며 `CharacterScene`의 ImageStore가 `assets/enemies/metal_dust_motion.png`도 관리한다. `animations.json`을 기존 `game/character.py`의 `_load_clip`으로 읽으며, 이 함수의 선택적 root로 적 폴더를 지정한다. 워든 호출의 기본 동작과 공통 엔진은 유지한다. 적 리소스 경로는 모듈 위치를 기준으로 계산한다. 각 전투 단계가 소비한 step만 SpritePlayer에 더하고 상태가 바뀌면 남은 dt가0이어도 새 클립의 첫 프레임을 선택한다. frame 프로퍼티가 현재 프레임을 반환하며 렌더는 시트 셀 크기를 그대로 사용한다. 이전의 단일 이미지 축소·확대 포즈는 제거했다.
 
 `feature/training-combat`의 `e343742`·`ebcad98`에서 검의 활성 구간·전방 상자·공격당 한 번 피해와 적 체력을 가져온다. 현재 선입력 업데이트에서는 활성 구간을 지난 당시의 스윙 ID와 상자를 보존하여 다음 공격과 명중 기록이 섞이지 않게 한다. 피해 수치와 돌진 규칙은 [기본 적 전투](systems/basic-enemy.md)가 소유하며 실제 결과는 [013 검증](../specs/013-basic-enemy/verification.md)에 기록한다.
 

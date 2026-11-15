@@ -1,0 +1,103 @@
+{
+  "name": "금속 먼지 덩어리 이동·공격",
+  "artSource": "host_image + existing-image rig inbetweens",
+  "route": "Codex built-in image_gen; local generate2dsprite / video2dsprite hibit processing",
+  "model": "도구가 별도 모델명을 반환하지 않음",
+  "estimateUsd": null,
+  "designSource": "metal_dust.png",
+  "designSourceSha256": "ec7579a7057e29497d4f9e08ceb1d128a84760ea7bc7966730c0ef08735031c2",
+  "file": "metal_dust_motion.png",
+  "sha256": "0c0e380a0735a97b6917bcf4c9e8ff1cd940ce8b5a1b3182e845631abcb4d54d",
+  "animations": "animations.json",
+  "frameSize": [
+    160,
+    112
+  ],
+  "pivot": [
+    80,
+    100
+  ],
+  "palette": "metal_dust.palette.json",
+  "paletteColors": 16,
+  "binaryAlpha": true,
+  "displayScale": 1,
+  "clips": {
+    "idle": {
+      "frames": 1,
+      "durationMs": 600,
+      "loop": true
+    },
+    "approach": {
+      "frames": 8,
+      "durationMs": 400,
+      "loop": true
+    },
+    "windup": {
+      "frames": 3,
+      "durationMs": 450,
+      "loop": false
+    },
+    "charge": {
+      "frames": 1,
+      "durationMs": 280,
+      "loop": false
+    },
+    "recover": {
+      "frames": 3,
+      "durationMs": 600,
+      "loop": false
+    }
+  },
+  "process": [
+    "image_gen locomotion poses + windup/charge/brake key poses",
+    "generate2dsprite.py process --scale-strategy registered --strict-qc",
+    "finish_frames.py hibit --palette assets/enemies/metal_dust.palette.json",
+    "이동 먼지 중간톤3색을 기존 팔레트의 한 단계 어두운 색으로 매핑; 금속색·알파 보존",
+    "원본의 소폭 리깅 중간 포즈2장과 접지 키포즈 평행이동·공통 셀 정렬",
+    "build_animation_clips.py --strict",
+    "export_engine.py --target aseprite-json --padding 0 --extrude 0"
+  ],
+  "qa": {
+    "paletteOutside": 0,
+    "alphaBinary": true,
+    "clippedFrames": 0,
+    "idleOriginalPixelsExact": true,
+    "clipBuilderWarnings": 0,
+    "exportRoundTrip": "pass"
+  },
+  "sourceWarnings": [
+    {
+      "file": "art/enemies/motion-v1/walk-spill/sheet-qc.json",
+      "id": "safe_frame",
+      "value": 2,
+      "threshold": 0,
+      "handling": "셀 침범·잘림0. 등록 셀과 최종 출력에서 여백 확인"
+    },
+    {
+      "file": "art/enemies/motion-v1/walk-spill/sheet-qc.json",
+      "id": "faint_specks",
+      "value": {
+        "floor_px": 376376,
+        "detached_components": 29
+      },
+      "threshold": 0,
+      "handling": "native_alpha hygiene 및 이진 알파 후처리"
+    },
+    {
+      "file": "art/enemies/motion-v1/walk-hibit-review/finish.json",
+      "id": "pixel-reduction",
+      "value": 2.882,
+      "threshold": 4.0,
+      "handling": "권장 원본 해상도 미달 경고 유지. 실제 픽셀 크기에서 검토; 업스케일로 검사를 회피하지 않음"
+    }
+  ],
+  "limits": [
+    "이동 포즈의 작은 먼지 질감 변화가 있음",
+    "돌진은 전용1포즈를 유지하며 게임의 위치 이동으로 진행",
+    "최종 미술·조작감은 사용자 직접 확인 전"
+  ],
+  "localSource": "art/enemies/motion-v1/",
+  "preview": "art/enemies/motion-v1/motion-preview.gif",
+  "localSelectedFrames": "art/enemies/motion-v1/selected-v2/",
+  "localExport": "art/enemies/motion-v1/export-v2/"
+}

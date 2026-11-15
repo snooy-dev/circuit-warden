@@ -40,8 +40,8 @@ class BasicEnemySceneTests(unittest.TestCase):
                 enemy = scene.level.enemy
                 image = enemy.frame.image
                 self.assertIsNot(image, previous)
-                self.assertEqual(enemy.frame.rect, (0, 0, 128, 104))
-                self.assertEqual(enemy.frame.pivot, (64 / 128, 92 / 104))
+                self.assertEqual(enemy.frame.rect, (0, 0, 160, 112))
+                self.assertEqual(enemy.frame.pivot, (80 / 160, 100 / 112))
                 enemy.facing = facing
                 scene.update(0)
                 pico.SDL_SetRenderDrawColor(pico.renderer, 20, 30, 40, 255)
@@ -104,6 +104,9 @@ class BasicEnemySceneTests(unittest.TestCase):
             self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
             self.assertEqual(scene.character.invulnerability_remaining, 0)
             self.assertIs(scene.level.enemy.frame.image, image)
+            self.assertIs(scene.level.enemy.clips, enemy.clips)
+            self.assertIs(scene.level.enemy.frame, enemy.clips['idle'].frames[0])
+            self.assertEqual(scene.level.enemy.animation.elapsed, 0)
             self.assertFalse(image.closed)
             scene.draw()
         finally:

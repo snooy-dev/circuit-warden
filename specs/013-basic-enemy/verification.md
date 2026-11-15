@@ -4,6 +4,18 @@
 
 2026-11-15: 원화 기반 hibit 적 1종의 양방향 전투 구현·선택한 검증 완료. 사용자 직접 조작감과 최종 미술 판단은 미확인이다.
 
+## 이동·공격 클립 통합 후속 검증
+
+FR-007의 사용자 요청과 리깅 우선·어색하면 이미지 포즈 전환이라는 답변에 따라 로컬 generate2dsprite의 출력 클립을 게임에 적용했다. 영상 경로는 없었으며 내장 ImageGen의 키포즈와 원본 리깅의 작은 중간 포즈2장을 사용했다. 기존 행동·피해 시간은 유지하고 전투 단계의 소비 시간만 SpritePlayer에 전달한다. 기존 스프라이트의 전체 크기 변형은 제거했다.
+
+- `git fetch origin` 뒤 `git merge --no-commit origin/main`: Already up to date. 사용자 원본 체크아웃은 수정하지 않았다.
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy -q`: **20개 통과**. 긴 dt의 회복 재생 시간·정확한 전환 경계의 첫 프레임·R 초기화·PNG 좌우 렌더·리소스 수명과 기존 전투 판정을 확인했다.
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m unittest tests.integration.test_character_scene.CharacterSceneTests.test_real_asset_draw_and_fresh_scene_lifetime tests.integration.test_character_scene.CharacterSceneTests.test_invalid_asset_on_enter_releases_already_loaded_texture -q`: **2개 통과**. 선택적 자산 root를 추가한 기존 로더의 워든 기본 호출과 실패 정리를 확인했다.
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir art/enemies/verification-motion-final`: **PASS**. 실제 SDL 이동 중간·예고 최대·돌진·회복, 점프 회피·피격·사망·R·양방향 타격·처치·리사이즈·텍스처 해제를 확인했다. 예고/돌진 캡처를 열어 접지·포즈·체력바 미표시를 관찰했다.
+- 원본 idle 픽셀 보존·공통160×112 셀·피벗(80,100)·팔레트 밖0·이진 알파·잘림0을 검사했다. 로컬 `build_animation_clips.py --strict` 경고0, `export_engine.py --target aseprite-json --padding 0 --extrude 0` 왕복 검사 PASS. 최종 이동 중간톤3색을 기존 팔레트의 어두운 단계로 맞추고 알파·금속색 보존 및 게임의16개 재생 위치/시간이 최종 Forge 출력과 같은지 확인했다. 색 보정 후 실제 SDL 이동 캡처(`art/enemies/verification-motion-palette/character-enemy-walk-palette.png`)도 확인했다. 코드·모양·시간이 같아 앞선 전투 검사 결과를 재사용했다. 상세 원본 QA 경고와 후처리 근거는 `assets/enemies/metal_dust_motion.json`에 보존했다. 이동 원본의 pixel-reduction 2.882<4 경고는 실제 해상도 한계로 남기고 게임 크기에서 확인했다.
+- `git diff --check`와 새 로컬 링크·최종 시트 SHA-256을 확인했다.
+- 시스템·아트 기준·구조·progress·검사 안내 및 FR-007·plan·T018~019를 대조했다. 새 범용 엔진 기능이나 전투 규칙은 추가하지 않았다. 전체 회귀는 재실행하지 않았다. 생성 포즈의 작은 질감 변화와 돌진1포즈 유지, 사용자 직접 품질 평가는 남는다.
+
 ## 크기·디테일 보정 자산 통합 후속 검증
 
 사용자의 적 크기·원화 디테일 보정 및 워든과 같은 픽셀 크기 요청에 따라 새 hibit 자산을 연결했다. 로더의 셀·피벗과 몸통 판정을 맞췄으며 공격 경계·돌진 접촉 시각·공중 회피 검사의 배치를 새 판정 크기에 맞게 이동했다. 전투 규칙 코드는 판정 크기 외에 변경하지 않았다.
@@ -46,14 +58,15 @@
 | FR-004 | 최초 접촉 시 보호·만료·체력 하한·사망 정지·대시 중 피격 |
 | FR-005 | 사망/처치/공격 중 R, 유지키·효과 제거·텍스처 재사용 |
 | FR-006, SC-003 | 기존 입력·점프·대시·선입력 회귀, 잔상 비피해 |
+| FR-007 | 모션 시간 경계·긴 dt·R·공유 로더 및 실제 이동/공격 PNG·SDL |
 | SC-002 | 최종 SDL smoke와 캡처 관찰 |
 | SC-DOC | 시스템 규칙·기술 구조·아트·검사 안내·진행 상태 동기화 |
 
-Spec Kit converge는 요구사항6개·성공 기준4개·수용 사례6개·작업16개와 기술 선택을 대조했고 남은 필수 구현이나 검증 누락을 발견하지 않았다. 첫 표시·검 타격 증분은 f5e518b로 보존했다.
+Spec Kit converge는 후속 요구사항 FR-007·작업 T018~019까지 코드·자산·docs·선택한 검증과 대조했고 남은 필수 구현이나 검증 누락을 발견하지 않았다. 첫 표시·검 타격 증분은 f5e518b로 보존했다.
 
 ## 한계와 미실행
 
-- 사용자 직접 조작감·전투 밸런스·최종 미술 품질은 미확인이다. 적은 단일 자세의 변형이며 관절 보행 시트가 없다.
+- 사용자 직접 조작감·전투 밸런스·최종 미술 품질은 미확인이다. 이동 포즈에는 작은 질감 변화가 있고 공격은 적은 키포즈로 구성된다. 돌진은 전용1포즈를 유지하면서 게임 위치가 이동한다.
 - 워든의 한 갱신 안 경로는 시작과 끝 사이의 선형 근사다. 적 경로는 단계별 선형 구간이다. 같은 갱신의 치명 검이 돌진보다 우선하는 현재 규칙을 유지한다.
 - 패링·전하·전체 맵/승패·다수 적·전체 회귀는 범위 밖이다. 공통 엔진을 수정하지 않아 전체 회귀는 선택하지 않았다.
 - 기존 체크아웃의 미커밋 점프·전하 변경은 건드리거나 포함하지 않았다. 과거 art/warden 후보 링크 일부는 원본 체크아웃에만 파일이 있으며 이번 자산과 새 링크는 작업트리에 존재한다.

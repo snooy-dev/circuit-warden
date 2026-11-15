@@ -1,14 +1,14 @@
 """기본 적 금속 먼지 덩어리."""
 
+import json
 from pathlib import Path
 
-from game_framework import GameObject, RenderItem, SpriteFrame, draw_sprite
+from game_framework import GameObject, RenderItem, SpritePlayer, draw_sprite
 
-from .character import GROUND_Y
+from .character import GROUND_Y, _load_clip
 
 
-IMAGE_PATH = Path(__file__).resolve().parents[1] / 'assets' / 'enemies' / 'metal_dust.png'
-WIDTH, HEIGHT = 128, 104
+ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'enemies'
 BODY_HEIGHT = 78
 HURT_HALF_WIDTH = 42
 SPAWN_X = 220.0
@@ -26,20 +26,33 @@ NEXT_PHASE = {
     'charge': ('recover', RECOVER_SECONDS),
     'recover': ('idle', IDLE_SECONDS),
 }
-POSE_SCALE = {'windup': (1.12, .76), 'charge': (1.15, .90), 'recover': (1.04, .88)}
 
 
-def load_enemy_frame(images):
-    image = images.load(IMAGE_PATH)
-    return SpriteFrame(image, (0, 0, WIDTH, HEIGHT), (64 / WIDTH, 92 / HEIGHT))
+def load_enemy_clips(images):
+    path = ASSETS / 'animations.json'
+    try:
+        animations = json.loads(path.read_text(encoding='utf-8'))
+        clips = {name: _load_clip(images, animations[name], ASSETS)
+                 for name in ('idle', 'approach', 'windup', 'charge', 'recover')}
+        for name, clip in clips.items():
+            if clip.loop != (name in ('idle', 'approach')):
+                raise ValueError('idle/approach만 반복해야 합니다.')
+        for name, seconds in (('windup', WINDUP_SECONDS), ('charge', CHARGE_SECONDS),
+                              ('recover', RECOVER_SECONDS)):
+            if abs(sum(clips[name].durations) - seconds) > 1e-9:
+                raise ValueError(f'{name} 클립 시간이 전투 시간과 다릅니다.')
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise ValueError(f'적 애니메이션 설정 오류: {path}: {error}') from error
+    return clips
 
 
 class Enemy(GameObject):
     MAX_HP = 3
 
-    def __init__(self, frame):
+    def __init__(self, clips):
         super().__init__()
-        self.frame = frame
+        self.clips = clips
+        self.animation = SpritePlayer(clips['idle'])
         self.x, self.y = SPAWN_X, float(GROUND_Y)
         self.facing = -1
         self.hp = self.MAX_HP
@@ -48,6 +61,10 @@ class Enemy(GameObject):
         self.state_remaining = IDLE_SECONDS
         self.motion = []
         self._charge_id = 0
+
+    @property
+    def frame(self):
+        return self.animation.frame
 
     @property
     def hurt_box(self):
@@ -66,6 +83,7 @@ class Enemy(GameObject):
     def update(self, dt):
         self.motion.clear()
         self.hit_remaining = max(0.0, self.hit_remaining - dt)
+        self.animation.play(self.clips[self.state])
         target = self.level.player
         elapsed = 0.0
         while dt > 0:
@@ -90,16 +108,17 @@ class Enemy(GameObject):
                 if self.state_remaining == 0:
                     self.state, self.state_remaining = NEXT_PHASE[self.state]
             if step > 0:
+                self.animation.update(step)
                 self.motion.append(((elapsed, elapsed + step), start_x, self.x - start_x, charge_id))
+            self.animation.play(self.clips[self.state])
             elapsed += step
             dt -= step
 
     def _draw(self, transform, opacity):
         if self.hit_remaining > 0 and int(self.hit_remaining / .045) % 2 == 0:
             opacity *= .3
-        width_scale, height_scale = POSE_SCALE.get(self.state, (1, 1))
         draw_sprite(self.frame, transform, (self.x, self.y),
-                    (WIDTH * width_scale, HEIGHT * height_scale), opacity, flip_x=self.facing < 0)
+                    self.frame.rect[2:], opacity, flip_x=self.facing < 0)
 
     def render_items(self):
         return (RenderItem(self._draw),)

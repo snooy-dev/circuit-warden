@@ -25,7 +25,7 @@ class BasicEnemySmoke(CharacterScene):
         self.next_step = self.started + .15
         self.steps = self.exercise()
         self.refs = (*[clip.frames[0].image for clip in self.character.clips.values()],
-                     self.level.enemy.frame.image)
+                     *[clip.frames[0].image for clip in self.level.enemy.clips.values()])
         self.previous_hp = self.level.enemy.hp
         self.previous_player_hp = self.character.hp
 
@@ -39,14 +39,20 @@ class BasicEnemySmoke(CharacterScene):
         self.capture('enemy-initial')
         yield from self.wait_until(lambda: enemy.state == 'approach')
         self.capture('enemy-approach')
+        yield .20
+        self.capture('enemy-approach-middle')
         yield from self.wait_until(lambda: enemy.state == 'windup')
         self.capture('enemy-windup')
         push_key(pico.SDLK_SPACE)
+        yield .25
+        self.capture('enemy-windup-peak')
         yield from self.wait_until(lambda: enemy.state == 'charge')
         self.capture('enemy-charge-jump')
         yield from self.wait_until(lambda: enemy.state == 'recover')
         assert actor.hp == 5, '예고를 보고 점프했지만 돌진 피해를 받음'
         self.capture('enemy-jump-evaded')
+        yield .18
+        self.capture('enemy-recover-middle')
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: actor.hp == 0)
         self.capture('enemy-player-defeated')

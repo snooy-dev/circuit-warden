@@ -22,9 +22,16 @@ class CombatFixture(unittest.TestCase):
         clips.update(prepare_idle_right=SpriteClip((frame,), (.1,), loop=False),
                      dash_right=SpriteClip((frame,), (.2,), loop=False),
                      dash_fx_right=attack)
+        enemy_clips = {
+            'idle': SpriteClip((frame,), (.6,)),
+            'approach': SpriteClip((frame, frame), (.2, .2)),
+            'windup': SpriteClip((frame, frame), (.15, .30), loop=False),
+            'charge': SpriteClip((frame,), (.28,), loop=False),
+            'recover': SpriteClip((frame, frame), (.30, .30), loop=False),
+        }
         self.level = GameplayLevel(None)
         with patch('game.scene.load_clips', return_value=clips), patch(
-                'game.scene.load_enemy_frame', return_value=frame):
+                'game.scene.load_enemy_clips', return_value=enemy_clips):
             self.level.open()
         self.addCleanup(self.level.close)
         self.actor = self.level.player
@@ -142,6 +149,18 @@ class EnemyChargeTests(CombatFixture):
                     self.level.update(enemy_rules.IDLE_SECONDS + enemy_rules.WINDUP_SECONDS
                                       + enemy_rules.CHARGE_SECONDS + .05)
                 self.assertEqual((self.enemy.state, self.actor.hp), ('recover', expected_hp))
+                self.assertIs(self.enemy.animation.clip, self.enemy.clips['recover'])
+                self.assertAlmostEqual(self.enemy.animation.elapsed, .05)
+
+    def test_animation_starts_new_clip_at_exact_state_boundary(self):
+        self.start_charge()
+        self.assertIs(self.enemy.animation.clip, self.enemy.clips['charge'])
+        self.assertEqual(self.enemy.animation.elapsed, 0)
+        self.level.update(enemy_rules.CHARGE_SECONDS)
+        self.assertIs(self.enemy.animation.clip, self.enemy.clips['recover'])
+        self.assertEqual(self.enemy.animation.elapsed, 0)
+        self.level.update(.05)
+        self.assertAlmostEqual(self.enemy.animation.elapsed, .05)
 
     def test_player_protection_expires_and_dead_player_can_reset(self):
         self.click()
@@ -166,6 +185,9 @@ class EnemyChargeTests(CombatFixture):
         self.assertIsNone(self.actor.level)
         self.assertIsNone(self.enemy.level)
         self.assertEqual(len(self.level.objects), 3)
+        self.assertIs(enemy.clips, self.enemy.clips)
+        self.assertIs(enemy.animation.clip, enemy.clips['idle'])
+        self.assertEqual(enemy.animation.elapsed, 0)
         self.level.handle_event(reset)
         self.assertIs(self.level.player, player)
         self.assertIs(self.level.enemy, enemy)

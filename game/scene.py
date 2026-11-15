@@ -10,7 +10,7 @@ from game_framework import GameObject, ImageStore, Level, LevelScene, RenderItem
 from .character import GROUND_Y, Character, load_clips
 from .combat import TIME_EPSILON, first_contact
 from .effects import SpriteEffect
-from .enemy import Enemy, load_enemy_frame
+from .enemy import Enemy, load_enemy_clips
 from .mode import GameplayMode
 
 
@@ -40,12 +40,12 @@ class GameplayLevel(Level):
     def on_open(self):
         self.spawn(_Ground())
         self.player = self.spawn(Character(load_clips(self.images)))
-        self.enemy = self.spawn(Enemy(load_enemy_frame(self.images)))
+        self.enemy = self.spawn(Enemy(load_enemy_clips(self.images)))
         self._last_hit_attack = 0
         self._last_contact_charge = None
 
     def reset_combat(self):
-        clips, frame = self.player.clips, self.enemy.frame
+        clips, enemy_clips = self.player.clips, self.enemy.clips
         view_bounds = self.player.view_bounds
         for obj in self.objects:
             if isinstance(obj, SpriteEffect):
@@ -54,7 +54,7 @@ class GameplayLevel(Level):
         self.enemy.destroy()
         self.player = self.spawn(Character(clips))
         self.player.view_bounds = view_bounds
-        self.enemy = self.spawn(Enemy(frame))
+        self.enemy = self.spawn(Enemy(enemy_clips))
         self._last_hit_attack = 0
         self._last_contact_charge = None
 

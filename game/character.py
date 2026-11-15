@@ -37,7 +37,7 @@ RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS
 
 
-def _load_clip(images, animation):
+def _load_clip(images, animation, root=None):
     filename = animation['file']
     if Path(filename).name != filename or Path(filename).suffix.lower() != '.png':
         raise ValueError('file은 에셋 폴더의 PNG 파일명이어야 합니다.')
@@ -57,7 +57,7 @@ def _load_clip(images, animation):
     indices = animation.get('frameIndices', range(count))
     if len(indices) != count or any(type(i) is not int or i < 0 for i in indices):
         raise ValueError('frameIndices는 프레임마다 하나의 비음수 정수여야 합니다.')
-    image = images.load(filename)
+    image = images.load(root / filename if root is not None else filename)
     frames = tuple(SpriteFrame(image, (i % columns * width, i // columns * height, width, height), pivot)
                    for i in indices)
     return SpriteClip(frames, tuple(ms / 1000 for ms in durations), loop=animation['loop'])

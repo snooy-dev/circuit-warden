@@ -52,5 +52,5 @@
     "pivotNote": "실루엣 중심으로 런타임 X 기준점을64로 지정. 픽셀 이동 없음."
   },
   "provenance": "PPT 원화 참조 → 내장 ImageGen으로 원화 디테일을 유지한 투명 배경 파생본 → hibit 16색 다수결 축소·1px 외곽선. generation-prompt는 metal_dust.prompt.txt.",
-  "review": "워든과 같은 원본1px=1월드 단위·16색을 적용. 보이는 높이78px·폭115px로 먼지층·구리 띠·금속 구슬을 보강했다. 사용자 최종 미술 평가는 미확인. 단일 자세이며 관절 보행 애니메이션은 없음."
+  "review": "워든과 같은 원본1px=1월드 단위·16색의 정지 디자인 기준이다. 게임 애니메이션은 metal_dust_motion.png와 animations.json을 사용한다. 사용자 최종 미술 평가는 미확인."
 }
