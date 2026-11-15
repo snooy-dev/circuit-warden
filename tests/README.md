@@ -49,3 +49,7 @@ SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다�
 같은 코드와 환경에서 통과한 결과는 재사용한다. 문서 수정만으로 게임 검사를 반복하지 않는다. 과거 001/008 실행 기록은 당시 커밋 기준이다.
 
 전하의 거리·상태 취소·선입력·알파 보간은 tests.unit.test_charge_teleport, 승인 v4 RGBA·전류 수명은 tests.unit.test_teleport_link, 실제 자산·좌표·장면 해제는 tests.integration.test_charge_scene을 선택한다. charge_smoke는 SDL 클릭으로10회 순간이동하며 목표 기준 활성화·100ms 진행 중 선입력·가로/세로/대각 연결·F6/F11·종료와 화면 캡처를 확인한다. 사용자 조작감 평가는 별도다.
+
+감사 회귀의 실제 창 검사는 `tests/smoke/audit_smoke.py --output-dir $testOutput`이다. SDL 큐의 F6 다음 묶음 클릭과 예약 공격 첫 프레임을 검사하며, 공격 시간 경계만 고정 dt로 재현한다.
+
+전하 합성 성능 비교는 `.\.venv\Scripts\python.exe -X utf8 -B tests/performance/charge_benchmark.py`다. 기본 기준 리비전은 `tests/fixtures/charge_composition.json`을 따르며 해당 Git 이력이 필요하다. 같은 장면의 RGBA 업로드를 먼저 비교한 뒤 기본5쌍을 교대 측정한다. 픽셀 CPU와 update/draw/SDL 소프트웨어 present를 분리하며 GPU·프레임 대기·사람의 입력은 측정하지 않는다. 성능 회귀가 의심될 때만 실행한다.

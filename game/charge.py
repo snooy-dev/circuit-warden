@@ -4,6 +4,7 @@ from ctypes import string_at
 from math import exp, floor, hypot, isfinite, pi, sin
 from pathlib import Path
 
+import numpy as np
 import pico2d.pico2d as pico
 
 from game_framework import GameObject, RenderItem, draw_image
@@ -17,37 +18,24 @@ ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'charge'
 
 
 def _pixels(data):
-    return {i: (data[i] * a / 255, data[i + 1] * a / 255, data[i + 2] * a / 255, a)
-            for i in range(0, len(data), 4) if (a := data[i + 3])}
-
-
-def _blend(first, second, value):
-    inverse = 1 - value
-    result = {i: (r * inverse, g * inverse, b * inverse, a * inverse)
-              for i, (r, g, b, a) in first.items()}
-    for i, (r, g, b, a) in second.items():
-        pr, pg, pb, pa = result.get(i, (0, 0, 0, 0))
-        result[i] = (pr + r * value, pg + g * value, pb + b * value, pa + a * value)
-    return result
+    pixels = np.frombuffer(data, dtype=np.uint8).reshape(SIZE, SIZE, 4).astype(np.float64)
+    rgb, alpha = pixels[:, :, :3], pixels[:, :, 3:]
+    rgb[:] = rgb * alpha / 255
+    return pixels
 
 
 def compose(inactive, active, pulse_a, pulse_b, value, fraction, bob):
     """premultiplied 보간 후 파동을 source-over; 마지막에만 straight RGBA로 복원."""
-    base = _blend(inactive, active, value)
-    for i, (r, g, b, a) in _blend(pulse_a, pulse_b, fraction).items():
-        i += bob * SIZE * 4
-        if 0 <= i < SIZE * SIZE * 4:
-            pr, pg, pb, pa = base.get(i, (0, 0, 0, 0))
-            inverse = 1 - a / 255
-            base[i] = (r + pr * inverse, g + pg * inverse, b + pb * inverse, a + pa * inverse)
-    data = bytearray(SIZE * SIZE * 4)
-    for i, (r, g, b, a) in base.items():
-        if a > 0:
-            data[i] = int(r * 255 / a + .5)
-            data[i + 1] = int(g * 255 / a + .5)
-            data[i + 2] = int(b * 255 / a + .5)
-            data[i + 3] = int(a + .5)
-    return bytes(data)
+    base = inactive * (1 - value) + active * value
+    first, last = max(0, -bob), min(SIZE, SIZE - bob)
+    if first < last:
+        pulse = pulse_a[first:last] * (1 - fraction) + pulse_b[first:last] * fraction
+        target = base[first + bob:last + bob]
+        target[:] = pulse + target * (1 - pulse[:, :, 3:] / 255)
+    rgb, alpha = base[:, :, :3], base[:, :, 3:]
+    np.divide(rgb * 255, alpha, out=rgb, where=alpha > 0)
+    base += .5
+    return base.astype(np.uint8).tobytes()
 
 
 def _load_frames(path, columns, count):

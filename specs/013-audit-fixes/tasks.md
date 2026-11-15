@@ -22,17 +22,17 @@
 
 ## Phase 4: User Story 2 - 효과 모양 유지와 성능
 
-- [ ] T009 [US2] requirements.txt에 NumPy 버전을 명시하고 게임 .venv에 설치하며 docs/architecture.md에 기록한다.
-- [ ] T010 [US2] 변경 전 game/charge.py의 출력 기준을 tests/fixtures/charge_composition.json에 보존하고 game/charge.py를 배열 합성으로 바꾼다.
-- [ ] T011 [US2] tests/unit/test_charge_teleport.py·tests/unit/test_teleport_link.py·tests/integration/test_charge_scene.py에서 RGBA·캐시·수명·자산을 검사한다.
-- [ ] T012 [US2] tests/performance/charge_benchmark.py로 전후 동일 시나리오 교대 측정과 출력 일치를 검증한다. FR-003/SC-003 미충족 시 보완한다.
-- [ ] T013 [US2] docs/architecture.md·tests/README.md·specs/013-audit-fixes/verification.md에 결과를 기록하고 성능 증분을 커밋한다.
+- [x] T009 [US2] requirements.txt에 NumPy 버전을 명시하고 게임 .venv에 설치하며 docs/architecture.md에 기록한다.
+- [x] T010 [US2] 변경 전 game/charge.py의 출력 기준을 tests/fixtures/charge_composition.json에 보존하고 game/charge.py를 배열 합성으로 바꾼다.
+- [x] T011 [US2] tests/unit/test_charge_teleport.py·tests/unit/test_teleport_link.py·tests/integration/test_charge_scene.py에서 RGBA·캐시·수명·자산을 검사한다.
+- [x] T012 [US2] tests/performance/charge_benchmark.py로 전후 동일 시나리오 교대 측정과 출력 일치를 검증한다. FR-003/SC-003 미충족 시 보완한다.
+- [x] T013 [US2] docs/architecture.md·tests/README.md·specs/013-audit-fixes/verification.md에 결과를 기록하고 성능 증분을 커밋한다.
 
 ## Phase 5: Documentation & Completion
 
-- [ ] T014 tests/ 전체 unittest를 한 번 실행하고 실제 SDL에서 예약 공격·표시 전환·전하·종료를 확인한다. 필요 시 tests/smoke/에 최소 재현 도구를 추가한다.
-- [ ] T015 docs/progress.md·specs/013-audit-fixes/verification.md·tasks.md를 결과와 맞추고 spec/plan/docs/코드 대응을 converge한다.
-- [ ] T016 assets/warden/jump_*.png 해시·기존 tmp 보존과 git diff --check를 확인하고 관련 변경만 최종 커밋한다.
+- [x] T014 tests/ 전체 unittest를 한 번 실행하고 실제 SDL에서 예약 공격·표시 전환·전하·종료를 확인한다. 필요 시 tests/smoke/에 최소 재현 도구를 추가한다.
+- [x] T015 docs/progress.md·specs/013-audit-fixes/verification.md·tasks.md를 결과와 맞추고 spec/plan/docs/코드 대응을 converge한다.
+- [x] T016 assets/warden/jump_*.png 해시·기존 tmp 보존과 git diff --check를 확인하고 관련 변경만 최종 커밋한다.
 
 ## Dependencies & Execution Order
 

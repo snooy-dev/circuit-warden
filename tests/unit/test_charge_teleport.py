@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pico2d.pico2d as pico
 
-from game.charge import Charge, ACTIVATION_DISTANCE, _pixels, compose
+from game.charge import Charge, ACTIVATION_DISTANCE, SIZE, _pixels, compose
 from game.character import BODY_HEIGHT, GROUND_Y, GRAVITY, TELEPORT_RISE_SECONDS
 from tests.unit import test_character as fixtures
 
@@ -122,12 +122,15 @@ class ChargeTeleportTests(unittest.TestCase):
                 charge.update(dt)
 
     def test_premultiplied_color_and_pulse_over(self):
-        red = _pixels(bytes((255, 0, 0, 255)))
-        blue = _pixels(bytes((0, 0, 255, 255)))
-        result = compose(red, blue, {}, {}, .5, 0, 0)
+        padding = bytes((SIZE * SIZE - 1) * 4)
+        red = _pixels(bytes((255, 0, 0, 255)) + padding)
+        blue = _pixels(bytes((0, 0, 255, 255)) + padding)
+        empty = _pixels(bytes((255, 0, 255, 0)) + padding)
+        result = compose(red, blue, empty, empty, .5, 0, 0)
         self.assertEqual(result[:4], bytes((128, 0, 128, 255)))
-        result = compose(red, {}, {}, {}, .5, 0, 0)
+        self.assertEqual(result[4:], padding)
+        result = compose(red, empty, empty, empty, .5, 0, 0)
         self.assertEqual(result[:4], bytes((255, 0, 0, 128)))
-        pulse = _pixels(bytes((0, 255, 0, 128)))
+        pulse = _pixels(bytes((0, 255, 0, 128)) + padding)
         result = compose(red, red, pulse, pulse, .5, 0, 0)
         self.assertEqual(result[:4], bytes((127, 128, 0, 255)))

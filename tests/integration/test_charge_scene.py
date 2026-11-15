@@ -1,10 +1,16 @@
+import json
 import unittest
 import weakref
+from hashlib import sha256
+from math import floor, nextafter
+from pathlib import Path
+from random import Random
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
+from game.charge import ChargeArt, compose
 from game.character import GROUND_Y
 from game.scene import CharacterScene
 from game.teleport_link import TeleportLink
@@ -189,6 +195,37 @@ class ChargeSceneTests(unittest.TestCase):
         ref = weakref.ref(art)
         del art
         self.assertIsNone(ref())
+
+    def test_approved_charge_composition_is_byte_identical(self):
+        reference = json.loads((Path(__file__).resolve().parents[1] /
+                                'fixtures/charge_composition.json').read_text(encoding='utf-8'))
+        art = ChargeArt()
+        frame_digest, composition_digest = sha256(), sha256()
+        for name in ('inactive', 'active', 'pulse'):
+            for rgba in art.frames[name]:
+                frame_digest.update(rgba)
+        self.assertEqual(frame_digest.hexdigest(), reference['frames_sha256'])
+
+        rng = Random(7)
+        samples = 0
+        for index in range(72):
+            elapsed = (index + .5) / 24
+            self.assertIs(art.frame(elapsed, 0), art.frames['inactive'][index])
+            self.assertIs(art.frame(elapsed, 1), art.frames['active'][index])
+            inactive, active = art.pixels('inactive', index), art.pixels('active', index)
+            values = (.01, .125, .25, .5, .75, .875, .99, rng.random(),
+                      nextafter((index % 8 + 1) / 9, 1))
+            for value in values:
+                phase = value * 9
+                lower = floor(phase)
+                pulse_a = art.pixels('pulse', lower)
+                pulse_b = art.pixels('pulse', min(lower + 1, 9))
+                for bob in (-1, 0, 1):
+                    composition_digest.update(compose(inactive, active, pulse_a, pulse_b,
+                                                      value, phase - lower, bob))
+                    samples += 1
+        self.assertEqual(samples, reference['samples'])
+        self.assertEqual(composition_digest.hexdigest(), reference['composition_sha256'])
 
     def test_initialization_failure_releases_partial_charge_resources(self):
         scene = CharacterScene()
