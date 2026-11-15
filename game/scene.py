@@ -57,7 +57,7 @@ class CharacterScene(LevelScene):
     def enter(self, engine):
         super().enter(engine)
         self.character.view_bounds = self.transform.bounds
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | Shift: dash | Click: charge / attack | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | Shift: dash | LMB: charge / attack | RMB: nearest charge | F6 / F11 | Esc')
 
     def handle_event(self, event):
         self.character.view_bounds = self.transform.bounds
@@ -76,5 +76,5 @@ class CharacterScene(LevelScene):
 
 
 def main():
-    print('게임플레이: A/D 이동 / Space 점프 / Shift 대시 / 왼쪽 클릭: 활성 전하 순간이동·그 외 공격 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
+    print('게임플레이: A/D 이동 / Space 점프 / Shift 대시 / 왼쪽 클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     Engine(*DEFAULT_SIZE).run(CharacterScene())
