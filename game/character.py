@@ -24,6 +24,9 @@ JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
 TELEPORT_RISE_SECONDS = .24
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
+ATTACK_ACTIVE_START = .10
+ATTACK_ACTIVE_END = .20
+ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
 # 10ms 프레임 기준: 착지 6~8번의 압축 자세 → 시작 4번 자세.
 LAND_CROUCH_START = .06
@@ -35,7 +38,7 @@ RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS
 
 
-def _load_clip(images, animation):
+def _load_clip(images, animation, root=None):
     filename = animation['file']
     if Path(filename).name != filename or Path(filename).suffix.lower() != '.png':
         raise ValueError('file은 에셋 폴더의 PNG 파일명이어야 합니다.')
@@ -55,7 +58,7 @@ def _load_clip(images, animation):
     indices = animation.get('frameIndices', range(count))
     if len(indices) != count or any(type(i) is not int or i < 0 for i in indices):
         raise ValueError('frameIndices는 프레임마다 하나의 비음수 정수여야 합니다.')
-    image = images.load(filename)
+    image = images.load(root / filename if root is not None else filename)
     frames = tuple(SpriteFrame(image, (i % columns * width, i // columns * height, width, height), pivot)
                    for i in indices)
     return SpriteClip(frames, tuple(ms / 1000 for ms in durations), loop=animation['loop'])
@@ -94,6 +97,8 @@ def _margins(clip):
 
 
 class Character(GameObject):
+    MAX_HP = 5
+
     def __init__(self, clips):
         super().__init__()
         self.clips = clips
@@ -102,9 +107,14 @@ class Character(GameObject):
         self.y = float(GROUND_Y)
         self.velocity_y = 0.0
         self.facing = 1
+        self.hp = self.MAX_HP
+        self.invulnerability_remaining = 0.0
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
+        self.attack_id = 0
+        self.attack_facing = 1
+        self.active_attack = None
         self.jump_phase = None
         self.jump_elapsed = 0.0
         self.dash_remaining = 0.0
@@ -135,6 +145,15 @@ class Character(GameObject):
         return self.y == GROUND_Y and self.velocity_y == 0
 
     @property
+    def hurt_box(self):
+        return self.x - 24, self.y, self.x + 24, self.y + BODY_HEIGHT
+
+    def take_hit(self):
+        if self.hp > 0 and self.invulnerability_remaining == 0:
+            self.hp -= 1
+            self.invulnerability_remaining = .75
+
+    @property
     def center(self):
         return self.x, self.y + BODY_HEIGHT / 2
 
@@ -149,6 +168,7 @@ class Character(GameObject):
     def teleport(self, position):
         if not self.can_teleport(position):
             return False
+        self.active_attack = None
         self._machine.teleport()
         self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
         self.velocity_y = 0.0
@@ -210,6 +230,8 @@ class Character(GameObject):
         return action
 
     def update(self, dt):
+        self.invulnerability_remaining = max(0.0, self.invulnerability_remaining - dt)
+        self.active_attack = None
         if self.view_bounds is None:
             self.buffered_action = None
         action = self._consume_action()
@@ -220,16 +242,16 @@ class Character(GameObject):
             self.buffer_remaining -= step
             action = self._consume_action()
             if action is not None:
-                self._update(0, action)
+                self._update(0, action, offset=step)
                 # 새 베기는 이번 Level 갱신에 포함되지 않으므로 공격도 첫 프레임을 유지한다.
                 if action == 'attack':
                     return
             elif self.buffer_remaining <= 1e-9:
                 self.buffered_action = None
         if dt > step:
-            self._update(dt - step)
+            self._update(dt - step, offset=step)
 
-    def _update(self, dt, action=None):
+    def _update(self, dt, action=None, offset=0):
         if action == 'dash':
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
@@ -242,9 +264,19 @@ class Character(GameObject):
         if started:
             self._machine.attack()
             self.player.play(self.clips['attack'], restart=True)
+            self.attack_id += 1
+            self.attack_facing = self.facing
         attacking = self.state == 'attack'
         if attacking and not started:
+            previous = self.player.elapsed
             self.player.update(dt)
+            if (self.active_attack is None and previous < ATTACK_ACTIVE_END
+                    and self.player.elapsed >= ATTACK_ACTIVE_START):
+                end = self.x + self.attack_facing * ATTACK_REACH
+                box = min(self.x, end), self.y + 8, max(self.x, end), self.y + 70
+                start = offset + min(dt, max(0, ATTACK_ACTIVE_START - previous))
+                stop = offset + ATTACK_ACTIVE_END - previous
+                self.active_attack = self.attack_id, box, (start, stop)
             if self.player.finished:
                 self._machine.finish()
 
@@ -434,6 +466,9 @@ class Character(GameObject):
         frame = self.player.frame
         width, height = frame.rect[2:]
         flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
+        if self.hp == 0 or (self.invulnerability_remaining > 0
+                            and int(self.invulnerability_remaining / .0625) % 2 == 0):
+            opacity *= .35
         draw_sprite(frame, transform, (self.x, self.y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 

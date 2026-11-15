@@ -272,7 +272,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 피해 판정·충돌·범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다. 기본 적 전투의 개별 피해 판정은 아래 후속 범위를 따른다.
 
 게임 기본 창은 사용자 요청에 따라 1280×720(16:9)이며, 기술 기본값은 view_height 600, 시트 1배, 속도 180 월드 단위/초, 바닥선 y=-180이다. 수평 A/D 조작은 사용자 결정이고 속도·배율·바닥선은 최종 수치가 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 idle/Run 전체 셀을 보존하고 너무 좁으면 중앙에 둔다. 공격은 같은 이동 경계를 쓰므로 화면 끝에서 검·여백 일부가 잘릴 수 있다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
 
@@ -318,6 +318,16 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 
 착지 연속 점프는 `_link_landing_jump`에서 land60~90ms의 유효 점프 예약을 소비하고 같은 jump 상태의 start40ms로 바꾼다. `_update_jump`가 착지60ms 경계를 분할하므로 긴 갱신도 연결 지점을 지나치지 않고 남은 시간을 이어 계산한다. 좌표·방향·클립 이미지는 변경하지 않는다.
 
+## 기본 적 전투
+
+`game/enemy.py`의 금속 먼지 적은 기존 GameObject·SpriteClip·SpritePlayer를 사용한다. `GameplayLevel`이 적 한 마리와 워든의 전투 수명을 소유하며 `CharacterScene`의 ImageStore가 `assets/enemies/metal_dust_motion.png`도 관리한다. `animations.json`을 기존 `game/character.py`의 `_load_clip`으로 읽으며, 이 함수의 선택적 root로 적 폴더를 지정한다. 워든 호출의 기본 동작과 공통 엔진은 유지한다. 적 리소스 경로는 모듈 위치를 기준으로 계산한다. 각 전투 단계가 소비한 step만 SpritePlayer에 더하고 상태가 바뀌면 남은 dt가0이어도 새 클립의 첫 프레임을 선택한다. frame 프로퍼티가 현재 프레임을 반환하며 렌더는 시트 셀 크기를 그대로 사용한다. 이전의 단일 이미지 축소·확대 포즈는 제거했다.
+
+`feature/training-combat`의 `e343742`·`ebcad98`에서 검의 활성 구간·전방 상자·공격당 한 번 피해와 적 체력을 가져온다. 현재 선입력 업데이트에서는 활성 구간을 지난 당시의 스윙 ID와 상자를 보존하여 다음 공격과 명중 기록이 섞이지 않게 한다. 피해 수치와 돌진 규칙은 [기본 적 전투](systems/basic-enemy.md)가 소유하며 실제 결과는 [013 검증](../specs/013-basic-enemy/verification.md)에 기록한다.
+
+전투 입력은 GameplayMode가 살아 있는 워든에만 전달하며 R의 반복 KEYDOWN을 억제한다. GameplayLevel.reset_combat는 기존 클립·이미지를 재사용하고 두 캐릭터와 일회성 효과를 정리한 뒤 새 캐릭터를 배치한다. 같은 장면 안의 재시작에서는 텍스처를 닫지 않고 장면 종료 시 ImageStore가 해제한다. 워든 체력 0에서는 레벨 갱신을 멈추지만 R·창 크기·전체화면·종료 입력은 유지한다. AABB의 접촉 시간 계산은 `game/combat.py`가 담당한다. 워든과 적은 스프라이트만 그리며 사용자 요청으로 체력바 출력은 제거했다.
+
+검 판정은 활성 스윙 ID·상자·시간 구간을 적의 단계별 이동 기록과 교차한다. 돌진은 양측의 같은 시각 상대 위치에서 첫 접촉을 구해 그 시각의 보호 상태를 확인한다. 워든의 프레임 안 경로는 시작/끝 위치 사이 선형 근사이며 행동별 세부 경로 계산은 하지 않는다. 엔진 시간 처리와 기존 행동·입력 버퍼는 유지한다.
+
 ## 전하 순간이동
 
 CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 지상 도착은idle, 공중 도착은상승(상단 여유0이면 낙하)으로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 공중 도착 수직 속도는 min(GRAVITY×TELEPORT_RISE_SECONDS, sqrt(2×GRAVITY×상단 여유))로 교체하며 기존 중력·정점 분할·상승/낙하 모션을 재사용한다. 속도는 누적하지 않고 공중 대시 소모 이력을 유지한다. 시간·높이 시험값은 전하 시스템 문서를 따른다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
@@ -331,3 +341,5 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
 
 GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 공중 도착만 기록하고 지상 도착은 비운다. after_update에서 grounded이면 착지 모션 종료를 기다리지 않고 비우며 on_end에서도 해제한다.
+
+전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R 이후에도 전하 활성 상태는 후처리에서 현재 위치에 맞춘다. R은 TeleportLink 객체·예약·마지막 전하를 제거하고 전하 배치·아트는 재사용한다.

@@ -1,0 +1,124 @@
+{
+  "idle": {
+    "file": "metal_dust_motion.png",
+    "frameSize": [
+      160,
+      112
+    ],
+    "columns": 4,
+    "count": 1,
+    "pivot": [
+      80,
+      100
+    ],
+    "durationsMs": [
+      600
+    ],
+    "frameIndices": [
+      0
+    ],
+    "loop": true
+  },
+  "approach": {
+    "file": "metal_dust_motion.png",
+    "frameSize": [
+      160,
+      112
+    ],
+    "columns": 4,
+    "count": 8,
+    "pivot": [
+      80,
+      100
+    ],
+    "durationsMs": [
+      75,
+      75,
+      75,
+      75,
+      75,
+      75,
+      75,
+      75
+    ],
+    "frameIndices": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "loop": true
+  },
+  "windup": {
+    "file": "metal_dust_motion.png",
+    "frameSize": [
+      160,
+      112
+    ],
+    "columns": 4,
+    "count": 3,
+    "pivot": [
+      80,
+      100
+    ],
+    "durationsMs": [
+      50,
+      100,
+      300
+    ],
+    "frameIndices": [
+      0,
+      9,
+      10
+    ],
+    "loop": false
+  },
+  "charge": {
+    "file": "metal_dust_motion.png",
+    "frameSize": [
+      160,
+      112
+    ],
+    "columns": 4,
+    "count": 1,
+    "pivot": [
+      80,
+      100
+    ],
+    "durationsMs": [
+      280
+    ],
+    "frameIndices": [
+      11
+    ],
+    "loop": false
+  },
+  "recover": {
+    "file": "metal_dust_motion.png",
+    "frameSize": [
+      160,
+      112
+    ],
+    "columns": 4,
+    "count": 3,
+    "pivot": [
+      80,
+      100
+    ],
+    "durationsMs": [
+      150,
+      150,
+      300
+    ],
+    "frameIndices": [
+      12,
+      13,
+      0
+    ],
+    "loop": false
+  }
+}

@@ -1,4 +1,4 @@
-"""플레이 레벨의 플레이어 입력 전달."""
+"""플레이 레벨의 입력 전달과 전투 초기화."""
 
 from math import hypot
 
@@ -10,6 +10,9 @@ from .teleport_link import TeleportLink
 
 
 class GameplayMode(GameMode):
+    def on_start(self):
+        self.reset_held = False
+
     def __init__(self):
         super().__init__()
         self.event_to_world = None
@@ -37,6 +40,12 @@ class GameplayMode(GameMode):
             candidate.active = candidate.in_range(self.activation_origin)
 
     def after_update(self):
+        if self.level.player.hp == 0:
+            self.pending_charge = None
+            if self.teleport_link is not None:
+                self.teleport_link.destroy()
+                self.teleport_link = None
+            return
         if self.level.player.view_bounds is None:
             self.pending_charge = None
         if self.teleport_link is not None and self.teleport_link.level is not self.level:
@@ -47,8 +56,8 @@ class GameplayMode(GameMode):
                 if self.teleport_link is not None:
                     # 갱신 후 생성한 효과는 다음 프레임부터 경과 시간을 모두 소비한다.
                     self.teleport_link.update(0)
-            for candidate in self.level.charges:
-                candidate.active = candidate.in_range(self.activation_origin)
+        for candidate in self.level.charges:
+            candidate.active = candidate.in_range(self.activation_origin)
         if self.level.player.grounded:
             self.last_charge = None
 
@@ -57,8 +66,17 @@ class GameplayMode(GameMode):
         self.pending_charge = self.teleport_link = self.last_charge = None
 
     def on_event(self, event):
+        if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_r:
+            if not self.reset_held:
+                self.level.reset_combat()
+                self.reset_held = True
+            return
+        if (event.type == pico.SDL_KEYUP and event.key == pico.SDLK_r
+                or event.type == pico.SDL_WINDOWEVENT and event.event in (
+                    pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED)):
+            self.reset_held = False
         player = self.level.player
-        if player.level is self.level:
+        if player.level is self.level and player.hp > 0:
             if player.view_bounds is None:
                 self.pending_charge = None
             if event.type == pico.SDL_WINDOWEVENT and event.event in (

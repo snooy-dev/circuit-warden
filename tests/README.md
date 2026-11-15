@@ -14,6 +14,7 @@
 
 | 확인할 위험 | 선택할 위치 |
 |---|---|
+| 기본 적의 타격·돌진·모션 시간 경계·피격 보호·재시작 | unit/test_basic_enemy.py, integration/test_basic_enemy.py |
 | 캐릭터 이동·공격 전이·재생 | unit/test_character.py의 해당 메서드 |
 | 이미지 로딩·실패/종료 해제 | integration/test_character_scene.py, test_scene_integration.py의 해당 메서드 |
 | 루프·이벤트·장면 수명 | unit/test_engine.py, test_game_framework.py의 해당 메서드 |
@@ -28,6 +29,7 @@
 
 | 변경 범위 | 선택 명령 |
 |---|---|
+| 기본 적의 이동·공격 포즈·양방향 전투·회피·체력·재시작 | `.\.venv\Scripts\python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir $testOutput` |
 | 전하 선택·취소·연결·창 좌표 | `.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOutput` |
 | 캐릭터 출력·입력 | `.\.venv\Scripts\python.exe -B tests/smoke/character_smoke.py --output-dir $testOutput` |
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |
