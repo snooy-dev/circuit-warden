@@ -320,7 +320,7 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 
 ## 전하 순간이동
 
-CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 상태 머신을 idle/낙하로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
+CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 지상 도착은idle, 공중 도착은상승(상단 여유0이면 낙하)으로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 공중 도착 수직 속도는 min(GRAVITY×TELEPORT_RISE_SECONDS, sqrt(2×GRAVITY×상단 여유))로 교체하며 기존 중력·정점 분할·상승/낙하 모션을 재사용한다. 속도는 누적하지 않고 공중 대시 소모 이력을 유지한다. 시간·높이 시험값은 전하 시스템 문서를 따른다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
 
 GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.activation_origin은 진행 중 연결의 도착점, 평소에는 캐릭터 중심이다. 시작 이벤트에서 즉시 전하 논리 상태를 갱신하고 이후 Charge.update도 같은 기준을 사용한다. ChargeArt는 승인 PNG를 SDL surface로 한 번 읽어 프레임 바이트를 공유하고 surface를 즉시 해제한다. Charge는 80×80 streaming texture를 소유하며 종료·생성 실패에서 해제한다. 두 상태와 파동은 premultiplied 보간 후 source-over 합성해 업로드하며 안정 상태는 원본 프레임을 직접 사용한다. 위상은 24fps·3초 공유 시간이고 중간 반전은 값·속도를 유지한다. 엔진/공용 프레임워크·게임 의존성은 변경하지 않았다.
 

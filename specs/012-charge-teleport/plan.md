@@ -4,7 +4,7 @@
 
 ## Summary
 
-기존 GameplayLevel에 전하 객체를 배치하고 CharacterScene의 event_to_world로 선택한다. GameplayMode가 공격보다 전하 선택을 먼저 처리하고 Character.teleport가 모든 행동을 낙하/idle로 전환한다. 승인된 전하 전환·400ms 원본 연결식을100ms 재생으로 압축해 Python으로 재사용한다.
+기존 GameplayLevel에 전하 객체를 배치하고 CharacterScene의 event_to_world로 선택한다. GameplayMode가 공격보다 전하 선택을 먼저 처리하고 Character.teleport가 모든 행동을 공중 상승(상단 여유0이면 낙하)/idle로 전환한다. 승인된 전하 전환·400ms 원본 연결식을100ms 재생으로 압축해 Python으로 재사용한다.
 
 ## Technical Context
 
@@ -46,6 +46,8 @@
 
 ## Verification & Risks
 
-[quickstart.md](quickstart.md)의 표적 검사와 SDL smoke를 수행한다. alpha 보간·부호 뒤집힘·상태 취소 누락·resize 오선택·종료 누수가 구체적 위험이다. 기존 jump/dash 선입력 관련 검사는 변경 영향이 있는 항목만 재사용/실행한다. 활성 거리/배치/재사용·조작감은 사용자 플레이 전이다. 전체 회귀는 선택하지 않는다.
+[quickstart.md](quickstart.md)의 표적 검사와 SDL smoke를 수행한다. alpha 보간·부호 뒤집힘·상태 취소 누락·resize 오선택·종료 누수가 구체적 위험이다. 기존 jump/dash 선입력 관련 검사는 변경 영향이 있는 항목만 재사용/실행한다. 기존 즉시 낙하는 사용자 플레이에서 반응 시간이 부족하다는 피드백을 받았다. 새 상승 관성과 활성 거리/배치/재사용의 최종 조작감은 사용자 재확인 전이다. 전체 회귀는 선택하지 않는다.
 
 후속 입력 규칙: GameplayMode가 진행 중 TeleportLink와 마지막 예약 전하를 보관한다. 활성 기준점은 진행 중 효과의 도착점이며 시작 이벤트에서 즉시 전하 상태를 갱신한다. CharacterScene은 Level 갱신 후 모드의 예약 실행을 호출해 효과 종료와 같은 프레임에 다음 이동을 시작한다. 첫 프레임 시간은 생성 시점과 최초 출력 여부를 반영한다. 논리 활성과 승인 상태 보간은 분리한다.
+
+공중 도착 관성 조정: game/character.py의 teleport에서 기존 수직 속도를 GRAVITY×0.16으로 교체하고 rise 모션을 재사용한다. 상단 여유로 허용되는 속도 sqrt(2×GRAVITY×여유)로 제한한다. 기존 _update_jump/_advance_vertical은 그대로 사용하며 공중 대시 이력·100ms 전류/진행·목표 기준 활성화·선입력은 유지한다. tests/unit/test_charge_teleport.py의 정점·분할 시간·복귀·상단·비누적 검사, tests/integration/test_charge_scene.py의 예약 연결과 tests/smoke/charge_smoke.py의 실제 상승/낙하 관찰을 선택한다. 해당 코드/테스트와 시스템·기술 구조·게임 설계·progress·012 문서를 한 증분으로 커밋한다. 새 아트/의존성/공용 엔진 변경이 없어 나머지 검사는 기존 근거를 재사용한다.

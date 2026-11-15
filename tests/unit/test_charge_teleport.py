@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pico2d.pico2d as pico
 
 from game.charge import Charge, ACTIVATION_DISTANCE, _pixels, compose
-from game.character import BODY_HEIGHT, GROUND_Y
+from game.character import BODY_HEIGHT, GROUND_Y, GRAVITY, TELEPORT_RISE_SECONDS
 from tests.unit import test_character as fixtures
 
 
@@ -26,7 +26,8 @@ class ChargeTeleportTests(unittest.TestCase):
                 actor.air_dash_used = True
                 self.assertTrue(actor.teleport((130, 100)))
                 self.assertEqual(actor.center, (130, 100))
-                self.assertEqual((actor.state, actor.jump_phase, actor.velocity_y), ('jump', 'fall', 0))
+                self.assertEqual((actor.state, actor.jump_phase), ('jump', 'rise'))
+                self.assertAlmostEqual(actor.velocity_y, GRAVITY * TELEPORT_RISE_SECONDS)
                 self.assertIsNone(actor.buffered_action)
                 self.assertIsNone(actor.dash_phase)
                 self.assertFalse(actor.attack_requested or actor.jump_requested or actor.dash_requested)
@@ -34,12 +35,49 @@ class ChargeTeleportTests(unittest.TestCase):
                 self.assertEqual(actor.facing, -1)
                 actor.update(.05)
                 self.assertLess(actor.x, 130)
-                self.assertLess(actor.center[1], 100)
+                self.assertGreater(actor.center[1], 100)
                 actor.pressed.clear()
                 actor.update(1)
                 self.assertTrue(actor.grounded)
                 self.assertFalse(actor.air_dash_used)
                 self.assertEqual(actor.state, 'idle')
+
+    def test_lift_apex_return_partition_and_no_velocity_accumulation(self):
+        for steps in ((.16,), (.01,) * 16):
+            actor = self.make_character()
+            actor.facing = -1
+            actor.air_dash_used = True
+            actor.teleport((0, 100))
+            self.assertIs(actor.player.clip, self.clips['jump_rise_left'])
+            for dt in steps:
+                actor.update(dt)
+            self.assertAlmostEqual(actor.center[1], 126.56)
+            self.assertAlmostEqual(actor.velocity_y, 0)
+            self.assertEqual(actor.jump_phase, 'fall')
+            actor.update(.16)
+            self.assertAlmostEqual(actor.center[1], 100)
+            self.assertLess(actor.velocity_y, 0)
+            actor.teleport((10, 80))
+            speed = actor.velocity_y
+            actor.update(.05)
+            actor.teleport((20, 100))
+            self.assertEqual(actor.velocity_y, speed)
+            self.assertTrue(actor.air_dash_used)
+
+    def test_lift_fits_ceiling_and_zero_headroom_falls(self):
+        actor = self.character
+        top = actor.view_bounds[3]
+        for room in (0, 5):
+            actor.teleport((0, top - BODY_HEIGHT / 2 - room))
+            if room:
+                self.assertEqual(actor.jump_phase, 'rise')
+                self.assertLess(actor.velocity_y, GRAVITY * TELEPORT_RISE_SECONDS)
+                actor.update(actor.velocity_y / GRAVITY)
+                self.assertAlmostEqual(actor.y + BODY_HEIGHT, top)
+            else:
+                self.assertEqual((actor.jump_phase, actor.velocity_y), ('fall', 0))
+            actor.update(.01)
+            self.assertLess(actor.y + BODY_HEIGHT, top)
 
     def test_invalid_destination_does_not_cancel_and_ground_arrival_resets(self):
         actor = self.character

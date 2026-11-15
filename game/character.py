@@ -21,6 +21,7 @@ JUMP_HEIGHT = BODY_HEIGHT * 2
 JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
+TELEPORT_RISE_SECONDS = .16
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
 INPUT_BUFFER_SECONDS = .1
@@ -163,7 +164,9 @@ class Character(GameObject):
             self.player.play(self.clips['idle'])
         else:
             self._machine.jump()
-            self.jump_phase = 'fall'
+            headroom = max(0, self.view_bounds[3] - self.y - BODY_HEIGHT)
+            self.velocity_y = min(GRAVITY * TELEPORT_RISE_SECONDS, sqrt(2 * GRAVITY * headroom))
+            self.jump_phase = 'rise' if self.velocity_y > 0 else 'fall'
             self._show_jump()
         return True
 

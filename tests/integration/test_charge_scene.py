@@ -35,7 +35,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(actor.state, 'attack')
         self.click(target.position)
         self.assertEqual(actor.center, target.position)
-        self.assertEqual(actor.jump_phase, 'fall')
+        self.assertEqual(actor.jump_phase, 'rise')
         scene.update(0)
         scene.update(.1)
         self.click(target.position)
@@ -100,7 +100,7 @@ class ChargeSceneTests(unittest.TestCase):
         scene.update(.001)
         second = [o for o in scene.level.objects if isinstance(o, TeleportLink)][-1]
         self.assertEqual(second.end, second_target.position)
-        self.assertLess(second.start[1], second_start[1])
+        self.assertGreater(second.start[1], second_start[1])
         self.assertEqual(actor.center, second_target.position)
         self.assertIsNone(actor.buffered_action)
         self.assertIsNone(scene.level.mode.pending_charge)
@@ -123,7 +123,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.click(last.position)
         self.assertEqual(actor.center, first.position)
         scene.update(0)
-        # 낙하로 실제 중심에서는 범위를 벗어나도 진행 중 활성 기준은 도착점이다.
+        # 실제 중심이 범위를 벗어나도 진행 중 활성 기준은 도착점이다.
         actor.y -= 40
         self.assertFalse(last.in_range(actor.center))
         scene.update(.1)

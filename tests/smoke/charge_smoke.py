@@ -61,7 +61,7 @@ class ChargeSmoke(CharacterScene):
         link = self.level.mode.teleport_link
         if link is not None and link not in self.links:
             self.teleports += 1
-            assert self.character.jump_phase == 'fall' and self.character.velocity_y == 0
+            assert self.character.jump_phase == 'rise' and self.character.velocity_y > 0
             assert self.character.buffered_action is None and link.end == self.character.center
             self.links.append(link)
             self.capture_first = f'charge-first-{self.teleports}'
@@ -75,10 +75,15 @@ class ChargeSmoke(CharacterScene):
         self.click(self.charges[2].position)
         yield .06
         assert actor.state == 'jump' and actor.x == 140
+        assert actor.center[1] > self.charges[2].position[1] and actor.velocity_y > 0
         self.capture('charge-attack-cancel')
+        self.capture('charge-lift-rise')
+        yield .19
+        assert actor.jump_phase == 'fall' and actor.center[1] > self.charges[2].position[1]
+        self.capture('charge-lift-fall')
         for index in (4, 1, 0):
             self.click(self.charges[index].position)
-            yield .11
+            yield .08
             assert actor.x == self.charges[index].position[0]
             self.capture(f'charge-chain-{index}')
         yield .8
@@ -90,7 +95,7 @@ class ChargeSmoke(CharacterScene):
         assert actor.jump_phase == 'start'
         self.click(self.charges[2].position)
         yield .06
-        assert actor.jump_phase == 'fall'
+        assert actor.jump_phase == 'rise'
         self.capture('charge-jump-cancel')
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
         actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
@@ -99,7 +104,7 @@ class ChargeSmoke(CharacterScene):
         assert actor.state == 'dash'
         self.click(self.charges[2].position)
         yield .06
-        assert actor.jump_phase == 'fall' and actor.dash_phase is None
+        assert actor.jump_phase == 'rise' and actor.dash_phase is None
         self.capture('charge-dash-cancel')
         push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
         yield .12

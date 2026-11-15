@@ -37,3 +37,9 @@ T001→T002→T003~T007→T009~T011→T014~T016→T012~T013. T008은 확정된 �
 - [x] T014 [US1] game/mode.py·game/charge.py·game/scene.py에 FR-008 목표 지점 즉시 활성화·진행 중 재시작 금지·마지막 유효 전하 선입력·종료 후 재검사·포커스/출력 취소를 연결한다.
 - [x] T015 [US2] game/teleport_link.py의 승인 형태를100ms로 압축하고 tests/unit/test_teleport_link.py·tests/integration/test_charge_scene.py·tests/smoke/charge_smoke.py에서 경계·선입력·출력·수명을 확인한다.
 - [x] T016 docs/systems/charge-teleport.md·docs/architecture.md·docs/art-direction.md·docs/progress.md와 specs/012-charge-teleport/verification.md를 새 규칙에 맞추고 T012~T013을 마무리한다.
+
+## Phase 6: 공중 도착 후 약한 상승 관성
+
+- [x] T017 [US1] FR-004와 플레이 피드백을 docs/systems/charge-teleport.md·specs/012-charge-teleport/spec.md·plan.md에 반영하고 game/character.py에160ms 상승·상단 제한·속도 비누적을 적용한다.
+- [x] T018 [US1] tests/unit/test_charge_teleport.py·tests/integration/test_charge_scene.py·tests/smoke/charge_smoke.py에서 정점/복귀/상단/선입력/대시 이력과 실제 화면을 확인한다.
+- [x] T019 docs/architecture.md·docs/game-design.md·docs/progress.md와 specs/012-charge-teleport/verification.md를 실제 결과에 맞추고 대응·링크·공백 확인 후 커밋한다.
