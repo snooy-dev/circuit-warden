@@ -1,7 +1,7 @@
 """Warden의 이동·점프·대시·단발 공격과 스프라이트 상태."""
 
 import json
-from math import sqrt
+from math import isfinite, sqrt
 from pathlib import Path
 
 import pico2d.pico2d as pico
@@ -21,6 +21,7 @@ JUMP_HEIGHT = BODY_HEIGHT * 2
 JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
+TELEPORT_RISE_SECONDS = .16
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
 INPUT_BUFFER_SECONDS = .1
@@ -104,11 +105,8 @@ class Character(GameObject):
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
-        self.attack_requested = False
-        self.jump_requested = False
         self.jump_phase = None
         self.jump_elapsed = 0.0
-        self.dash_requested = False
         self.dash_remaining = 0.0
         self.dash_phase = None
         self.air_dash_used = False
@@ -117,7 +115,8 @@ class Character(GameObject):
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
                          ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle'],
                          ['dash', ['idle', 'run', 'jump'], 'dash'], ['end_dash', 'dash', 'idle'],
-                         ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle']],
+                         ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle'],
+                         ['teleport', '*', 'idle']],
         )
         self.view_bounds = None
         self._idle_margins = _margins(clips['idle'])
@@ -135,14 +134,43 @@ class Character(GameObject):
     def grounded(self):
         return self.y == GROUND_Y and self.velocity_y == 0
 
+    @property
+    def center(self):
+        return self.x, self.y + BODY_HEIGHT / 2
+
+    def can_teleport(self, position):
+        if self.view_bounds is None or not all(isfinite(v) for v in position):
+            return False
+        x, y = position
+        left, _, right, top = self.view_bounds
+        return (left + self._left_margin <= x <= right - self._right_margin
+                and GROUND_Y + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2)
+
+    def teleport(self, position):
+        if not self.can_teleport(position):
+            return False
+        self._machine.teleport()
+        self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
+        self.velocity_y = 0.0
+        self.buffered_action, self.buffer_remaining = None, 0.0
+        self.dash_phase, self.dash_remaining = None, 0.0
+        self.jump_phase, self.jump_elapsed = None, 0.0
+        if self.grounded:
+            self.air_dash_used = False
+            self.player.play(self.clips['idle'])
+        else:
+            self._machine.jump()
+            headroom = max(0, self.view_bounds[3] - self.y - BODY_HEIGHT)
+            self.velocity_y = min(GRAVITY * TELEPORT_RISE_SECONDS, sqrt(2 * GRAVITY * headroom))
+            self.jump_phase = 'rise' if self.velocity_y > 0 else 'fall'
+            self._show_jump()
+        return True
+
     def control(self, event):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()
             self.buffered_action = None
-            self.attack_requested = False
-            self.jump_requested = False
-            self.dash_requested = False
         elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE}:
             if event.key == pico.SDLK_SPACE and event.key not in self.pressed:
                 self._queue_action('jump')
@@ -169,7 +197,7 @@ class Character(GameObject):
 
     def _consume_action(self):
         if self._link_landing_jump():
-            return True
+            return 'jump'
         action = self.buffered_action
         free = self.state in ('idle', 'run')
         allowed = free and self.grounded
@@ -177,44 +205,40 @@ class Character(GameObject):
             allowed = (free or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
                 self.grounded or not self.air_dash_used)
         if action is None or not allowed or self.view_bounds is None:
-            return False
-        setattr(self, f'{action}_requested', True)
+            return None
         self.buffered_action = None
-        return True
+        return action
 
     def update(self, dt):
         if self.view_bounds is None:
             self.buffered_action = None
-        self._consume_action()
+        action = self._consume_action()
         # 만료 시점을 넘는 갱신도 오래된 입력을 실행하지 않도록 나눈다.
         step = min(dt, self.buffer_remaining) if self.buffered_action else dt
-        self._update(step)
+        self._update(step, action)
         if self.buffered_action:
             self.buffer_remaining -= step
-            if self._consume_action():
-                self._update(0)
+            action = self._consume_action()
+            if action is not None:
+                self._update(0, action)
+                # 새 베기는 이번 Level 갱신에 포함되지 않으므로 공격도 첫 프레임을 유지한다.
+                if action == 'attack':
+                    return
             elif self.buffer_remaining <= 1e-9:
                 self.buffered_action = None
         if dt > step:
             self._update(dt - step)
 
-    def _update(self, dt):
-        if (self.dash_requested and (self.state in ('idle', 'run') or
-                self.state == 'jump' and self.jump_phase in ('rise', 'fall'))
-                and (self.grounded or not self.air_dash_used) and self.view_bounds is not None):
+    def _update(self, dt, action=None):
+        if action == 'dash':
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
             self._play_dash_phase(entry)
             self.air_dash_used = not self.grounded
-        self.dash_requested = False
-        if (self.jump_requested and self.grounded and self.state in ('idle', 'run')
-                and self.view_bounds is not None):
+        elif action == 'jump' and self.state != 'jump':
             self._machine.jump()
             self.jump_phase, self.jump_elapsed = 'start', 0.0
-        self.jump_requested = False
-        started = (self.attack_requested and self.grounded and self.state in ('idle', 'run')
-                   and self.view_bounds is not None)
-        self.attack_requested = False
+        started = action == 'attack'
         if started:
             self._machine.attack()
             self.player.play(self.clips['attack'], restart=True)

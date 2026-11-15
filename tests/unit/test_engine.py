@@ -256,7 +256,7 @@ class EngineTests(unittest.TestCase):
 
     def test_display_request_deferred_and_fullscreen_failure_cleans_up(self):
         self.pico.SDL_SetWindowFullscreen.return_value = -1
-        self.pico.get_events.side_effect = [[], [event(1)]]
+        self.pico.get_events.side_effect = [[], []]
         scene = self.scene()
         scene.update.side_effect = lambda dt: self.app.set_display(fullscreen=True)
         with self.assertRaisesRegex(RuntimeError, '전체화면 전환 실패'):
@@ -266,21 +266,86 @@ class EngineTests(unittest.TestCase):
         self.pico.close_canvas.assert_called_once()
         self.assertFalse(self.app.fullscreen)
 
-    def test_fullscreen_return_restores_window_size_and_resize_request(self):
-        self.pico.SDL_SetWindowFullscreen.return_value = 0
-        self.pico.SDL_SetWindowSize.reset_mock()
-        self.app.set_display(fullscreen=True)
+    def test_quit_skips_pending_display_change(self):
+        scene = self.scene()
+        scene.update.side_effect = lambda dt: self.app.set_display(fullscreen=True)
+        self.app.run(scene)
         self.pico.SDL_SetWindowFullscreen.assert_not_called()
-        self.app._apply_display()
-        self.pico.SDL_SetWindowFullscreen.assert_called_once()
-        self.pico.SDL_SetWindowSize.assert_not_called()
-        self.app.fullscreen = True
-        self.app.set_display(fullscreen=False)
-        self.app._apply_display()
-        self.pico.SDL_SetWindowSize.assert_called_with(self.pico.window, 800, 600)
-        self.app.set_display(window_size=(1024, 720))
-        self.app._apply_display()
-        self.pico.SDL_SetWindowSize.assert_called_with(self.pico.window, 1024, 720)
+        scene.update.assert_called_once_with(0)
+
+    def test_pending_fullscreen_uses_old_output_for_click_then_refreshes(self):
+        self.pico.SDL_MOUSEBUTTONDOWN = 11
+        click = event(11, x=200, y=150)
+        minimized = self.pico.SDL_WINDOW_MINIMIZED
+        fullscreen = self.pico.SDL_WINDOW_FULLSCREEN
+        for flags, expected in ((0, (400, 300)), (minimized, None)):
+            with self.subTest(flags=flags):
+                self.app = engine.Engine()
+                old = ((800, 600), (1600, 1200), flags)
+                new = ((1920, 1080), (1920, 1080), fullscreen)
+                self.app._query_display.return_value = old
+
+                def enter_fullscreen(*args):
+                    self.app._query_display.return_value = new
+                    return 0
+
+                self.pico.SDL_SetWindowFullscreen.side_effect = enter_fullscreen
+                self.pico.get_events.side_effect = [[], [click], [event(1)]]
+                scene = self.scene()
+                updates = []
+
+                def update(dt):
+                    updates.append(self.app.viewport)
+                    if len(updates) == 1:
+                        self.app.set_display(fullscreen=True)
+
+                scene.update.side_effect = update
+                scene.handle_event.side_effect = lambda evt: self.assertEqual(
+                    self.app.event_to_output(evt), expected)
+                self.app.run(scene)
+                scene.handle_event.assert_called_once_with(click)
+                self.assertEqual(updates, [(0, 0, 1600, 1200), (0, 0, 1920, 1080)])
+
+    def test_fullscreen_return_restores_window_size_and_resize_request(self):
+        external_size, desktop_size, requested_size = (960, 700), (1920, 1080), (1024, 720)
+        enter, restore, resize = event(3), event(4), event(5)
+        batches = iter([[enter], [restore], [resize], [], [event(1)]])
+        updates = []
+
+        def poll():
+            batch = next(batches)
+            if batch == [restore]:
+                self.app._query_display.return_value = external_size, external_size, 0
+            return batch
+
+        def set_fullscreen(window, flags):
+            if flags:
+                self.app._query_display.return_value = (desktop_size, desktop_size,
+                                                         self.pico.SDL_WINDOW_FULLSCREEN)
+            return 0
+
+        def set_size(window, width, height):
+            size = width, height
+            self.app._query_display.return_value = size, size, 0
+
+        def handle(evt):
+            if evt is enter:
+                self.app.set_display(fullscreen=True)
+            elif evt is restore:
+                self.assertEqual(self.app.window_size, external_size)
+                self.app.set_display(fullscreen=False)
+            else:
+                self.app.set_display(window_size=requested_size)
+
+        self.pico.get_events.side_effect = poll
+        self.pico.SDL_SetWindowFullscreen.side_effect = set_fullscreen
+        self.pico.SDL_SetWindowSize.side_effect = set_size
+        scene = self.scene()
+        scene.handle_event.side_effect = handle
+        scene.update.side_effect = lambda dt: updates.append((self.app.fullscreen, self.app.window_size))
+        self.app.run(scene)
+        self.assertEqual(updates, [(False, (800, 600)), (True, desktop_size),
+                                   (False, external_size), (False, requested_size)])
 
 
 class SDLBoundaryTests(unittest.TestCase):

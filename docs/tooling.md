@@ -29,7 +29,7 @@
 
 스킬은 모두 `.agents/skills/`에 있다. Spec Kit 9개, Sprite Forge 5개(`generate2dsprite`, `generate2dmap`, `generate2dmedia`, `video2dsprite`, `codeart2d`), pixelfx 1개로 총 15개다. 새로 설치된 스킬은 다음 대화 차례의 목록에서 확인한다.
 
-게임은 기존 `.venv/`와 `requirements.txt`의 Pico2D 1.5.1을 사용한다. 도구는 기존 Python 3.14.7로 만든 `.local-tools/python/`을 사용하며 Python 자체를 추가 설치한 것은 아니다. 이 도구 환경에는 Specify CLI와 Sprite Forge의 NumPy·Pillow·SciPy 의존성이 있다. pixelfx는 기존 Node.js v24.19.0을 사용한다. 게임 의존성과 전역 환경은 변경하지 않았다.
+게임은 기존 `.venv/`와 `requirements.txt`의 Pico2D 1.5.1을 사용한다. 도구는 기존 Python 3.14.7로 만든 `.local-tools/python/`을 사용하며 Python 자체를 추가 설치한 것은 아니다. 이 도구 환경에는 Specify CLI와 Sprite Forge의 NumPy·Pillow·SciPy 의존성이 있다. pixelfx는 기존 Node.js v24.19.0을 사용한다. 전하 PNG 생성은 도구 환경의 NumPy·Pillow를 사용한다. 게임 requirements.txt에서 NumPy를 제거했으며 런타임은 이를 import하지 않는다. 도구 의존성과 전역 환경은 공유하거나 변경하지 않는다.
 
 ## 사용과 복원
 
@@ -61,3 +61,15 @@ FFmpeg 9.0.2 essentials를 `.local-tools/ffmpeg/ffmpeg-9.0.2-essentials_build/bi
 - 문서: 링크·삭제된 결정 연표 참조·필수 docs 항목·Git 제외 범위를 확인한다.
 
 도구 설정이 PPTX 내용 확정이나 게임 구현을 의미하지 않는다. 반복 스프라이트 생성·보정은 별도 기능 문서 없이 진행하고 결과·검사는 채팅으로 보고한다. 채택 상태·장기 기준만 기존 아트 기준·진행 상태에 반영한다. 게임 규칙·코드·런타임 통합 변경은 Spec Kit 흐름을 따른다. 자동 문서 단계만으로 완료를 판단하지 않는다.
+
+## 효과 PNG 재생성
+
+승인 원본과 라이선스를 보존하며 다음 명령으로 assets/charge/baked를 재생성한다. Node/pixelfx와 NumPy/Pillow는 제작 도구에만 필요하고 게임은 생성된 PNG만 읽는다.
+
+```powershell
+.\.local-tools\python\Scripts\python.exe -X utf8 -B scripts/bake-effects/charge.py
+node scripts/bake-effects/link.mjs
+.\.local-tools\python\Scripts\python.exe -X utf8 -B scripts/bake-effects/check.py --output-dir $testOutput
+```
+
+`$testOutput`은 비교 이미지 보관 폴더다. 과거 NumPy 구현과의 성능 비교에는 게임 환경에 별도 선택 의존성 `numpy==2.5.4`가 필요하다. 게임 실행·일반 테스트에는 필요하지 않으며 자세한 재현은 [검사 안내](../tests/README.md)를 따른다.

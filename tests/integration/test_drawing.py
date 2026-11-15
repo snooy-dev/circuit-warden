@@ -107,6 +107,24 @@ class DrawingStateTests(unittest.TestCase):
             image.__del__()
             self.assertEqual(sum(bool(call.args[0]) for call in calls.call_args_list), 1)
 
+    def test_rotated_source_flip_alpha_and_failure_restore_state(self):
+        image, _ = self.image()
+        pico.SDL_SetTextureAlphaMod(image.texture, 190)
+        pico.SDL_SetTextureBlendMode(image.texture, pico.SDL_BLENDMODE_ADD)
+        initial = self.texture_state(image.texture)
+        draw_image(image, self.transform, (-4, -2, 4, 2), .5, source=(0, 0, 2, 1), angle=90)
+        self.assertEqual(self.pixel(10, 7)[:3], (127, 0, 0))
+        self.assertEqual(self.pixel(10, 12)[:3], (0, 127, 0))
+        self.assertEqual(self.texture_state(image.texture), initial)
+        draw_image(image, self.transform, (-4, -2, 4, 2), source=(0, 0, 2, 1), angle=90, flip_x=True)
+        self.assertEqual(self.pixel(10, 7)[:3], (0, 255, 0))
+        with patch.object(pico, 'SDL_RenderCopyExF', return_value=-1):
+            with self.assertRaises(RuntimeError):
+                draw_image(image, self.transform, (-4, -2, 4, 2), .2, angle=45)
+        self.assertEqual(self.texture_state(image.texture), initial)
+        with self.assertRaises(ValueError):
+            draw_image(image, self.transform, (-4, -2, 4, 2), angle=float('nan'))
+
     def test_source_over_order_and_shape_state_restore_even_on_failure(self):
         pico.SDL_SetRenderDrawColor(self.backend, 7, 8, 9, 10)
         pico.SDL_SetRenderDrawBlendMode(self.backend, pico.SDL_BLENDMODE_ADD)

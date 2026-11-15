@@ -155,11 +155,15 @@ class Canvas:
             self._dispatching = False
 
     def _update_snapshot(self, dt, snapshot):
-        if self._closed:
-            return
-        for element in snapshot:
-            if element.canvas is self:
-                element.update(dt)
+        try:
+            if self._closed:
+                return
+            for element in snapshot:
+                if element.canvas is self:
+                    element.update(dt)
+        finally:
+            # 보관된 예외의 traceback에도 전체 순회 목록을 남기지 않는다.
+            snapshot = ()
 
     def close(self):
         self._check_rendering()

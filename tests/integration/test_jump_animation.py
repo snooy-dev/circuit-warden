@@ -39,7 +39,7 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertEqual((actor.x, actor.y), (0, GROUND_Y))
         self.assertIs(actor.player.clip, actor.clips['jump_start_right'])
         self.key(scene, pico.SDLK_LSHIFT)
-        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0))
         scene.update(.02)
         self.assertEqual(actor.jump_phase, 'rise')
         self.assertEqual(actor.x, 0)
@@ -61,7 +61,7 @@ class JumpAnimationTests(unittest.TestCase):
         x = actor.x
         self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
         self.key(scene, pico.SDLK_SPACE)
-        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0))
         scene.update(.179)
         self.assertEqual(actor.x, x)
         self.assertEqual(actor.state, 'jump')

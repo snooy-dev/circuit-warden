@@ -15,13 +15,13 @@ class Display:
             raise ValueError('창 크기는 양의 정수여야 합니다.')
 
     def set_display(self, *, fullscreen=None, window_size=None):
-        """요청은 다음 프레임 입력 전에 적용한다. 실패는 예외로 전달한다."""
+        """요청은 다음 프레임 입력 처리 뒤 적용한다. 실패는 예외로 전달한다."""
         if window_size is not None:
+            window_size = tuple(window_size)
             self._validate_size(*window_size)
-            self._windowed_size = tuple(window_size)
-        if fullscreen is not None:
-            self._requested_fullscreen = bool(fullscreen)
-        self._display_request = True
+        pending_fullscreen, pending_size = self._display_request or (None, None)
+        self._display_request = (pending_fullscreen if fullscreen is None else bool(fullscreen),
+                                 window_size or pending_size)
 
     def window_to_output(self, x, y):
         """좌상단 창 좌표를 좌상단 출력 픽셀로 변환한다. 무효 출력은 None."""
@@ -57,15 +57,13 @@ class Display:
             self._windowed_size = window
         return window, output, flags
 
-    def _apply_display(self):
-        if self._display_request is None:
-            return
-        self._display_request = None
-        target = self._requested_fullscreen
+    def _apply_display(self, fullscreen, window_size):
+        target = self.fullscreen if fullscreen is None else fullscreen
         if target != self.fullscreen:
             flags = pico.SDL_WINDOW_FULLSCREEN_DESKTOP if target else 0
             if pico.SDL_SetWindowFullscreen(pico.window, flags) != 0:
-                self._requested_fullscreen = self.fullscreen
                 raise RuntimeError(f'전체화면 전환 실패: {pico.SDL_GetError()!r}')
+        if window_size is not None:
+            self._windowed_size = window_size
         if not target:
             pico.SDL_SetWindowSize(pico.window, *self._windowed_size)

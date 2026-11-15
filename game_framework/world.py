@@ -166,12 +166,16 @@ class Level:
             self._dispatching = False
 
     def _dispatch_snapshot(self, mode_method, object_method, value, snapshot):
-        if self._state != 'open':
-            return
-        getattr(self.mode, mode_method)(value)
-        for obj in snapshot:
-            if obj.level is self:
-                getattr(obj, object_method)(value)
+        try:
+            if self._state != 'open':
+                return
+            getattr(self.mode, mode_method)(value)
+            for obj in snapshot:
+                if obj.level is self:
+                    getattr(obj, object_method)(value)
+        finally:
+            # 보관된 예외의 traceback에도 전체 순회 목록을 남기지 않는다.
+            snapshot = ()
 
     def close(self):
         self._check_rendering()

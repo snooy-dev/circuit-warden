@@ -28,6 +28,7 @@
 
 | 변경 범위 | 선택 명령 |
 |---|---|
+| 전하 선택·취소·연결·창 좌표 | `.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOutput` |
 | 캐릭터 출력·입력 | `.\.venv\Scripts\python.exe -B tests/smoke/character_smoke.py --output-dir $testOutput` |
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |
 | 독립 UI·앵커·트리 | `.\.venv\Scripts\python.exe -B tests/smoke/ui_smoke.py $testOutput` |
@@ -35,7 +36,7 @@
 
 character_smoke는 실제 GameplayMode를 통해 양 방향 공격·추가 클릭 무시·유지 키 복귀와 첫 프레임 캡처를 포함한다.
 
-SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 네 스크립트는 상시 통과 관문이 아니다.
+SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다르다. 각 스크립트는 상시 통과 관문이 아니다.
 
 ## 넓은 통합 변경에만 전체 회귀
 
@@ -46,3 +47,13 @@ SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다�
 ```
 
 같은 코드와 환경에서 통과한 결과는 재사용한다. 문서 수정만으로 게임 검사를 반복하지 않는다. 과거 001/008 실행 기록은 당시 커밋 기준이다.
+
+전하의 거리·상태 취소·선입력·반전은 tests.unit.test_charge_teleport, 구운 전류 원본 샘플·짧은 거리/방향별 끝점·수명은 tests.unit.test_teleport_link, 실제 자산·좌표·PNG 공유/로딩 실패·장면 해제는 tests.integration.test_charge_scene을 선택한다. 회전 그리기의 alpha/blend 복원은 tests.integration.test_drawing에서 확인한다. charge_smoke는 SDL 클릭으로10회 순간이동하며 목표 기준 활성화·100ms 진행 중 선입력·가로/세로/대각 연결·F6/F11·종료와 화면 캡처를 확인한다. 사용자 조작감 평가는 별도다.
+
+감사 회귀의 실제 창 검사는 `tests/smoke/audit_smoke.py --output-dir $testOutput`이다. SDL 큐의 F6 다음 묶음 클릭과 예약 공격 첫 프레임을 검사하며, 공격 시간 경계만 고정 dt로 재현한다.
+
+효과 성능 비교는 `.\.venv\Scripts\python.exe -X utf8 -B tests/performance/charge_benchmark.py`다. 기준은 NumPy 최적화 커밋 `eb082e5`이며 Git 이력이 필요하다. 새 게임 의존성에는 NumPy가 없지만 이전 구현을 실행하는 이 비교에만 필요하므로, 벤치마크를 수행할 환경에서 `.\.venv\Scripts\python.exe -m pip install numpy==2.5.4`로 준비한다. 일반 게임/테스트를 위해 설치할 필요는 없다.
+
+같은 클릭 시나리오를 별도 워밍업한 뒤5쌍 교대 측정한다. 양쪽 순간이동12회와 변경 후 업로드0회를 확인한다. 측정은 update/draw/SDL 소프트웨어 present이며 이벤트 처리·SDL_RenderClear·실제 창/GPU/VSync·프레임 대기는 제외한다. p95는 실행별95백분위의 중앙값이고 최대/초과는전체900프레임 기준이다. 로딩은 장면 enter 시간, RGBA는 구운 이미지 크기의 합계이며 프로세스 최대 메모리가 아니다. 시각 차이가 허용되므로 전후 전체 출력 바이트 일치를 요구하지 않는다.
+
+제작 합성과 사전 생성 PNG 검사: `.\.local-tools\python\Scripts\python.exe -X utf8 -B scripts/bake-effects/check.py --output-dir $testOutput`. 기존 합성1,944샘플 기준·원본154프레임·구운2,376프레임을 확인하고648전환 샘플의 색 차이와 비교 이미지를 출력한다. 전류 생성기는 승인 원본을 직접 호출하고 첫 섬광 끝점·기존48px RGBA SHA를 자체 검사한다. 생성/검사 방법은 [도구 구성](../docs/tooling.md#효과-png-재생성)을 따른다.

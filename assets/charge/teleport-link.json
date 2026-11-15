@@ -1,0 +1,16 @@
+{
+  "status": "2026-11-15 사용자 PNG 전환 요청·미세 형태 차이 허용. 승인 원본 보존,72길이 PNG 재생",
+  "source": "art/charge/approved-teleport-link-v4/link.js",
+  "sourceSha256": "1c0d35e8f766c0c64455af2ad1cd0fff8864988d35137d813782a87adc252d09",
+  "runtime": "game/teleport_link.py",
+  "durationSeconds": 0.1,
+  "loop": false,
+  "sampling": "승인 원본 누적30Hz12샘플을100ms에 시간 매핑, seed7. 가까운 길이 PNG를 선택하므로 임의 방향의 픽셀·가지 차이는 허용",
+  "coordinates": "고정 world 끝점, 중앙 기준 회전·가로 배율. 8px 미만은 가로 배율도 유지",
+  "license": "licenses/pixelfx-LICENSE.txt",
+  "techniqueSource": "https://www.spritefusion.com/pixel-art-vfx/lightning",
+  "sourceDurationSeconds": 0.4,
+  "sourceFps": 30,
+  "bakedManifest": "baked/link.json",
+  "generator": "scripts/bake-effects/link.mjs"
+}
