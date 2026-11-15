@@ -29,7 +29,7 @@
     },
     "approach": {
       "frames": 8,
-      "durationMs": 400,
+      "durationMs": 600,
       "loop": true
     },
     "windup": {
@@ -55,7 +55,8 @@
     "이동 먼지 중간톤3색을 기존 팔레트의 한 단계 어두운 색으로 매핑; 금속색·알파 보존",
     "원본의 소폭 리깅 중간 포즈2장과 접지 키포즈 평행이동·공통 셀 정렬",
     "build_animation_clips.py --strict",
-    "export_engine.py --target aseprite-json --padding 0 --extrude 0"
+    "export_engine.py --target aseprite-json --padding 0 --extrude 0",
+    "사용자 후속 요청으로 이동 주기400→600ms, 프레임당50→75ms 조정. 게임 이동 속도는 유지."
   ],
   "qa": {
     "paletteOutside": 0,
@@ -98,6 +99,6 @@
   ],
   "localSource": "art/enemies/motion-v1/",
   "preview": "art/enemies/motion-v1/motion-preview.gif",
-  "localSelectedFrames": "art/enemies/motion-v1/selected-v2/",
+  "localSelectedFrames": "art/enemies/motion-v1/selected-slower-v3/",
   "localExport": "art/enemies/motion-v1/export-v2/"
 }
