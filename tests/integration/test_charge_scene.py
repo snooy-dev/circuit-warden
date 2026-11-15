@@ -95,7 +95,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(sum(isinstance(o, TeleportLink) for o in scene.level.objects), 1)
         scene.update(.05)
         scene.draw()
-        self.assertEqual(first._uploaded_frame, 0)
+        self.assertEqual(first.frame_index, 0)
         scene.update(.099)
         second_start = actor.center
         self.assertIs(scene.level.mode.teleport_link, first)
@@ -111,7 +111,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIsNone(first.level)
         self.assertIs(second.level, scene.level)
         scene.exit()
-        self.assertIsNone(second.texture)
+        self.assertIsNone(second._frames)
 
     def test_destination_activation_and_last_valid_buffer(self):
         scene = self.open_scene()
@@ -242,3 +242,28 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertTrue(all(image.closed for image in loaded))
         self.assertTrue(scene.images.closed)
         self.assertEqual(scene.level.objects, ())
+
+    def test_link_filter_failure_releases_all_preloaded_images(self):
+        scene = CharacterScene()
+        load = scene.images.load
+        loaded = []
+
+        def record(path):
+            image = load(path)
+            loaded.append(image)
+            return image
+
+        original = pico.SDL_SetTextureScaleMode
+
+        def fail_link(texture, mode):
+            if loaded[-1].path.name.startswith('link-'):
+                return -1
+            return original(texture, mode)
+
+        with (patch.object(scene.images, 'load', side_effect=record),
+              patch.object(pico, 'SDL_SetTextureScaleMode', side_effect=fail_link)):
+            with self.assertRaises(RuntimeError):
+                scene.enter(self.app)
+        self.assertTrue(all(image.closed for image in loaded))
+        self.assertTrue(scene.images.closed)
+        self.assertIsNone(scene.level.link_art)

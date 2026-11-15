@@ -61,3 +61,15 @@ FFmpeg 9.0.2 essentials를 `.local-tools/ffmpeg/ffmpeg-9.0.2-essentials_build/bi
 - 문서: 링크·삭제된 결정 연표 참조·필수 docs 항목·Git 제외 범위를 확인한다.
 
 도구 설정이 PPTX 내용 확정이나 게임 구현을 의미하지 않는다. 반복 스프라이트 생성·보정은 별도 기능 문서 없이 진행하고 결과·검사는 채팅으로 보고한다. 채택 상태·장기 기준만 기존 아트 기준·진행 상태에 반영한다. 게임 규칙·코드·런타임 통합 변경은 Spec Kit 흐름을 따른다. 자동 문서 단계만으로 완료를 판단하지 않는다.
+
+## 효과 PNG 재생성
+
+승인 원본과 라이선스를 보존하며 다음 명령으로 assets/charge/baked를 재생성한다. Node/pixelfx와 NumPy/Pillow는 제작 도구에만 필요하고 게임은 생성된 PNG만 읽는다.
+
+```powershell
+.\.local-tools\python\Scripts\python.exe -X utf8 -B scripts/bake-effects/charge.py
+node scripts/bake-effects/link.mjs
+.\.local-tools\python\Scripts\python.exe -X utf8 -B scripts/bake-effects/check.py --output-dir $testOutput
+```
+
+`$testOutput`은 비교 이미지 보관 폴더다. 과거 NumPy 구현과의 성능 비교에는 게임 환경에 별도 선택 의존성 `numpy==2.5.4`가 필요하다. 게임 실행·일반 테스트에는 필요하지 않으며 자세한 재현은 [검사 안내](../tests/README.md)를 따른다.

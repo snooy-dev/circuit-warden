@@ -124,9 +124,15 @@ def main():
         parser.error('--repeats는 1 이상이어야 합니다.')
     revision = args.baseline
     print(f'비교 기준 {revision}, 각{args.repeats*FRAME_COUNT}프레임, SDL 소프트웨어')
-    variants = (baseline_art(revision), None)
+    try:
+        variants = (baseline_art(revision), None)
+    except ModuleNotFoundError as error:
+        if error.name != 'numpy':
+            raise
+        raise SystemExit('이전 구현 비교에만 numpy==2.5.4가 필요합니다. tests/README.md의 성능 검사 환경을 참고하세요.') from error
     warmups = [run_scenario(variant) for variant in variants]
     assert warmups[0]['teleports'] == warmups[1]['teleports'] == 12
+    assert warmups[1]['uploads'] == 0, 'PNG 재생 중 업로드 발생'
     runs = ([], [])
     for repeat in range(args.repeats):
         for index in (range(2) if repeat % 2 == 0 else reversed(range(2))):

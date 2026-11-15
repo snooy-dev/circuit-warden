@@ -58,5 +58,11 @@
       "source": "art/charge/transitions-v2/check.mjs",
       "sha256": "b32fe9be242d07d0dbb271354501d1faf3a6b224a3ee46d8e8d57d361f01d391"
     }
+  },
+  "runtime": {
+    "manifest": "baked/charge.json",
+    "generator": "scripts/bake-effects/charge.py",
+    "sampling": "연속 상태값은 유지하고33단계 PNG 중 최근접 선택, bob은24fps 각 위상 중간 시각으로 굽는다. 기존 playback 합성 수식은 제작 단계에 적용한다.",
+    "differences": "미세 차이 사용자 허용. 안정 상태 원본 RGBA 보존, 확대 화면의 픽셀 일치는 미보장."
   }
 }

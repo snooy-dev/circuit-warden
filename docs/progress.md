@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **PNG 효과 재생 014 진행:** 사용자 요청으로 pixelfx 효과의 런타임 픽셀 생성을 PNG 재생으로 바꾼다. 미세한 형태 차이는 허용하되 색·굵기·광륜·타이밍은 유지한다. [명세](../specs/014-baked-effects/spec.md)·[계획](../specs/014-baked-effects/plan.md). 사용자 점프 PNG8개·tmp는 보존하며 검증 후 로컬 커밋한다.
+- **PNG 효과 재생 014 구현·검증 완료:** 사용자 요청과 미세 형태 차이 허용에 따라 전하33단계×72위상·전류72길이×12샘플을 PNG 재생으로 전환했다. 런타임 픽셀 생성·효과 업로드0회, 이전 NumPy 구현 대비 소프트웨어 p95 12.630→1.558ms(-87.7%). 이미지 RGBA59.74MiB·PNG13.095MiB, 장면 로딩72.2→295.2ms. 전체163검사·실제SDL10순간이동·창 전환·해제 통과. [명세](../specs/014-baked-effects/spec.md)·[계획](../specs/014-baked-effects/plan.md)·[검증과 한계](../specs/014-baked-effects/verification.md). feature/baked-effects에서 검증 증분을 로컬 커밋하며 사용자 점프 PNG8개·tmp는 보존/제외한다. PR/push·사용자 직접 미술/조작감은 미확인이다.
 
 - **감사 013 수정·검증 완료:** 사용자 요청의1~5(예약 공격 첫 프레임, 표시 전환 클릭, 효과 모양 보존 성능, 예외 참조 해제, 행동 판정 중복)를 수정했다. [명세](../specs/013-audit-fixes/spec.md)·[계획](../specs/013-audit-fixes/plan.md)·[검증](../specs/013-audit-fixes/verification.md). 전체161검사·실제SDL 예약 공격/전환/전하/종료를 통과했다. 합성1,944샘플·업로드847개 RGBA가 기존과 같고 교대900프레임의 픽셀CPU p95는22.175→8.957ms였다. NumPy2.5.4를 게임환경에 추가하고 PNG·전류 래스터는 유지했다. feature/audit-fixes에서 검증 증분을 로컬 커밋하며 사용자 점프 PNG8개·기존 tmp는 보존/제외한다. PR/push와 사람의 직접 조작감 확인은 미실시다.
 

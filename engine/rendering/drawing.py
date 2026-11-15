@@ -26,7 +26,7 @@ def draw_rect(rect, color, opacity):
             _sdl(pico.SDL_SetRenderDrawBlendMode(pico.renderer, blend.value))
 
 
-def draw_image(texture, rect, opacity, *, image=None, source=None, flip_x=False):
+def draw_image(texture, rect, opacity, *, image=None, source=None, flip_x=False, angle=0):
     rect = pico.SDL_FRect(*rect)
     access = c_int()
     _sdl(pico.SDL_QueryTexture(texture, None, byref(access), None, None))
@@ -38,7 +38,11 @@ def draw_image(texture, rect, opacity, *, image=None, source=None, flip_x=False)
     try:
         _sdl(pico.SDL_SetTextureBlendMode(texture, pico.SDL_BLENDMODE_BLEND))
         _sdl(pico.SDL_SetTextureAlphaMod(texture, int(opacity * 255)))
-        if source is None:
+        if angle:
+            src = pico.SDL_Rect(*source) if source is not None else None
+            _sdl(pico.SDL_RenderCopyExF(pico.renderer, texture, src, rect, angle, None,
+                                      pico.SDL_FLIP_HORIZONTAL if flip_x else pico.SDL_FLIP_NONE))
+        elif source is None:
             _sdl(pico.SDL_RenderCopyF(pico.renderer, texture, None, rect))
         else:
             left, top, width, height = source

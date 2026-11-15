@@ -4,6 +4,9 @@ import json
 from math import exp, floor, hypot, isfinite
 from pathlib import Path
 
+import pico2d.pico2d as pico
+from engine.rendering.drawing import _sdl
+
 from game_framework import GameObject, RenderItem, SpriteFrame, draw_sprite
 
 
@@ -23,6 +26,7 @@ class ChargeArt:
         self.frames = []
         for step in range(self.steps + 1):
             image = images.load(ASSETS / f'charge-{step:02}.png')
+            _sdl(pico.SDL_SetTextureScaleMode(image._borrow().texture, pico.SDL_ScaleModeNearest))
             self.frames.append(tuple(SpriteFrame(image, (i % columns * width, i // columns * height,
                                                         width, height), pivot)
                                      for i in range(data['count'])))

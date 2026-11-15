@@ -1,5 +1,7 @@
 """게임 좌표와 값 검사를 제공하는 공개 그리기 API."""
 
+from math import isfinite
+
 from engine.rendering import drawing as backend
 
 from ._validation import _bounds, _opacity
@@ -32,9 +34,11 @@ def _image_source(image, source):
     return source
 
 
-def draw_image(image, transform, bounds, opacity=1, *, source=None, flip_x=False):
+def draw_image(image, transform, bounds, opacity=1, *, source=None, flip_x=False, angle=0):
     """호출자가 소유하는 Pico2D Image의 전체 또는 지정 영역을 논리 좌표에 그린다."""
     _opacity(opacity)
+    if not isfinite(angle):
+        raise ValueError('angle은 유한한 출력 시계방향 각도여야 합니다.')
     if type(flip_x) is not bool:
         raise TypeError('flip_x는 bool이어야 합니다.')
     if flip_x and source is None:
@@ -44,7 +48,9 @@ def draw_image(image, transform, bounds, opacity=1, *, source=None, flip_x=False
     if not transform.valid:
         return
     rect = _output_rect(transform, bounds)
-    if source is None:
+    if angle:
+        backend.draw_image(image.texture, rect, opacity, source=source, flip_x=flip_x, angle=angle)
+    elif source is None:
         backend.draw_image(image.texture, rect, opacity)
     else:
         backend.draw_image(image.texture, rect, opacity, image=image, source=source, flip_x=flip_x)

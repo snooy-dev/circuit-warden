@@ -30,7 +30,7 @@ class GameplayMode(GameMode):
         start = player.center
         if player.teleport(charge.position) and hypot(
                 start[0] - player.center[0], start[1] - player.center[1]) > 1e-6:
-            self.teleport_link = self.level.spawn(TeleportLink(start, player.center))
+            self.teleport_link = self.level.spawn(TeleportLink(start, player.center, self.level.link_art))
         for candidate in self.level.charges:
             candidate.active = candidate.in_range(self.activation_origin)
 
@@ -49,6 +49,7 @@ class GameplayMode(GameMode):
                 candidate.active = candidate.in_range(self.activation_origin)
 
     def on_end(self):
+        self.level.link_art = None
         self.pending_charge = self.teleport_link = None
 
     def on_event(self, event):

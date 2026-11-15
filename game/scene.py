@@ -10,6 +10,7 @@ from game_framework import GameObject, ImageStore, Level, LevelScene, RenderItem
 from .character import GROUND_Y, Character, load_clips
 from .charge import Charge, ChargeArt
 from .mode import GameplayMode
+from .teleport_link import LinkArt
 
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
@@ -32,11 +33,13 @@ class GameplayLevel(Level):
         self.images = images
         self.player = None
         self.charges = []
+        self.link_art = None
 
     def on_open(self):
         self.spawn(_Ground())
         self.player = self.spawn(Character(load_clips(self.images)))
         art = ChargeArt(self.images)
+        self.link_art = LinkArt(self.images)
         self.charges = [self.spawn(Charge(art, position)) for position in
                         ((-320, -80), (-160, 70), (140, -50), (320, 140), (0, 200))]
 

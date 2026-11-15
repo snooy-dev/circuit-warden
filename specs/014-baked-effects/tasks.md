@@ -17,15 +17,15 @@
 
 ## Phase 3: User Story 2 - 전류
 
-- [ ] T007 [US2] scripts/bake-effects/link.mjs·assets/charge/baked에 승인 원본의 길이별12샘플 시트를 만든다.
-- [ ] T008 [US2] engine/rendering/drawing.py·game_framework/drawing.py의 회전, game/teleport_link.py·scene.py·mode.py의 공유 재생을 연결한다.
-- [ ] T009 [US2] tests/unit/test_teleport_link.py와 그리기 회귀·게임 통합에서 방향·끝점·수명·자원 해제를 확인한다.
-- [ ] T010 [US2] tests/performance/charge_benchmark.py의 비교와 tests/smoke/charge_smoke.py 실제 창으로 성능·메모리·모양을 검증한다.
+- [x] T007 [US2] scripts/bake-effects/link.mjs·assets/charge/baked에 승인 원본의 길이별12샘플 시트를 만든다.
+- [x] T008 [US2] engine/rendering/drawing.py·game_framework/drawing.py의 회전, game/teleport_link.py·scene.py·mode.py의 공유 재생을 연결한다.
+- [x] T009 [US2] tests/unit/test_teleport_link.py와 그리기 회귀·게임 통합에서 방향·끝점·수명·자원 해제를 확인한다.
+- [x] T010 [US2] tests/performance/charge_benchmark.py의 비교와 tests/smoke/charge_smoke.py 실제 창으로 성능·메모리·모양을 검증한다.
 
 ## Phase 4: Documentation & Completion
 
-- [ ] T011 docs/architecture.md·art-direction.md·tooling.md·tests/README.md와 verification.md를 결과에 맞춘다.
-- [ ] T012 docs/progress.md·specs/014-baked-effects의 대응을 converge로 확인하고 관련 변경만 커밋한다.
+- [x] T011 docs/architecture.md·art-direction.md·tooling.md·tests/README.md와 verification.md를 결과에 맞춘다.
+- [x] T012 docs/progress.md·specs/014-baked-effects의 대응을 converge로 확인하고 관련 변경만 커밋한다.
 
 ## Dependencies & Execution Order
 
