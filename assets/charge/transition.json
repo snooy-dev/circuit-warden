@@ -1,0 +1,62 @@
+{
+  "status": "2026-11-15 사용자 확정. 전하 상태 v5·반전 v2 런타임 연결; 조작감은 사용자 플레이 전.",
+  "states": {
+    "inactive": "청록색 잔류 전류",
+    "active": "푸른색 발광"
+  },
+  "pulse": {
+    "file": "pulse.png",
+    "frameSize": [
+      80,
+      80
+    ],
+    "columns": 4,
+    "count": 10,
+    "pivot": [
+      40,
+      40
+    ],
+    "sampling": "시간으로 자동 재생하지 않고 activationProgress * 9의 인접 두 프레임을 보간한다.",
+    "endpoints": "0번과 9번은 완전 투명"
+  },
+  "controller": {
+    "reference": "reference/controller.js",
+    "check": "node assets/charge/reference/check.mjs",
+    "activationOmega": 18,
+    "deactivationOmega": 14,
+    "valueEpsilon": 5e-05,
+    "velocityEpsilon": 0.001,
+    "reversal": "목표만 변경하며 현재 진행도와 속도를 보존한다. 전환 시간은 남은 거리와 속도에 따라 달라진다."
+  },
+  "playback": {
+    "fps": 24,
+    "sharedPhaseSeconds": 3,
+    "phaseRule": "두 상태 시트는 동일한 누적 시간을 사용하며 반전 시 시간을 초기화하지 않는다.",
+    "baseBlend": "비활성 (1-value), 활성 value 비율로 premultiplied alpha를 선형 보간한다.",
+    "pulseBlend": "파동의 인접 프레임을 보간한 후 source-over로 합성한다.",
+    "pulseBobPixels": "round(sin(elapsedSeconds / 3 * 2 * PI) * 1.2)",
+    "filter": "nearest"
+  },
+  "sources": {
+    "inactive.png": {
+      "source": "art/charge/states-v5/inactive/sheet.png",
+      "sha256": "0d19dc696d7c0c4165cdae840e8211ba566cac232bad2c5d12478d12496fe37b"
+    },
+    "active.png": {
+      "source": "art/charge/states-v5/active/sheet.png",
+      "sha256": "fba93aa77400a583c7262ca2d0a5032292b2a6c8ac82132fc8c79de903d66846"
+    },
+    "pulse.png": {
+      "source": "art/charge/transitions-v2/pulse.png",
+      "sha256": "aa3a0c4d2d76b9a9e1188521103ed62253ecdd240bdd902654c65eb97910d377"
+    },
+    "reference/controller.js": {
+      "source": "art/charge/transitions-v2/controller.js",
+      "sha256": "f24f583a7873d943cfe923ae77b34e2f627ca8aec29edb4e9265bd1941b04583"
+    },
+    "reference/check.mjs": {
+      "source": "art/charge/transitions-v2/check.mjs",
+      "sha256": "b32fe9be242d07d0dbb271354501d1faf3a6b224a3ee46d8e8d57d361f01d391"
+    }
+  }
+}

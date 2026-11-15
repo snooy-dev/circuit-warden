@@ -1,7 +1,7 @@
 """Warden의 이동·점프·대시·단발 공격과 스프라이트 상태."""
 
 import json
-from math import sqrt
+from math import isfinite, sqrt
 from pathlib import Path
 
 import pico2d.pico2d as pico
@@ -117,7 +117,8 @@ class Character(GameObject):
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
                          ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle'],
                          ['dash', ['idle', 'run', 'jump'], 'dash'], ['end_dash', 'dash', 'idle'],
-                         ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle']],
+                         ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle'],
+                         ['teleport', '*', 'idle']],
         )
         self.view_bounds = None
         self._idle_margins = _margins(clips['idle'])
@@ -134,6 +135,37 @@ class Character(GameObject):
     @property
     def grounded(self):
         return self.y == GROUND_Y and self.velocity_y == 0
+
+    @property
+    def center(self):
+        return self.x, self.y + BODY_HEIGHT / 2
+
+    def can_teleport(self, position):
+        if self.view_bounds is None or not all(isfinite(v) for v in position):
+            return False
+        x, y = position
+        left, _, right, top = self.view_bounds
+        return (left + self._left_margin <= x <= right - self._right_margin
+                and GROUND_Y + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2)
+
+    def teleport(self, position):
+        if not self.can_teleport(position):
+            return False
+        self._machine.teleport()
+        self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
+        self.velocity_y = 0.0
+        self.buffered_action, self.buffer_remaining = None, 0.0
+        self.attack_requested = self.jump_requested = self.dash_requested = False
+        self.dash_phase, self.dash_remaining = None, 0.0
+        self.jump_phase, self.jump_elapsed = None, 0.0
+        if self.grounded:
+            self.air_dash_used = False
+            self.player.play(self.clips['idle'])
+        else:
+            self._machine.jump()
+            self.jump_phase = 'fall'
+            self._show_jump()
+        return True
 
     def control(self, event):
         if event.type == pico.SDL_WINDOWEVENT and event.event in (

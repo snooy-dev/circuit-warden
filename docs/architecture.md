@@ -317,3 +317,11 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 시작120ms 후 이륙하고 착지180ms 동안 잠근다. _update_jump는 시작/정점/바닥/착지완료 경계로 dt를 나누고 공중에 해당하는 시간만 수평 이동에 반영한다. 원본 상승300ms는 물리 상승400ms로 시간 매핑하고 낙하600ms는 반복한다. 재생 시각은 수직 속도에서 산출해 방향전환/대시 체공·복귀에도 유지한다. 대시중 착지는 land로 표시해 두고 대시 종료 후 착지 모션을 진행하며 갱신의 남은 시간도 소비한다. 좌우 전용 클립을 사용해 추가 수평 반전하지 않는다. 엔진·자산 원본·독립 idle/Run은 그대로다.
 
 착지 연속 점프는 `_link_landing_jump`에서 land60~90ms의 유효 점프 예약을 소비하고 같은 jump 상태의 start40ms로 바꾼다. `_update_jump`가 착지60ms 경계를 분할하므로 긴 갱신도 연결 지점을 지나치지 않고 남은 시간을 이어 계산한다. 좌표·방향·클립 이미지는 변경하지 않는다.
+
+## 전하 순간이동
+
+CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 상태 머신을 idle/낙하로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
+
+GameplayLevel은 Character 다음에 전하 5개를 등록해 이동 갱신 후 거리 상태를 갱신한다. ChargeArt는 승인 PNG를 SDL surface로 한 번 읽어 프레임 바이트를 공유하고 surface를 즉시 해제한다. Charge는 80×80 streaming texture를 소유하며 종료·생성 실패에서 해제한다. 두 상태와 파동은 premultiplied 보간 후 source-over 합성해 업로드하며 안정 상태는 원본 프레임을 직접 사용한다. 위상은 24fps·3초 공유 시간이고 중간 반전은 값·속도를 유지한다. 엔진/공용 프레임워크·게임 의존성은 변경하지 않았다.
+
+기본 동작 검증은 [012 verification](../specs/012-charge-teleport/verification.md)에 기록한다. 끝점 전류 연결은 다음 증분이다.

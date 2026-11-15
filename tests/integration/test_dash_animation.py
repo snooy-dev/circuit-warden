@@ -99,7 +99,7 @@ class DashAnimationTests(unittest.TestCase):
         self.key(scene, pico.SDLK_SPACE)
         self.key(scene, pico.SDLK_LSHIFT, pico.SDL_KEYUP)
         self.key(scene, pico.SDLK_RSHIFT)
-        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0))
         scene.update(.166)
         self.assertIs(actor.player.clip, actor.clips['recover_run_left'])
         self.assertEqual(actor.facing, -1)

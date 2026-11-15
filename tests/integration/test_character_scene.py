@@ -26,6 +26,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.enterContext(patch.object(pico, 'SDL_SetWindowTitle'))
         self.app = Mock(reset_generation=0, output_valid=True, viewport=(0, 0, 800, 600),
                         fullscreen=False, window_size=DEFAULT_SIZE)
+        self.app.event_to_output.side_effect = lambda event: (event.x, event.y)
 
     def pixels(self):
         sample = pico.SDL_Rect(340, 350, 120, 100)
@@ -187,7 +188,7 @@ class CharacterSceneTests(unittest.TestCase):
         actor = scene.character
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_a))
         scene.update(.1)
-        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0)
         scene.handle_event(click)
         scene.update(.1)
         first = next(obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
