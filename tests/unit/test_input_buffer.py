@@ -40,6 +40,20 @@ class InputBufferTests(unittest.TestCase):
         self.assertEqual(actor.state, 'idle')
         self.assertIsNone(actor.buffered_action)
 
+    def test_attack_starts_at_zero_when_dash_unlocks_at_buffer_expiry(self):
+        for dash_elapsed, expected_state in ((.367, 'attack'), (.3669, 'idle')):
+            with self.subTest(dash_elapsed=dash_elapsed):
+                actor = self.character = self.make_character()
+                self.press(pico.SDLK_LSHIFT)
+                actor.update(dash_elapsed)
+                self.attack()
+                actor.update(.09)
+                actor.update(.08)
+                self.assertEqual(actor.state, expected_state)
+                self.assertIsNone(actor.buffered_action)
+                if expected_state == 'attack':
+                    self.assertEqual(actor.player.elapsed, 0)
+
     def test_landing_buffers_attack_but_never_attacks_in_air(self):
         actor = self.character
         self.press(pico.SDLK_SPACE)

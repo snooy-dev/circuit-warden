@@ -30,7 +30,7 @@ class ChargeTeleportTests(unittest.TestCase):
                 self.assertAlmostEqual(actor.velocity_y, GRAVITY * TELEPORT_RISE_SECONDS)
                 self.assertIsNone(actor.buffered_action)
                 self.assertIsNone(actor.dash_phase)
-                self.assertFalse(actor.attack_requested or actor.jump_requested or actor.dash_requested)
+                self.assertIs(actor.player.clip, self.clips['jump_rise_left'])
                 self.assertTrue(actor.air_dash_used)
                 self.assertEqual(actor.facing, -1)
                 actor.update(.05)
