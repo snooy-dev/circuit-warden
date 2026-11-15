@@ -330,4 +330,4 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 
 전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
 
-GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 교체하고 on_end에서 해제한다.
+GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 공중 도착만 기록하고 지상 도착은 비운다. after_update에서 grounded이면 착지 모션 종료를 기다리지 않고 비우며 on_end에서도 해제한다.

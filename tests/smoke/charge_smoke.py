@@ -88,6 +88,15 @@ class ChargeSmoke(CharacterScene):
         yield .2
         assert actor.x == self.charges[2].position[0]
         self.capture('charge-right-chain')
+        yield .8
+        assert actor.grounded and self.level.mode.last_charge is None
+        count = self.teleports
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .06
+        assert self.teleports == count + 1 and actor.x == self.charges[2].position[0]
+        assert actor.jump_phase == 'rise'
+        self.capture('charge-right-after-landing')
+        yield .12
         for index in (4, 1, 0):
             self.click((self.charges[index].position[0] - 44, self.charges[index].position[1]))
             yield .08

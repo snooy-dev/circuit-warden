@@ -32,16 +32,18 @@ PASS: 순간이동10회·선입력2회·공격/점프/대시 취소·상승/낙�
 
 화면 위쪽 여유가 작으면 기존 제한 때문에 상승량/시간이 줄어든다. 상승 강화의 최종 조작감은 사용자 확인 전이다. 새 아트·의존성·엔진·공용 프레임워크·README 변경 및 PR 게시는 하지 않았다.
 
-## 우클릭 마지막 도착 제외 검증
+## 착지 후 우클릭 제외 해제 검증
 
-사용자 후속 요청에 따라 FR-009에서 마지막 성공 도착 전하를 우클릭 후보에서 제외했다. 좌클릭 선택·기존 예약 규칙은 유지한다. 시작 시 사용자 미커밋 변경은 없었으며 fetch/merge 결과 Already up to date였다. 마지막 도착은 GameplayMode.last_charge에 기록하고 예약/실패로 바꾸지 않으며 다른 전하 도착 성공 때 교체하고 on_end에서 해제한다. 과거 자동 선택 검증은 9cd420c에 보존한다.
+2026-11-15 사용자 직접 테스트에서 착지 후 우클릭 무반응을 보고했다. 실제 창 입력 기록에서 button=3이 들어왔지만 마지막 전하만 활성 거리 안에 있어 제외 후 후보가0인 상황을 확인했다. 사용자 후속 지시대로 공중 제외는 유지하고 착지 즉시 해제한다. 이전 제외 구현 검증은 5580d74에 보존한다. 시작 시 작업 트리는 깨끗했고 fetch/merge 결과 Already up to date였다.
+
+GameplayMode.after_update 마지막에서 grounded이면 last_charge를 비운다. 지상 순간이동 도착도 즉시 비우며 공중 예약 실행으로 다시 상승하면 새 도착 기록을 유지한다. 착지 모션 종료를 기다리지 않는다.
 
 ```powershell
-D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_shares_last_valid_buffer_and_destination_origin tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_exclusion_changes_only_on_arrival_and_clears_on_exit tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_only_last_target_is_noop_but_left_click_still_selects tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_nearest_ignores_cursor_and_filters_invalid_targets tests.integration.test_charge_scene.ChargeSceneTests.test_buffer_clears_on_focus_invalid_output_or_invalid_destination
+D:/GitHub/circuit-warden/.venv/Scripts/python.exe -m unittest tests.integration.test_charge_scene.ChargeSceneTests.test_landing_clears_exclusion_before_landing_animation_finishes tests.integration.test_charge_scene.ChargeSceneTests.test_ground_destination_clears_exclusion_immediately tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_shares_last_valid_buffer_and_destination_origin tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_only_last_target_is_noop_but_left_click_still_selects tests.integration.test_charge_scene.ChargeSceneTests.test_right_click_exclusion_changes_only_on_arrival_and_clears_on_exit
 ```
 
-5개 통과. FR-009: 마지막 전하 제외·다음 최근접 선택·진행 중/효과 종료 후 제외 유지·예약만으로 제외 대상이 바뀌지 않음·다음 도착 시 교체·이전 전하 재사용·장면 종료 해제를 확인했다. 유일한 전하가 제외 대상이면 위치/수직 속도/예약을 유지하고 좌클릭 직접 선택은 가능하다. 동률·무효 대상 제외·FR-008 혼합 예약/무효 예약 취소도 통과했다.
+5개 통과. FR-009: 자연 낙하 후 land 단계에서 제외 기록 해제·같은 전하 우클릭 재사용·지상 도착 즉시 해제·공중에서는 제외 유지·후보 없음 무동작·좌클릭 선택·도착 성공 때 기록 교체·장면 종료 해제. FR-008: 혼합 예약·공중 도착 기준/기록 유지.
 
-위 SDL 명령을 수정한 smoke로 실행해 순간이동12회·선입력3회, 우클릭으로 전하2→3→2 연속 이동, 공격/점프/대시 취소·상승/낙하·F6/F11 선택·종료를 통과했다. max draw=0.3ms, median draw=0.1ms. character-charge-right-chain.png를 열어 연속 이동 후 전하2 위의 캐릭터를 확인했다. 자동 입력·화면 관찰이며 사용자 직접 플레이 평가는 아니다.
+위 SDL 명령으로 순간이동13회·선입력3회·공중 전하2→3→2 우클릭 연결·착지 후 전하2 우클릭 재사용·기존 행동 취소·F6/F11·종료를 통과했다. max draw=0.2ms, median draw=0.1ms. character-charge-right-after-landing.png를 열어 착지 후 같은 전하로 재이동해 상승하는 화면을 관찰했다. SDL 자동 입력·화면 관찰이며 사용자 직접 재검사는 아니다.
 
-Converge: FR-009/T027~T028과 mode·표적/smoke·시스템/progress/architecture 및 012 spec/plan/contracts/quickstart를 대조했으며 남은 필수 작업은 없다. 변경 문서 링크·git diff --check를 통과했다. 기본 조작·게임 의도·장면 조작 안내는 우클릭 최근접 선택을 이미 설명하므로 변경하지 않았다. 물리·엔진·자산·의존성·README는 범위 밖이다. 전체 회귀·PR 게시·사용자 직접 조작감 평가는 미실시다. 제외 대상은 시간/착지로 해제하지 않고 다음 성공 도착이나 장면 종료로 갱신한다.
+Converge: FR-009/T029~T030과 mode·표적/smoke·시스템/progress/architecture 및 012 spec/plan/contracts/quickstart를 대조했다. 남은 필수 구현 작업은 없다. 변경 링크·git diff --check를 통과했다. 기본 조작·게임 의도·창 안내는 기존 우클릭 선택 설명을 유지하므로 변경 영향이 없고 물리·엔진·자산·의존성·README는 범위 밖이다. 전체 회귀·PR 게시·사용자 직접 재검사는 미실시다. 이전에 열어 둔 게임은 코드를 다시 읽지 않으므로 재시작해야 한다.

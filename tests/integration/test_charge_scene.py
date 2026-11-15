@@ -137,6 +137,39 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(scene.character.center, target.position)
         self.assertIsNone(scene.level.mode.teleport_link)
 
+    def test_landing_clears_exclusion_before_landing_animation_finishes(self):
+        scene = self.open_scene()
+        actor = scene.character
+        target = scene.level.charges[2]
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertIs(scene.level.mode.last_charge, target)
+        scene.update(0)
+        scene.update(.1)
+        self.assertFalse(actor.grounded)
+        self.assertIs(scene.level.mode.last_charge, target)
+        for _ in range(100):
+            scene.update(.01)
+            if actor.grounded:
+                break
+        self.assertTrue(actor.grounded)
+        self.assertEqual(actor.jump_phase, 'land')
+        self.assertIsNone(scene.level.mode.last_charge)
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertEqual(actor.center, target.position)
+        self.assertEqual(actor.jump_phase, 'rise')
+        self.assertIs(scene.level.mode.last_charge, target)
+
+    def test_ground_destination_clears_exclusion_immediately(self):
+        scene = self.open_scene()
+        target = scene.level.charges[2]
+        self.click(target.position)
+        scene.update(0)
+        scene.update(.1)
+        target.position = (140, GROUND_Y + 83 / 2)
+        self.click(target.position)
+        self.assertTrue(scene.character.grounded)
+        self.assertIsNone(scene.level.mode.last_charge)
+
     def test_selection_priority_overlap_reuse_and_inactive_fallback(self):
         scene = self.open_scene()
         actor = scene.character
