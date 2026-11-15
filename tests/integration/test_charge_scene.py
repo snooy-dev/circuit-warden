@@ -29,11 +29,10 @@ class ChargeSceneTests(unittest.TestCase):
         scene = self.open_scene()
         actor = scene.character
         target = scene.level.charges[2]
-        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
-                                          button=pico.SDL_BUTTON_LEFT, x=0, y=0))
+        self.click((target.position[0] + 50, target.position[1]))
         scene.update(0)
         self.assertEqual(actor.state, 'attack')
-        self.click(target.position)
+        self.click((target.position[0] + 44, target.position[1]))
         self.assertEqual(actor.center, target.position)
         self.assertEqual(actor.jump_phase, 'rise')
         scene.update(0)
@@ -42,10 +41,10 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(actor.center, target.position)
         self.assertIsNone(actor.buffered_action)
         overlap = scene.level.charges[0]
-        overlap.position = (target.position[0] + 5, target.position[1])
+        overlap.position = (target.position[0] + 70, target.position[1])
         scene.update(0)
         scene.update(.1)
-        self.click(overlap.position)
+        self.click((target.position[0] + 40, target.position[1]))
         self.assertEqual(actor.center, overlap.position)
         scene.update(0)
         scene.update(.1)
@@ -68,7 +67,7 @@ class ChargeSceneTests(unittest.TestCase):
             scene.update(0)
             scene.character.teleport((0, GROUND_Y + 83 / 2))
             self.app.event_to_output.side_effect = lambda event: (event.x * ratio, event.y * ratio)
-            x, y = scene.transform.point(*target.position)
+            x, y = scene.transform.point(target.position[0] + 44, target.position[1])
             scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
                                                 button=pico.SDL_BUTTON_LEFT, x=x / ratio, y=y / ratio))
             self.assertEqual(scene.character.center, target.position)
@@ -119,8 +118,8 @@ class ChargeSceneTests(unittest.TestCase):
         self.click(first.position)
         self.assertTrue(last.active)
         self.assertEqual(scene.level.mode.activation_origin, first.position)
-        self.click(second.position)
-        self.click(last.position)
+        self.click((second.position[0] + 44, second.position[1]))
+        self.click((last.position[0] - 44, last.position[1]))
         self.assertEqual(actor.center, first.position)
         scene.update(0)
         # 실제 중심이 범위를 벗어나도 진행 중 활성 기준은 도착점이다.

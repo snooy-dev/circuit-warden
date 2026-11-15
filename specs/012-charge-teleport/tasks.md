@@ -43,3 +43,8 @@ T001→T002→T003~T007→T009~T011→T014~T016→T012~T013. T008은 확정된 �
 - [x] T017 [US1] FR-004와 플레이 피드백을 docs/systems/charge-teleport.md·specs/012-charge-teleport/spec.md·plan.md에 반영하고 game/character.py에160ms 상승·상단 제한·속도 비누적을 적용한다.
 - [x] T018 [US1] tests/unit/test_charge_teleport.py·tests/integration/test_charge_scene.py·tests/smoke/charge_smoke.py에서 정점/복귀/상단/선입력/대시 이력과 실제 화면을 확인한다.
 - [x] T019 docs/architecture.md·docs/game-design.md·docs/progress.md와 specs/012-charge-teleport/verification.md를 실제 결과에 맞추고 대응·링크·공백 확인 후 커밋한다.
+
+## Phase 7: 전하 표시보다 넓은 클릭 판정
+
+- [x] T020 [US1] FR-002와 사용자 요청을 시스템/spec/plan에 반영하고 game/charge.py의 클릭 반경을48로 확대한다. 기존 선택·중첩·선입력·배율 검사를 표시 밖 클릭으로 조정해 실행한다.
+- [x] T021 tests/smoke/charge_smoke.py에서 판정 안/밖·선입력·창 크기 변경 후 선택을 확인하고 progress·verification을 갱신한다. 문서/코드 대응·링크·공백을 대조한 뒤 관련 증분만 커밋한다.

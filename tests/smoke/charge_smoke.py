@@ -69,10 +69,10 @@ class ChargeSmoke(CharacterScene):
     def exercise(self):
         actor = self.character
         self.capture('charge-ready')
-        self.click(self.charges[-1].position)
+        self.click((self.charges[2].position[0] + 50, self.charges[2].position[1]))
         yield .04
         assert actor.state == 'attack' and actor.grounded
-        self.click(self.charges[2].position)
+        self.click((self.charges[2].position[0] + 44, self.charges[2].position[1]))
         yield .06
         assert actor.state == 'jump' and actor.x == 140
         assert actor.center[1] > self.charges[2].position[1] and actor.velocity_y > 0
@@ -82,7 +82,7 @@ class ChargeSmoke(CharacterScene):
         assert actor.jump_phase == 'fall' and actor.center[1] > self.charges[2].position[1]
         self.capture('charge-lift-fall')
         for index in (4, 1, 0):
-            self.click(self.charges[index].position)
+            self.click((self.charges[index].position[0] - 44, self.charges[index].position[1]))
             yield .08
             assert actor.x == self.charges[index].position[0]
             self.capture(f'charge-chain-{index}')
@@ -125,7 +125,7 @@ class ChargeSmoke(CharacterScene):
             yield .12
             actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
             count = self.teleports
-            self.click(self.charges[2].position)
+            self.click((self.charges[2].position[0] + 44, self.charges[2].position[1]))
             yield .06
             assert self.teleports == count + 1 and actor.x == 140
             self.capture('charge-' + name)

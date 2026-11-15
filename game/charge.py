@@ -11,7 +11,7 @@ from engine.rendering.drawing import _sdl
 
 
 ACTIVATION_DISTANCE = 300
-CLICK_RADIUS = 24
+CLICK_RADIUS = 48
 SIZE = 80
 ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'charge'
 
