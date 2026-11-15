@@ -9,7 +9,6 @@ from transitions import Machine
 
 from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
 
-from .combat import draw_health
 from .effects import SpriteEffect
 
 
@@ -448,9 +447,5 @@ class Character(GameObject):
         draw_sprite(frame, transform, (self.x, self.y),
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
-    def _draw_health(self, transform, opacity):
-        draw_health(transform, self.x, self.y + BODY_HEIGHT + 8, self.hp / self.MAX_HP,
-                    (86, 204, 227), opacity)
-
     def render_items(self):
-        return RenderItem(self._draw), RenderItem(self._draw_health, draw_order=1)
+        return (RenderItem(self._draw),)

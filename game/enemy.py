@@ -5,7 +5,6 @@ from pathlib import Path
 from game_framework import GameObject, RenderItem, SpriteFrame, draw_sprite
 
 from .character import GROUND_Y
-from .combat import draw_health
 
 
 IMAGE_PATH = Path(__file__).resolve().parents[1] / 'assets' / 'enemies' / 'metal_dust.png'
@@ -102,9 +101,5 @@ class Enemy(GameObject):
         draw_sprite(self.frame, transform, (self.x, self.y),
                     (WIDTH * width_scale, HEIGHT * height_scale), opacity, flip_x=self.facing < 0)
 
-    def _draw_health(self, transform, opacity):
-        draw_health(transform, self.x, self.y + BODY_HEIGHT + 8, self.hp / self.MAX_HP,
-                    (232, 90, 90), opacity)
-
     def render_items(self):
-        return RenderItem(self._draw), RenderItem(self._draw_health, draw_order=1)
+        return (RenderItem(self._draw),)

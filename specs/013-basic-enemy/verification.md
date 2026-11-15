@@ -4,6 +4,14 @@
 
 2026-11-15: 원화 기반 hibit 적 1종의 양방향 전투 구현·선택한 검증 완료. 사용자 직접 조작감과 최종 미술 판단은 미확인이다.
 
+## 체력바 제거 후속 검증
+
+사용자 요청으로 워든과 적의 체력바 그리기·미사용 함수를 제거했다. 내부 체력·피해·처치·재시작은 유지했다.
+
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir art/enemies/verification-no-health-bars`: PASS. 실제 SDL 공방·회피·사망·R·처치·정리를 확인했고 초기 캡처를 열어 양쪽 체력바가 없음을 관찰했다.
+- `rg`로 미사용 체력바 함수·호출이 남지 않았음을 확인하고 `git diff --check`를 통과했다.
+- 명세 FR-001·계획·T016·시스템·구조를 대조했으며 converge에 남은 작업은 없다. 아래 자동 검사64개 결과는 체력바 제거 이전 결과다. 이번에는 출력만 삭제했으므로 자동·전체 회귀를 재실행하지 않고 SDL 검사로 확인했다.
+
 ## 환경과 명령
 
 작업트리: `C:/Users/Developer/.codex/worktrees/basic-enemy/circuit-warden`, 브랜치 `feature/basic-enemy`. 최신 origin/main을 fetch한 6568aa7에서 분리했다. 게임 Python은 기존 체크아웃의 `.venv`를 재사용하며 의존성을 변경하지 않았다.
@@ -31,7 +39,7 @@
 | SC-002 | 최종 SDL smoke와 캡처 관찰 |
 | SC-DOC | 시스템 규칙·기술 구조·아트·검사 안내·진행 상태 동기화 |
 
-Spec Kit converge는 요구사항6개·성공 기준4개·수용 사례6개·작업15개와 기술 선택을 대조했고 남은 필수 구현이나 검증 누락을 발견하지 않았다. 첫 표시·검 타격 증분은 f5e518b로 보존했다.
+Spec Kit converge는 요구사항6개·성공 기준4개·수용 사례6개·작업16개와 기술 선택을 대조했고 남은 필수 구현이나 검증 누락을 발견하지 않았다. 첫 표시·검 타격 증분은 f5e518b로 보존했다.
 
 ## 한계와 미실행
 

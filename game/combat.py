@@ -1,9 +1,6 @@
-"""양방향 전투의 판정과 체력 표시."""
+"""양방향 전투의 접촉 판정."""
 
 from math import inf
-
-from game_framework import draw_rect
-
 
 TIME_EPSILON = 1e-9
 
@@ -33,10 +30,3 @@ def first_contact(moving, fixed, times, movement, window=(0, inf)):
     if enter >= min(last, leave) - TIME_EPSILON or leave <= first + TIME_EPSILON:
         return None
     return max(first, enter)
-
-
-def draw_health(transform, x, y, fraction, color, opacity):
-    left = x - 25
-    draw_rect(transform, (left - 2, y - 2, left + 52, y + 7), (28, 30, 38), opacity)
-    if fraction > 0:
-        draw_rect(transform, (left, y, left + 50 * fraction, y + 5), color, opacity)

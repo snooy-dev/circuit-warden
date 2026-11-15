@@ -34,3 +34,7 @@
 ## Dependencies & Execution Order
 
 T001~002 후 T003~007을 실행한 뒤 T008~013, T014~015 순서로 진행한다. 구현과 독립적으로 테스트 사례를 준비할 수 있으며 같은 파일을 동시에 편집하지 않는다. 첫 플레이 가능 증분은 US1이며 사용자 요청의 전체 범위는 US2까지다.
+
+## Phase 5: 체력바 표시 제거
+
+- [x] T016 FR-001의 후속 요청에 따라 `game/character.py`, `game/enemy.py`, `game/combat.py`에서 양쪽 체력바 출력과 미사용 함수를 제거하고, 실제 SDL 화면 및 관련 docs·verification을 확인한 뒤 커밋한다.
