@@ -4,7 +4,7 @@
 
 ## Summary
 
-예약 행동을 직접 전달해 중복 플래그를 제거하고 공격 진입 갱신의 첫 프레임을 보존한다. 대기 입력 처리 후 요청된 창 변경을 적용한다. 내부 순회 함수도 예외 시 스냅샷을 비운다. 전하 합성을 NumPy float64 연산으로 바꾸고 RGBA 동일성과 장면 전체 비용을 검증한다. 전류 래스터는 목표를 충족하면 변경하지 않는다.
+예약 행동을 직접 전달해 중복 플래그를 제거하고 공격 진입 갱신의 첫 프레임을 보존한다. 이전 프레임의 표시 요청을 다음 묶음의 대기 입력 처리 후 적용한다. 새 입력에서 발생한 요청은 다음 프레임에 남긴다. 내부 순회 함수도 예외 시 스냅샷을 비운다. 전하 합성을 NumPy float64 연산으로 바꾸고 RGBA 동일성과 장면 전체 비용을 검증한다. 전류 래스터는 목표를 충족하면 변경하지 않는다.
 
 ## Technical Context
 
@@ -27,7 +27,7 @@
 ## Project Structure & Interfaces
 
 - game/character.py, tests/unit/test_input_buffer.py, tests/unit/test_charge_teleport.py, tests/integration/test_character_scene.py: 행동 전달·첫 프레임.
-- engine/loop.py, tests/unit/test_engine.py, tests/integration/test_charge_scene.py: 표시 전환 전 클릭.
+- engine/loop.py, engine/display.py, tests/unit/test_engine.py, tests/integration/test_resize_input.py, tests/integration/test_charge_scene.py: 표시 전환 전 클릭.
 - game_framework/world.py, game_framework/ui.py, tests/unit/test_game_framework.py: 예외 참조 정리.
 - game/charge.py, requirements.txt: 배열 합성. tests/fixtures/charge_composition.json과 tests/performance/charge_benchmark.py는 기존 출력 해시와 동일 조건 비교를 제공한다.
 - docs/architecture.md, docs/progress.md, tests/README.md와 이 기능 문서. 루트 README·PNG·tmp는 수정하지 않는다.

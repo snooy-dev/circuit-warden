@@ -134,7 +134,7 @@ P1 구현: `game_framework/world.py`의 GameObject·Level·GameMode. `Level(mode
 - destroy는 ID와 객체 동일성을 확인해 저장소에서 제거하고 소속/수명 상태를 먼저 바꾼 뒤 정리 콜백을 한 번 시도한다. 반복 제거는 무해하다. 스냅샷·외부 변수에 참조가 남을 수 있으므로 즉시 메모리 해제를 보장한다는 뜻은 아니다. 콜백 전체 실행 비용은 O(1)로 보지 않는다.
 - 입력 이벤트 하나를 전달할 때와 update 한 번을 호출할 때 각각 tuple(_objects.values())를 콜백 전에 만든다. GameMode 먼저, 이어 스냅샷 등록순으로 객체를 호출한다. 호출 직전 아직 이 Level 소속인지 확인한다.
 - 이벤트 중 생성한 객체는 같은 이벤트를 받지 않지만 다음 이벤트·업데이트부터 참여할 수 있다. 업데이트 중 생성한 객체는 그 업데이트에 참여하지 않으나 같은 프레임 렌더에는 보인다. 제거된 객체는 이후 호출·렌더에서 제외하며 이미 실행 중인 메서드를 강제로 중단하지는 않는다.
-- 스냅샷은 전달 종료·실패 시 해제한다. 소유 dict를 직접 순회하면서 콜백을 호출하지 않는다. 재진입한 입력/업데이트 전달은 거부한다.
+- 스냅샷은 전달 종료·실패 시 바깥 호출과 실제 내부 순회 함수 모두에서 해제한다. 예외를 보관해도 traceback의 목록 참조가 무관한 객체를 붙잡지 않는다. 실패 콜백 자체의 traceback은 보존한다. 소유 dict를 직접 순회하면서 콜백을 호출하지 않는다. 재진입한 입력/업데이트 전달은 거부한다.
 - close는 닫는 상태로 전환해 등록을 막고 모드 종료·모든 객체 정리를 시도한다. 개별 정리 실패로 나머지를 누락하지 않고 오류를 보존한다. 정리 콜백 중 새 등록도 거부한다. 초기화 실패는 실패 객체 정리 후 오류를 전달한다.
 
 ### Canvas 생성·삭제·순회
@@ -142,7 +142,7 @@ P1 구현: `game_framework/world.py`의 GameObject·Level·GameMode. `Level(mode
 - 최소 UI 계층을 이번 검토안에 포함한다. 새 UIElement를 roots 또는 부모 children 끝에 추가한다. 한 번만 부착 가능한 새 노드만 받아 다중 부모·다중 Canvas·순환을 막는다. 실행 중 reparent나 제거된 노드 재부착 API는 두지 않는다.
 - 부모 삭제는 하위 트리 삭제다. 먼저 하위 노드 참조를 모으고, 부모/roots 목록에서 대상 루트를 동일성으로 찾아 분리한다. 모든 대상의 소속을 해제한 다음 자식부터 정리를 시도하고 참조를 끊는다. 중복 삭제는 무해하며 일부 정리 실패에도 나머지를 시도한다. 삭제 중 새 부착은 거부한다.
 - 자식 추가는 분할상환 O(1), 하위 트리 제거는 O(S + K)다. S는 제거 노드 수, K는 대상 루트의 형제 수다. 형제 목록에서 검색·이동하는 비용을 인정한다. 많은 UI를 한꺼번에 닫을 때는 각 형제에 remove를 반복하지 않고 전체 목록을 분리해 O(U)에 정리한다.
-- update 대상은 등록순 전위 DFS(부모→자식)로 평탄화한 tuple이다. LevelScene은 Level과 Canvas 두 스냅샷을 모두 GameMode/객체 콜백 전에 취득한다. 이후 Level 갱신, Canvas 갱신 순으로 호출하며 Canvas도 호출 직전 소속을 확인한다. 따라서 Level 갱신 중 만든 UI도 같은 update에는 참여하지 않는다.
+- update 대상은 등록순 전위 DFS(부모→자식)로 평탄화한 tuple이다. LevelScene은 Level과 Canvas 두 스냅샷을 모두 GameMode/객체 콜백 전에 취득한다. 이후 Level 갱신, Canvas 갱신 순으로 호출하며 Canvas도 호출 직전 소속을 확인한다. 따라서 Level 갱신 중 만든 UI도 같은 update에는 참여하지 않는다. 내부 순회도 finally에서 snapshot을 비워 보관된 갱신 예외가 다른 노드를 유지하지 않게 한다.
 - visible=false는 해당 노드와 하위 트리의 그리기만 생략한다. 숨겨진 노드의 update는 유지한다. 순회는 명시적 스택으로 구현하는 안이며, 깊은 트리의 Python 재귀 제한에 의존하지 않는다.
 - UI는 좌상단 원점·아래 방향 y의 Canvas 논리 단위를 사용한다. 루트는 정규화 anchor와 논리 offset으로 배치하고 자식은 부모 로컬 위치를 더한다. Canvas 전체의 균등 배율만 적용한다. 루트 기준점 외 자동 레이아웃·노드별 회전/스케일·클리핑·UI 입력 소비/포커스는 포함하지 않는다. 화면을 닫을 때 전체 정리한다.
 
@@ -250,8 +250,8 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 ### P2 실행 계약
 
 - `Engine(width=WIDTH, height=HEIGHT, fullscreen=False)`와 기존 `Engine().run(scene)`을 지원한다. 크기는 양의 정수다. 초기 창은 크기 변경 가능하며 최소 크기 정책은 추가하지 않는다.
-- `set_display(fullscreen=..., window_size=(w,h))`는 다음 프레임 입력 전에 적용한다. 보더리스 데스크톱 전체화면을 사용하고 복귀 시 마지막 정상 창 크기를 복원한다. SDL 전체화면/출력 조회 실패는 RuntimeError로 전달하고 기존 finally 경로로 닫는다.
-- `window_size`, `output_size`, `viewport=(0,0,w,h)`, `fullscreen`, `output_valid`는 입력 전 조회한 현재 프레임 상태다. 최소화 또는 0 크기 때 draw/present/입력 역변환만 생략하고 update/종료 처리는 유지한다. 입력 후 출력이 달라지면 표시를 건너뛰고 다음 프레임에 재조회한다.
+- `set_display(fullscreen=..., window_size=(w,h))`는 다음 프레임의 대기 입력을 현재 화면 기준으로 전달한 뒤 update 전에 적용한다. 프레임 시작에 적용할 요청을 분리하므로 입력 콜백이 만든 새 요청은 다음 프레임에 남는다. 종료 입력은 표시 적용보다 우선한다. 요청 크기는 마지막 실제 창 크기와 분리해 외부 resize 조회가 덮어쓰지 않는다. 보더리스 데스크톱 전체화면 복귀 시 마지막 정상 창 크기를 복원한다. SDL 전체화면/출력 조회 실패는 RuntimeError로 전달하고 기존 finally 경로로 닫는다.
+- `window_size`, `output_size`, `viewport=(0,0,w,h)`, `fullscreen`, `output_valid`는 입력 전 조회하고 표시 요청 적용 후 다시 조회한다. 입력 역변환은 변경 전 표시, update/draw는 변경 후 표시를 사용한다. 최소화 또는0 크기 때 draw/present/입력 역변환만 생략하고 update/종료 처리는 유지한다. 예상하지 못한 출력 변경은 해당 표시를 건너뛰고 다음 프레임에 재조회한다.
 - `window_to_output(x,y)`는 좌상단 창 좌표를 좌상단 출력 픽셀로 변환한다. `event_to_output(event)`는 마우스 이동/버튼에만 적용하고 휠·무효 출력은 None이다. Scene의 event.x/y와 콜백 시그니처는 유지한다. Pico2D 그림의 y 뒤집기는 출력 높이로 한 번 수행한다.
 - `render_resets`는 현재 프레임 SDL_RENDER_TARGETS_RESET/SDL_RENDER_DEVICE_RESET 종류 tuple이다. 입력/업데이트 전에 확정하며 해당 이벤트도 Scene에 전달한다. `reset_generation`은 누적 증가하므로 최소화로 draw를 건너뛰어도 P3는 마지막 복구 세대와 비교할 수 있다. 자원 복구는 P3 책임이다.
 - Pico2D 설치 파일·resize_canvas는 수정/호출하지 않는다. 프로젝트 poll_events가 키 반복 필터와 마우스/휠 필드를 유지하며 창 이벤트(event/data1/data2)와 렌더 리셋을 추가 보존한다.

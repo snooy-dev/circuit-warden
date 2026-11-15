@@ -17,8 +17,7 @@ class Engine(Display):
     def __init__(self, width=WIDTH, height=HEIGHT, *, fullscreen=False):
         self._validate_size(width, height)
         self._windowed_size = (width, height)
-        self._requested_fullscreen = bool(fullscreen)
-        self._display_request = None
+        self._display_request = (bool(fullscreen), None)
         self.window_size = (width, height)
         self.output_size = (0, 0)
         self.viewport = (0, 0, 0, 0)
@@ -52,14 +51,17 @@ class Engine(Display):
         pico.window = pico.renderer = None
         pico.audio_on = False
         try:
-            pico.open_canvas(*self._windowed_size)
+            fullscreen, window_size = self._display_request or (None, None)
+            pico.open_canvas(*(window_size or self._windowed_size))
             if not pico.window or not pico.renderer:
                 raise RuntimeError('Pico2D 창 또는 렌더러를 생성하지 못했습니다.')
             pico.hide_lattice()
             pico.SDL_SetWindowResizable(pico.window, pico.SDL_TRUE)
+            if fullscreen is None:
+                fullscreen = self.fullscreen
             self.fullscreen = False
-            self._display_request = True
-            self._apply_display()
+            self._display_request = None
+            self._apply_display(fullscreen, window_size)
             self._refresh_display()
             self._scene = initial_scene
             self._scene.enter(self)
@@ -68,7 +70,7 @@ class Engine(Display):
                 started = perf_counter()
                 dt = 0.0 if previous is None else min(started - previous, MAX_DT)
                 previous = started
-                self._apply_display()
+                display_request, self._display_request = self._display_request, None
                 events = poll_events()
                 # 이벤트 펌프가 반영한 크기를 입력 전달 전에 확정한다.
                 frame_display = self._refresh_display()
@@ -86,6 +88,10 @@ class Engine(Display):
                         break
                 if not self._running:
                     break
+                # 대기 입력은 화면 전환 전 좌표를 사용한다.
+                if display_request is not None:
+                    self._apply_display(*display_request)
+                    frame_display = self._refresh_display()
                 self._scene.update(dt)
                 if not self._running:
                     break

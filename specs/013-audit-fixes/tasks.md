@@ -11,14 +11,14 @@
 ## Phase 2: User Story 1 - 입력과 공격 첫 프레임
 
 - [x] T003 [P] [US1] game/character.py와 tests/unit/test_input_buffer.py·tests/integration/test_character_scene.py에서 FR-001 예약 공격 첫 프레임을 수정·회귀 검사한다.
-- [ ] T004 [P] [US1] engine/loop.py와 tests/unit/test_engine.py에서 FR-002 표시 전환 전에 대기 클릭을 처리하고 같은/다음 묶음·종료를 회귀 검사한다.
+- [x] T004 [P] [US1] engine/loop.py와 tests/unit/test_engine.py에서 FR-002 표시 전환 전에 대기 클릭을 처리하고 같은/다음 묶음·종료를 회귀 검사한다.
 
 ## Phase 3: User Story 3 - 상태와 수명 정리
 
 - [x] T005 [US3] game/character.py에서 FR-005 요청 플래그를 제거하고 단일 판정을 사용한다. tests/unit/test_charge_teleport.py의 내부 플래그 확인을 동작 검사로 바꾼다(T003과 같은 담당).
-- [ ] T006 [P] [US3] game_framework/world.py·ui.py와 tests/unit/test_game_framework.py에서 FR-004 snapshot 해제·예외 보관 약한 참조 회귀를 검사한다.
+- [x] T006 [P] [US3] game_framework/world.py·ui.py와 tests/unit/test_game_framework.py에서 FR-004 snapshot 해제·예외 보관 약한 참조 회귀를 검사한다.
 - [x] T007 docs/architecture.md·specs/013-audit-fixes/verification.md·tasks.md에 T003/005 결과를 기록하고 해당 증분만 커밋한다.
-- [ ] T008 docs/architecture.md·specs/013-audit-fixes/verification.md·tasks.md에 T004/006 결과를 기록하고 해당 증분만 커밋한다.
+- [x] T008 docs/architecture.md·specs/013-audit-fixes/verification.md·tasks.md에 T004/006 결과를 기록하고 해당 증분만 커밋한다.
 
 ## Phase 4: User Story 2 - 효과 모양 유지와 성능
 
