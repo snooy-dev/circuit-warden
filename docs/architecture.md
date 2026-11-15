@@ -286,17 +286,17 @@ GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 �
 
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 
-SwordTrail(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
+SpriteEffect(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
 
 ## Warden 점프
 
-Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. idle/run/attack Machine은 기존 애니메이션 상태를 맡으며 점프를 별도 애니메이션 상태로 늘리지 않는다. 공중에서도 수평 이동 여부로 idle/Run을 선택하고 실제 y로 그린다.
+Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. Machine의 jump 상태와 jump_phase(start/rise/fall/land)로 전용 모션을 선택한다. grounded는 물리적 접지를 나타내며 시작/착지 잠금 중에도 true이므로 행동 허용은 state/phase까지 확인한다.
 
 점프 높이는 BODY_HEIGHT×2이다. 현재 측면 idle 망토 바람 v2의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=166 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
 
 상승 시간 T=0.4초를 기술 기본값으로 두며 중력 g=2H/T², 초기 수직 속도 v=gT다. 매 update에서 y+=v·dt−g·dt²/2, v-=g·dt로 적분하고 하강 중 바닥 이하(반올림 오차 1e-9 포함)를 바닥/속도0으로 고정한다. 총 체공은 약 0.8초다. 엔진의 물리 단계·범용 충돌은 추가하지 않는다.
 
-Space는 기존 pressed set으로 중복 KEYDOWN을 억제하고 지상에서만 요청한다. 공중·공격 중 Space와 공중 클릭은 버리며, 같은 갱신의 새 점프/공격은 점프를 우선한다. focus-loss/minimize는 미시작 점프·유지 키를 지우고 진행 중 수직 운동은 계속한다. 무효 출력에서 신규 점프를 받지 않는다. 정책은 [기본 게임플레이](systems/basic-gameplay.md), 검증은 [011](../specs/011-basic-gameplay/verification.md)을 따른다.
+Space/Shift는 기존 pressed set으로 중복 KEYDOWN을 억제한다. 새 점프·공격·대시는 마지막 행동1개를100ms 저장하고 실행 가능 조건을 만족하는 갱신에서 한 번 소비한다. 만료 경계를 나눠 오래된 입력이 실행되지 않게 하며 소비 시점은 갱신 경계라 최대 한 프레임 지연될 수 있다. focus-loss/minimize는 미시작 점프·유지 키를 지우고 진행 중 수직 운동은 계속한다. 무효 출력에서 신규 점프를 받지 않는다. 정책은 [기본 게임플레이](systems/basic-gameplay.md), 검증은 [011](../specs/011-basic-gameplay/verification.md)을 따른다.
 
 ## 월드 크기와 대시
 
@@ -304,4 +304,16 @@ WorldTransform.scale=출력 viewport 높이/view_height이며 플레이 장면�
 
 현재 idle 알파 범위는 폭61~62·키81~83 월드 단위, Run은 폭61~62·키82~83이다. 최대 키83·폭62(귀·망토 포함)는 보이는 형상의 범위이며 충돌 박스가 아니다. 여백 포함 셀은128×104 월드 단위이고 기존 화면 경계는 이 셀을 사용한다.
 
-DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_SECONDS=.2, 수평 속도830 월드 단위/초다. 기본 창에서는199.2출력px로 보이나 거리 계산에는 출력 픽셀을 사용하지 않는다. Character의 dash 상태·dash_remaining·air_dash_used로 남은 시간만 수평 적분하며 중력은 유지한다. Run 좌우 클립을 그대로 사용하고 dash에서는 추가 반전하지 않는다. 엔진/프레임워크에는 대시 규칙을 추가하지 않는다. [조작 규칙](systems/basic-gameplay.md#대시)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다.
+DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_SECONDS=.2, 수평 속도830 월드 단위/초다. 기본 창에서는199.2출력px로 보이나 거리 계산에는 출력 픽셀을 사용하지 않는다. Character의 dash 상태 내부에 준비/이동/복귀 단계를 두고 남은 시간을 분할해 처리한다. 수평 적분은 이동 단계에만 적용하고 대시 이동200ms에는 수직 적분을 멈추고 준비/복귀에서 재개한다. 전용 좌우 클립과 효과에는 추가 반전을 적용하지 않는다. 엔진/프레임워크에는 대시 규칙을 추가하지 않는다. [조작 규칙](systems/basic-gameplay.md#대시)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다.
+
+### 전용 대시 모션·효과
+
+준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다. SpriteEffect는 기존 베기 효과 구현을 이름 변경해 함께 재사용한다.
+
+로더는 선택적 frameIndices를 검증하며 대시 시트의 중복셀6을 건너뛴11프레임과 셀5의34ms를 보존한다. 프레임 색/알파·시트 바이트는 변경하지 않는다. 원본의 연결 기준은 idle0/Run0 진입, idle0/Run14 복귀라 해당 복귀 후1/15번부터 재생한다. 임의 진입 위상과 독립 idle/Run의 눈 색 차이는 남아 있는 아트 연결 한계다.
+
+### 전용 점프 모션 연결
+
+시작120ms 후 이륙하고 착지180ms 동안 잠근다. _update_jump는 시작/정점/바닥/착지완료 경계로 dt를 나누고 공중에 해당하는 시간만 수평 이동에 반영한다. 원본 상승300ms는 물리 상승400ms로 시간 매핑하고 낙하600ms는 반복한다. 재생 시각은 수직 속도에서 산출해 방향전환/대시 체공·복귀에도 유지한다. 대시중 착지는 land로 표시해 두고 대시 종료 후 착지 모션을 진행하며 갱신의 남은 시간도 소비한다. 좌우 전용 클립을 사용해 추가 수평 반전하지 않는다. 엔진·자산 원본·독립 idle/Run은 그대로다.
+
+착지 연속 점프는 `_link_landing_jump`에서 land60~90ms의 유효 점프 예약을 소비하고 같은 jump 상태의 start40ms로 바꾼다. `_update_jump`가 착지60ms 경계를 분할하므로 긴 갱신도 연결 지점을 지나치지 않고 남은 시간을 이어 계산한다. 좌표·방향·클립 이미지는 변경하지 않는다.

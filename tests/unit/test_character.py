@@ -25,6 +25,17 @@ class CharacterTests(unittest.TestCase):
                 durations = (.041, .042) if name == 'idle' else (.03, .03)
                 self.clips[name] = SpriteClip(frames, durations)
             self.clips['attack'] = SpriteClip(self.clips['idle'].frames, (.05, .05), loop=False)
+            for direction in ('left', 'right'):
+                frames = self.clips[f'run_{direction}'].frames
+                self.clips[f'run_{direction}'] = SpriteClip(frames * 8, (.03,) * 16)
+                for phase, times in (('prepare_idle', (.05, .05)), ('prepare_run', (.05, .05)),
+                                     ('dash', (.1, .1)), ('recover_idle', (.08, .087)),
+                                     ('recover_run', (.08, .087))):
+                    self.clips[f'{phase}_{direction}'] = SpriteClip(frames, times, loop=False)
+                for phase, duration in (('start', .12), ('rise', .3), ('fall', .6), ('land', .18)):
+                    self.clips[f'jump_{phase}_{direction}'] = SpriteClip(
+                        frames, (duration / 2,) * 2, loop=phase == 'fall')
+
         self.character = self.make_character()
 
     def make_character(self):
@@ -36,7 +47,7 @@ class CharacterTests(unittest.TestCase):
         self.assertEqual(DASH_DISTANCE, BODY_HEIGHT * 2)
         for facing in (-1, 1):
             for viewport in ((0, 0, 1280, 720), (0, 0, 1920, 1080)):
-                for steps in ((DASH_SECONDS,), (.07, .07, .2)):
+                for steps in ((.467,), (.07, .07, .1, .1, .1, .027)):
                     actor = self.make_character()
                     actor.facing = facing
                     actor.view_bounds = WorldTransform(viewport, view_height=600).bounds
@@ -52,74 +63,95 @@ class CharacterTests(unittest.TestCase):
     def test_air_dash_once_and_landing_restores_use(self):
         actor = self.character
         actor.control(key(pico.SDLK_SPACE))
+        actor.update(.12)  # Finish the ground startup before testing an air dash.
         actor.update(.1)
-        before_y = actor.y
         actor.control(key(pico.SDLK_LSHIFT))
-        actor.update(.1)
-        self.assertEqual(actor.state, 'dash')
-        self.assertGreater(actor.y, before_y)
+        actor.update(.467)
         self.assertTrue(actor.air_dash_used)
-        actor.update(.1)
+        self.assertFalse(actor.grounded)
+        self.assertAlmostEqual(actor.x, DASH_DISTANCE)
         actor.control(key(pico.SDLK_LSHIFT, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_LSHIFT))
-        actor.update(.1)
-        self.assertEqual(actor.state, 'idle')
-        self.assertAlmostEqual(actor.x, DASH_DISTANCE)
-        actor.update(.4)
+        actor.update(.01)
+        self.assertEqual(actor.state, 'jump')
+        actor.update(.5)
         self.assertTrue(actor.grounded)
         self.assertFalse(actor.air_dash_used)
+        actor.update(.18)  # Wait out the landing lock before attempting a new jump.
         actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_SPACE))
+        actor.update(.12)
         actor.update(.1)
         actor.control(key(pico.SDLK_LSHIFT, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_RSHIFT))
         actor.update(.05)
         self.assertEqual(actor.state, 'dash')
 
-    def test_dash_locks_inputs_and_uses_left_run(self):
+    def test_air_dash_holds_height_and_velocity_for_two_tenths(self):
+        for jump_age in (.1, .5):
+            actor = self.make_character()
+            actor.control(key(pico.SDLK_SPACE))
+            actor.update(.12)
+            actor.update(jump_age)
+            actor.control(key(pico.SDLK_LSHIFT))
+            actor.update(.1)
+            height, velocity = actor.y, actor.velocity_y
+            for dt in (.07, .13):
+                actor.update(dt)
+                self.assertAlmostEqual(actor.y, height)
+                self.assertAlmostEqual(actor.velocity_y, velocity)
+            self.assertAlmostEqual(actor.x, DASH_DISTANCE)
+            actor.update(.167)
+            self.assertNotEqual(actor.y, height)
+            actor.update(2 * JUMP_APEX_SECONDS - jump_age - .267 - .001)
+            self.assertFalse(actor.grounded)
+            actor.update(.001)
+            self.assertTrue(actor.grounded)
+
+    def test_dash_phases_lock_inputs_and_select_recovery(self):
         actor = self.character
         actor.facing = -1
         actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(0)
         actor.control(key(pico.SDLK_SPACE))
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
         actor.control(click)
         actor.update(.05)
-        self.assertEqual(actor.state, 'dash')
-        self.assertTrue(actor.grounded)
-        self.assertIs(actor.player.clip, self.clips['run_left'])
-        with patch('game.character.draw_sprite') as draw:
-            actor._draw(object(), 1)
-        self.assertFalse(draw.call_args.kwargs['flip_x'])
+        self.assertEqual(actor.x, 0)
+        self.assertIs(actor.player.clip, self.clips['prepare_idle_left'])
         actor.control(key(pico.SDLK_d))
-        actor.control(key(pico.SDLK_SPACE))
-        actor.control(key(pico.SDLK_RSHIFT))
-        actor.control(click)
-        actor.update(.15)
+        actor.update(.05)
+        self.assertIs(actor.player.clip, self.clips['dash_left'])
+        actor.update(.2)
         self.assertAlmostEqual(actor.x, -DASH_DISTANCE)
+        self.assertEqual(actor.facing, -1)
+        self.assertIs(actor.player.clip, self.clips['recover_idle_left'])
+        actor.control(click)
+        actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
+        actor.control(key(pico.SDLK_SPACE))
+        actor.update(.167)
+        self.assertTrue(actor.grounded)
         self.assertEqual(actor.facing, 1)
         self.assertIs(actor.player.clip, self.clips['run_right'])
-        self.assertTrue(actor.grounded)
-        actor.update(.1)
-        self.assertEqual(actor.state, 'run')
-        self.assertEqual(actor.facing, 1)
-        self.assertGreater(actor.x, -DASH_DISTANCE)
+        self.assertEqual(actor.player.elapsed, 0)
+        self.assertAlmostEqual(actor.x, -DASH_DISTANCE)
 
-    def test_dash_end_keeps_run_time_without_extra_movement(self):
-        for facing, symbol, clip_name in ((1, pico.SDLK_d, 'run_right'),
-                                          (-1, pico.SDLK_a, 'run_left')):
+    def test_dash_run_recovery_continues_at_frame_fifteen(self):
+        for facing, symbol, direction in ((1, pico.SDLK_d, 'right'), (-1, pico.SDLK_a, 'left')):
             actor = self.make_character()
-            actor.facing = facing
             actor.control(key(symbol))
             actor.update(.01)
-            actor.player.update(.02)
             start = actor.x
             actor.control(key(pico.SDLK_LSHIFT))
-            actor.update(.1)
-            actor.update(.1)
+            actor.update(.05)
+            self.assertIs(actor.player.clip, self.clips[f'prepare_run_{direction}'])
+            actor.update(.25)
+            self.assertIs(actor.player.clip, self.clips[f'recover_run_{direction}'])
+            actor.update(.167)
             self.assertAlmostEqual(actor.x, start + facing * DASH_DISTANCE)
             self.assertEqual(actor.state, 'run')
-            self.assertIs(actor.player.clip, self.clips[clip_name])
-            self.assertAlmostEqual(actor.player.elapsed, .22 % .06)
+            self.assertIs(actor.player.clip, self.clips[f'run_{direction}'])
+            self.assertAlmostEqual(actor.player.elapsed, .45)
 
     def test_dash_end_selects_idle_when_keys_cancel_or_boundary_blocks(self):
         for at_boundary in (False, True):
@@ -130,9 +162,23 @@ class CharacterTests(unittest.TestCase):
             else:
                 actor.control(key(pico.SDLK_a))
             actor.control(key(pico.SDLK_LSHIFT))
-            actor.update(.2)
+            actor.update(.3)
+            self.assertIs(actor.player.clip, self.clips['recover_idle_right'])
+            actor.update(.167)
             self.assertEqual(actor.state, 'idle')
             self.assertIs(actor.player.clip, self.clips['idle'])
+
+    def test_release_during_run_recovery_returns_to_idle_start(self):
+        actor = self.character
+        actor.control(key(pico.SDLK_d))
+        actor.update(.01)
+        actor.control(key(pico.SDLK_LSHIFT))
+        actor.update(.3)
+        self.assertIs(actor.player.clip, self.clips['recover_run_right'])
+        actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
+        actor.update(.167)
+        self.assertIs(actor.player.clip, self.clips['idle'])
+        self.assertEqual(actor.player.elapsed, 0)
 
     def test_dash_bounds_attack_and_focus_requests(self):
         actor = self.character
@@ -141,8 +187,6 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_LSHIFT))
         actor.update(.05)
         self.assertEqual(actor.state, 'attack')
-        actor.update(.06)
-        self.assertEqual(actor.x, 0)
         actor.control(key(pico.SDLK_LSHIFT, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_LSHIFT))
         focus = SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST)
@@ -151,21 +195,22 @@ class CharacterTests(unittest.TestCase):
         self.assertEqual(actor.x, 0)
         actor.x = 320
         actor.control(key(pico.SDLK_LSHIFT))
-        actor.update(.05)
+        actor.update(.15)
         self.assertEqual(actor.x, 330)
         actor.control(focus)
-        actor.update(.15)
+        actor.update(.317)
         self.assertEqual(actor.x, 330)
         self.assertEqual(actor.state, 'idle')
         actor.view_bounds = (-20, -300, 20, 300)
         actor.control(key(pico.SDLK_LSHIFT))
-        actor.update(.2)
+        actor.update(.467)
         self.assertEqual(actor.x, 0)
 
     def test_jump_reaches_two_body_heights_and_lands_with_split_time(self):
         whole, split = self.character, self.make_character()
         for actor in (whole, split):
             actor.control(key(pico.SDLK_SPACE))
+            actor.update(.12)
         whole.update(JUMP_APEX_SECONDS)
         for _ in range(40):
             split.update(JUMP_APEX_SECONDS / 40)
@@ -174,19 +219,20 @@ class CharacterTests(unittest.TestCase):
             self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
             self.assertAlmostEqual(actor.velocity_y, 0)
             self.assertEqual(actor.x, 0)
-            self.assertIs(actor.player.clip, actor.clips['idle'])
+            self.assertIs(actor.player.clip, actor.clips['jump_fall_right'])
             self.assertFalse(actor.grounded)
         whole.update(JUMP_APEX_SECONDS)
         for _ in range(40):
             split.update(JUMP_APEX_SECONDS / 40)
         for actor in (whole, split):
             self.assertTrue(actor.grounded)
+            actor.update(.18)
             actor.control(key(pico.SDLK_SPACE))
-            actor.update(.1)
+            actor.update(.3)
             self.assertTrue(actor.grounded)
             actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
             actor.control(key(pico.SDLK_SPACE))
-            actor.update(.1)
+            actor.update(.3)
             self.assertFalse(actor.grounded)
             actor.update(2)
             self.assertEqual(actor.y, GROUND_Y)
@@ -196,28 +242,30 @@ class CharacterTests(unittest.TestCase):
         actor = self.character
         actor.control(key(pico.SDLK_d))
         actor.control(key(pico.SDLK_SPACE))
+        actor.update(.12)
         actor.update(.1)
         self.assertEqual(actor.x, 18)
-        self.assertIs(actor.player.clip, actor.clips['run_right'])
+        self.assertIs(actor.player.clip, actor.clips['jump_rise_right'])
         actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_a))
         actor.update(.1)
         self.assertEqual(actor.x, 0)
-        self.assertIs(actor.player.clip, actor.clips['run_left'])
+        self.assertIs(actor.player.clip, actor.clips['jump_rise_left'])
         actor.control(key(pico.SDLK_a, pico.SDL_KEYUP))
         actor.update(.1)
-        self.assertIs(actor.player.clip, actor.clips['idle'])
+        self.assertIs(actor.player.clip, actor.clips['jump_rise_left'])
         with patch('game.character.draw_sprite') as draw:
             actor._draw(WorldTransform((0, 0, 800, 600), view_height=600), 1)
             self.assertEqual(draw.call_args.args[2], (actor.x, actor.y))
         actor.update(.5)
         self.assertTrue(actor.grounded)
 
-    def test_airborne_inputs_are_not_buffered_and_attack_blocks_jump(self):
+    def test_early_airborne_actions_expire_and_attack_locks_before_buffered_jump(self):
         actor = self.character
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
         actor.control(click)
         actor.control(key(pico.SDLK_SPACE))
+        actor.update(.12)
         actor.update(.1)
         self.assertNotEqual(actor.state, 'attack')
         velocity = actor.velocity_y
@@ -227,7 +275,7 @@ class CharacterTests(unittest.TestCase):
         actor.update(0)
         self.assertEqual(actor.velocity_y, velocity)
         actor.update(.7)
-        actor.update(.1)
+        actor.update(.18)
         self.assertTrue(actor.grounded)
         self.assertNotEqual(actor.state, 'attack')
         actor.control(click)
@@ -237,8 +285,8 @@ class CharacterTests(unittest.TestCase):
         actor.update(.05)
         self.assertEqual(actor.state, 'attack')
         self.assertTrue(actor.grounded)
-        actor.update(.1)
-        self.assertTrue(actor.grounded)
+        actor.update(.05)
+        self.assertEqual(actor.jump_phase, 'start')
 
     def test_focus_loss_clears_pending_jump_but_airborne_character_lands(self):
         actor = self.character
@@ -254,6 +302,7 @@ class CharacterTests(unittest.TestCase):
         actor.view_bounds = (-400, -300, 400, 300)
         actor.control(key(pico.SDLK_d))
         actor.control(key(pico.SDLK_SPACE))
+        actor.update(.12)
         actor.update(.1)
         x = actor.x
         actor.control(lost)
@@ -361,7 +410,7 @@ class CharacterTests(unittest.TestCase):
             self.assertIs(draw.call_args.args[0], self.clips['idle'].frames[0])
             self.assertTrue(draw.call_args.kwargs['flip_x'])
 
-    def test_attack_starts_at_first_frame_ignores_clicks_and_resumes_held_key(self):
+    def test_attack_starts_at_first_frame_and_resumes_held_key(self):
         actor = self.character
         actor.control(key(pico.SDLK_d))
         actor.update(.1)
@@ -375,7 +424,6 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_a))
         actor.update(.05)
-        actor.control(click)
         self.assertEqual(actor.player.elapsed, .05)
         self.assertEqual(actor.facing, 1)
         actor.update(.05)

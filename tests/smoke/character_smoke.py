@@ -12,7 +12,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.scene import CharacterScene, DEFAULT_SIZE
-from game.effects import SwordTrail
+from game.effects import SpriteEffect
 from game.character import GROUND_Y, DASH_DISTANCE
 
 
@@ -44,6 +44,7 @@ class CharacterSmoke(CharacterScene):
         self.passed = False
         self.dash_captures = set()
         self.previous_dash_clip = None
+        self.jump_captures = set()
 
     def enter(self, engine):
         super().enter(engine)
@@ -94,11 +95,10 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert actor.state == 'attack' and actor.x == stopped_x and actor.facing == -1
-        trail = next(obj for obj in self.level.objects if isinstance(obj, SwordTrail))
+        trail = next(obj for obj in self.level.objects if isinstance(obj, SpriteEffect))
         assert trail.position[0] == stopped_x and trail.facing == -1
         self.capture('attack-left')
         push_key(pico.SDLK_d)
-        push_click()
         yield
 
         assert actor.state == 'run' and actor.x > stopped_x and actor.facing == 1
@@ -112,7 +112,6 @@ class CharacterSmoke(CharacterScene):
         assert trail.level is None
         self.capture('attack-right')
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
-        push_click()
         yield
 
         assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1
@@ -131,13 +130,15 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert not actor.grounded and actor.y > GROUND_Y and actor.x == stopped_x
-        assert actor.player.clip is idle
+        assert actor.player.clip is actor.clips['jump_rise_left']
         self.capture('jump-idle')
         push_click()
         yield
 
-        assert not actor.grounded and actor.state == 'idle'
-        self.capture('jump-idle-descending')
+        assert not actor.grounded and actor.state == 'jump'
+        self.capture('jump-idle-rising')
+        yield
+        yield
         yield
         yield
 
@@ -147,16 +148,18 @@ class CharacterSmoke(CharacterScene):
         push_key(pico.SDLK_SPACE)
         yield
 
-        assert not actor.grounded and actor.x > stopped_x and actor.player.clip is right
+        assert not actor.grounded and actor.x > stopped_x and actor.player.clip is actor.clips['jump_rise_right']
         self.capture('jump-run-right')
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_key(pico.SDLK_a)
         yield
 
-        assert not actor.grounded and actor.player.clip is left
+        assert not actor.grounded and actor.player.clip is actor.clips['jump_rise_left']
         self.capture('jump-run-left')
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield
+        yield
         yield
         yield
 
@@ -164,7 +167,10 @@ class CharacterSmoke(CharacterScene):
         stopped_x = actor.x
         self.capture('jump-landed')
         push_key(pico.SDLK_a)
+        yield
+        stopped_x = actor.x
         push_key(pico.SDLK_LSHIFT)
+        yield
         yield
 
         assert actor.grounded and actor.x <= stopped_x - DASH_DISTANCE + 1e-6
@@ -183,6 +189,7 @@ class CharacterSmoke(CharacterScene):
         assert not actor.grounded
         push_key(pico.SDLK_RSHIFT)
         yield
+        yield
 
         assert actor.air_dash_used and abs(actor.x - (stopped_x + DASH_DISTANCE)) < 1e-6
         push_key(pico.SDLK_RSHIFT, pico.SDL_KEYUP)
@@ -193,7 +200,9 @@ class CharacterSmoke(CharacterScene):
         assert actor.x == stopped_x
         yield
         assert actor.grounded and not actor.air_dash_used
-        assert self.dash_captures == {'dash-ground-left', 'dash-air-right'}
+        assert {'dash-ground-left-prepare_run', 'dash-ground-left-dash',
+                'dash-ground-left-recover_run', 'dash-air-right-prepare_idle',
+                'dash-air-right-dash', 'dash-air-right-recover_idle'} <= self.dash_captures
         push_key(pico.SDLK_RSHIFT, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
         push_key(pico.SDLK_F6)
@@ -210,6 +219,7 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert not self.engine.fullscreen and self.engine.window_size == (1024, 720)
+        assert {'start', 'rise', 'fall', 'land'} <= self.jump_captures
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield
@@ -220,16 +230,22 @@ class CharacterSmoke(CharacterScene):
 
     def draw(self):
         super().draw()
+        if self.character.state == 'jump':
+            phase = self.character.jump_phase
+            if phase not in self.jump_captures and self.character.player.elapsed >= .04:
+                self.capture('jump-' + phase)
+                self.jump_captures.add(phase)
         if self.previous_dash_clip is not None and self.character.state != 'dash':
             if pico.SDLK_a in self.character.pressed:
-                assert self.character.player.clip is self.previous_dash_clip
+                assert self.character.player.clip is self.character.clips['run_left']
                 self.capture('dash-resume-left')
             self.previous_dash_clip = None
         if self.character.state == 'dash':
             self.previous_dash_clip = self.character.player.clip
             name = 'dash-' + ('ground' if self.character.grounded else 'air')
             name += '-right' if self.character.facing > 0 else '-left'
-            if name not in self.dash_captures:
+            name += '-' + self.character.dash_phase
+            if name not in self.dash_captures and self.character.player.elapsed >= .04:
                 self.capture(name)
                 self.dash_captures.add(name)
         if self.character.state == 'attack' and self.character.player.elapsed == 0:

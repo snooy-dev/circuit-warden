@@ -1,9 +1,9 @@
-"""공격 위치에 남아 단발 재생 후 사라지는 베기 효과."""
+"""생성 위치에서 단발 재생 후 사라지는 스프라이트 효과."""
 
 from game_framework import GameObject, RenderItem, SpritePlayer, draw_sprite
 
 
-class SwordTrail(GameObject):
+class SpriteEffect(GameObject):
     def __init__(self, clip, position, facing, scale):
         super().__init__()
         self.player = SpritePlayer(clip)

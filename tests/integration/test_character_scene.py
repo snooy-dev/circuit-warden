@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import pico2d.pico2d as pico
 
 from game.scene import CharacterScene, DEFAULT_SIZE
-from game.effects import SwordTrail
+from game.effects import SpriteEffect
 from game.mode import GameplayMode
 from game_framework import GameObject
 
@@ -146,6 +146,40 @@ class CharacterSceneTests(unittest.TestCase):
                 self.assertIsNone(scene.engine)
                 self.assertEqual(scene.level.objects, ())
 
+    def test_dash_assets_preserve_frame_order_timing_and_pivots(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        clips = scene.character.clips
+        for direction, pivot in (('left', 63), ('right', 64)):
+            for phase, count, duration in (('prepare_idle', 6, .1), ('prepare_run', 6, .1),
+                                            ('dash', 11, .2), ('recover_idle', 10, .167),
+                                            ('recover_run', 10, .167)):
+                clip = clips[f'{phase}_{direction}']
+                self.assertFalse(clip.loop)
+                self.assertEqual(len(clip.frames), count)
+                self.assertAlmostEqual(sum(clip.durations), duration)
+                self.assertEqual(clip.frames[0].pivot, (pivot / 128, 92 / 104))
+            dash = clips[f'dash_{direction}']
+            self.assertEqual(dash.frames[6].rect, (384, 104, 128, 104))
+            self.assertEqual(dash.durations[5], .034)
+            effect = clips[f'dash_fx_{direction}']
+            self.assertEqual(len(effect.frames), 22)
+            self.assertAlmostEqual(sum(effect.durations), .367)
+            self.assertEqual(effect.frames[0].pivot,
+                             ((287 if direction == 'left' else 96) / 384, 112 / 128))
+
+    def test_invalid_dash_frame_indices_release_images(self):
+        for indices in ([0], [True] * 11, [-1] * 11, [1000] * 11):
+            scene = CharacterScene()
+            metadata = json.loads((scene.images.root / 'animations.json').read_text(encoding='utf-8'))
+            metadata['dash_right']['frameIndices'] = indices
+            with patch('game.character.json.loads', return_value=metadata):
+                with self.assertRaisesRegex(ValueError, r'animations\.json.*dash_right'):
+                    scene.enter(self.app)
+            self.assertTrue(scene.images.closed)
+            self.assertEqual(scene.level.objects, ())
+
     def test_sword_trails_keep_attack_position_and_expire_independently(self):
         scene = CharacterScene()
         scene.enter(self.app)
@@ -156,7 +190,7 @@ class CharacterSceneTests(unittest.TestCase):
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
         scene.handle_event(click)
         scene.update(.1)
-        first = next(obj for obj in scene.level.objects if isinstance(obj, SwordTrail))
+        first = next(obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
         self.assertEqual(first.player.elapsed, 0)
         self.assertEqual(first.player.clip.durations, (.05,) * 14)
         position = first.position
@@ -178,7 +212,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual((first.position, first.facing), (position, -1))
         scene.handle_event(click)
         scene.update(0)
-        trails = [obj for obj in scene.level.objects if isinstance(obj, SwordTrail)]
+        trails = [obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)]
         self.assertEqual(len(trails), 2)
         second = trails[-1]
         self.assertEqual(second.facing, 1)

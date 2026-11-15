@@ -179,5 +179,649 @@
       50
     ],
     "loop": false
+  },
+  "prepare_idle_left": {
+    "file": "prepare_idle_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 6,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false
+  },
+  "prepare_idle_right": {
+    "file": "prepare_idle_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 6,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false
+  },
+  "prepare_run_left": {
+    "file": "prepare_run_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 6,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false
+  },
+  "prepare_run_right": {
+    "file": "prepare_run_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 6,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false
+  },
+  "dash_left": {
+    "file": "dash_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 11,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      34,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false,
+    "frameIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  "dash_right": {
+    "file": "dash_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 11,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      34,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false,
+    "frameIndices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7,
+      8,
+      9,
+      10,
+      11
+    ]
+  },
+  "recover_idle_left": {
+    "file": "recover_idle_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 10,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17
+    ],
+    "loop": false
+  },
+  "recover_idle_right": {
+    "file": "recover_idle_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 10,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17
+    ],
+    "loop": false
+  },
+  "recover_run_left": {
+    "file": "recover_run_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 10,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17
+    ],
+    "loop": false
+  },
+  "recover_run_right": {
+    "file": "recover_run_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 4,
+    "count": 10,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17
+    ],
+    "loop": false
+  },
+  "dash_fx_left": {
+    "file": "dash_fx_left.png",
+    "frameSize": [
+      384,
+      128
+    ],
+    "columns": 6,
+    "count": 22,
+    "pivot": [
+      287,
+      112
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17
+    ],
+    "loop": false
+  },
+  "dash_fx_right": {
+    "file": "dash_fx_right.png",
+    "frameSize": [
+      384,
+      128
+    ],
+    "columns": 6,
+    "count": 22,
+    "pivot": [
+      96,
+      112
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17
+    ],
+    "loop": false
+  },
+  "jump_start_left": {
+    "file": "jump_start_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 12,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10
+    ],
+    "loop": false
+  },
+  "jump_start_right": {
+    "file": "jump_start_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 12,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10
+    ],
+    "loop": false
+  },
+  "jump_rise_left": {
+    "file": "jump_rise_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 18,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false
+  },
+  "jump_rise_right": {
+    "file": "jump_rise_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 18,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": false
+  },
+  "jump_fall_left": {
+    "file": "jump_fall_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 36,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": true
+  },
+  "jump_fall_right": {
+    "file": "jump_fall_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 36,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17,
+      17,
+      16,
+      17
+    ],
+    "loop": true
+  },
+  "jump_land_left": {
+    "file": "jump_land_left.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 18,
+    "pivot": [
+      63,
+      92
+    ],
+    "durationsMs": [
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10
+    ],
+    "loop": false
+  },
+  "jump_land_right": {
+    "file": "jump_land_right.png",
+    "frameSize": [
+      128,
+      104
+    ],
+    "columns": 6,
+    "count": 18,
+    "pivot": [
+      64,
+      92
+    ],
+    "durationsMs": [
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10,
+      10
+    ],
+    "loop": false
   }
 }

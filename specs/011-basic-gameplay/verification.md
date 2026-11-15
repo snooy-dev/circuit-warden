@@ -148,3 +148,83 @@ Converge: FR-014/015·SC-008과 구현/검증/현재 docs 대응, 남은 필수 
 - `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-review-fixes`: 종료0/PASS. A 유지 대시 종료 렌더 프레임에서 기존 Run 클립의 동일성을 검사했다. character-dash-resume-left.png를 열어 좌측 Run 표시를 확인했다. 지상/공중 대시·점프·공격·창 전환·종료 정리도 통과했다.
 
 Converge: 감사1/2→T028/T029→구현/회귀 대응, 추가 필수 작업 없음. systems/basic-gameplay·progress·011 spec/plan/data-model/tasks/verification을 현재 동작에 맞췄다. 변경 문서 로컬 링크·git diff --check 확인. 루트 README/자산/의존성은 변경하지 않았다. 전체 엔진 회귀와 사용자 직접 조작감 평가는 미실시다.
+
+## 승인 대시 자산 준비 (진행 중)
+
+2026-11-13 사용자 요청으로 basic-gameplay 브랜치를 origin/main d64aa93으로 fast-forward했다. training-combat은 별도 브랜치로 보존한다. 원본 승인 메타데이터에 따라 캐릭터10개·효과2개 PNG를 바이트 보존 복사했고 재생 대상130프레임의 원본 RGBA와 일치를 확인했다. 개별 SHA-256은 assets/warden/README.md에 기록했다. 원본 dash 셀6은 중복 유지 이미지라 frameIndices로 제외하고 셀5를34ms 유지한다.
+
+`.venv/Scripts/python.exe -B -m unittest tests.integration.test_character_scene.CharacterSceneTests.test_dash_assets_preserve_frame_order_timing_and_pivots tests.integration.test_character_scene.CharacterSceneTests.test_invalid_dash_frame_indices_release_images -v`: 2개 통과. 실제 PNG 프레임 순서·기준점·100/200/167/367ms와 잘못된 인덱스/초기화 실패 자원 해제를 확인했다. git diff --check 통과.
+
+T030만 완료이며 T031/T032는 남아 있다. 준비·복귀의 행동 잠금 포함 여부를 사용자에게 질문했다. 현재 대시는 기존 Run을 사용하고 새 모션·효과의 실동작/SDL 검사는 아직 미완료다. 전체 통합 완료로 취급하지 않는다.
+
+## 전용 대시 동작 연결 (2026-11-13)
+
+사용자 답변: 준비100ms·이동200ms·복귀167ms 전체를 행동 잠금에 포함한다. T030의 자산 검증을 재사용하고 T031/T032를 완료했다. Analyze 대조에서 기존 Run 대체 정책은 전용 준비/복귀·원본 연결 프레임으로 갱신했고 거리166·공중1회·중력·동시 입력 우선은 유지했다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character tests.integration.test_character_scene -q`: 28개 통과. 전용 클립/단계 시간·분할dt·거리·방향·입력 잠금·복귀·공중회복·자산/잘못된 인덱스·기존 공격/점프/창/수명 확인.
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character.CharacterTests.test_release_during_run_recovery_returns_to_idle_start tests.integration.test_dash_animation -v`: 추가4개 통과. Run복귀 중 키해제의 idle 시작, 실제 자산으로 단일/분할dt의 공중 효과 생성 경계 위치·재생 동기화·367ms 소멸, 좌측 무반전·복귀 잠금·벽/장면종료를 확인했다. 앞28개 결과를 재사용하여 고유 검사32개를 확인했다.
+- `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-motion`: 종료0/PASS. 실제 지상 좌측 prepare_run/dash/recover_run과 공중 우측 prepare_idle/dash/recover_idle, 기존 조작·창 전환·종료 정리 통과. character-dash-ground-left-dash.png·character-dash-air-right-dash.png를 열어 새 자세와 전류 잔광의 방향/뒤쪽 합성을 확인했다.
+
+SpriteEffect는 기존 베기 단발 객체를 이름 변경해 재사용하며 별도 엔진/라이브러리를 추가하지 않았다. 단계 경계를 넘는 갱신에서도 효과는 이동 시작 위치에 생성하고 같은 갱신의 생성 이후 시간만 진행한다. 전용 복귀의 마지막 자세 이후 idle1/Run15로 이어가며 다른 상태/방향으로 바뀌면0부터 재생한다.
+
+Converge: FR-016/SC-009·T030~032를 코드/자산/검증과 대조해 남은 필수 항목 없음. docs/art-direction·architecture·game-design·systems/basic-gameplay·progress와 011 현재 문서를 동기화했다. 원본 자산/독립 idle·Run/루트 README/미병합 training-combat은 보존한다. 변경 Markdown 링크·git diff --check 확인. 푸시/PR은 수행하지 않는다.
+
+남은 한계: 원본 효과는 출발점 고정 직선166 경로이므로 공중 곡선/벽을 추종하지 않는다. 원본은 idle0/Run0 진입 위상만 제작 검토돼 임의 위상 진입과 독립 idle/Run 눈 색 연결은 최종 미술 품질 확인이 필요하다. 전체 엔진 회귀·사용자 직접 조작감은 미실시다.
+
+## 공중 대시 체공 보정 (2026-11-13)
+
+T033: 이동 단계에서만 수직 적분을 건너뛴다. 수평 거리·단계 시간·입력 잠금은 보존한다. 기존 브랜치 fetch/merge는 Already up to date.
+
+게임 Python으로 `-B -m unittest tests.unit.test_character.CharacterTests.test_air_dash_holds_height_and_velocity_for_two_tenths tests.unit.test_character.CharacterTests.test_air_dash_once_and_landing_restores_use tests.integration.test_dash_animation -q` 실행: 신규 상승/하강 체공·효과/단계3개는 통과, 기존 착지1개는 늘어난 체공을 반영하지 못해 실패했다. 해당 테스트의 대기만 .3→.5로 바꾸고 해당 메서드 재실행 통과. 최종 선택5개 충족. 신규 검사는 분할 이동200ms의 높이/속도 고정과 총999ms 미착지·1000ms 착지를 확인한다.
+
+`-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/dash-hover`: 첫 실행은 변경한 대시 전의 양키 이동 검사에서 실패했다(원인 미확정). 코드 변경 없이 재실행하여 전체 시나리오 PASS/종료0. 공중 대시 캡처를 열어 높이를 유지한 모션과 잔상을 확인했다. 이 첫 실행 실패를 제품 결함으로 확정하거나 숨기지 않는다.
+
+현재 기본 조작·기술 구조·게임설계·진행 상태 및 011 문서를 갱신했다. 변경 링크/공백 확인. 전체 회귀·사용자 직접 체감 평가는 미실시이며 새로운 조작감의 채택 여부는 사용자 확인 대상이다.
+
+## 막힌 방향 효과 억제 (2026-11-13)
+
+사용자 요청 T034에 따라 준비 종료 시 기존 can_continue가 참인 경우에만 효과를 spawn한다. 브랜치 fetch/merge는 Already up to date. 수정 전 새 좌우 경계 검사에서 효과1!=0 실패를 재현했다.
+
+`.venv/Scripts/python.exe -B -m unittest tests.integration.test_dash_animation -v`: 4개 모두 통과. 실제 자산/소프트웨어 SDL 장면에서 좌우 바깥 방향 무생성, 안쪽 방향 생성, 경계1단위 전 생성과 도달 후 idle복귀, 공중 동기화·367ms 소멸·장면 정리를 확인했다. 모션·잠금·체공·거리 수치는 변경하지 않았다.
+
+기본 조작·progress·011 명세/계획/작업을 현재 규칙에 맞췄다. 링크/공백 확인. 이번에는 실제 창·전체 회귀를 재실행하지 않았으며 생성 유무는 장면 통합 검사로 직접 검증했다. 향후 장애물 충돌은 현재 화면 경계만 존재하는 구현 범위 밖이다.
+
+## 전용 점프 모션 통합 (2026-11-14)
+
+FR-017/SC-010·T035~037. 사용자 요청으로 basic-gameplay를 재사용하고 fetch/merge 결과 Already up to date. 원본 jump-v13-hibit-v2의8개 시트/168프레임 바이트·승인 SHA-256·RGBA·행우선 순서를 대조했다. 임베디드 review-only 표기는 제작 당시 메타데이터이며 최상위 approval.json과 사용자 게임 연결 요청을 적용했다. 개별 해시는 assets/warden/README.md에 보관한다.
+
+사용자 답변에 따라 시작200ms 후 이륙·착지300ms를 잠근다. 기존 높이166·상승400ms/하강400ms는 유지하고 상승300ms 클립의 재생 시간만 매핑한다. 공중 방향 변경·대시 종료 시 수직 속도 기반으로 모션 위상을 유지한다. 대시 중 착지한 경우 마지막 대시 갱신에서 남은 시간부터 착지 모션을 진행하고 방향 잠금을 유지한다.
+
+게임 .venv Python의 실제 검사:
+- `-B -m unittest tests.unit.test_character tests.integration.test_dash_animation`: 25개 통과. 새 시작/착지 시점과 전용 클립에 맞춘 기존 점프/대시·공격/이동 회귀.
+- `-B -m unittest tests.integration.test_jump_animation -v`: 최초 imported TestCase 때문에 기존장면9개와 신규3개가 함께 실행돼12개 통과했다. 수집을 module import로 정리했고 대시중 착지 사례를 추가했다.
+- `-B -m unittest tests.integration.test_jump_animation tests.integration.test_dash_animation -q`: 8개 통과. 실제 점프 자산4종의 좌우프레임/시간/기준점, 시작/공중/착지 잠금, 단일1.3초와13분할의 동일 이동144, 공중대시복귀·포커스·대시중 착지와 효과 수명 확인.
+- `-B -m unittest tests.integration.test_jump_animation.JumpAnimationTests.test_landing_during_dash_waits_for_dash_and_keeps_landing_direction -q`: 갱신 남은33ms를 착지에 반영하는 경계 기대값을 강화해 재실행 통과. 위 결과의 중복 실행은 고유 검사 수에 합산하지 않는다.
+- `-B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/jump-motion`: 종료0/PASS. 실제 SDL 시작·상승·낙하·착지와 공중 방향 전환·대시·공격·창 전환·정리 통과. character-jump-rise.png·character-jump-fall.png·character-jump-land.png를 열어 전용 자세·방향·바닥 정렬을 관찰했다.
+
+Converge: 요구/작업/자산/코드/검증 대응, 추가 필수 작업 없음. docs의 현재 점프 규칙·구조·아트·게임설계·진행 상태와 011 문서를 갱신했다. 루트 README/원본/독립 idle·Run/사용자 tmp와 PPTX 잠금 파일은 편집하지 않았다. 변경 링크/공백 확인. 전체 엔진 회귀·사용자 직접 조작감·최종 연결 미술 품질은 미실시다.
+
+## 입력 반응성 시험 (2026-11-14)
+
+사용자 요청으로 준비120ms·착지180ms, 마지막 행동100ms 선입력을 적용했다. 기존 branch 작업을 이어가며 사용자 수정 PNG8개와 tmp를 보존했다. 커밋/스테이징하지 않았다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_character tests.integration.test_jump_animation tests.integration.test_dash_animation`: 29개 통과. 시간 기대값/동시 입력의 마지막 행동 정책을 갱신했다.
+- `.venv/Scripts/python.exe -B -m unittest tests.unit.test_input_buffer -q`: 5개 통과. 실행1회/마지막 행동/만료 경계를 넘는 긴 갱신/공중 공격 금지/착지 후 공격 예약/포커스 상실/공중 대시1회. 최초 실행은 fixture 시간이 바뀌기 전이라3개 실패했고 fixture .12/.18 동기화 후 모두 통과했다.
+- `.venv/Scripts/python.exe -B tests/smoke/character_smoke.py --output-dir C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/input-buffer`: PASS/종료0. 최초 시도는 출력 디렉터리 부재로 실행 전 거부되어 폴더 생성 후 재실행했다. 기존 추가 클릭 무시 시나리오는 새 정책과 달라 제거하고 선입력은 위 표적 검사로 확인했다. 실제 SDL 조작/점프 단계/대시/창 전환/정리 통과, 시작 캡처를 열어 표시 확인.
+
+Converge: FR-018/T038~039 대응, 현재 규칙·구조·진행 상태·data-model·quickstart 갱신. 공백 확인. 전체 엔진 회귀는 범위 밖이라 미실시. 사람이 느끼는 모션 속도·선입력 조작감은 미확인이다. 선입력 소비는 update 경계이므로 실제 잠금 해제보다 최대 한 프레임 늦을 수 있다.
+
+## 착지 웅크림 연속 점프 (2026-11-14)
+
+실제 게임 start/land 오른쪽 전 프레임 비교에서 land6~8/start4를 선택했다. PNG/설정 시간은 추가 수정하지 않았다. 유효한 점프 예약에만 착지 회복 생략을 적용한다.
+
+- `.venv/Scripts/python.exe -B -m unittest tests.integration.test_jump_animation tests.unit.test_input_buffer -q`: 11개 통과. 좌우 연결의 실제4번 프레임·좌표/방향 유지·80ms 후 이륙·높이166·키 유지 반복 방지·긴/분할 갱신 동일 결과·늦은 입력의 일반 준비·예약 만료/공중 제한을 검증했다.
+- `.venv/Scripts/python.exe -B C:/Users/Developer/.codex/visualizations/2026/11/11/01a1cac2-b470-7663-9b16-80b99460d51f/input-buffer/check_landing_link.py`: 실제 SDL 연속 점프 PASS/종료0. 착지→시작 웅크림→두 번째 이륙→일반 착지/idle 완료 확인. 같은 폴더의 character-land-before-link.png와 character-linked-start-crouch.png를 캡처했다.
+
+Converge: FR-019/T040 구현·검사·현재 규칙/구조/진행 상태/quickstart/data-model 대응 완료. 공백 확인. 커밋·스테이징하지 않았다. 전체 회귀와 사람의 조작감/연결 미술 평가는 미실시다. 웅크림 이후 입력은 자세 역행을 피하기 위해 일반 점프 경로를 사용한다.
+
+## 커밋·PR 준비 (2026-11-15)
+
+사용자 후속 지시로 커밋·main 대상 PR을 진행한다. fetch origin 후 HEAD..origin/main은 비어 있고 merge --no-commit origin/main은 Already up to date였다. 기존 PR4는 병합되어 새 PR로 준비한다. 별도 미커밋 점프 PNG8개와 tmp는 제외한다.
+
+PR에 실제 포함되는 HEAD의 PNG를 git show로 임시 폴더에 추출하고 현재 animations.json을 복사한 뒤 game.scene.ASSETS를 그 경로로 대체해 게임 Python unittest를 실행했다. tests.unit.test_character, tests.integration.test_jump_animation, tests.integration.test_dash_animation, tests.unit.test_input_buffer 총36개 통과. 원본 작업 폴더 PNG는 쓰지 않았다. 기존 SDL 검사 결과는 보존하며 이번에는 전체 창 검사를 반복하지 않았다. diff 공백 확인. 전체 엔진 회귀·사람의 조작감 평가는 범위 밖이다.
