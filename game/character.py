@@ -23,6 +23,9 @@ GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
+ATTACK_ACTIVE_START = .10
+ATTACK_ACTIVE_END = .20
+ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
 # 10ms 프레임 기준: 착지 6~8번의 압축 자세 → 시작 4번 자세.
 LAND_CROUCH_START = .06
@@ -105,6 +108,9 @@ class Character(GameObject):
         self.buffered_action = None
         self.buffer_remaining = 0.0
         self.attack_requested = False
+        self.attack_id = 0
+        self.attack_facing = 1
+        self.active_attack = None
         self.jump_requested = False
         self.jump_phase = None
         self.jump_elapsed = 0.0
@@ -183,6 +189,7 @@ class Character(GameObject):
         return True
 
     def update(self, dt):
+        self.active_attack = None
         if self.view_bounds is None:
             self.buffered_action = None
         self._consume_action()
@@ -218,9 +225,16 @@ class Character(GameObject):
         if started:
             self._machine.attack()
             self.player.play(self.clips['attack'], restart=True)
+            self.attack_id += 1
+            self.attack_facing = self.facing
         attacking = self.state == 'attack'
         if attacking and not started:
+            previous = self.player.elapsed
             self.player.update(dt)
+            if previous < ATTACK_ACTIVE_END and self.player.elapsed >= ATTACK_ACTIVE_START:
+                end = self.x + self.attack_facing * ATTACK_REACH
+                self.active_attack = (self.attack_id,
+                                      (min(self.x, end), self.y + 8, max(self.x, end), self.y + 70))
             if self.player.finished:
                 self._machine.finish()
 

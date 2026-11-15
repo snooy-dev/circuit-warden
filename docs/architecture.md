@@ -272,7 +272,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 피해 판정·충돌·범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다.
+game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다. 기본 적 전투의 개별 피해 판정은 아래 후속 범위를 따른다.
 
 게임 기본 창은 사용자 요청에 따라 1280×720(16:9)이며, 기술 기본값은 view_height 600, 시트 1배, 속도 180 월드 단위/초, 바닥선 y=-180이다. 수평 A/D 조작은 사용자 결정이고 속도·배율·바닥선은 최종 수치가 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 idle/Run 전체 셀을 보존하고 너무 좁으면 중앙에 둔다. 공격은 같은 이동 경계를 쓰므로 화면 끝에서 검·여백 일부가 잘릴 수 있다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
 
@@ -317,3 +317,9 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 시작120ms 후 이륙하고 착지180ms 동안 잠근다. _update_jump는 시작/정점/바닥/착지완료 경계로 dt를 나누고 공중에 해당하는 시간만 수평 이동에 반영한다. 원본 상승300ms는 물리 상승400ms로 시간 매핑하고 낙하600ms는 반복한다. 재생 시각은 수직 속도에서 산출해 방향전환/대시 체공·복귀에도 유지한다. 대시중 착지는 land로 표시해 두고 대시 종료 후 착지 모션을 진행하며 갱신의 남은 시간도 소비한다. 좌우 전용 클립을 사용해 추가 수평 반전하지 않는다. 엔진·자산 원본·독립 idle/Run은 그대로다.
 
 착지 연속 점프는 `_link_landing_jump`에서 land60~90ms의 유효 점프 예약을 소비하고 같은 jump 상태의 start40ms로 바꾼다. `_update_jump`가 착지60ms 경계를 분할하므로 긴 갱신도 연결 지점을 지나치지 않고 남은 시간을 이어 계산한다. 좌표·방향·클립 이미지는 변경하지 않는다.
+
+## 기본 적 전투
+
+`game/enemy.py`의 금속 먼지 적은 기존 GameObject와 SpriteFrame을 사용한다. `GameplayLevel`이 적 한 마리와 워든의 전투 수명을 소유하며 `CharacterScene`의 ImageStore가 `assets/enemies/metal_dust.png`도 관리한다. 워든 자산 루트·로더와 공통 엔진은 유지한다. 적 리소스의 절대 경로는 모듈 위치를 기준으로 계산해 실행 디렉터리와 무관하게 읽는다.
+
+`feature/training-combat`의 `e343742`·`ebcad98`에서 검의 활성 구간·전방 상자·공격당 한 번 피해와 적 체력 표시를 가져온다. 현재 선입력 업데이트에서는 활성 구간을 지난 당시의 스윙 ID와 상자를 보존하여 다음 공격과 명중 기록이 섞이지 않게 한다. 피해 수치와 돌진 규칙은 [기본 적 전투](systems/basic-enemy.md)가 소유하며 실제 결과는 [013 검증](../specs/013-basic-enemy/verification.md)에 기록한다.

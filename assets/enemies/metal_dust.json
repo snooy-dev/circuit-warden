@@ -1,0 +1,56 @@
+{
+  "name": "금속 먼지 덩어리",
+  "source": {
+    "deck": "Circuit_Warden_GameDesign.pptx",
+    "slide": 19,
+    "image": "ppt/media/image4.png",
+    "conceptSha256": "162c4b5fcdf7b50f666cc1ffc2511a105de534f059c12572a988581d9bf53457"
+  },
+  "artSource": "host_image",
+  "route": "host-image_gen",
+  "model": "도구가 별도 모델명을 반환하지 않음",
+  "estimateUsd": null,
+  "file": "metal_dust.png",
+  "sha256": "25ee0d0b471aa24901fefa44128056659f1e62adde27b16253e7fd77c3a4add9",
+  "frameSize": [
+    128,
+    96
+  ],
+  "pivot": [
+    76,
+    80
+  ],
+  "visibleBounds": [
+    37,
+    25,
+    114,
+    80
+  ],
+  "facing": "right",
+  "flipLeft": true,
+  "finish": "hibit",
+  "palette": "metal_dust.palette.json",
+  "paletteColors": 16,
+  "usedColors": 15,
+  "binaryAlpha": true,
+  "displayScale": 1,
+  "process": {
+    "tool": "Agent Sprite Forge finish_frames.py hibit 0.5.0",
+    "targetHeight": 55,
+    "colors": 15,
+    "outline": "auto",
+    "supersample": 8,
+    "coverage": 0.45,
+    "canvas": [
+      128,
+      96
+    ],
+    "canvasAnchor": [
+      64,
+      80
+    ],
+    "pivotNote": "실루엣 중심으로 런타임 X 기준점을 76으로 지정. 픽셀 이동 없음."
+  },
+  "provenance": "PPT 원화 참조 → 내장 ImageGen 단순화 → 마스터 정렬 → hibit 팔레트·다수결 축소·1px 외곽선. generation-prompt는 metal_dust.prompt.txt.",
+  "review": "원화의 먼지·금속 띠·다리 형태와 크기 확인. 사용자 최종 미술 평가는 미확인. 단일 자세이며 관절 보행 애니메이션은 없음."
+}

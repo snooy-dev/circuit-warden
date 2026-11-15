@@ -8,6 +8,7 @@ from engine import Engine, HEIGHT
 from game_framework import GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
 
 from .character import GROUND_Y, Character, load_clips
+from .enemy import Enemy, load_enemy_frame
 from .mode import GameplayMode
 
 
@@ -30,10 +31,26 @@ class GameplayLevel(Level):
         super().__init__(GameplayMode())
         self.images = images
         self.player = None
+        self.enemy = None
+        self._last_hit_attack = 0
 
     def on_open(self):
         self.spawn(_Ground())
         self.player = self.spawn(Character(load_clips(self.images)))
+        self.enemy = self.spawn(Enemy(load_enemy_frame(self.images)))
+        self._last_hit_attack = 0
+
+    def update(self, dt):
+        super().update(dt)
+        if self.enemy is None or self.enemy.level is not self:
+            return
+        attack = self.player.active_attack
+        if attack is not None and attack[0] != self._last_hit_attack:
+            attack_id, (left, bottom, right, top) = attack
+            enemy_left, enemy_bottom, enemy_right, enemy_top = self.enemy.hurt_box
+            if left < enemy_right and enemy_left < right and bottom < enemy_top and enemy_bottom < top:
+                self._last_hit_attack = attack_id
+                self.enemy.take_hit()
 
 
 class CharacterScene(LevelScene):
