@@ -43,7 +43,7 @@ class ChargeTeleportTests(unittest.TestCase):
                 self.assertEqual(actor.state, 'idle')
 
     def test_lift_apex_return_partition_and_no_velocity_accumulation(self):
-        for steps in ((.16,), (.01,) * 16):
+        for steps in ((.24,), (.01,) * 24):
             actor = self.make_character()
             actor.facing = -1
             actor.air_dash_used = True
@@ -51,10 +51,10 @@ class ChargeTeleportTests(unittest.TestCase):
             self.assertIs(actor.player.clip, self.clips['jump_rise_left'])
             for dt in steps:
                 actor.update(dt)
-            self.assertAlmostEqual(actor.center[1], 126.56)
+            self.assertAlmostEqual(actor.center[1], 159.76)
             self.assertAlmostEqual(actor.velocity_y, 0)
             self.assertEqual(actor.jump_phase, 'fall')
-            actor.update(.16)
+            actor.update(.24)
             self.assertAlmostEqual(actor.center[1], 100)
             self.assertLess(actor.velocity_y, 0)
             actor.teleport((10, 80))

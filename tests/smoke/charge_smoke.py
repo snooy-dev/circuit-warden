@@ -37,11 +37,11 @@ class ChargeSmoke(CharacterScene):
         self.charges = tuple(self.level.charges)
         self.links = []
 
-    def click(self, position):
+    def click(self, position, button=pico.SDL_BUTTON_LEFT):
         x, y = self.transform.point(*position)
         event = pico.SDL_Event()
         event.type = pico.SDL_MOUSEBUTTONDOWN
-        event.button.button = pico.SDL_BUTTON_LEFT
+        event.button.button = button
         event.button.x = round(x * self.engine.window_size[0] / self.engine.output_size[0])
         event.button.y = round(y * self.engine.window_size[1] / self.engine.output_size[1])
         assert pico.SDL_PushEvent(byref(event)) == 1
@@ -72,7 +72,7 @@ class ChargeSmoke(CharacterScene):
         self.click((self.charges[2].position[0] + 50, self.charges[2].position[1]))
         yield .04
         assert actor.state == 'attack' and actor.grounded
-        self.click((self.charges[2].position[0] + 44, self.charges[2].position[1]))
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
         yield .06
         assert actor.state == 'jump' and actor.x == 140
         assert actor.center[1] > self.charges[2].position[1] and actor.velocity_y > 0
@@ -81,6 +81,22 @@ class ChargeSmoke(CharacterScene):
         yield .19
         assert actor.jump_phase == 'fall' and actor.center[1] > self.charges[2].position[1]
         self.capture('charge-lift-fall')
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .06
+        assert actor.x == self.charges[3].position[0]
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .2
+        assert actor.x == self.charges[2].position[0]
+        self.capture('charge-right-chain')
+        yield .8
+        assert actor.grounded and self.level.mode.last_charge is None
+        count = self.teleports
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .06
+        assert self.teleports == count + 1 and actor.x == self.charges[2].position[0]
+        assert actor.jump_phase == 'rise'
+        self.capture('charge-right-after-landing')
+        yield .12
         for index in (4, 1, 0):
             self.click((self.charges[index].position[0] - 44, self.charges[index].position[1]))
             yield .08

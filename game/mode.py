@@ -15,6 +15,7 @@ class GameplayMode(GameMode):
         self.event_to_world = None
         self.teleport_link = None
         self.pending_charge = None
+        self.last_charge = None
 
     @property
     def activation_origin(self):
@@ -28,9 +29,10 @@ class GameplayMode(GameMode):
                 or not player.can_teleport(charge.position)):
             return
         start = player.center
-        if player.teleport(charge.position) and hypot(
-                start[0] - player.center[0], start[1] - player.center[1]) > 1e-6:
-            self.teleport_link = self.level.spawn(TeleportLink(start, player.center, self.level.link_art))
+        if player.teleport(charge.position):
+            self.last_charge = None if player.grounded else charge
+            if hypot(start[0] - player.center[0], start[1] - player.center[1]) > 1e-6:
+                self.teleport_link = self.level.spawn(TeleportLink(start, player.center, self.level.link_art))
         for candidate in self.level.charges:
             candidate.active = candidate.in_range(self.activation_origin)
 
@@ -47,10 +49,12 @@ class GameplayMode(GameMode):
                     self.teleport_link.update(0)
             for candidate in self.level.charges:
                 candidate.active = candidate.in_range(self.activation_origin)
+        if self.level.player.grounded:
+            self.last_charge = None
 
     def on_end(self):
         self.level.link_art = None
-        self.pending_charge = self.teleport_link = None
+        self.pending_charge = self.teleport_link = self.last_charge = None
 
     def on_event(self, event):
         player = self.level.player
@@ -60,17 +64,21 @@ class GameplayMode(GameMode):
             if event.type == pico.SDL_WINDOWEVENT and event.event in (
                     pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
                 self.pending_charge = None
-            if (event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT
-                    and self.event_to_world is not None):
-                point = self.event_to_world(event)
+            if (event.type == pico.SDL_MOUSEBUTTONDOWN
+                    and event.button in (pico.SDL_BUTTON_LEFT, pico.SDL_BUTTON_RIGHT)
+                    and player.view_bounds is not None):
+                automatic = event.button == pico.SDL_BUTTON_RIGHT
+                point = self.activation_origin if automatic else (
+                    self.event_to_world(event) if self.event_to_world is not None else None)
                 if point is not None:
                     candidates = [(hypot(point[0] - charge.position[0], point[1] - charge.position[1]),
                                    index, charge) for index, charge in enumerate(self.level.charges)
                                   if charge.level is self.level and charge.in_range(self.activation_origin)
+                                  and (not automatic or charge is not self.last_charge)
                                   and player.can_teleport(charge.position)]
                     if candidates:
                         distance, _, charge = min(candidates)
-                        if distance <= CLICK_RADIUS:
+                        if automatic or distance <= CLICK_RADIUS:
                             if self.teleport_link is not None and self.teleport_link.level is self.level:
                                 self.pending_charge = charge
                             else:
