@@ -29,7 +29,7 @@
 
 스킬은 모두 `.agents/skills/`에 있다. Spec Kit 9개, Sprite Forge 5개(`generate2dsprite`, `generate2dmap`, `generate2dmedia`, `video2dsprite`, `codeart2d`), pixelfx 1개로 총 15개다. 새로 설치된 스킬은 다음 대화 차례의 목록에서 확인한다.
 
-게임은 기존 `.venv/`와 `requirements.txt`의 Pico2D 1.5.1을 사용한다. 도구는 기존 Python 3.14.7로 만든 `.local-tools/python/`을 사용하며 Python 자체를 추가 설치한 것은 아니다. 이 도구 환경에는 Specify CLI와 Sprite Forge의 NumPy·Pillow·SciPy 의존성이 있다. pixelfx는 기존 Node.js v24.19.0을 사용한다. 전하 합성에는 게임 requirements.txt의 NumPy2.5.4를 게임 .venv에 별도로 설치했다. 도구 의존성과 전역 환경은 공유하거나 변경하지 않는다.
+게임은 기존 `.venv/`와 `requirements.txt`의 Pico2D 1.5.1을 사용한다. 도구는 기존 Python 3.14.7로 만든 `.local-tools/python/`을 사용하며 Python 자체를 추가 설치한 것은 아니다. 이 도구 환경에는 Specify CLI와 Sprite Forge의 NumPy·Pillow·SciPy 의존성이 있다. pixelfx는 기존 Node.js v24.19.0을 사용한다. 전하 PNG 생성은 도구 환경의 NumPy·Pillow를 사용한다. 게임 requirements.txt에서 NumPy를 제거했으며 런타임은 이를 import하지 않는다. 도구 의존성과 전역 환경은 공유하거나 변경하지 않는다.
 
 ## 사용과 복원
 

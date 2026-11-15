@@ -1,16 +1,13 @@
 import json
 import unittest
 import weakref
-from hashlib import sha256
-from math import floor, nextafter
 from pathlib import Path
-from random import Random
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.charge import ChargeArt, compose
+from game.charge import ASSETS
 from game.character import GROUND_Y
 from game.scene import CharacterScene
 from game.teleport_link import TeleportLink
@@ -176,71 +173,72 @@ class ChargeSceneTests(unittest.TestCase):
         scene = self.open_scene()
         charges = scene.level.charges
         art = charges[0].art
-        self.assertEqual(tuple(len(art.frames[n]) for n in ('inactive', 'active', 'pulse')), (72, 72, 10))
+        self.assertEqual((len(art.frames), len(art.frames[0])), (33, 72))
         self.assertTrue(all(art is charge.art for charge in charges))
-        self.assertFalse(any(art.frames['pulse'][0][3::4]))
-        self.assertFalse(any(art.frames['pulse'][-1][3::4]))
-        for index in range(40):
-            art.frame(index / 60, .5)
-        self.assertLessEqual(len(art._composites), 16)
-        self.assertLessEqual(len(art._pixels), 16)
         self.assertIs(art.frame(.7, .5), art.frame(.7, .5))
-        for dt in (.08, .06, .1, .2, .6):
-            scene.update(dt)
-            scene.draw()
+        self.assertIs(art.frame(.7, 0), art.frames[0][16])
+        self.assertIs(art.frame(.7, 1), art.frames[-1][16])
+        with patch.object(pico, 'SDL_UpdateTexture', side_effect=AssertionError('전하 업로드')):
+            for dt in (.08, .06, .1, .2, .6):
+                scene.update(dt)
+                scene.draw()
         self.assertTrue(any(c.value == 1 for c in charges))
         self.assertTrue(any(c.value == 0 for c in charges))
+        images = [row[0].image for row in art.frames]
         scene.exit()
-        self.assertTrue(all(c.texture is None and c.level is None for c in charges))
+        self.assertTrue(all(c.art is None and c.level is None for c in charges))
+        self.assertTrue(all(image.closed for image in images))
         ref = weakref.ref(art)
         del art
         self.assertIsNone(ref())
 
-    def test_approved_charge_composition_is_byte_identical(self):
-        reference = json.loads((Path(__file__).resolve().parents[1] /
-                                'fixtures/charge_composition.json').read_text(encoding='utf-8'))
-        art = ChargeArt()
-        frame_digest, composition_digest = sha256(), sha256()
-        for name in ('inactive', 'active', 'pulse'):
-            for rgba in art.frames[name]:
-                frame_digest.update(rgba)
-        self.assertEqual(frame_digest.hexdigest(), reference['frames_sha256'])
+    def test_baked_stable_frames_preserve_approved_pixels(self):
+        from ctypes import string_at
 
-        rng = Random(7)
-        samples = 0
-        for index in range(72):
-            elapsed = (index + .5) / 24
-            self.assertIs(art.frame(elapsed, 0), art.frames['inactive'][index])
-            self.assertIs(art.frame(elapsed, 1), art.frames['active'][index])
-            inactive, active = art.pixels('inactive', index), art.pixels('active', index)
-            values = (.01, .125, .25, .5, .75, .875, .99, rng.random(),
-                      nextafter((index % 8 + 1) / 9, 1))
-            for value in values:
-                phase = value * 9
-                lower = floor(phase)
-                pulse_a = art.pixels('pulse', lower)
-                pulse_b = art.pixels('pulse', min(lower + 1, 9))
-                for bob in (-1, 0, 1):
-                    composition_digest.update(compose(inactive, active, pulse_a, pulse_b,
-                                                      value, phase - lower, bob))
-                    samples += 1
-        self.assertEqual(samples, reference['samples'])
-        self.assertEqual(composition_digest.hexdigest(), reference['composition_sha256'])
+        def rgba(path):
+            source = pico.IMG_Load(str(path).encode('utf-8'))
+            self.assertTrue(source)
+            try:
+                converted = pico.SDL_ConvertSurfaceFormat(source, pico.SDL_PIXELFORMAT_RGBA32, 0)
+                self.assertTrue(converted)
+                try:
+                    surface = converted.contents
+                    return surface.w, surface.h, b''.join(
+                        string_at(surface.pixels + y * surface.pitch, surface.w * 4)
+                        for y in range(surface.h))
+                finally:
+                    pico.SDL_FreeSurface(converted)
+            finally:
+                pico.SDL_FreeSurface(source)
+
+        meta = json.loads((ASSETS / 'charge.json').read_text(encoding='utf-8'))
+        left, top, right, bottom = meta['crop']
+        width, height = meta['size']
+        for step, name in ((0, 'inactive'), (32, 'active')):
+            sw, _, original = rgba(ASSETS.parent / f'{name}.png')
+            bw, _, baked = rgba(ASSETS / f'charge-{step:02}.png')
+            for index in range(72):
+                for row in range(height):
+                    src = ((index // 9 * 80 + top + row) * sw + index % 9 * 80 + left) * 4
+                    dst = ((index // 9 * height + row) * bw + index % 9 * width) * 4
+                    self.assertEqual(baked[dst:dst + width * 4], original[src:src + width * 4])
 
     def test_initialization_failure_releases_partial_charge_resources(self):
         scene = CharacterScene()
-        create = pico.SDL_CreateTexture
-        textures = []
-        def fail_second(renderer, format, access, width, height):
-            if textures:
-                return None
-            texture = create(renderer, format, access, width, height)
-            textures.append(texture)
-            return texture
-        with patch.object(pico, 'SDL_CreateTexture', side_effect=fail_second), \
-                patch.object(pico, 'SDL_DestroyTexture', wraps=pico.SDL_DestroyTexture) as destroy:
-            with self.assertRaisesRegex(RuntimeError, '전하 텍스처'):
+        load = scene.images.load
+        loaded = []
+
+        def fail_second(path):
+            if Path(path).name == 'charge-01.png':
+                raise OSError('전하 PNG 로딩 실패')
+            image = load(path)
+            loaded.append(image)
+            return image
+
+        with patch.object(scene.images, 'load', side_effect=fail_second):
+            with self.assertRaisesRegex(OSError, '전하 PNG'):
                 scene.enter(self.app)
-            self.assertTrue(any(call.args == (textures[0],) for call in destroy.call_args_list))
+        self.assertTrue(loaded)
+        self.assertTrue(all(image.closed for image in loaded))
         self.assertTrue(scene.images.closed)
         self.assertEqual(scene.level.objects, ())

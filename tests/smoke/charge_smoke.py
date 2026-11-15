@@ -164,7 +164,7 @@ if __name__ == '__main__':
     scene = ChargeSmoke(output)
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and scene.teleports >= 10 and scene.buffered_clicks >= 1
-    assert all(c.texture is None and c.level is None for c in scene.charges)
+    assert all(c.art is None and c.level is None for c in scene.charges)
     assert all(link.texture is None and link.level is None for link in scene.links)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
     print(f'PASS: charge click/cancel/chain/resize/fullscreen/cleanup; '

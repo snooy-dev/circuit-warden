@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **PNG 효과 재생 014 진행:** 사용자 요청으로 pixelfx 효과의 런타임 픽셀 생성을 PNG 재생으로 바꾼다. 미세한 형태 차이는 허용하되 색·굵기·광륜·타이밍은 유지한다. [명세](../specs/014-baked-effects/spec.md)·[계획](../specs/014-baked-effects/plan.md). 사용자 점프 PNG8개·tmp는 보존하며 검증 후 로컬 커밋한다.
+
 - **감사 013 수정·검증 완료:** 사용자 요청의1~5(예약 공격 첫 프레임, 표시 전환 클릭, 효과 모양 보존 성능, 예외 참조 해제, 행동 판정 중복)를 수정했다. [명세](../specs/013-audit-fixes/spec.md)·[계획](../specs/013-audit-fixes/plan.md)·[검증](../specs/013-audit-fixes/verification.md). 전체161검사·실제SDL 예약 공격/전환/전하/종료를 통과했다. 합성1,944샘플·업로드847개 RGBA가 기존과 같고 교대900프레임의 픽셀CPU p95는22.175→8.957ms였다. NumPy2.5.4를 게임환경에 추가하고 PNG·전류 래스터는 유지했다. feature/audit-fixes에서 검증 증분을 로컬 커밋하며 사용자 점프 PNG8개·기존 tmp는 보존/제외한다. PR/push와 사람의 직접 조작감 확인은 미실시다.
 
 - **전하 순간이동 012 클릭 판정 확대:** 사용자 요청으로 표시보다 넓은 원형 판정을 적용했다. 시험값은 [시스템 기준](systems/charge-teleport.md)을 따른다. 공중 도착 상승 관성·목표 기준 활성화·마지막 유효 전하 선입력을 유지한다. [명세](../specs/012-charge-teleport/spec.md)·[계획](../specs/012-charge-teleport/plan.md)·[검증](../specs/012-charge-teleport/verification.md). 표시 밖 선택/판정 밖 공격·중첩·배율·선입력 표적3개와 실제SDL 순간이동10회(선입력2회)를 통과했다. 새 클릭 범위의 조작감은 사용자 재확인 전이며 사용자 점프 PNG8개·기존 tmp는 보존한다.

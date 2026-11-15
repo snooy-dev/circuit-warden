@@ -36,7 +36,7 @@ class GameplayLevel(Level):
     def on_open(self):
         self.spawn(_Ground())
         self.player = self.spawn(Character(load_clips(self.images)))
-        art = ChargeArt()
+        art = ChargeArt(self.images)
         self.charges = [self.spawn(Charge(art, position)) for position in
                         ((-320, -80), (-160, 70), (140, -50), (320, 140), (0, 200))]
 
