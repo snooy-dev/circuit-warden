@@ -52,4 +52,6 @@
 
 후속 입력 규칙: GameplayMode가 진행 중 TeleportLink와 마지막 예약 전하를 보관한다. 활성 기준점은 진행 중 효과의 도착점이며 시작 이벤트에서 즉시 전하 상태를 갱신한다. CharacterScene은 Level 갱신 후 모드의 예약 실행을 호출해 효과 종료와 같은 프레임에 다음 이동을 시작한다. 첫 프레임 시간은 생성 시점과 최초 출력 여부를 반영한다. 논리 활성과 승인 상태 보간은 분리한다.
 
-공중 도착 관성 조정: game/character.py의 teleport에서 기존 수직 속도를 GRAVITY×0.16으로 교체하고 rise 모션을 재사용한다. 상단 여유로 허용되는 속도 sqrt(2×GRAVITY×여유)로 제한한다. 기존 _update_jump/_advance_vertical은 그대로 사용하며 공중 대시 이력·100ms 전류/진행·목표 기준 활성화·선입력은 유지한다. tests/unit/test_charge_teleport.py의 정점·분할 시간·복귀·상단·비누적 검사, tests/integration/test_charge_scene.py의 예약 연결과 tests/smoke/charge_smoke.py의 실제 상승/낙하 관찰을 선택한다. 해당 코드/테스트와 시스템·기술 구조·게임 설계·progress·012 문서를 한 증분으로 커밋한다. 새 아트/의존성/공용 엔진 변경이 없어 나머지 검사는 기존 근거를 재사용한다.
+공중 도착 관성 조정: game/character.py의 teleport에서 기존 수직 속도를 GRAVITY×0.24으로 교체하고 rise 모션을 재사용한다. 상단 여유로 허용되는 속도 sqrt(2×GRAVITY×여유)로 제한한다. 기존 _update_jump/_advance_vertical은 그대로 사용하며 공중 대시 이력·100ms 전류/진행·목표 기준 활성화·선입력은 유지한다. tests/unit/test_charge_teleport.py의 정점·분할 시간·복귀·상단·비누적 검사, tests/integration/test_charge_scene.py의 예약 연결과 tests/smoke/charge_smoke.py의 실제 상승/낙하 관찰을 선택한다. 해당 코드/테스트와 시스템·기술 구조·게임 설계·progress·012 문서를 한 증분으로 커밋한다. 새 아트/의존성/공용 엔진 변경이 없어 나머지 검사는 기존 근거를 재사용한다.
+
+후속 상승 강화: 더 높이 오르고 덜 빨리 떨어지게 해 달라는 사용자 요청에 따라 상승 시간만 조정한다. 일반 점프·중력·상단 제한·비누적·선입력은 유지한다. 기존 정점/복귀 검사 기대값을 바꾸고 상단 제한·행동 취소·예약 연결 검사와 SDL smoke를 실행한다. 시스템/progress 및 012 spec/plan/tasks/data-model/quickstart/verification을 동기화한다. Analyze: FR-004의 범위 안이며 호출부·설정·내보내기·자산 변경이나 새 의존성이 필요하지 않다.
