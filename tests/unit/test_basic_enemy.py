@@ -31,7 +31,8 @@ class CombatFixture(unittest.TestCase):
         }
         self.level = GameplayLevel(None)
         with patch('game.scene.load_clips', return_value=clips), patch(
-                'game.scene.load_enemy_clips', return_value=enemy_clips):
+                'game.scene.load_enemy_clips', return_value=enemy_clips), patch(
+                'game.scene.ChargeArt'), patch('game.scene.LinkArt'):
             self.level.open()
         self.addCleanup(self.level.close)
         self.actor = self.level.player
@@ -184,7 +185,7 @@ class EnemyChargeTests(CombatFixture):
         self.assertEqual((player.hp, player.x, enemy.hp, enemy.x), (5, 0, 3, 220))
         self.assertIsNone(self.actor.level)
         self.assertIsNone(self.enemy.level)
-        self.assertEqual(len(self.level.objects), 3)
+        self.assertEqual(len(self.level.objects), 8)
         self.assertIs(enemy.clips, self.enemy.clips)
         self.assertIs(enemy.animation.clip, enemy.clips['idle'])
         self.assertEqual(enemy.animation.elapsed, 0)

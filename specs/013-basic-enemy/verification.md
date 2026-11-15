@@ -4,6 +4,18 @@
 
 2026-11-15: 원화 기반 hibit 적 1종의 양방향 전투 구현·선택한 검증 완료. 사용자 직접 조작감과 최종 미술 판단은 미확인이다.
 
+## 최신 main 통합 검증 — 2026-11-16
+
+사용자 요청으로 `origin/main` 9f1d72c를 `feature/basic-enemy`에 merge했다. 시작 시 워크트리는 깨끗했으며 원본 D:/GitHub/circuit-warden은 수정하지 않았다. 충돌8파일은 입력 action 반환/시간 offset, 전투·전하 배치, 두 기능의 현재 문서를 함께 유지해 해결했다. 적 PNG·이동600ms·체력바 제거와 최신 전하·워든 PNG를 보존한다.
+
+- `D:/GitHub/circuit-warden/.venv/Scripts/python.exe -B -m unittest discover -s tests -p 'test_*.py' -q`: **194개 통과**. 최초 표적 실행은 전하 없는 장면을 가정한 테스트 fixture에서19개 오류가 났으며 전하 아트 mock·클릭 좌표·유지 객체 기대값을 갱신했다. 런타임 검증을 우회하지 않았다.
+- 새 결합 회귀3개는 순간이동의 공격 취소와 체력/보호 보존, 전투 판정 후 예약 이동과 사망 예약 취소, R의 효과/예약/제외 상태 정리와 아트 재사용을 검사한다.
+- 후속 읽기 전용 리뷰에서 사망 중 전류 고정과 R 이후 전하 활성 상태 갱신 경계를 확인했다. 사망 시 전류 제거·후처리 활성 재계산을 보완하고 `... -B -m unittest tests.integration.test_basic_enemy tests.integration.test_charge_scene -q`: **24개 통과**. 짧은20ms 치명 프레임에도 전류가 남지 않음을 포함한다. 전체194개 결과는 이 작은 보완 전이며 관련24개로 재검증했다.
+- `... -B -m tests.smoke.basic_enemy_smoke --output-dir art/enemies/verification-main-merge`: **PASS**. 실제 SDL 공방·점프 회피·사망·R·처치·양방향·resize·해제를 확인했다. 접근 중간 캡처를 열어 전하5개와 적의 동시 표시·접지를 확인했다.
+- `... -B tests/smoke/charge_smoke.py --output-dir "$env:TEMP/circuit-warden-enemy-merge-charge"`: **PASS**, 순간이동13회·예약3회·취소·연속 선택·resize/fullscreen·정리. 명령 세션별 임시 경로가 달라 후속 세션에서는 이 캡처를 열지 않았으며 통과한 자동 SDL 실행 결과만 근거로 삼는다.
+- SDL 두 검사는 사망 전류/활성 상태 보완 전 실행이다. 해당 보완은 실제 PNG 기반 통합24개로 확인했고 창 검사는 반복하지 않았다. 사용자 직접 조작감·밸런스는 미확인이다.
+- FR-008·계획·T020~021과 현재 시스템/구조/게임 설계/진행 상태를 대조했다. 충돌 표시와 diff 공백을 검사하고 두 부모 이력을 보존한다. push·PR·main 브랜치 변경은 하지 않는다.
+
 ## 이동 모션 속도 후속 조정
 
 사용자의 다리 움직임이 빠르다는 지적에 따라 이동8프레임의 프레임당 시간을50→75ms, 한 주기를400→600ms로 조정했다. 이동 속도100·공격 설정·PNG는 유지했다.

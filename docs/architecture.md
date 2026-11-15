@@ -134,7 +134,7 @@ P1 구현: `game_framework/world.py`의 GameObject·Level·GameMode. `Level(mode
 - destroy는 ID와 객체 동일성을 확인해 저장소에서 제거하고 소속/수명 상태를 먼저 바꾼 뒤 정리 콜백을 한 번 시도한다. 반복 제거는 무해하다. 스냅샷·외부 변수에 참조가 남을 수 있으므로 즉시 메모리 해제를 보장한다는 뜻은 아니다. 콜백 전체 실행 비용은 O(1)로 보지 않는다.
 - 입력 이벤트 하나를 전달할 때와 update 한 번을 호출할 때 각각 tuple(_objects.values())를 콜백 전에 만든다. GameMode 먼저, 이어 스냅샷 등록순으로 객체를 호출한다. 호출 직전 아직 이 Level 소속인지 확인한다.
 - 이벤트 중 생성한 객체는 같은 이벤트를 받지 않지만 다음 이벤트·업데이트부터 참여할 수 있다. 업데이트 중 생성한 객체는 그 업데이트에 참여하지 않으나 같은 프레임 렌더에는 보인다. 제거된 객체는 이후 호출·렌더에서 제외하며 이미 실행 중인 메서드를 강제로 중단하지는 않는다.
-- 스냅샷은 전달 종료·실패 시 해제한다. 소유 dict를 직접 순회하면서 콜백을 호출하지 않는다. 재진입한 입력/업데이트 전달은 거부한다.
+- 스냅샷은 전달 종료·실패 시 바깥 호출과 실제 내부 순회 함수 모두에서 해제한다. 예외를 보관해도 traceback의 목록 참조가 무관한 객체를 붙잡지 않는다. 실패 콜백 자체의 traceback은 보존한다. 소유 dict를 직접 순회하면서 콜백을 호출하지 않는다. 재진입한 입력/업데이트 전달은 거부한다.
 - close는 닫는 상태로 전환해 등록을 막고 모드 종료·모든 객체 정리를 시도한다. 개별 정리 실패로 나머지를 누락하지 않고 오류를 보존한다. 정리 콜백 중 새 등록도 거부한다. 초기화 실패는 실패 객체 정리 후 오류를 전달한다.
 
 ### Canvas 생성·삭제·순회
@@ -142,7 +142,7 @@ P1 구현: `game_framework/world.py`의 GameObject·Level·GameMode. `Level(mode
 - 최소 UI 계층을 이번 검토안에 포함한다. 새 UIElement를 roots 또는 부모 children 끝에 추가한다. 한 번만 부착 가능한 새 노드만 받아 다중 부모·다중 Canvas·순환을 막는다. 실행 중 reparent나 제거된 노드 재부착 API는 두지 않는다.
 - 부모 삭제는 하위 트리 삭제다. 먼저 하위 노드 참조를 모으고, 부모/roots 목록에서 대상 루트를 동일성으로 찾아 분리한다. 모든 대상의 소속을 해제한 다음 자식부터 정리를 시도하고 참조를 끊는다. 중복 삭제는 무해하며 일부 정리 실패에도 나머지를 시도한다. 삭제 중 새 부착은 거부한다.
 - 자식 추가는 분할상환 O(1), 하위 트리 제거는 O(S + K)다. S는 제거 노드 수, K는 대상 루트의 형제 수다. 형제 목록에서 검색·이동하는 비용을 인정한다. 많은 UI를 한꺼번에 닫을 때는 각 형제에 remove를 반복하지 않고 전체 목록을 분리해 O(U)에 정리한다.
-- update 대상은 등록순 전위 DFS(부모→자식)로 평탄화한 tuple이다. LevelScene은 Level과 Canvas 두 스냅샷을 모두 GameMode/객체 콜백 전에 취득한다. 이후 Level 갱신, Canvas 갱신 순으로 호출하며 Canvas도 호출 직전 소속을 확인한다. 따라서 Level 갱신 중 만든 UI도 같은 update에는 참여하지 않는다.
+- update 대상은 등록순 전위 DFS(부모→자식)로 평탄화한 tuple이다. LevelScene은 Level과 Canvas 두 스냅샷을 모두 GameMode/객체 콜백 전에 취득한다. 이후 Level 갱신, Canvas 갱신 순으로 호출하며 Canvas도 호출 직전 소속을 확인한다. 따라서 Level 갱신 중 만든 UI도 같은 update에는 참여하지 않는다. 내부 순회도 finally에서 snapshot을 비워 보관된 갱신 예외가 다른 노드를 유지하지 않게 한다.
 - visible=false는 해당 노드와 하위 트리의 그리기만 생략한다. 숨겨진 노드의 update는 유지한다. 순회는 명시적 스택으로 구현하는 안이며, 깊은 트리의 Python 재귀 제한에 의존하지 않는다.
 - UI는 좌상단 원점·아래 방향 y의 Canvas 논리 단위를 사용한다. 루트는 정규화 anchor와 논리 offset으로 배치하고 자식은 부모 로컬 위치를 더한다. Canvas 전체의 균등 배율만 적용한다. 루트 기준점 외 자동 레이아웃·노드별 회전/스케일·클리핑·UI 입력 소비/포커스는 포함하지 않는다. 화면을 닫을 때 전체 정리한다.
 
@@ -250,8 +250,8 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 ### P2 실행 계약
 
 - `Engine(width=WIDTH, height=HEIGHT, fullscreen=False)`와 기존 `Engine().run(scene)`을 지원한다. 크기는 양의 정수다. 초기 창은 크기 변경 가능하며 최소 크기 정책은 추가하지 않는다.
-- `set_display(fullscreen=..., window_size=(w,h))`는 다음 프레임 입력 전에 적용한다. 보더리스 데스크톱 전체화면을 사용하고 복귀 시 마지막 정상 창 크기를 복원한다. SDL 전체화면/출력 조회 실패는 RuntimeError로 전달하고 기존 finally 경로로 닫는다.
-- `window_size`, `output_size`, `viewport=(0,0,w,h)`, `fullscreen`, `output_valid`는 입력 전 조회한 현재 프레임 상태다. 최소화 또는 0 크기 때 draw/present/입력 역변환만 생략하고 update/종료 처리는 유지한다. 입력 후 출력이 달라지면 표시를 건너뛰고 다음 프레임에 재조회한다.
+- `set_display(fullscreen=..., window_size=(w,h))`는 다음 프레임의 대기 입력을 현재 화면 기준으로 전달한 뒤 update 전에 적용한다. 프레임 시작에 적용할 요청을 분리하므로 입력 콜백이 만든 새 요청은 다음 프레임에 남는다. 종료 입력은 표시 적용보다 우선한다. 요청 크기는 마지막 실제 창 크기와 분리해 외부 resize 조회가 덮어쓰지 않는다. 보더리스 데스크톱 전체화면 복귀 시 마지막 정상 창 크기를 복원한다. SDL 전체화면/출력 조회 실패는 RuntimeError로 전달하고 기존 finally 경로로 닫는다.
+- `window_size`, `output_size`, `viewport=(0,0,w,h)`, `fullscreen`, `output_valid`는 입력 전 조회하고 표시 요청 적용 후 다시 조회한다. 입력 역변환은 변경 전 표시, update/draw는 변경 후 표시를 사용한다. 최소화 또는0 크기 때 draw/present/입력 역변환만 생략하고 update/종료 처리는 유지한다. 예상하지 못한 출력 변경은 해당 표시를 건너뛰고 다음 프레임에 재조회한다.
 - `window_to_output(x,y)`는 좌상단 창 좌표를 좌상단 출력 픽셀로 변환한다. `event_to_output(event)`는 마우스 이동/버튼에만 적용하고 휠·무효 출력은 None이다. Scene의 event.x/y와 콜백 시그니처는 유지한다. Pico2D 그림의 y 뒤집기는 출력 높이로 한 번 수행한다.
 - `render_resets`는 현재 프레임 SDL_RENDER_TARGETS_RESET/SDL_RENDER_DEVICE_RESET 종류 tuple이다. 입력/업데이트 전에 확정하며 해당 이벤트도 Scene에 전달한다. `reset_generation`은 누적 증가하므로 최소화로 draw를 건너뛰어도 P3는 마지막 복구 세대와 비교할 수 있다. 자원 복구는 P3 책임이다.
 - Pico2D 설치 파일·resize_canvas는 수정/호출하지 않는다. 프로젝트 poll_events가 키 반복 필터와 마우스/휠 필드를 유지하며 창 이벤트(event/data1/data2)와 렌더 리셋을 추가 보존한다.
@@ -263,7 +263,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 - ImageStore(root)는 실제 경로별 이미지를 장면당 한 번 로딩한다. 생성은 SDL 작업 없이 가능하고 load는 활성 렌더러가 필요하다. 닫힌 저장소·이미지와 다른 렌더러 세션의 사용은 거부한다.
 - SpriteFrame.rect는 좌상단 기준 정수 `(left, top, width, height)`, pivot은 셀 내부 0~1 기준점이다. SpriteClip은 프레임별 양수 초와 반복 여부를 가진다. SpritePlayer만 개체별 시간을 갖는다. 같은 clip은 이어 재생하고 명시 restart 또는 다른 clip은 처음부터 시작한다. 단발은 마지막 프레임을 유지한다.
-- `draw_image(..., source=None, flip_x=False)`의 영역 검증·좌표 투영은 `game_framework/drawing.py`, Pico2D 클리핑과 alpha/blend 상태 복원은 `engine/rendering/drawing.py`가 맡는다. 출력 크기를 명시해 시트 전체 크기로 늘어나는 기본값을 피한다. 전체 이미지 기존 경로는 유지한다. engine은 게임 API를 import하지 않는다.
+- `draw_image(..., source=None, flip_x=False)`의 영역 검증·좌표 투영은 `game_framework/drawing.py`, Pico2D 클리핑과 alpha/blend 상태 복원은 `engine/rendering/drawing.py`가 맡는다. 출력 크기를 명시해 시트 전체 크기로 늘어나는 기본값을 피한다. 전체 이미지 기존 경로는 유지한다. 선택적 angle은 출력 좌표의 시계방향 각도이며 SDL_RenderCopyExF에서 영역·반전·회전을 처리하고 alpha/blend 상태를 복원한다. engine은 게임 API를 import하지 않는다.
 - `draw_sprite`는 월드/UI의 축 방향과 수평 반전 기준점을 반영해 bounds를 계산한다. RenderItem의 순서·숨김·컬링 계약은 유지한다. 정확한 bounds를 제공하지 못하면 None을 사용한다.
 - LevelScene의 선택적 images는 장면이 소유한다. exit는 Level → Canvas → images 순으로 모든 정리를 시도하며 렌더러 종료 전에 texture를 해제한다. 부분 진입 실패와 반복 종료도 같은 계약을 따른다.
 - Pico2D clip의 native 오류 반환 미노출과 장치 리셋 시 명시 오류 종료는 남은 한계다. 자동 복구·범용 메타데이터 임포터·게임 이동 정책은 추가하지 않는다.
@@ -282,7 +282,7 @@ game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 �
 
 GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. Character가 transitions.Machine의 idle/run/attack 명시 전이(auto_transitions=False)를 소유한다. SpritePlayer의 loop=False·finished를 재사용하며 로더는 정확한 bool loop와 클립별 반복 정책을 검사한다.
 
-공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 실제 검증은 [011 verification](../specs/011-basic-gameplay/verification.md)을 따른다.
+공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. `_consume_action`이 허용한 마지막 예약 행동을 지역값으로 `_update`에 직접 전달하며 별도 요청 플래그나 중복 허용 판정을 두지 않는다. 예약 만료 경계에서 공격이 시작돼도 그 외부 갱신의 잔여 시간은 공격에 적용하지 않아 새 베기와 함께0초를 유지한다. 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 기반 검증은 [011](../specs/011-basic-gameplay/verification.md), 예약 경계 보완은 [013](../specs/013-audit-fixes/verification.md)을 따른다.
 
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 
@@ -327,3 +327,19 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 전투 입력은 GameplayMode가 살아 있는 워든에만 전달하며 R의 반복 KEYDOWN을 억제한다. GameplayLevel.reset_combat는 기존 클립·이미지를 재사용하고 두 캐릭터와 일회성 효과를 정리한 뒤 새 캐릭터를 배치한다. 같은 장면 안의 재시작에서는 텍스처를 닫지 않고 장면 종료 시 ImageStore가 해제한다. 워든 체력 0에서는 레벨 갱신을 멈추지만 R·창 크기·전체화면·종료 입력은 유지한다. AABB의 접촉 시간 계산은 `game/combat.py`가 담당한다. 워든과 적은 스프라이트만 그리며 사용자 요청으로 체력바 출력은 제거했다.
 
 검 판정은 활성 스윙 ID·상자·시간 구간을 적의 단계별 이동 기록과 교차한다. 돌진은 양측의 같은 시각 상대 위치에서 첫 접촉을 구해 그 시각의 보호 상태를 확인한다. 워든의 프레임 안 경로는 시작/끝 위치 사이 선형 근사이며 행동별 세부 경로 계산은 하지 않는다. 엔진 시간 처리와 기존 행동·입력 버퍼는 유지한다.
+
+## 전하 순간이동
+
+CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 지상 도착은idle, 공중 도착은상승(상단 여유0이면 낙하)으로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 공중 도착 수직 속도는 min(GRAVITY×TELEPORT_RISE_SECONDS, sqrt(2×GRAVITY×상단 여유))로 교체하며 기존 중력·정점 분할·상승/낙하 모션을 재사용한다. 속도는 누적하지 않고 공중 대시 소모 이력을 유지한다. 시간·높이 시험값은 전하 시스템 문서를 따른다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
+
+GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.activation_origin은 진행 중 연결의 도착점, 평소에는 캐릭터 중심이다. 시작 이벤트에서 즉시 전하 논리 상태를 갱신하고 이후 Charge.update도 같은 기준을 사용한다. ChargeArt는 오프라인으로 구운33단계×72위상 PNG를 장면 ImageStore에서 공유한다. Charge는 개별 텍스처를 만들지 않고 연속 상태값에 가장 가까운 SpriteFrame을 선택해 그린다. 24fps·3초 위상과 중간 반전 값·속도는 유지하며 bob은 위상 중간 시각으로 구웠다. 안정 상태의 원본 RGBA를 보존하고 중간 표시의 단계화·최대1px bob 차이는 사용자가 허용한 미세 차이에 해당한다. 투명 여백을 자른 전하 이미지 RGBA 크기는43.14MiB다. 게임에서는 NumPy·픽셀 합성·전하 업로드를 사용하지 않는다. 생성 도구는 scripts/bake-effects/charge.py다.
+
+기본 동작 검증은 [012 verification](../specs/012-charge-teleport/verification.md)에 기록한다. TeleportLink는 고정 출발/도착 좌표에서 승인 v4의30fps·12프레임 형상을100ms에 시간 매핑해 소멸한다. 이벤트에서 생성된 효과의 첫 갱신은 생성 전 프레임 시간을 건너뛰어 첫 섬광을 보존한다. 최초 draw가 먼저 일어나면 그 뒤 갱신부터 시간을 소비한다. GameplayMode는 진행 중 효과와 마지막 예약 전하를 보관하고 CharacterScene의 Level 갱신 직후 after_update에서 완료·재검사·예약 실행을 처리한다. 이 단계에서 생성된 효과는 같은 프레임에 처음 출력한다. LinkArt는 승인 pixelfx 원본을 오프라인으로 구운72길이×12프레임을 장면 시작에 공유 로딩한다. 길이는1~32px 정수,36~64px의4px 간격,72~320px의8px 간격이다. 가까운 길이를 선택하고 중앙 기준 회전·가로 배율로 연결하며 세로 배율은 유지한다. 8px 미만은 광륜 왜곡을 피하려고 가로 배율도 유지하고 이론상 끝점 오차를0.25px 이내로 제한한다. 길이 선택에 따른 경로·가지 및 회전의 픽셀 차이는 사용자 허용 범위이며 원본과 화면 픽셀 일치를 주장하지 않는다. 현재 활성 거리보다 긴320px 초과의 품질은 미검증이다.
+
+전하·전류 이미지 모두 최근접 필터를 명시하며 게임 중 픽셀 생성·프레임 업로드·개별 텍스처 생성은 없다. 효과 종료 시 프레임/아트 참조를 제거하고 모드 종료 때 공유 전류 참조를 비운 뒤 ImageStore가 텍스처를 해제한다. 현재 플레이어 전류는 재시작 금지 규칙으로 겹치지 않는다. 전체 효과 PNG는13.095MiB, 비압축 RGBA는59.74MiB이며 실제 프로세스/GPU 메모리 최대값과는 다르다. 전하·전류 규칙과 최신 성능·시각 차이·실제 SDL 검증은 [014 검증](../specs/014-baked-effects/verification.md)을 따른다.
+
+전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
+
+GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 공중 도착만 기록하고 지상 도착은 비운다. after_update에서 grounded이면 착지 모션 종료를 기다리지 않고 비우며 on_end에서도 해제한다.
+
+전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R 이후에도 전하 활성 상태는 후처리에서 현재 위치에 맞춘다. R은 TeleportLink 객체·예약·마지막 전하를 제거하고 전하 배치·아트는 재사용한다.

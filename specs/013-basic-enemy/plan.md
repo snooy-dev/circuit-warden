@@ -10,7 +10,7 @@
 
 - **Language/Dependencies**: Python, Pico2D, 기존 transitions.
 - **Runtime**: 게임 `.venv`, 도구 Python 분리.
-- **Platform/Performance**: 현행 1280×720 기본 창. 워든과 적 한 마리의 상태와 판정만 갱신한다.
+- **Platform/Performance**: 현행 1280×720 기본 창. 워든·적 한 마리·기존 전하5개와 효과를 갱신한다.
 - **Testing**: 전투 경계와 기존 조작의 표적 자동 검사, 실제 SDL 창 검사를 수행한다.
 
 ## Constitution Check
@@ -19,6 +19,10 @@
 - [x] 진행 상태·기획·기술 맥락과 기존 전투 커밋을 확인했다.
 - [x] 문서 영향 및 실행 검증을 계획했다.
 - [x] 기존 게임 환경과 프레임워크를 사용한다.
+
+## 최신 main 통합
+
+사용자의 2026-11-16 요청에 따라 origin/main 9f1d72c를 이력 보존 merge한다. 최신 입력의 action 반환·예약 공격 첫 프레임 유지와 기존 공격 시간 offset을 결합한다. 전투 판정 뒤 after_update에서 예약 순간이동을 처리하고 사망 예약은 취소한다. R은 전류 객체·예약·마지막 전하를 정리하고 기존 전하 아트를 재사용한다. 결합 회귀3개, 여러 기능·엔진 변경의 전체 자동 검사, SDL 전투와 순간이동 검사를 수행한다.
 
 ## Decisions & Alternatives
 

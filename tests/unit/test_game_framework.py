@@ -286,6 +286,27 @@ class FrameworkTests(unittest.TestCase):
             gc.collect()
             self.assertIsNone(ref())
 
+    def test_saved_dispatch_error_releases_unrelated_objects_after_close(self):
+        for method in ('update', 'handle_event'):
+            with self.subTest(method=method):
+                level = Level()
+                level.open()
+                broken = level.spawn(GameObject())
+                def fail(value):
+                    raise ValueError('dispatch')
+                setattr(broken, method, fail)
+                ref = weakref.ref(level.spawn(GameObject()))
+                saved = None
+                try:
+                    getattr(level, method)(0)
+                except ValueError as error:
+                    saved = error
+                self.assertIsNotNone(saved)
+                self.assertIsNotNone(saved.__traceback__)
+                level.close()
+                gc.collect()
+                self.assertIsNone(ref())
+
 
 
 class CanvasTests(unittest.TestCase):
@@ -376,6 +397,23 @@ class CanvasTests(unittest.TestCase):
         ref = weakref.ref(node)
         self.canvas.remove(node)
         del node
+        gc.collect()
+        self.assertIsNone(ref())
+
+    def test_saved_update_error_releases_unrelated_nodes_after_close(self):
+        broken = self.node()
+        def fail(dt):
+            raise ValueError('update')
+        broken.update = fail
+        ref = weakref.ref(self.node())
+        saved = None
+        try:
+            self.canvas.update(0)
+        except ValueError as error:
+            saved = error
+        self.assertIsNotNone(saved)
+        self.assertIsNotNone(saved.__traceback__)
+        self.canvas.close()
         gc.collect()
         self.assertIsNone(ref())
 

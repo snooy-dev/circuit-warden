@@ -26,6 +26,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.enterContext(patch.object(pico, 'SDL_SetWindowTitle'))
         self.app = Mock(reset_generation=0, output_valid=True, viewport=(0, 0, 800, 600),
                         fullscreen=False, window_size=DEFAULT_SIZE)
+        self.app.event_to_output.side_effect = lambda event: (event.x, event.y)
 
     def pixels(self):
         sample = pico.SDL_Rect(340, 350, 120, 100)
@@ -180,6 +181,29 @@ class CharacterSceneTests(unittest.TestCase):
             self.assertTrue(scene.images.closed)
             self.assertEqual(scene.level.objects, ())
 
+    def test_buffered_attack_and_sword_trail_start_together_after_slow_frame(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        actor = scene.character
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_LSHIFT))
+        for dt in (.1, .1, .1, .0672):
+            scene.update(dt)  # 대시 종료까지 99.8ms 남긴다.
+        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
+                                            button=pico.SDL_BUTTON_LEFT, x=0, y=0))
+        for _ in range(6):
+            scene.update(.0166)
+        scene.update(.08)
+
+        self.assertEqual(actor.state, 'attack')
+        trail, = (obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)
+                  and obj.player.clip is actor.clips['sword_trail'])
+        for player in (actor.player, trail.player):
+            self.assertEqual(player.elapsed, 0)
+            self.assertIs(player.frame, player.clip.frames[0])
+        scene.update(.05)
+        self.assertEqual((actor.player.elapsed, trail.player.elapsed), (.05, .05))
+
     def test_sword_trails_keep_attack_position_and_expire_independently(self):
         scene = CharacterScene()
         scene.enter(self.app)
@@ -187,7 +211,7 @@ class CharacterSceneTests(unittest.TestCase):
         actor = scene.character
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_a))
         scene.update(.1)
-        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0)
         scene.handle_event(click)
         scene.update(.1)
         first = next(obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
