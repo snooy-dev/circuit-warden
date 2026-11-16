@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **공중→지상 빠른 내려베기 v5 검토 대기:** 사용자가 지상 적을 빠르게 공격하는 전방 아래 단일 베기 설명을 기준으로 재생성을 요청했다. 승인 원화 v4와 그 원화에서 새로 만든 끝 자세만 입력해 로컬 LTX-2.5로 생성했다. 세 번째 영상의 [9프레임·280ms 후보](../art/warden/air-ground-slash-v5/review-hibit/preview.gif)·[idle 비교](../art/warden/air-ground-slash-v5/review-hibit/idle-comparison.gif)를 보관한다. 검토용 타격 시점90ms·192×192·idle 공통16색·고정 배율이며 이진 알파·셀 잘림0·팔레트 밖 색0을 확인했다. 중간 검날 잔상과 자동 매트/시작 위치 경고는 남아 있다. [출처·한계](../art/warden/air-ground-slash-v5/provenance.json)·[경고 원문](../art/warden/air-ground-slash-v5/qa-warnings.json). 이전 공격 원화·모션은 재사용하지 않았으며 사용자 모션 승인·게임 통합·충돌 및 착지 연결 검사는 미완료다.
+
 - **공중 공격 원화 v4 승인·모션 미채택:** 2026-11-16 사용자가 [원화 v4](../art/warden/air-attack-side-master-v4/source.png)를 승인했다. 원본 해시를 보존하고 이 원화에서 로컬 LTX-2.5로 새 영상3개를 생성했으나 팔·다리/검 변형, 잔상, 반복 회전으로 모두 미채택이다. 기존 공격 원화·모션은 입력하지 않았다. 첫 영상의 단일 베기 구간을12프레임·280ms·192×192·idle 공통16색으로 만든 [비교본](../art/warden/air-attack-motion-v4/review-hibit/idle-comparison.gif)은 진단용이다. 이진 알파·팔레트 밖 색0·최종 셀 잘림0은 확인했지만 아트 일관성은 미충족이다. [출처·미완료](../art/warden/air-attack-motion-v4/provenance.json)·[경고와 실패 원문](../art/warden/air-attack-motion-v4/qa-warnings.json). 모션 완성·게임 통합은 미완료다.
 
 - **공중 공격 원화 v3 보류:** 사용자가 idle 원본과의 아트 일관성 부족을 지적했다. [원화 후보](../art/warden/air-attack-side-master-v3/source.png)의 명암 단순화·검팔 표현 차이를 확인하고 승인 후보 제시를 철회했다. 원본 표현을 우선하며 원화 승인 전 모션 생성은 보류한다. 이번 후속 작업은 차이 설명·예상 궤적 제안이며 새 모션 생성·게임 통합은 수행하지 않는다.
