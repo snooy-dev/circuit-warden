@@ -40,7 +40,9 @@
 
 ## 현재 제작 상태
 
-2026-11-16 최신 사용자 지시: **기존 공중 공격 소스를 절대 재사용하지 않는다.** 이전 공중 공격 원화·파생 포즈·프레임·영상은 보존만 하며 후속 제작 입력에서 제외한다. 새 [공중 베기 검토본](../art/warden/air-attack-fresh-v1/preview.gif)은 기본 캐릭터·채택 검 원화만 참조한 ImageGen 신규 포즈와 로컬 LTX-2.5 영상에서 만들었다. 192×192·공통16색·12프레임·검토용350ms이며 미승인·게임 미통합이다. 몸통 후속 움직임이 작고 손·칼날 윤곽 변화와 원본 알파 흔들림 경고가 남는다. [출처·검사](../art/warden/air-attack-fresh-v1/provenance.json)·[느린 재생](../art/warden/air-attack-fresh-v1/preview-slow.gif). 아래 이전 후보 기록은 재사용 허가가 아니다.
+2026-11-16 최신 사용자 지시: **기존 공중 공격 소스를 절대 재사용하지 않는다.** 이전 공중 공격 원화·파생 포즈·프레임·영상은 보존만 하며 후속 제작 입력에서 제외한다. **좌우 횡스크롤에 맞는 고정 측면 연출과 현재 idle의 아트 일관성은 필수 조건**이다. 같은 팔레트만으로 충족 판정하지 않고 얼굴·귀·몸통·하체 비율, 명암과 픽셀 표현을 같은 게임 크기에서 비교한다. 카메라 방향 회전과 검의 원근 단축으로 공격 방향·사거리가 불명확해지는 연출은 제외한다.
+
+기본 원화에서 새로 만든 fresh-v1은 사용자가 횡스크롤에 부적합하다고 지적해 반려했다. 후속 [측면 fresh-v2](../art/warden/air-attack-side-fresh-v2/preview.gif)는 기존 공중 공격 입력 없이 현재 idle 원화·검 원화에서 ImageGen 시작/끝 포즈와 로컬 LTX-2.5 영상을 새로 만들었다. idle과 같은 축소·색상 선택·외곽선 함수 및 공통 배율로 192×192·16색·12프레임·검토용350ms를 구성했다. [동일 배율 비교](../art/warden/air-attack-side-fresh-v2/idle-comparison-final.png)에서 눈10×13px와 측면 방향은 맞췄으나 손·하체 형태, 검 변형, 약한 팔/몸 연동이 남아 **idle 일관성 조건 미충족으로 채택 보류·게임 미통합**이다. [검사와 한계](../art/warden/air-attack-side-fresh-v2/provenance.json). 아래 이전 후보 기록은 재사용 허가가 아니다.
 
 2026-11-16 사용자는 [공중 공격 색감 보정 원화](../art/warden/air-attack-keypose-v3/color-v2/source.png)를 승인하고 프레임별 포즈 생성을 요청했다. 현재는 내장 ImageGen으로 반대팔을 몸 뒤에 가리고 검팔 연결을 보정한 [원화 v4](../art/warden/air-attack-anatomy-v4/source-poses.png)·[hibit 7포즈 후보](../art/warden/air-attack-anatomy-v4/poses.png)다. 192×192·idle 공통16색·1px 외곽선이며 눈 중심 평행 이동과 공통 배율로 정렬했다. [재생 미리보기](../art/warden/air-attack-anatomy-v4/preview.gif)는 검토용 350ms이고 게임 시간 확정이 아니다. 7장 모두 파생 보정본이며 승인 원화 자체는 수정하지 않았다. 팔 길이·하체 윤곽의 잔여 차이와 연속 동작 품질은 미확정이다. 모션 전체 승인 및 게임 통합은 미완료다.
 
