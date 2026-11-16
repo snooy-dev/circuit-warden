@@ -51,11 +51,43 @@ FFmpeg 9.0.2 essentials를 `.local-tools/ffmpeg/ffmpeg-9.0.2-essentials_build/bi
 
 외부 영상 생성 서비스 인증은 미구성이다. 현재 아트 제작·채택 상태는 [아트 기준](art-direction.md#현재-제작-상태)을 따른다. 도구 설치가 새 생성 승인을 뜻하지 않는다. FFmpeg 기능 검사는 VP9 알파·H.264·PNG 지원을 확인했다. 임시 디렉터리 접근 오류는 검사 프로세스의 TEMP/TMP를 `.local-tools/tmp`로 지정해 해소했다.
 
+### ComfyUI LTX-2.5 스프라이트 연결
+
+`scripts/comfy-media/media.py`를 `sprite_set.py --media-cli`에 연결했다. `generate2dsprite`·`video2dsprite`·`generate2dmedia`의 프로젝트 영상 경로는 `local:comfyui-ltx25`다. 이미지 생성 경로와 기존 키잉·정렬·완성 처리는 유지한다. 로컬 연결 실패는 유료 API로 전환하지 않는다.
+
+- 서버: `http://127.0.0.1:8188`, ComfyUI 0.45.4, RTX 5090 32GB에서 검사했다. Desktop 설치 루트는 `C:\Users\Developer\AppData\Local\Comfy-Desktop\ComfyUI-Installs\ComfyUI`, 실행 환경은 그 아래 `ComfyUI/.venv`다. 모델·입출력 루트는 `D:\ComfyUI`다.
+- 모델: `ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors`, `gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors`, LTX-2.5 video/audio BF16 VAE, I2V용 `ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors`가 필요하다. 새 모델 다운로드·전역 환경 변경은 하지 않았다.
+- 출처: [공식 ComfyUI 워크플로](https://github.com/Comfy-Org/workflow_templates/tree/e7cd011d4ded3411c2f481200544f0be6fdc962e/templates)의 `video_ltx2_5_i2v.json`·`video_ltx2_5_flf2v.json`. [원본·API 그래프·출처와 SHA](../scripts/comfy-media/workflows/provenance.json) 및 MIT LICENSE를 함께 보존한다. UI 원본을 ComfyUI에 열 수도 있다. 어댑터는 평탄화한 API 그래프를 사용하며 프롬프트 보강기와 예제의 게임/만화 배제 부정 프롬프트를 제거했다.
+- 입력은 불투명 키 배경의 원화다. 투명 이미지는 먼저 기존 스킬의 원화 준비 단계를 사용한다. `--last-frame`을 주면 첫/끝 프레임 가이드를 사용한다. 이는 끝 프레임 픽셀 일치나 완전한 루프를 보장하지 않는다.
+- `480p`/`720p`는 기존 호출기와 호환되는 옵션명이며 실제 짧은 변은 512/768px, 두 변은 64배수다. 전체 캔버스를 크롭 없이 조정하므로 종횡비는 반올림 오차가 있다. 최대 변 2048px, 1~20초, 24fps·8n+1프레임으로 길이를 반올림한다. 실제 크기·길이·원본 크기·해시·seed는 job/result에 남긴다. 오디오는 제거한다.
+
+프로젝트 루트에서 도구 세션을 준비한 뒤 실행한다. 출력 폴더는 새 경로를 사용한다.
+
+```powershell
+. ./scripts/use-project-tools.ps1
+python scripts/comfy-media/media.py doctor
+python scripts/comfy-media/media.py prepare --prompt-file <txt> --reference <png> --duration 2 --resolution 480p --out-dir <준비폴더>
+python scripts/comfy-media/media.py video --prompt-file <txt> --reference <png> --duration 2 --resolution 480p --out-dir <생성폴더>
+python .agents/skills/video2dsprite/scripts/sprite_set.py run --plan <set>/set_plan.json --media-cli scripts/comfy-media/media.py --jobs 1 --timeout 7200
+python scripts/comfy-media/media.py resume --job <생성폴더>/job.json
+```
+
+`doctor`·`prepare`는 GPU 제출이 없다. `resume`은 기존 prompt_id의 결과만 회수한다. 스킬 실행은 로컬 job을 먼저 재개하고 오류 뒤 자동으로 새 take를 제출하지 않는다. 같은 job의 동시 재개는 피한다. `prepared` 상태에서 프로세스가 끝난 작업은 GPU 미제출이며 원본 준비 기록을 보존하고 새 폴더로 시작한다. `submitting`/`queued`/`timeout`은 새 생성 전에 기존 작업을 확인한다. 제출 응답이 유실돼도 미리 저장한 ID로 조회할 수 있다. 서버 재시작으로 history가 사라지고 로컬 history도 없으면 자동 재제출하지 않으므로 ComfyUI 큐·출력을 확인해야 한다. 전체 대기열 삭제나 다른 작업 중단은 수행하지 않는다.
+
+스킬 설치본은 Git 제외라 업데이트/복원 뒤 아래 명령을 재실행한다. 설치기는 세 SKILL.md의 안내와 sprite_set.py의 로컬 재개 부분만 바꾸며, 예상 코드가 달라졌으면 쓰기 전에 멈춘다.
+
+```powershell
+python scripts/comfy-media/install_skill_route.py
+python scripts/comfy-media/install_skill_route.py --check
+```
+
+I2V·첫/끝 프레임 경로 모두 512×512·49프레임·약 2.04초 로컬 생성과 디코딩을 통과했다. 상세 자동 검사·호출기 확인은 [연결 검증](../specs/015-comfy-ltx-sprites/verification.md)을 따른다. 시험 영상은 도구 연결 검증이며 미술 승인·게임 자산 채택이 아니다.
+
 ## 검증 기준
 
 - Spec Kit: Codex만 등록, 스킬 누락·변경 없음. 실행 로그 제외를 추가한 `.specify/.gitignore`는 의도한 수정 1건으로 통합 검사에서 경고한다. 이를 없애려고 설치 명세의 해시를 조작하지 않는다. 프로젝트 템플릿이 기본 템플릿보다 우선한다.
 - workflow resolve: 문서 읽기 → specify → 설계 문서 반영 → spec 검토 → plan → 기술 문서 반영 → plan 검토 → tasks → analyze → implement → docs 동기화 → converge 순서를 확인한다. 이 명령은 흐름을 실행하지 않는다.
-- Forge: 171개 설치 파일 일치, NumPy·Pillow·SciPy 의존성, pixelfx 연결 검사를 통과했다. 여러 Python 경로 경고가 있으므로 도구 준비 스크립트나 명시적 실행 경로를 사용한다. FFmpeg는 설치·기능 검사를 마쳤다. 선택적 SVG 렌더러 resvg-py와 영상 생성 서비스 인증은 미구성이다.
+- Forge: 원본 171개 파일 설치 확인 후 프로젝트 LTX 연결을 위해 SKILL.md 3개·sprite_set.py 1개를 의도적으로 수정한다. NumPy·Pillow·SciPy·pixelfx·FFmpeg는 검사했다. 여러 Python 경로 경고가 있으므로 도구 준비 스크립트나 명시적 실행 경로를 사용한다. 선택적 SVG 렌더러 resvg-py와 외부 영상 서비스 인증은 미구성이다.
 - pixelfx: 원본의 `node tools/check.mjs fire/torch` 검사로 1 pass, 0 fail, 0 warn을 확인했다. 게임용 에셋은 만들지 않았다.
 - 도구 준비 스크립트: 경로 설정과 도구 미설치 시 오류 처리를 확인한다.
 - 문서: 링크·삭제된 결정 연표 참조·필수 docs 항목·Git 제외 범위를 확인한다.
