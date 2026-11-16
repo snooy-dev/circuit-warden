@@ -40,6 +40,8 @@
 
 ## 현재 제작 상태
 
+2026-11-16 최신 사용자 지시: **기존 공중 공격 소스를 절대 재사용하지 않는다.** 이전 공중 공격 원화·파생 포즈·프레임·영상은 보존만 하며 후속 제작 입력에서 제외한다. 새 [공중 베기 검토본](../art/warden/air-attack-fresh-v1/preview.gif)은 기본 캐릭터·채택 검 원화만 참조한 ImageGen 신규 포즈와 로컬 LTX-2.5 영상에서 만들었다. 192×192·공통16색·12프레임·검토용350ms이며 미승인·게임 미통합이다. 몸통 후속 움직임이 작고 손·칼날 윤곽 변화와 원본 알파 흔들림 경고가 남는다. [출처·검사](../art/warden/air-attack-fresh-v1/provenance.json)·[느린 재생](../art/warden/air-attack-fresh-v1/preview-slow.gif). 아래 이전 후보 기록은 재사용 허가가 아니다.
+
 2026-11-16 사용자는 [공중 공격 색감 보정 원화](../art/warden/air-attack-keypose-v3/color-v2/source.png)를 승인하고 프레임별 포즈 생성을 요청했다. 현재는 내장 ImageGen으로 반대팔을 몸 뒤에 가리고 검팔 연결을 보정한 [원화 v4](../art/warden/air-attack-anatomy-v4/source-poses.png)·[hibit 7포즈 후보](../art/warden/air-attack-anatomy-v4/poses.png)다. 192×192·idle 공통16색·1px 외곽선이며 눈 중심 평행 이동과 공통 배율로 정렬했다. [재생 미리보기](../art/warden/air-attack-anatomy-v4/preview.gif)는 검토용 350ms이고 게임 시간 확정이 아니다. 7장 모두 파생 보정본이며 승인 원화 자체는 수정하지 않았다. 팔 길이·하체 윤곽의 잔여 차이와 연속 동작 품질은 미확정이다. 모션 전체 승인 및 게임 통합은 미완료다.
 
 2026-11-14 사용자 결정까지 반영했다. 게임 전체 아트 스타일·규격은 미정이며 아래 후보의 규격을 전체 게임 규격으로 확대하지 않는다. 게임에 사용할 측면 idle 망토 바람 v2·좌우 Run v4·공격 v6 아웃라인 있음·전기 베기 v4 복사본을 assets/warden에 배치했다. 기본 플레이 장면에 표시·이동·공격·베기 연결을 구현하고 실제 PNG·SDL 출력을 확인했다. 사용자 직접 품질 평가는 미확인이다.
