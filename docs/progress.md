@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **공중 공격 원화 v4 승인·모션 미채택:** 2026-11-16 사용자가 [원화 v4](../art/warden/air-attack-side-master-v4/source.png)를 승인했다. 원본 해시를 보존하고 이 원화에서 로컬 LTX-2.5로 새 영상3개를 생성했으나 팔·다리/검 변형, 잔상, 반복 회전으로 모두 미채택이다. 기존 공격 원화·모션은 입력하지 않았다. 첫 영상의 단일 베기 구간을12프레임·280ms·192×192·idle 공통16색으로 만든 [비교본](../art/warden/air-attack-motion-v4/review-hibit/idle-comparison.gif)은 진단용이다. 이진 알파·팔레트 밖 색0·최종 셀 잘림0은 확인했지만 아트 일관성은 미충족이다. [출처·미완료](../art/warden/air-attack-motion-v4/provenance.json)·[경고와 실패 원문](../art/warden/air-attack-motion-v4/qa-warnings.json). 모션 완성·게임 통합은 미완료다.
+
 - **공중 공격 원화 v3 보류:** 사용자가 idle 원본과의 아트 일관성 부족을 지적했다. [원화 후보](../art/warden/air-attack-side-master-v3/source.png)의 명암 단순화·검팔 표현 차이를 확인하고 승인 후보 제시를 철회했다. 원본 표현을 우선하며 원화 승인 전 모션 생성은 보류한다. 이번 후속 작업은 차이 설명·예상 궤적 제안이며 새 모션 생성·게임 통합은 수행하지 않는다.
 
 - **공중 공격 측면 후보 보류:** 2026-11-16 사용자는 fresh-v1을 횡스크롤에 부적합하다고 지적하고 idle 아트 일관성을 필수 조건으로 지정했다. 기존 공중 공격 소스 재사용 금지를 유지하며, 현재 idle 원화·검 원화에서 새 시작/끝 포즈와 로컬 LTX 영상을 제작했다. [idle 비교](../art/warden/air-attack-side-fresh-v2/idle-comparison-final.png)·[재생](../art/warden/air-attack-side-fresh-v2/preview.gif)·[검사](../art/warden/air-attack-side-fresh-v2/provenance.json). 측면 방향·idle 공통 후처리·눈10×13px·16색·이진 알파·잘림0·패키지15검사는 확인했으나 손·하체 형태와 검 변형·약한 팔/몸 연동이 남아 **일관성 조건 미충족·채택 보류**다. 게임 미통합이며 이전 후보는 보존만 한다.
