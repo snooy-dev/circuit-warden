@@ -1,0 +1,25 @@
+{
+  "upstream": "https://github.com/Comfy-Org/workflow_templates",
+  "commit": "e7cd011d4ded3411c2f481200544f0be6fdc962e",
+  "license": "MIT",
+  "files": {
+    "i2v": {
+      "ui": "video_ltx2_5_i2v.json",
+      "api": "api_i2v.json",
+      "source": "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/e7cd011d4ded3411c2f481200544f0be6fdc962e/templates/video_ltx2_5_i2v.json",
+      "sha256": "03b136ba0ad752c1e91e496a23fa4f4826ef881777d591dc9129c459922e7dac"
+    },
+    "flf2v": {
+      "ui": "video_ltx2_5_flf2v.json",
+      "api": "api_flf2v.json",
+      "source": "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/e7cd011d4ded3411c2f481200544f0be6fdc962e/templates/video_ltx2_5_flf2v.json",
+      "sha256": "d8107deef9a9b005a3eff41e12520225a344b65381d74686ac22dc4e65d19c21"
+    }
+  },
+  "adaptation": [
+    "UI 서브그래프를 API 프롬프트로 펼치고 노드 ID, 연결, 가이드 강도, VAE, 샘플러 설정과 시그마를 유지했다.",
+    "스프라이트 프롬프트를 그대로 써야 하므로 프롬프트 보강기와 예제 전용 부정 프롬프트를 제거했다.",
+    "해상도·영상 길이·FPS를 계산하는 UI 노드 대신 실행기가 해상도, 프레임 수, FPS를 직접 전달한다.",
+    "오디오는 공식 그래프와 동일하게 유지하고 출력 형식을 MP4/H.264로 고정했다."
+  ]
+}

@@ -47,6 +47,10 @@ specify workflow resolve speckit
 
 ## FFmpeg와 생성 서비스
 
+### ComfyUI LTX-2.5 연결 설계
+
+사용자 요청으로 `scripts/comfy-media/`에서 공식 LTX-2.5 I2V·첫/끝 프레임 워크플로를 고정 보관하고 기존 `sprite_set.py --media-cli`에 로컬 어댑터를 연결한다(구현·검증 진행 중). 기본 서버는 `http://127.0.0.1:8188`, 확인한 설치 모델은 LTX-2.5 22B Distilled INT8 ConvRot다. 게임 환경·ComfyUI 설정·기존 후처리는 변경하지 않는다. 프롬프트 자동 확장과 유료 fallback은 사용하지 않는다. 실제 생성 시험은 도구 연결 검증이며 미술 승인이나 게임 자산 채택을 뜻하지 않는다.
+
 FFmpeg 9.0.2 essentials를 `.local-tools/ffmpeg/ffmpeg-9.0.2-essentials_build/bin`에 설치했다. 공식 FFmpeg 다운로드 페이지가 안내하는 [Gyan 배포본](https://www.gyan.dev/ffmpeg/builds/)이며 ZIP과 게시된 SHA256 일치를 확인했다. 준비 스크립트가 현재 세션 PATH에만 추가한다. 게임 의존성과 전역 PATH는 변경하지 않았다. FFmpeg는 영상 생성 AI가 아닌 디코딩·프레임 추출·인코딩 도구다. 아트 작업에서의 사용 여부는 사용자 요청 범위에 맞춰 정하며 도구 사용만을 위해 계획 문서를 만들지 않는다.
 
 외부 영상 생성 서비스 인증은 미구성이다. 현재 아트 제작·채택 상태는 [아트 기준](art-direction.md#현재-제작-상태)을 따른다. 도구 설치가 새 생성 승인을 뜻하지 않는다. FFmpeg 기능 검사는 VP9 알파·H.264·PNG 지원을 확인했다. 임시 디렉터리 접근 오류는 검사 프로세스의 TEMP/TMP를 `.local-tools/tmp`로 지정해 해소했다.
