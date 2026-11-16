@@ -2,9 +2,9 @@
 import argparse
 import importlib.util
 import io
-import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
@@ -116,9 +116,56 @@ class ComfyMediaTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 media.submit(path)
             self.assertEqual(media.read_json(path)["state"], "submitting")
+            ident = media.read_json(path)["prompt_id"]
+            self.assertEqual(factory.return_value.json.call_args.args[1]["prompt_id"], ident)
+            self.assertIsNotNone(ident)
             with self.assertRaises(ValueError):
                 media.submit(path)
             self.assertEqual(factory.return_value.json.call_count, 1)
+
+    def test_rejected_workflow_does_not_poll_forever(self):
+        path = self.job(state="prepared", prompt_id=None, kind="i2v", sources=[], client_id="client")
+        media.save_json(self.folder / "workflow-api.json", media.workflow("i2v"))
+        with patch.object(media, "Client") as factory:
+            factory.return_value.json.side_effect = media.HttpFailure(400, "invalid workflow")
+            with self.assertRaises(media.HttpFailure):
+                media.submit(path)
+            self.assertEqual(media.read_json(path)["state"], "error")
+            with self.assertRaises(RuntimeError):
+                media.resume(path, 1)
+            self.assertEqual(factory.return_value.json.call_count, 1)
+
+    def test_failed_video_validation_and_crash_recovery_keep_only_verified_output(self):
+        fixture = self.folder / "fixture.mp4"
+        subprocess.run([media.executable("ffmpeg"), "-v", "error", "-f", "lavfi", "-i",
+                        "color=c=magenta:s=64x64:r=24", "-f", "lavfi", "-i", "sine=frequency=440",
+                        "-t", "0.375", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac",
+                        str(fixture)], check=True, capture_output=True)
+        data = fixture.read_bytes()
+        fixture.unlink()
+        path = self.job(kind="i2v", model=media.MODEL, width=64, height=64, frames=17,
+                        fps=24, durationRequested=.375, sourceSize=[64, 64])
+        history = {"status": {"completed": True}, "outputs": {"75": {"images": [
+            {"filename": "server.mp4", "subfolder": "sprite-ltx25", "type": "output"}]}}}
+        client = MagicMock()
+        client.open.side_effect = lambda _: io.BytesIO(data)
+        with self.assertRaises(ValueError):
+            media.collect(path, media.read_json(path), history, client)
+        self.assertEqual(list(self.folder.glob("*.mp4")), [])
+        job = media.read_json(path)
+        job["frames"] = 9
+        media.save_json(path, job)
+        result = media.collect(path, job, history, client)
+        self.assertEqual(result["frames"], 9)
+        self.assertFalse(result["lastFrameUsed"])
+        # Simulate interruption after clip publication but before completion metadata.
+        (self.folder / "result.json").unlink()
+        media.save_json(self.folder / "history.json", history)
+        with patch.object(media, "Client") as factory:
+            recovered = media.resume(path, 1)
+            factory.return_value.json.assert_not_called()
+            factory.return_value.open.assert_not_called()
+        self.assertEqual(recovered["sha256"], result["sha256"])
 
     def test_timeout_then_resume_uses_only_existing_prompt_id(self):
         path = self.job()

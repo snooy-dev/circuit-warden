@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **LTX-2.5 스프라이트 연결 진행:** 사용자 요청으로 공식 I2V·첫/끝 프레임 워크플로와 ComfyUI 로컬 생성기를 기존 sprite_set의 `--media-cli`에 연결한다. [명세](../specs/015-comfy-ltx-sprites/spec.md)·[계획](../specs/015-comfy-ltx-sprites/plan.md). 게임 변경·유료 API·새 아트 채택은 범위 밖이며 짧은 연결 검증만 진행한다.
+- **LTX-2.5 스프라이트 연결 완료:** 사용자 요청으로 공식 I2V·첫/끝 프레임 워크플로를 고정 보관하고 세 스킬의 영상 경로를 로컬 ComfyUI에 연결했다. timeout 뒤 같은 작업을 재개해 중복 제출을 막는다. 자동14개·스킬3개 형식 검사·두 경로의 실제512×512/49프레임/24fps 생성·디코딩·기존 호출기 결과 수신을 통과했다. [사용·복원](tooling.md#comfyui-ltx-25-스프라이트-연결)·[검증](../specs/015-comfy-ltx-sprites/verification.md). 긴 전체 세트·미술 품질은 미검증이며 게임 통합·새 아트 채택·유료 API는 수행하지 않았다.
 
 - **공중 공격 v1·v2 반려·팔 연결 보정 v4 후보:** 2026-11-16 사용자는 하체 비율에 이어 모든 포즈의 추가 팔과 일부 팔 방향을 지적했다. v2의 팔 오류가 해결됐다는 이전 판정을 철회한다. 반대팔을 몸 뒤로 가리는 7포즈를 만들고, 검토 중 어깨 연결이 달라 보인 시작·마무리 포즈를 추가 보정했다. [원화 7포즈](../art/warden/air-attack-anatomy-v4/source-poses.png)·[hibit](../art/warden/air-attack-anatomy-v4/poses.png)·[느린 재생](../art/warden/air-attack-anatomy-v4/preview-slow.gif). 변환·클립 경고0, 이진 알파·잘림0·idle 팔레트 밖 색0을 확인했다. 팔 길이·하체 윤곽의 잔여 차이와 연속 동작 품질은 미확정이며 모션 승인·게임 통합은 미완료다. 승인 색감 원화와 반려본은 보존한다.
 

@@ -46,6 +46,12 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         raise ValueError("ComfyUI redirects are not allowed")
 
 
+class HttpFailure(RuntimeError):
+    def __init__(self, code, detail):
+        super().__init__(f"ComfyUI HTTP {code}: {detail}")
+        self.code = code
+
+
 class Client:
     def __init__(self, address):
         parsed = urllib.parse.urlsplit(address)
@@ -63,7 +69,7 @@ class Client:
             return self.opener.open(request, timeout=30)
         except urllib.error.HTTPError as error:
             detail = error.read(8192).decode("utf-8", "replace")
-            raise RuntimeError(f"ComfyUI HTTP {error.code}: {detail}") from error
+            raise HttpFailure(error.code, detail) from error
 
     def json(self, path, data=None):
         body = None if data is None else json.dumps(data).encode("utf-8")
@@ -224,10 +230,18 @@ def submit(path):
         node = "395" if job["kind"] == "i2v" else ("31" if source["prepared"] == "first.png" else "39")
         graph[node]["inputs"]["image"] = uploaded
     save_json(folder / "workflow-api.json", graph)
-    job.update(state="submitting", workflowSha256=sha(folder / "workflow-api.json"))
+    job.update(state="submitting", prompt_id=str(uuid.uuid4()),
+               workflowSha256=sha(folder / "workflow-api.json"))
     save_json(path, job)
     # Never retry POST: a lost response may still mean the GPU job was queued.
-    result = client.json("/prompt", {"prompt": graph, "client_id": job["client_id"]})
+    try:
+        result = client.json("/prompt", {"prompt": graph, "client_id": job["client_id"],
+                                         "prompt_id": job["prompt_id"]})
+    except HttpFailure as error:
+        if 400 <= error.code < 500:
+            job.update(state="error", error=str(error))
+            save_json(path, job)
+        raise
     if not result.get("prompt_id"):
         job.update(state="error", error=result)
         save_json(path, job)
@@ -245,17 +259,17 @@ def collect(path, job, history, client):
     safe_file(record, "output")
     folder = path.parent
     raw = folder / "download.mp4.part"
-    with client.open("/view?" + urllib.parse.urlencode({key: record[key] for key in ("filename", "subfolder", "type")})) as response:
-        with raw.open("wb") as destination:
-            shutil.copyfileobj(response, destination)
     clip = folder / "clip.mp4"
-    if clip.exists():
-        raise ValueError("clip.mp4 already exists without a verified result; preserve it and inspect the job")
-    staged = folder / "verified.mp4"
-    subprocess.run([executable("ffmpeg"), "-v", "error", "-y", "-i", str(raw), "-map", "0:v:0",
-                    "-an", "-c:v", "copy", str(staged)], check=True, capture_output=True)
+    staged = folder / "verified.mp4.part"
+    if not clip.exists():
+        with client.open("/view?" + urllib.parse.urlencode({key: record.get(key, "") for key in ("filename", "subfolder", "type")})) as response:
+            with raw.open("wb") as destination:
+                shutil.copyfileobj(response, destination)
+        subprocess.run([executable("ffmpeg"), "-v", "error", "-y", "-i", str(raw), "-map", "0:v:0",
+                        "-an", "-c:v", "copy", "-f", "mp4", str(staged)], check=True, capture_output=True)
+    candidate = clip if clip.exists() else staged
     probe = subprocess.run([executable("ffprobe"), "-v", "error", "-count_frames", "-show_streams",
-                            "-show_format", "-of", "json", str(staged)], check=True, capture_output=True)
+                            "-show_format", "-of", "json", str(candidate)], check=True, capture_output=True)
     media = json.loads(probe.stdout)
     streams = media["streams"]
     if len(streams) != 1 or streams[0]["codec_type"] != "video":
@@ -265,8 +279,8 @@ def collect(path, job, history, client):
             or int(video["nb_read_frames"]) != job["frames"] or video["width"] != job["width"]
             or video["height"] != job["height"]):
         raise ValueError("decoded video dimensions/frame count differ from the prepared workflow")
-    staged.replace(clip)
-    raw.unlink()
+    if candidate == staged:
+        staged.replace(clip)
     result = {"status": "ok", "route": ROUTE, "artifact": str(clip.resolve()), "sha256": sha(clip),
               "model": job["model"], "estimateUsd": 0, "lastFrameUsed": job["kind"] == "flf2v",
               "durationRequested": job["durationRequested"], "durationUsed": float(media["format"]["duration"]),
@@ -275,6 +289,7 @@ def collect(path, job, history, client):
     save_json(folder / "result.json", result)
     job.update(state="complete", output=record)
     save_json(path, job)
+    raw.unlink(missing_ok=True)
     return result
 
 
@@ -292,9 +307,17 @@ def resume(path, timeout, poll=2):
         if not clip.is_file() or sha(clip) != result["sha256"]:
             raise ValueError("completed artifact is missing or changed")
         result["artifact"] = str(clip)
+        result["job"] = str(path)
         return result
     if not job.get("prompt_id"):
         raise ValueError(f"job is {job['state']} with no prompt_id; inspect ComfyUI queue before any new submission")
+    if job["state"] == "error":
+        raise RuntimeError(f"ComfyUI execution failed: {job.get('error')}")
+    saved_history = path.parent / "history.json"
+    if saved_history.exists():
+        history = read_json(saved_history)
+        if history.get("status", {}).get("completed"):
+            return collect(path, job, history, client)
     end = time.monotonic() + timeout
     while True:
         history = client.json("/history/" + urllib.parse.quote(job["prompt_id"], safe="")).get(job["prompt_id"])

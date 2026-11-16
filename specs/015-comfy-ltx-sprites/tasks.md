@@ -15,13 +15,13 @@
 
 ## Phase 3: User Story 2 - 실패와 재개·스킬 연결
 - [X] T007 [US2] scripts/comfy-media/media.py의 제출 상태·timeout·재개·출력 보호를 구현하고 tests/test_comfy_media.py로 검사한다. FR-004/005.
-- [ ] T008 [US2] scripts/comfy-media/install_skill_route.py와 세 로컬 SKILL.md의 경로 안내를 연결한다. FR-006.
-- [ ] T009 [US2] 짧은 로컬 클립·디코딩·기존 sprite_set 계약을 실제 확인한다. FR-007.
+- [X] T008 [US2] scripts/comfy-media/install_skill_route.py와 세 로컬 SKILL.md의 경로 안내를 연결한다. FR-006.
+- [X] T009 [US2] 짧은 로컬 클립·디코딩·기존 sprite_set 계약을 실제 확인한다. FR-007.
 
 ## Phase 4: Documentation & Completion
-- [ ] T010 docs/tooling.md·docs/progress.md·verification.md에 명령·결과·한계를 반영한다.
-- [ ] T011 specs/015-comfy-ltx-sprites와 구현의 대응을 converge로 확인하고 최종 증분을 커밋한다.
+- [X] T010 docs/tooling.md·docs/progress.md·verification.md에 명령·결과·한계를 반영한다.
+- [X] T011 specs/015-comfy-ltx-sprites와 구현의 대응을 converge로 확인하고 최종 증분을 커밋한다.
 
 ## Dependencies & Execution Order
 T001→T002→T003→T004/T005→T006→T007/T008→T009→T010→T011.
-US1에서 작동하는 최소 경로를 확인하고 US2에서 재개·로컬 설치를 마무리한다. 원본/API 그래프 조사만 서브에이전트에 분리하며 같은 파일의 병렬 쓰기는 없다.
+US1에서 작동하는 최소 경로를 확인하고 US2에서 재개·로컬 설치를 마무리한다. 원본/API 그래프 및 호출기 복구 패치·설치기를 서브에이전트에 분리했으며 같은 파일의 병렬 쓰기는 없다.

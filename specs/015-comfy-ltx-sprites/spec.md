@@ -26,7 +26,7 @@
 3. **Given** 기존 sprite_set 작업, **When** 로컬 생성기를 지정, **Then** 동일한 결과 계약으로 후처리에 전달한다.
 ### User Story 2 - 실패 확인과 재개 (Priority: P1)
 **Why this priority**: 긴 작업의 오류가 중복 생성·덮어쓰기로 이어지면 안 된다.
-**Independent Test**: 가짜 HTTP 서버로 오류·시간 초과·재개를 검사한다.
+**Independent Test**: HTTP 클라이언트 대역과 기존 호출기로 오류·시간 초과·재개를 검사한다.
 **Acceptance Scenarios**:
 1. **Given** 서버/모델/노드 누락, **When** 실행, **Then** 구체적 오류로 종료하며 유료 경로로 전환하지 않는다.
 2. **Given** 제출 후 시간 초과, **When** 재개, **Then** 재제출 없이 결과를 회수한다.
