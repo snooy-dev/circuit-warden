@@ -186,7 +186,7 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 ## 현재 제작 상태
 
-**공중 공격은 전체 모션 채택 미완료다.** 로컬 최신 작업은 [v9 동작 지시](../art/warden/air-rebound-v9/motion-contract-8.txt)와 생성 자료까지 확인했다. 확인 가능한 [finished4 검사](../art/warden/air-rebound-v9/finished4/qa.json)는73프레임·이진 알파·팔레트 밖 색0·셀 경계 픽셀0이지만 `visualStatus: pending`이고 매트 변화 경고가 남아 있다. 이 검사는 take4 파생본에만 해당하며 뒤의 take에 승계하지 않는다. v9의 전체 미술 검수·사용자 채택·게임 통합 근거는 미확인이다. 이번 문서 정리는 새 모션 생성이나 후보 채택을 뜻하지 않는다.
+**공중 공격 v9의 동작 방향은 사용자가 수용했고, 전류 보정본은 검토 대기다.** 2026-11-16 사용자가 [최종 v9 동작](../art/warden/air-rebound-v9/delivery/preview.gif)의 느낌을 수용하고 idle 전류 추가를 요청했다. 기존 idle 전류 코드 재사용도 명시 선택했다. [전류 보정본](../art/warden/air-rebound-v9/current-detail-v1/attack-preview.gif)은 기존10포즈·300ms를 유지하며 전류 갱신용18프레임으로 구성한다. 두 귀·이마·아래 얼굴·몸통·꼬리에 측면 idle의2초 주기와 진행 방향을 적용했다. 윤곽·전류 영역 밖 픽셀 동일,16색·투명도·파일 검증과 밝은 머리의6경로 진행을 확인했다. [출처·검사 수치](../art/warden/air-rebound-v9/current-detail-v1/provenance.json)를 보존한다. 실제 창 연속 재생과 idle→공격 전류 위상 연결은 미검사이며 사용자 최종 채택·게임 통합을 뜻하지 않는다. 이전 take의 검사 결과는 이 보정본에 승계하지 않는다.
 
 | 이전 공중 후보 | 유효한 상태·남은 문제 | 보존 근거 |
 |---|---|---|
