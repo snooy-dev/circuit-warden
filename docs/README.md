@@ -11,7 +11,7 @@
 
 위 목록은 문서 탐색 순서다. 작업별 필수 문서는 [AGENTS.md](../AGENTS.md#작업-시작과-문서-선택)에서 선택한다.
 
-반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다. 워든 작업은 [기준 이미지·고정 요소·실측 비교표](art-direction.md#워든-원화-기준) → [동작별 적용 범위](art-direction.md#동작별-적용-범위) → [현재 후보 상태](art-direction.md#현재-제작-상태)를 확인한다. 과거 후보별 지시를 공통 디자인 기준으로 확대하지 않는다.
+반복 스프라이트 생성·보정은 Spec Kit 문서를 작성하지 않는다. [아트 기준](art-direction.md)과 사용자 요청으로 작업하고 결과·검사는 채팅으로 보고한다. 워든 작업은 [파일 없이 읽는 비율·형태·명암·변형 규격](art-direction.md#워든-원화-기준) → [동작별 적용 범위](art-direction.md#동작별-적용-범위) → [현재 후보 상태](art-direction.md#현재-제작-상태)를 확인한다. 제작 지시에 문서 규격을 명시하며 과거 후보별 지시를 공통 디자인 기준으로 확대하지 않는다.
 
 엔진·게임 구현은 PR #3 병합 커밋 `1e3b6ad`를 통해 main에 포함됐다. [008 계획](../specs/008-game-framework/plan.md)의 P1~P5 구현·검증을 통합했으며, 과거 구현 근거는 [008 검증 결과](../specs/008-game-framework/verification.md), 현재 실행·검사는 [tests 안내](../tests/README.md)를 따른다. main에는 idle·Run 기반 표시·이동이 연결돼 있으며 최종 게임 규칙은 별도다. 승인된 엔진/게임 API 경계와 game·tests 분류는 [기술 구조](architecture.md#코드-폴더-구조)를 따른다.
 
