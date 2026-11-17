@@ -186,7 +186,7 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 ## 현재 제작 상태
 
-**공중 공격 v9의 동작 방향은 사용자가 수용했고, 전류 가독성 v2는 검토 대기다.** 사용자가 [최종 v9 동작](../art/warden/air-rebound-v9/delivery/preview.gif)의 느낌을 수용하고 기존 idle 전류 코드 재사용을 선택했다. 2026-11-17 공격 중 전류가 덜 보인다는 지적으로 v1은 보류했다. [v2 미리보기](../art/warden/air-rebound-v9/current-detail-v2/attack-preview.gif)는10포즈·300ms·18표시프레임을 유지하며 두 귀·이마·아래 얼굴·몸통·꼬리의 흰 머리와 청록 잔상을 강화했다. 전류 진행 방향은 idle과 같고, 공격 가독성을 위해 주기는1.2초로 조정했다. [출처·검사](../art/warden/air-rebound-v9/current-detail-v2/provenance.json)에 윤곽·전류 영역 밖 픽셀 동일,16색·투명도·파일 검증과 브라우저 정상·1/4 속도 비교 재생을 기록했다. 게임 내 idle→공격 전류 위상 연결은 미검사이며 사용자 최종 채택·게임 통합을 뜻하지 않는다.
+**공중 공격 v9의 동작 방향은 사용자가 수용했고, 전류 크기 v3는 검토 대기다.** 사용자가 [최종 v9 동작](../art/warden/air-rebound-v9/delivery/preview.gif)의 느낌을 수용하고 기존 idle 전류 코드 재사용을 선택했다. 2026-11-17 가독성·idle 대비 크기 차이 지적으로 v1·v2는 보류했다. [v3 공격 비교](../art/warden/air-rebound-v9/current-detail-v3/attack-preview.gif)는10포즈·300ms·18표시프레임을 보존한다. [동일 배율·시점 비교](../art/warden/air-rebound-v9/current-detail-v3/idle-flow-comparison.gif)를 기준으로 idle의 흰 머리 반경0.55px·최대 선폭1.3px·부위별 잔상 길이·2초 주기를 적용하고, 이미 축소된 몸체 색이 전류 잔상을 지우던 다수결 처리를 전류별로 분리했다. 두 귀·이마·아래 얼굴·몸통·꼬리의 밝은 픽셀 평균 합계는 idle32.7px, 공격 자세별32.4~35.6px이며 방향은 기존 기준을 따른다. [출처·검사](../art/warden/air-rebound-v9/current-detail-v3/provenance.json)에480개 자세/시점의 윤곽·전류 영역 밖 픽셀·16색 보존,60개 경로에서 전류 머리 이동과 파일 검증을 기록했다. 같은 배율의 렌더링 결과를 육안 비교했으나 v3 실시간 재생은 Chrome 제어 접근이 허용되지 않아 미검사다. 게임 내 idle→공격 위상 연결·사용자 최종 채택·게임 통합도 미완료다.
 
 | 이전 공중 후보 | 유효한 상태·남은 문제 | 보존 근거 |
 |---|---|---|
