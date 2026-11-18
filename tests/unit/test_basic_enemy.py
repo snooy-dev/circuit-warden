@@ -18,7 +18,7 @@ class CombatFixture(unittest.TestCase):
             frame = SpriteFrame(image, (0, 0, 128, 104), (.5, 92 / 104))
         idle = SpriteClip((frame,), (.5,))
         attack = SpriteClip((frame,) * 7, (.05,) * 7, loop=False)
-        clips = dict(idle=idle, run_left=idle, run_right=idle, attack=attack, sword_trail=attack)
+        clips = dict(idle=idle, run_left=idle, run_right=idle, attack=attack)
         clips.update(prepare_idle_right=SpriteClip((frame,), (.1,), loop=False),
                      dash_right=SpriteClip((frame,), (.2,), loop=False),
                      dash_fx_right=attack)

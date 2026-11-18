@@ -228,3 +228,11 @@ Converge: FR-019/T040 구현·검사·현재 규칙/구조/진행 상태/quickst
 사용자 후속 지시로 커밋·main 대상 PR을 진행한다. fetch origin 후 HEAD..origin/main은 비어 있고 merge --no-commit origin/main은 Already up to date였다. 기존 PR4는 병합되어 새 PR로 준비한다. 별도 미커밋 점프 PNG8개와 tmp는 제외한다.
 
 PR에 실제 포함되는 HEAD의 PNG를 git show로 임시 폴더에 추출하고 현재 animations.json을 복사한 뒤 game.scene.ASSETS를 그 경로로 대체해 게임 Python unittest를 실행했다. tests.unit.test_character, tests.integration.test_jump_animation, tests.integration.test_dash_animation, tests.unit.test_input_buffer 총36개 통과. 원본 작업 폴더 PNG는 쓰지 않았다. 기존 SDL 검사 결과는 보존하며 이번에는 전체 창 검사를 반복하지 않았다. diff 공백 확인. 전체 엔진 회귀·사람의 조작감 평가는 범위 밖이다.
+
+## 승인 지상·공중 공격 통합 (2026-11-18)
+
+- FR-020. 지상 HK v6·팔 v3의 17장과 승인 FX v11의 뒤·앞 레이어 34장의 원본 해시를 대조했다. 합성한 17셀 전체 RGBA와 승인 GIF의 10ms 단위 104개 샘플(끝 대기 포함)이 일치했다. 게임에서는 340ms 동안만 재생하며 FX는 40ms부터 320ms 직전까지 보인다. 공중 v9·전류 v4 시트는 승인본과 SHA-256이 같다. 시트 해시는 assets/warden/README.md에 기록했다.
+- FR-021. 상승·하강 동안 기존 중력과 수직 속도를 적용한다. 공중 시트의 기준점은 몸 중심에 둔다. 베는 동안 수평 위치와 방향을 잠그며 착지 시 진행 중인 공격과 판정을 끝낸다. 공중 검의 활성 구간은 양 끝 높이 사이를 선형 근사해 적의 상대 이동과 검사한다.
+- 게임 Python에서 `.venv/Scripts/python.exe -B -m unittest discover -s tests/unit -q` 133개와 `-s tests/integration -q` 63개 통과. 지상·공중 좌우, 점프 준비 중 예약한 클릭의 이륙 시 실행, 정점 빗나감·하강 중 1회 명중, 조기 착지·공중 복귀, 전하 우선·재시작을 포함한다. 전체 tests를 게임 환경으로 한 번에 실행했을 때 제작 도구의 Pillow 부재와 이전 점프 기대값을 확인했다. 기대값을 새 규칙에 맞춰 수정했고 제작 도구 14개는 프로젝트 도구 Python에서 `-B -m unittest tests.test_comfy_media tests.test_comfy_skill_install -q`로 통과했다.
+- SC-011. 게임 Python으로 `tests/smoke/character_smoke.py`와 `tests/smoke/audit_smoke.py`를 각각 `--output-dir <임시 폴더>`로 실행해 실제 SDL 창에서 통과했다. 예약 공격 첫 프레임·FX 시작, 공중 공격 입력과 복귀, 종료 후 자원 해제를 확인했다. 감사 검사의 예전 texture 속성 참조는 현행 공유 자원 검사로 수정한 뒤 재실행했다. 실제 플레이에서 캡처한 좌우 지상·공중 4장을 열어 방향과 바닥 대비 위치를 확인했다.
+- Converge. FR-020/021·SC-011은 T041~044와 게임 자산·입력·피해·재생 검사에 대응한다. 사용자 직접 조작감 및 미채택 공중 FX의 미술 평가는 미확인이다.

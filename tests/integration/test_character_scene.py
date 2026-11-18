@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 import pico2d.pico2d as pico
 
 from game.scene import CharacterScene, DEFAULT_SIZE
-from game.effects import SpriteEffect
 from game.mode import GameplayMode
 from game_framework import GameObject
 
@@ -62,8 +61,15 @@ class CharacterSceneTests(unittest.TestCase):
                     self.assertNotEqual(self.pixels(), before)
                     attack = actor.clips['attack']
                     self.assertFalse(attack.loop)
-                    self.assertEqual(attack.durations, (.05,) * 7)
-                    self.assertEqual(attack.frames[-1].rect, (1152, 0, 192, 192))
+                    self.assertEqual(attack.durations, (.02,) * 17)
+                    self.assertEqual(attack.frames[-1].rect, (768, 384, 192, 192))
+                    self.assertEqual(attack.frames[0].pivot, (96 / 192, 120 / 192))
+                    self.assertNotIn('sword_trail', actor.clips)
+                    air_attack = actor.clips['air_attack']
+                    self.assertFalse(air_attack.loop)
+                    self.assertEqual(air_attack.durations, (.017, .016, .017) * 6)
+                    self.assertEqual(air_attack.frames[-1].rect, (960, 384, 192, 192))
+                    self.assertEqual(air_attack.frames[0].pivot, (96 / 192, 112 / 192))
                     refs = tuple(clip.frames[0].image for clip in actor.clips.values())
                 finally:
                     scene.exit()
@@ -181,7 +187,7 @@ class CharacterSceneTests(unittest.TestCase):
             self.assertTrue(scene.images.closed)
             self.assertEqual(scene.level.objects, ())
 
-    def test_buffered_attack_and_sword_trail_start_together_after_slow_frame(self):
+    def test_buffered_ground_attack_preserves_first_composite_frame_after_slow_frame(self):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
@@ -196,55 +202,35 @@ class CharacterSceneTests(unittest.TestCase):
         scene.update(.08)
 
         self.assertEqual(actor.state, 'attack')
-        trail, = (obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)
-                  and obj.player.clip is actor.clips['sword_trail'])
-        for player in (actor.player, trail.player):
-            self.assertEqual(player.elapsed, 0)
-            self.assertIs(player.frame, player.clip.frames[0])
+        self.assertIs(actor.player.clip, actor.clips['attack'])
+        self.assertEqual(actor.player.elapsed, 0)
+        self.assertIs(actor.player.frame, actor.clips['attack'].frames[0])
         scene.update(.05)
-        self.assertEqual((actor.player.elapsed, trail.player.elapsed), (.05, .05))
+        self.assertEqual(actor.player.elapsed, .05)
+        self.assertIs(actor.player.frame, actor.clips['attack'].frames[2])
 
-    def test_sword_trails_keep_attack_position_and_expire_independently(self):
+    def test_ground_attack_draws_composite_at_locked_position_and_clears_it_on_exit(self):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
         actor = scene.character
-        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_a))
-        scene.update(.1)
+        objects = scene.level.objects
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0)
-        scene.handle_event(click)
-        scene.update(.1)
-        first = next(obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
-        self.assertEqual(first.player.elapsed, 0)
-        self.assertEqual(first.player.clip.durations, (.05,) * 14)
-        position = first.position
-        self.assertEqual(first.facing, -1)
-        self.assertLess(scene.level.objects[0].render_items()[0].draw_order,
-                        first.render_items()[0].draw_order)
-        self.assertLess(first.render_items()[0].draw_order, actor.render_items()[0].draw_order)
-        with patch('game.effects.draw_sprite') as draw:
-            first._draw(scene.transform, 1)
-            self.assertEqual(draw.call_args.args[2], position)
-            self.assertTrue(draw.call_args.kwargs['flip_x'])
-        scene.update(.35)
-        self.assertNotEqual(actor.state, 'attack')
-        self.assertIs(first.level, scene.level)
-        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYUP, key=pico.SDLK_a))
-        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
-        scene.update(.01)
-        self.assertGreater(actor.x, position[0])
-        self.assertEqual((first.position, first.facing), (position, -1))
-        scene.handle_event(click)
-        scene.update(0)
-        trails = [obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)]
-        self.assertEqual(len(trails), 2)
-        second = trails[-1]
-        self.assertEqual(second.facing, 1)
-        self.assertEqual(second.player.elapsed, 0)
-        scene.update(.34)
-        self.assertIsNone(first.level)
-        self.assertIs(second.level, scene.level)
-        image = second.player.frame.image
-        scene.exit()
-        self.assertIsNone(second.level)
-        self.assertTrue(image.closed)
+        attack = actor.clips['attack']
+        for facing, key in ((-1, pico.SDLK_d), (1, pico.SDLK_a)):
+            with self.subTest(facing=facing):
+                actor.facing = facing
+                position = actor.x, actor.y
+                scene.handle_event(click)
+                scene.update(.1)
+                scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
+                scene.update(.12)
+                self.assertEqual(scene.level.objects, objects)
+                with patch('game.character.draw_sprite') as draw:
+                    actor.render_items()[0].drawable(scene.transform, 1)
+                draw.assert_called_once_with(attack.frames[6], scene.transform, position,
+                                             attack.frames[6].rect[2:], 1, flip_x=facing < 0)
+                scene.handle_event(SimpleNamespace(type=pico.SDL_KEYUP, key=key))
+                scene.update(.22)
+                self.assertIs(actor.player.clip, actor.clips['idle'])
+                self.assertEqual(scene.level.objects, objects)

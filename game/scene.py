@@ -86,11 +86,15 @@ class GameplayLevel(Level):
         attack = self.player.active_attack
         if attack is None:
             return
-        attack_id, box, window = attack
+        attack_id, box, window, velocity_y = attack
         if attack_id == self._last_hit_attack:
             return
         for times, x, dx, _ in self.enemy.motion:
-            if first_contact(self.enemy.hurt_box_at(x), box, times, (dx, 0), window) is not None:
+            left, bottom, right, top = self.enemy.hurt_box_at(x)
+            shift = velocity_y * times[0]
+            relative_box = left, bottom - shift, right, top - shift
+            motion = dx, -velocity_y * (times[1] - times[0])
+            if first_contact(relative_box, box, times, motion, window) is not None:
                 self._last_hit_attack = attack_id
                 self.enemy.take_hit()
                 break

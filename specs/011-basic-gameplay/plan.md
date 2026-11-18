@@ -118,3 +118,14 @@ feature/basic-gameplay를 최신 origin/main(d64aa93)으로 fast-forward했다. 
 ## 착지 연속 점프 연결
 
 실제 시트를 비교해 착지0-based6~8번(60~90ms)을 시작4번(40ms)에 연결한다. 기존 jump 상태 안에서 land→start로 이어가고 버퍼를1회 소비한다. 긴 dt도 착지60ms에서 나눠 연결한다. 좌우·잔여80ms 후 이륙·만료·키 유지·일반 착지를 검증하고 현재 규칙 문서를 갱신한다.
+
+
+## 승인 공격 통합과 공중 공격
+
+2026-11-18 FR-020/021·SC-011 증분. 기존 지상 전용 진입/350ms 기술 가정을 대체한다. game/character.py와 assets/warden의 기존 클립 로더·SpritePlayer·단발 공격 상태를 확장하고 공중 여부로 클립을 선택한다. 승인 지상 HK v6·팔 보정 v3 표시 프레임마다 FX v11의 뒤쪽→몸체→앞쪽 순서로 미리 합성한다. 공중 v9·눈색/전류 v4 원본 시트를 복사한다. 원본 표시 순서·durations·root를 보존하며 지상 시트의 frameIndices는 합성된 표시 프레임을 차례로 가리킨다. 공중 FX 후보·새 의존성·공통 엔진 변경은 필요하지 않다.
+
+지상 별도 베기 클립·생성 경로를 제거하고 대시는 기존 SpriteEffect를 사용한다. 공중 공격은 기존 점프 수직 적분을 재사용하고 공격 완료/바닥 접촉 경계를 분할한다. 바닥이 먼저면 active_attack과 남은 타격을 지우고 착지 단계로, 공격이 먼저면 현재 상승/낙하 단계로 돌아간다. 방향/수평 이동 잠금·피해 구간·공격 ID·100ms 예약·전하 우선/취소는 기존 공통 경로를 유지한다. 착지에서 기존 대시/마지막 전하 제한 해제를 빠뜨리지 않는다.
+
+호출부와 검증 범위는 game/scene.py의 입력·효과/전투 처리, game/character.py의 로더/공격·점프 경계, tests/unit/test_character.py·test_input_buffer.py와 tests/integration/test_character_scene.py의 관련 fixture, tests/smoke/character_smoke.py의 실제 좌우·상승/낙하·조기 착지 출력이다. 상태/시간 분할/피해·취소와 원본 대비 픽셀 합성·잔여 베기 제거는 표적 자동 검사로, 자산 표시와 전환은 실제 SDL 창 캡처로 확인한다.
+
+문서 영향은 spec의 Documentation Contract와 후속 증분을 따른다. docs/systems/basic-gameplay.md가 행동 규칙, basic-enemy.md가 피해 수치를 소유한다. 검증 후 tasks/verification/progress·관련 현재 docs를 실제 구현에 맞추고 converge한다. 루트 README와 다른 아트 후보는 수정하지 않는다.

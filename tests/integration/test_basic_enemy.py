@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import pico2d.pico2d as pico
 
+from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.teleport_link import TeleportLink
 
@@ -85,37 +86,75 @@ class BasicEnemySceneTests(unittest.TestCase):
             finally:
                 scene.exit()
 
-    def test_restart_during_attack_keeps_textures_and_removes_old_effects(self):
-        scene = CharacterScene()
-        scene.enter(self.app)
-        try:
-            scene.update(0)
-            actor, enemy = scene.character, scene.level.enemy
-            image = enemy.frame.image
-            scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
-                                               button=pico.SDL_BUTTON_LEFT))
-            scene.update(0)
-            self.assertGreater(len(scene.level.objects), 3)
-            actor.take_hit()
-            enemy.take_hit()
-            charges = tuple(scene.level.charges)
-            old_objects = tuple(obj for obj in scene.level.objects[1:] if obj not in charges)
-            scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r, repeat=0))
-            scene.update(0)
-            self.assertTrue(all(obj.level is None for obj in old_objects))
-            self.assertEqual(len(scene.level.objects), 8)
-            self.assertTrue(all(charge.level is scene.level for charge in charges))
-            self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
-            self.assertEqual(scene.character.invulnerability_remaining, 0)
-            self.assertIs(scene.level.enemy.frame.image, image)
-            self.assertIs(scene.level.enemy.clips, enemy.clips)
-            self.assertIs(scene.level.enemy.frame, enemy.clips['idle'].frames[0])
-            self.assertEqual(scene.level.enemy.animation.elapsed, 0)
-            self.assertFalse(image.closed)
-            scene.draw()
-        finally:
-            scene.exit()
-        self.assertTrue(image.closed)
+    def test_air_attack_misses_at_apex_but_hits_once_on_descent(self):
+        for facing in (-1, 1):
+            for flight, expected in ((.35, 3), (.57, 2)):
+                with self.subTest(facing=facing, flight=flight):
+                    scene = CharacterScene()
+                    scene.enter(self.app)
+                    try:
+                        actor, enemy = scene.character, scene.level.enemy
+                        actor.facing = facing
+                        enemy.x, enemy.state, enemy.state_remaining = facing * 70, 'recover', 10
+                        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_SPACE))
+                        jump_start = actor.clips['jump_start_left' if facing < 0 else 'jump_start_right']
+                        scene.update(sum(jump_start.durations))
+                        scene.update(flight)
+                        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
+                                                           button=pico.SDL_BUTTON_LEFT))
+                        scene.update(0)
+                        self.assertIs(actor.player.clip, actor.clips['air_attack'])
+                        scene.update(.11)
+                        self.assertEqual(enemy.hp, 3)
+                        scene.update(.04)
+                        self.assertFalse(actor.grounded)
+                        self.assertEqual(enemy.hp, expected)
+                        scene.update(.04)
+                        self.assertEqual(enemy.hp, expected)
+                        scene.update(.5)
+                        self.assertEqual(enemy.hp, expected)
+                    finally:
+                        scene.exit()
+
+    def test_restart_during_attack_or_dash_clears_animation_and_keeps_textures(self):
+        for action in ('attack', 'dash'):
+            with self.subTest(action=action):
+                scene = CharacterScene()
+                scene.enter(self.app)
+                try:
+                    scene.update(0)
+                    actor, enemy = scene.character, scene.level.enemy
+                    image = enemy.frame.image
+                    event = (SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+                             if action == 'attack' else
+                             SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_LSHIFT))
+                    scene.handle_event(event)
+                    scene.update(0)
+                    scene.update(.11)
+                    self.assertEqual(actor.state, action)
+                    effects = [obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)]
+                    self.assertEqual(len(effects), int(action == 'dash'))
+                    actor.take_hit()
+                    enemy.take_hit()
+                    charges = tuple(scene.level.charges)
+                    scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r, repeat=0))
+                    scene.update(0)
+                    self.assertTrue(all(obj.level is None for obj in (actor, enemy, *effects)))
+                    self.assertTrue(all(charge.level is scene.level for charge in charges))
+                    self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
+                    self.assertEqual(scene.character.invulnerability_remaining, 0)
+                    self.assertIs(scene.character.clips, actor.clips)
+                    self.assertIs(scene.character.player.frame, actor.clips['idle'].frames[0])
+                    self.assertIsNone(scene.character.active_attack)
+                    self.assertIs(scene.level.enemy.frame.image, image)
+                    self.assertIs(scene.level.enemy.clips, enemy.clips)
+                    self.assertIs(scene.level.enemy.frame, enemy.clips['idle'].frames[0])
+                    self.assertEqual(scene.level.enemy.animation.elapsed, 0)
+                    self.assertFalse(image.closed)
+                    scene.draw()
+                finally:
+                    scene.exit()
+                self.assertTrue(image.closed)
 
     def test_teleport_cancels_active_sword_without_resetting_health(self):
         scene = CharacterScene()
@@ -137,6 +176,7 @@ class BasicEnemySceneTests(unittest.TestCase):
                                                button=pico.SDL_BUTTON_LEFT))
             self.assertEqual(actor.center, charge.position)
             self.assertIsNone(actor.active_attack)
+            self.assertIs(actor.player.clip, actor.clips['idle'])
             self.assertEqual((actor.hp, actor.invulnerability_remaining, actor.attack_id),
                              (4, .4, attack_id))
             scene.update(.05)

@@ -54,7 +54,7 @@ class InputBufferTests(unittest.TestCase):
                 if expected_state == 'attack':
                     self.assertEqual(actor.player.elapsed, 0)
 
-    def test_landing_buffers_attack_but_never_attacks_in_air(self):
+    def test_landing_interrupts_air_attack_and_buffers_ground_attack(self):
         actor = self.character
         self.press(pico.SDLK_SPACE)
         actor.update(.12 + .75)

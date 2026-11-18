@@ -71,7 +71,7 @@ def load_clips(images):
     except ValueError as error:
         raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
     clips = {}
-    names = ('idle', 'run_left', 'run_right', 'attack', 'sword_trail') + tuple(
+    names = ('idle', 'run_left', 'run_right', 'attack', 'air_attack') + tuple(
         f'{phase}_{direction}' for phase in (
             'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx',
             'jump_start', 'jump_rise', 'jump_fall', 'jump_land')
@@ -123,7 +123,7 @@ class Character(GameObject):
         self._machine = Machine(
             states=('idle', 'run', 'attack', 'dash', 'jump'), initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
-                         ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle'],
+                         ['attack', ['idle', 'run', 'jump'], 'attack'], ['finish', 'attack', 'idle'],
                          ['dash', ['idle', 'run', 'jump'], 'dash'], ['end_dash', 'dash', 'idle'],
                          ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle'],
                          ['teleport', '*', 'idle']],
@@ -221,6 +221,8 @@ class Character(GameObject):
         action = self.buffered_action
         free = self.state in ('idle', 'run')
         allowed = free and self.grounded
+        if action == 'attack' and self.state == 'jump':
+            allowed = self.jump_phase in ('rise', 'fall')
         if action == 'dash':
             allowed = (free or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
                 self.grounded or not self.air_dash_used)
@@ -242,10 +244,8 @@ class Character(GameObject):
             self.buffer_remaining -= step
             action = self._consume_action()
             if action is not None:
-                self._update(0, action, offset=step)
-                # 새 베기는 이번 Level 갱신에 포함되지 않으므로 공격도 첫 프레임을 유지한다.
-                if action == 'attack':
-                    return
+                self._update(dt - step, action, offset=step)
+                return
             elif self.buffer_remaining <= 1e-9:
                 self.buffered_action = None
         if dt > step:
@@ -263,20 +263,34 @@ class Character(GameObject):
         started = action == 'attack'
         if started:
             self._machine.attack()
-            self.player.play(self.clips['attack'], restart=True)
+            self.player.play(self.clips['attack' if self.grounded else 'air_attack'], restart=True)
             self.attack_id += 1
             self.attack_facing = self.facing
         attacking = self.state == 'attack'
+        airborne_attack = attacking and self.jump_phase in ('rise', 'fall')
+        flight_time = dt
+        if airborne_attack:
+            landing_time = (self.velocity_y + sqrt(self.velocity_y ** 2
+                            + 2 * GRAVITY * (self.y - GROUND_Y))) / GRAVITY
+            flight_time = min(dt, landing_time)
         if attacking and not started:
             previous = self.player.elapsed
-            self.player.update(dt)
+            self.player.update(flight_time)
             if (self.active_attack is None and previous < ATTACK_ACTIVE_END
                     and self.player.elapsed >= ATTACK_ACTIVE_START):
                 end = self.x + self.attack_facing * ATTACK_REACH
                 box = min(self.x, end), self.y + 8, max(self.x, end), self.y + 70
                 start = offset + min(dt, max(0, ATTACK_ACTIVE_START - previous))
                 stop = offset + ATTACK_ACTIVE_END - previous
-                self.active_attack = self.attack_id, box, (start, stop)
+                velocity = 0
+                if airborne_attack:
+                    stop = min(stop, offset + landing_time)
+                    # 활성 구간 양 끝의 높이를 잇는 속도로 검과 적의 상대 이동을 검사한다.
+                    t0, t1 = start - offset, stop - offset
+                    velocity = self.velocity_y - .5 * GRAVITY * (t0 + t1)
+                    dy = self.velocity_y * t0 - .5 * GRAVITY * t0 ** 2 - velocity * start
+                    box = box[0], box[1] + dy, box[2], box[3] + dy
+                self.active_attack = self.attack_id, box, (start, stop), velocity
             if self.player.finished:
                 self._machine.finish()
 
@@ -289,6 +303,13 @@ class Character(GameObject):
             if self.jump_phase is not None:
                 self._machine.jump()
                 self._update_jump(remaining)
+        elif airborne_attack:
+            self._advance_vertical(flight_time)
+            if self.grounded and self.state == 'attack':
+                self._machine.finish()
+            if self.state != 'attack':
+                self._machine.jump()
+                move_dt = self._update_jump(dt - flight_time)
         elif self.state == 'jump':
             move_dt = self._update_jump(dt)
         else:
@@ -322,9 +343,6 @@ class Character(GameObject):
                     self.x = min(max(self.x, left + idle_left), right - idle_right)
 
         if self.state == 'attack':
-            if started and self.level is not None:
-                self.level.spawn(SpriteEffect(self.clips['sword_trail'], (self.x, GROUND_Y),
-                                           self.facing, DISPLAY_SCALE))
             return
         if self.state == 'jump':
             self._show_jump()
@@ -469,7 +487,9 @@ class Character(GameObject):
         if self.hp == 0 or (self.invulnerability_remaining > 0
                             and int(self.invulnerability_remaining / .0625) % 2 == 0):
             opacity *= .35
-        draw_sprite(frame, transform, (self.x, self.y),
+        # 공중 공격 시트는 몸 중심, 지상·점프 시트는 발 위치를 기준으로 그린다.
+        position = self.center if self.state == 'attack' and not self.grounded else (self.x, self.y)
+        draw_sprite(frame, transform, position,
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
     def render_items(self):

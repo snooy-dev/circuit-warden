@@ -25,6 +25,7 @@ class CharacterTests(unittest.TestCase):
                 durations = (.041, .042) if name == 'idle' else (.03, .03)
                 self.clips[name] = SpriteClip(frames, durations)
             self.clips['attack'] = SpriteClip(self.clips['idle'].frames, (.05, .05), loop=False)
+            self.clips['air_attack'] = SpriteClip(self.clips['idle'].frames, (.15, .15), loop=False)
             for direction in ('left', 'right'):
                 frames = self.clips[f'run_{direction}'].frames
                 self.clips[f'run_{direction}'] = SpriteClip(frames * 8, (.03,) * 16)
@@ -260,7 +261,26 @@ class CharacterTests(unittest.TestCase):
         actor.update(.5)
         self.assertTrue(actor.grounded)
 
-    def test_early_airborne_actions_expire_and_attack_locks_before_buffered_jump(self):
+    def test_air_attack_preserves_jump_arc_and_resumes_fall(self):
+        actor = self.character
+        reference = self.make_character()
+        for character in (actor, reference):
+            character.control(key(pico.SDLK_SPACE))
+            character.update(.32)
+        actor.control(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT))
+        actor.control(key(pico.SDLK_a))
+        for dt in (0, .15, .14):
+            actor.update(dt)
+            reference.update(dt)
+            self.assertIs(actor.player.clip, actor.clips['air_attack'])
+            self.assertEqual((actor.x, actor.facing), (0, 1))
+            self.assertAlmostEqual(actor.y, reference.y)
+            self.assertAlmostEqual(actor.velocity_y, reference.velocity_y)
+        actor.update(.02)
+        self.assertEqual((actor.state, actor.jump_phase), ('jump', 'fall'))
+        self.assertIs(actor.player.clip, actor.clips['jump_fall_right'])
+
+    def test_air_attack_keeps_jump_velocity_and_ground_attack_buffers_jump(self):
         actor = self.character
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
         actor.control(click)
@@ -273,6 +293,7 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_SPACE))
         actor.control(click)
         actor.update(0)
+        self.assertIs(actor.player.clip, actor.clips['air_attack'])
         self.assertEqual(actor.velocity_y, velocity)
         actor.update(.7)
         actor.update(.18)

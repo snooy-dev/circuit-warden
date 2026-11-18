@@ -11,7 +11,6 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.character import BODY_HEIGHT, GROUND_Y
-from game.effects import SpriteEffect
 from game.scene import ALTERNATE_SIZE, DEFAULT_SIZE, CharacterScene
 from tests.smoke.character_smoke import CharacterSmoke, push_click, push_key
 from tests.smoke.charge_smoke import ChargeSmoke
@@ -32,6 +31,8 @@ class AuditSmoke(CharacterScene):
         self.started = monotonic()
         self.steps = self.exercise()
         self.refs = tuple(clip.frames[0].image for clip in self.character.clips.values())
+        for art in (self.level.charges[0].art, self.level.link_art):
+            self.refs += tuple(frames[0].image for frames in art.frames)
 
     def exercise(self):
         actor = self.character
@@ -60,14 +61,14 @@ class AuditSmoke(CharacterScene):
         yield .08
 
         assert actor.state == 'attack'
-        self.trail, = (obj for obj in self.level.objects if isinstance(obj, SpriteEffect)
-                       and obj.player.clip is actor.clips['sword_trail'])
-        for player in (actor.player, self.trail.player):
-            assert player.elapsed == 0 and player.frame is player.clip.frames[0]
+        attack = actor.clips['attack']
+        assert actor.player.clip is attack and actor.player.elapsed == 0
+        assert actor.player.frame is attack.frames[0]
         self.capture('audit-buffered-attack-first')
         yield .05
 
-        assert actor.player.elapsed == self.trail.player.elapsed == .05
+        assert actor.player.elapsed == .05 and actor.player.frame is attack.frames[2]
+        self.capture('audit-buffered-attack-fx')
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield
@@ -93,8 +94,8 @@ if __name__ == '__main__':
     scene = AuditSmoke(output)
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
-    assert all(charge.texture is None and charge.level is None for charge in scene.level.charges)
-    assert scene.link.texture is None and scene.link.level is None and scene.trail.level is None
+    assert all(charge.art is None and charge.level is None for charge in scene.level.charges)
+    assert scene.link._frames is None and scene.link.level is None
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
     print('PASS: SDL queued click before F6 resize; buffered attack with forced dt; Escape and cleanup',
           flush=True)

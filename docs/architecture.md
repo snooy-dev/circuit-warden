@@ -282,11 +282,11 @@ game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 �
 
 GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. Character가 transitions.Machine의 idle/run/attack 명시 전이(auto_transitions=False)를 소유한다. SpritePlayer의 loop=False·finished를 재사용하며 로더는 정확한 bool loop와 클립별 반복 정책을 검사한다.
 
-공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. `_consume_action`이 허용한 마지막 예약 행동을 지역값으로 `_update`에 직접 전달하며 별도 요청 플래그나 중복 허용 판정을 두지 않는다. 예약 만료 경계에서 공격이 시작돼도 그 외부 갱신의 잔여 시간은 공격에 적용하지 않아 새 베기와 함께0초를 유지한다. 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 기반 검증은 [011](../specs/011-basic-gameplay/verification.md), 예약 경계 보완은 [013](../specs/013-audit-fixes/verification.md)을 따른다.
+공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. `_consume_action`이 허용한 마지막 예약 행동을 지역값으로 `_update`에 직접 전달하며 별도 요청 플래그나 중복 허용 판정을 두지 않는다. 예약 만료 경계에서 공격이 시작돼도 그 외부 갱신의 잔여 시간은 공격에 적용하지 않아 새 베기와 함께0초를 유지한다. 지상 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 공중 공격은 수평 위치·방향을 고정하되 기존 수직 적분을 계속한다. 바닥 접촉과 공격 완료 경계를 분할하고, 착지가 먼저면 공격·남은 타격을 취소해 착지 모션을 시작한다. 공중에서 공격이 먼저 끝나면 실제 수직 단계의 점프 모션으로 복귀한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 기반 검증은 [011](../specs/011-basic-gameplay/verification.md), 예약 경계 보완은 [013](../specs/013-audit-fixes/verification.md)을 따른다.
 
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 
-SpriteEffect(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
+지상 공격 시트는 승인 v11의 뒤쪽 효과, 캐릭터, 앞쪽 효과 순서로 미리 합성한다. SpritePlayer 하나가 캐릭터 렌더 레이어(0)에서 합성된 클립을 재생하므로 모션 종료·취소와 동시에 베기 효과도 끝난다. 지상 공격은 발 위치, 공중 공격은 몸 중심에 시트 기준점을 맞춘다. 장면의 ImageStore가 지상·공중 공격 시트를 소유·해제한다.
 
 ## Warden 점프
 
@@ -308,7 +308,7 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 
 ### 전용 대시 모션·효과
 
-준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다. SpriteEffect는 기존 베기 효과 구현을 이름 변경해 함께 재사용한다.
+준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다.
 
 로더는 선택적 frameIndices를 검증하며 대시 시트의 중복셀6을 건너뛴11프레임과 셀5의34ms를 보존한다. 프레임 색/알파·시트 바이트는 변경하지 않는다. 원본의 연결 기준은 idle0/Run0 진입, idle0/Run14 복귀라 해당 복귀 후1/15번부터 재생한다. 임의 진입 위상과 독립 idle/Run의 눈 색 차이는 남아 있는 아트 연결 한계다.
 
