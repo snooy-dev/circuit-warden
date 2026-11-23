@@ -26,7 +26,7 @@ class JumpAnimationTests(unittest.TestCase):
         scene = self.scene()
         actor = scene.character
         for direction, x in (('left', 63), ('right', 64)):
-            for phase, count, duration in (('start', 12, .12), ('rise', 18, .3),
+            for phase, count, duration in (('start', 12, .03), ('rise', 18, .3),
                                             ('fall', 36, .6), ('land', 18, .18)):
                 clip = actor.clips[f'jump_{phase}_{direction}']
                 self.assertEqual(len(clip.frames), count)
@@ -35,12 +35,12 @@ class JumpAnimationTests(unittest.TestCase):
                 self.assertEqual(clip.frames[0].pivot, (x / 128, 92 / 104))
         self.key(scene, pico.SDLK_d)
         self.key(scene, pico.SDLK_SPACE)
-        scene.update(.1)
+        scene.update(.02)
         self.assertEqual((actor.x, actor.y), (0, GROUND_Y))
         self.assertIs(actor.player.clip, actor.clips['jump_start_right'])
         self.key(scene, pico.SDLK_LSHIFT)
         scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0))
-        scene.update(.02)
+        scene.update(.01)
         self.assertEqual(actor.jump_phase, 'rise')
         self.assertEqual(actor.x, 0)
         self.assertIs(actor.player.clip, actor.clips['air_attack'])
@@ -77,7 +77,7 @@ class JumpAnimationTests(unittest.TestCase):
 
     def test_jump_boundaries_preserve_height_and_horizontal_distance_across_dt(self):
         outcomes = []
-        for steps in ((1.1,), (.1,) * 11):
+        for steps in ((1.01,), (.101,) * 10):
             scene = self.scene()
             scene.level.enemy.destroy()
             self.key(scene, pico.SDLK_d)
@@ -87,7 +87,7 @@ class JumpAnimationTests(unittest.TestCase):
             actor = scene.character
             self.assertTrue(actor.grounded)
             self.assertIsNone(actor.jump_phase)
-            self.assertAlmostEqual(actor.x, 144)
+            self.assertAlmostEqual(actor.x, SPEED * .8)
             outcomes.append((actor.x, actor.y))
         self.assertAlmostEqual(outcomes[0][0], outcomes[1][0])
 
@@ -96,7 +96,7 @@ class JumpAnimationTests(unittest.TestCase):
         scene.level.enemy.destroy()
         actor = scene.character
         self.key(scene, pico.SDLK_SPACE)
-        scene.update(.47)
+        scene.update(.38)
         self.key(scene, pico.SDLK_LSHIFT)
         scene.update(.467)
         self.assertEqual(actor.state, 'jump')
@@ -115,7 +115,7 @@ class JumpAnimationTests(unittest.TestCase):
         scene = self.scene()
         actor = scene.character
         self.key(scene, pico.SDLK_SPACE)
-        scene.update(.82)
+        scene.update(.73)
         self.key(scene, pico.SDLK_LSHIFT)
         scene.update(.15)
         self.assertTrue(actor.grounded)
@@ -138,7 +138,7 @@ class JumpAnimationTests(unittest.TestCase):
             actor = scene.character
             actor.facing = facing
             self.key(scene, pico.SDLK_SPACE)
-            scene.update(.92)
+            scene.update(.83)
             self.assertEqual(actor.jump_phase, 'land')
             self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
             self.key(scene, pico.SDLK_SPACE)
@@ -146,12 +146,13 @@ class JumpAnimationTests(unittest.TestCase):
             self.assertEqual(actor.jump_phase, 'land')
             scene.update(.001)
             self.assertEqual(actor.jump_phase, 'start')
-            self.assertAlmostEqual(actor.jump_elapsed, .04)
+            self.assertAlmostEqual(actor.jump_elapsed, .01)
             direction = 'left' if facing < 0 else 'right'
             self.assertIs(actor.player.frame, actor.clips[f'jump_start_{direction}'].frames[4])
             self.assertIsNone(actor.buffered_action)
-            self.assertEqual((actor.x, actor.y, actor.facing), (0, GROUND_Y, facing))
-            scene.update(.08)
+            self.assertEqual((actor.x, actor.facing), (0, facing))
+            self.assertAlmostEqual(actor.y, GROUND_Y)
+            scene.update(.02)
             self.assertEqual(actor.jump_phase, 'rise')
             scene.update(.4)
             self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
@@ -165,7 +166,7 @@ class JumpAnimationTests(unittest.TestCase):
             scene = self.scene()
             actor = scene.character
             self.key(scene, pico.SDLK_SPACE)
-            scene.update(.92)
+            scene.update(.83)
             self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
             self.key(scene, pico.SDLK_SPACE)
             for dt in steps:
@@ -177,7 +178,7 @@ class JumpAnimationTests(unittest.TestCase):
         scene = self.scene()
         actor = scene.character
         self.key(scene, pico.SDLK_SPACE)
-        scene.update(1.02)  # Landing recovery has passed the crouch window.
+        scene.update(.93)  # Landing recovery has passed the crouch window.
         self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
         self.key(scene, pico.SDLK_SPACE)
         scene.update(.08)

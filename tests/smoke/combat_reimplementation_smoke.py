@@ -90,8 +90,8 @@ class CombatSmoke(CharacterScene):
 
         short = yield from self.running_jump(short=True)
         long = yield from self.running_jump(short=False)
-        assert short[0] < 45 and 161 < long[0] <= JUMP_HEIGHT
-        assert long[1] > short[1] + 60
+        assert 65 < short[0] < 105 and 161 < long[0] <= JUMP_HEIGHT
+        assert long[1] > short[1] + 40
         print(f'점프 높이 / 거리: 짧게 {short[0]:.1f} / {short[1]:.1f}, '
               f'길게 {long[0]:.1f} / {long[1]:.1f}', flush=True)
 

@@ -150,7 +150,7 @@ class BasicEnemyTests(CombatFixture):
 
     def test_sword_hits_target_reached_only_during_active_horizontal_motion(self):
         for facing, key in ((1, pico.SDLK_d), (-1, pico.SDLK_a)):
-            for gap, expected_hp in ((25, 2), (38, 3)):
+            for gap, expected_hp in ((36, 2), (50, 3)):
                 with self.subTest(facing=facing, gap=gap):
                     self.level.reset_combat()
                     actor, enemy = self.level.player, self.level.enemy

@@ -149,7 +149,7 @@ class CharacterSmoke(CharacterScene):
         push_key(pico.SDLK_a)
         yield
 
-        assert not actor.grounded and actor.player.clip is actor.clips['jump_rise_left']
+        assert not actor.grounded and actor.player.clip is actor.clips['jump_fall_left']
         self.capture('jump-run-left')
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
@@ -228,7 +228,7 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert not self.engine.fullscreen and self.engine.window_size == (1024, 720)
-        assert {'start', 'rise', 'fall', 'land'} <= self.jump_captures
+        assert {'rise', 'fall', 'land'} <= self.jump_captures
         assert len(self.attack_captures) == 8
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
@@ -242,7 +242,7 @@ class CharacterSmoke(CharacterScene):
         super().draw()
         if self.character.state == 'jump':
             phase = self.character.jump_phase
-            if phase not in self.jump_captures and self.character.player.elapsed >= .04:
+            if phase not in self.jump_captures and (phase == 'start' or self.character.player.elapsed >= .04):
                 self.capture('jump-' + phase)
                 self.jump_captures.add(phase)
         if self.previous_dash_clip is not None and self.character.state != 'dash':

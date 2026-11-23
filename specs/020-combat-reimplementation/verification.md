@@ -71,3 +71,20 @@ $combatRecheck = @(
 - **기준 커밋:** `feature/combat-reimplementation`의 `959e252`다. 위 일곱 모듈의 `unittest` 명령으로 최종 코드의 관련 검사 113개가 통과했다. 인수 후에는 게임 코드 변경 없이 기존 결과를 재사용하고 캐릭터 SDL 창 검사만 다시 실행했다.
 - **남은 확인:** 사용자의 직접 플레이에서 이동 중 공격, 가변 점프, 카메라 반응과 베기 효과의 가독성을 평가한다. 전체 회귀는 검사 범위에 포함하지 않았다.
 - **문서 범위:** `docs/progress.md`에 검증 결과를 반영했다. `docs/art-direction.md`와 `docs/progress.md`의 2026-11-18 공격 FX 타이밍 정정은 별도 작업 트리 변경으로 보존했다.
+
+## 점프 반응과 이동 속도 후속 조정
+
+[Team Cherry 매뉴얼](https://cdn.pidgi.net/images/5/51/Manual_EN_-_Hollow_Knight.pdf#page=5)의 방향 유지 달리기·버튼 유지 점프와 위 잊혀진 교차로 영상의 이동 흐름을 참고했다. 자료에서 원작의 점프 입력 시간과 월드 단위 변환은 확인하지 못했다. 시작 30ms, 해제 배율 0.65, 이동 속도 240은 워든 훈련장의 시험값이다.
+
+- **FR-007, SC-004:** 시작 30ms와 최대 높이 166, 10·60·200ms에서 키를 뗐을 때 정점의 증가, 대시 체공 중 해제와 수직 갱신 재개, 착지 웅크림 연결을 검사했다. 가장 짧은 탭의 정점은 약 70이다. 실제 SDL 창에서 짧은 점프의 높이/거리는 80.0/130.9, 긴 점프는 165.8/192.0이었다.
+- **FR-008, SC-004:** 100ms 기본 이동 거리는 18 → 24다. 공중 조향·이동 공격의 활성 구간·전하 이동 취소와 대시 동작을 확인했다. SDL 훈련장에서 공중 공격 후 발판에 착지했고 낮은 벽 x=916에서 이동과 카메라가 멈췄다.
+- **실행 결과:** 관련 자동 검사 113개와 두 SDL 창 검사가 통과했다. 첫 캐릭터 SDL 실행에서 방향 전환 검사 시점에 상승 클립을 기대해 실패했다. 그 시점의 새 궤적에 맞게 하강 클립을 검사한 뒤 통과했다. 짧은 시작 클립은 프레임 간격에 따라 화면 캡처에서 건너뛸 수 있어 실제 클립과 이륙 경계는 통합 검사에서 확인했다. 전체 회귀와 사용자 직접 조작감 재평가는 수행하지 않았다.
+- **수렴:** FR-007/008과 SC-004를 구현·검사했고 기본 게임플레이·기술 구조·진행 상태를 갱신했다.
+
+```powershell
+.\.venv\Scripts\python.exe -B -m unittest tests.unit.test_character tests.integration.test_jump_animation tests.integration.test_character_scene tests.unit.test_basic_enemy tests.integration.test_basic_enemy tests.integration.test_charge_scene tests.unit.test_input_buffer
+.\.venv\Scripts\python.exe -B -m tests.smoke.combat_reimplementation_smoke --output-dir $combatSmokeOutput
+.\.venv\Scripts\python.exe -B -m tests.smoke.character_smoke --output-dir $combatCharacterOutput
+powershell -NoProfile -ExecutionPolicy Bypass -File .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks
+git diff --check
+```

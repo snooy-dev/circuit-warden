@@ -16,7 +16,7 @@ from .effects import SpriteEffect
 
 
 GROUND_Y = -180
-SPEED = 180
+SPEED = 240
 PUSHBACK_SPEED = 440
 PUSHBACK_SECONDS = .12
 HURT_SECONDS = PUSHBACK_SECONDS
@@ -32,7 +32,7 @@ JUMP_HEIGHT = BODY_HEIGHT * 2
 JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
-JUMP_RELEASE_SPEED = JUMP_SPEED * .48
+JUMP_RELEASE_FACTOR = .65
 TELEPORT_RISE_SECONDS = .24
 ARRIVAL_BLEND_SECONDS = .045
 DASH_DISTANCE = BODY_HEIGHT * 2
@@ -41,10 +41,10 @@ ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
-# 10ms 프레임 기준: 착지 6~8번의 압축 자세 → 시작 4번 자세.
+# 착지 6~8번의 압축 자세 → 시작 4번 자세.
 LAND_CROUCH_START = .06
 LAND_CROUCH_END = .09
-JUMP_CROUCH_START = .04
+JUMP_CROUCH_START = .01
 DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
@@ -643,7 +643,8 @@ class Character(GameObject):
                     self._machine.end_jump()
                     break
                 self.jump_phase, self.jump_elapsed = 'rise', 0.0
-                self.velocity_y = JUMP_SPEED if self.jump_held else JUMP_RELEASE_SPEED
+                self.velocity_y = JUMP_SPEED
+                self._apply_jump_release()
                 self.rise_start_speed = self.velocity_y
             else:
                 step = self._advance_vertical(remaining)
@@ -664,10 +665,13 @@ class Character(GameObject):
         self.player.play(clip, restart=True)
         self.player.update(elapsed)
 
-    def _advance_vertical(self, dt):
+    def _apply_jump_release(self):
         if self.jump_held is False and self.jump_phase == 'rise':
-            self.velocity_y = min(self.velocity_y, JUMP_RELEASE_SPEED)
+            self.velocity_y *= JUMP_RELEASE_FACTOR
             self.jump_held = None
+
+    def _advance_vertical(self, dt):
+        self._apply_jump_release()
         remaining = dt
         while remaining > 0 and not self.grounded:
             velocity = self.velocity_y

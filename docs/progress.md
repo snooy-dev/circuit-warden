@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **점프 반응·기본 이동 후속 조정:** 2026-11-23 사용자 플레이 피드백으로 Space 이륙 준비를 단축하고, 해제 시점에 따른 높이 차이를 조정하고, 기본 이동을 33% 높였다. 관련 자동 검사와 캐릭터·훈련장 SDL 검사를 통과했다. 사용자 조작감 재확인은 남아 있다. [변경 명세](../specs/020-combat-reimplementation/spec.md) · [검증](../specs/020-combat-reimplementation/verification.md#점프-반응과-이동-속도-후속-조정).
+
 - **전투 조작·플랫폼 훈련장 재구현:** 2026-11-23 사용자 요청으로 이동 중 지상·공중 공격, 수평 추적과 벽 정지, Space 가변 점프, 워든 키 크기의 베기 효과를 기본 실행에 적용했다. 공중 발판 6개와 낮은 벽을 배치했다. `feature/combat-reimplementation`의 로컬 커밋 `959e252`에 구현을 보존했다. 관련 자동 검사 113개와 훈련장 SDL 창 검사를 통과했다. 기존 캐릭터 SDL 창 검사도 단독 재실행해 대시 캡처와 전체화면 전환을 확인했다. 다음 확인은 사용자의 직접 플레이 조작감·미술 평가다. [명세](../specs/020-combat-reimplementation/spec.md) · [계획](../specs/020-combat-reimplementation/plan.md) · [검증 및 재개 지점](../specs/020-combat-reimplementation/verification.md#인수인계와-남은-확인).
 
 - **게임오브젝트 콜리전 구현:** 2026-11-23 사용자 후속 요청으로 적의 몸통에 닿으면 워든이 밀려나도록 적용했다. 접촉 시 대시를 끊고, 벽에 몰렸을 때는 적도 접촉면에서 멈춘다. 돌진의 피해·피격 보호는 기존 규칙을 따른다. [명세](../specs/016-collision/spec.md) · [검증](../specs/016-collision/verification.md).

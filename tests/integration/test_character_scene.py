@@ -210,7 +210,7 @@ class CharacterSceneTests(unittest.TestCase):
             scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
             control.assert_called_once()
         scene.update(.1)
-        self.assertEqual(actor.x, 18)
+        self.assertEqual(actor.x, SPEED * .1)
 
     def test_malformed_pivot_reports_clip_and_closes_scene(self):
         scene = CharacterScene()
