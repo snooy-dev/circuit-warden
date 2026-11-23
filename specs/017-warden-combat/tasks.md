@@ -14,9 +14,9 @@
 
 - [x] T005 [US2] game/character.py·game/scene.py에 J 공격과 실제 공중 타격 경로를 적용하고 tests/integration/test_basic_enemy.py에 시나리오 추가. FR-002.
 - [x] T006 [US2] docs/game-design.md·docs/systems·docs/architecture.md·docs/progress.md 및 verification.md를 갱신하고 검증된 기본 전투를 커밋. SC-DOC.
-- [ ] T007 [US2] assets/combat에 적중·전하 소비 원본/시트를 만들고 game/effects.py·game/scene.py·game/mode.py에서 연결. FR-004.
+- [x] T007 [US2] assets/combat에 적중·전하 소비 원본/시트를 만들고 game/effects.py·game/scene.py·game/mode.py에서 연결. FR-004.
 
 ## Phase 4: Verification and convergence
 
-- [ ] T008 tests/smoke/charge_smoke.py의 SDL 입력·소비·공중 명중·이탈을 실행하고 게임 크기 합성 검수. SC-001–003.
-- [ ] T009 docs 및 verification.md 동기화, 잔여 요구 확인과 최종 증분 로컬 커밋. SC-DOC.
+- [x] T008 tests/smoke/charge_smoke.py의 SDL 입력·소비·공중 명중·이탈을 실행하고 게임 크기 합성 검수. SC-001–003.
+- [x] T009 docs 및 verification.md 동기화, 잔여 요구 확인과 최종 증분 로컬 커밋. SC-DOC.

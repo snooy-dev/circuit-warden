@@ -270,6 +270,10 @@ class BasicEnemySceneTests(unittest.TestCase):
         scene.update(DURATION + .01)
         self.assertEqual((actor.state, enemy.hp), ('attack', 2))
         self.assertFalse(actor.grounded)
+        hit_spark, = (obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
+        self.assertIs(hit_spark.player.clip, scene.level.combat_clips['hit_spark'])
+        self.assertLessEqual(hit_spark.position[1], enemy.hurt_box[3])
+        self.assertEqual(hit_spark.player.elapsed, 0)
 
         self.app.event_to_output.return_value = scene.transform.point(*escape.position)
         scene.handle_event(click)
@@ -279,3 +283,5 @@ class BasicEnemySceneTests(unittest.TestCase):
         self.assertTrue(entry.spent and escape.spent)
         scene.update(.1)
         self.assertEqual(enemy.hp, 2)
+        scene.update(.10)
+        self.assertIsNone(hit_spark.level)

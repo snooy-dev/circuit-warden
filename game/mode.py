@@ -37,7 +37,8 @@ class GameplayMode(GameMode):
             return
         charge.spend()
         player.teleport_guard_remaining = DURATION
-        self.teleport_link = self.level.spawn(TeleportLink(start, player.center, self.level.link_art))
+        self.teleport_link = self.level.spawn(TeleportLink(
+            start, player.center, self.level.link_art, self.level.combat_clips['charge_spent']))
         for candidate in self.level.charges:
             candidate.active = candidate.in_range(self.activation_origin)
 
@@ -63,6 +64,7 @@ class GameplayMode(GameMode):
 
     def on_end(self):
         self.level.link_art = None
+        self.level.combat_clips.clear()
         self.pending_charge = self.teleport_link = None
 
     def on_event(self, event):

@@ -257,7 +257,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIsNone(scene.level.mode.teleport_link)
 
     def test_buffer_clears_on_focus_invalid_output_or_invalid_destination(self):
-        for reason in ('focus', 'output', 'destination', 'destroyed'):
+        for reason in ('focus', 'output', 'destination', 'blocked', 'destroyed'):
             with self.subTest(reason=reason):
                 scene = self.open_scene()
                 first, target = scene.level.charges[2:4]
@@ -271,6 +271,8 @@ class ChargeSceneTests(unittest.TestCase):
                     self.app.output_valid = False
                 elif reason == 'destination':
                     target.position = (1000, 0)
+                elif reason == 'blocked':
+                    target.position = (scene.level.enemy.x, GROUND_Y + 83 / 2)
                 else:
                     target.destroy()
                 scene.update(.1)

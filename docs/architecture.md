@@ -352,3 +352,5 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 GameplayMode는 실제 이동 성공 후에만 Charge.spent를 설정한다. 소비된 객체는 레벨의 배치로 남으며 거리 활성화와 렌더에서 빠진다. 같은 좌표나 막힌 도착, 취소·실패한 예약은 소비 상태를 바꾸지 않는다. GameplayLevel은 돌진 접촉 시각을 피격 보호와 전하 이동 보호 중 늦은 만료 시점에 비교한다.
 
 전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R은 TeleportLink 객체와 예약을 제거하고 전하의 소비·시각 상태를 초기화한다. 전하 배치와 공유 텍스처를 재사용한다.
+
+전하 소모 스프라이트는 TeleportLink의 도착점 좌표와 경과 시간을 공유한다. 검 적중 스파크는 적중을 검출한 시각의 검과 적 몸통 접점에서 SpriteEffect로 재생한다. 두 시트는 ImageStore에서 한 번 로드하고 최근접 필터로 그린다. 재시작과 사망은 남은 단발 효과를 정리하며 장면 종료 시 텍스처를 해제한다.

@@ -33,7 +33,8 @@ class CombatFixture(unittest.TestCase):
         self.level = GameplayLevel(None)
         with patch('game.scene.load_clips', return_value=clips), patch(
                 'game.scene.load_enemy_clips', return_value=enemy_clips), patch(
-                'game.scene.ChargeArt'), patch('game.scene.LinkArt'):
+                'game.scene.ChargeArt'), patch('game.scene.LinkArt'), patch(
+                'game.scene.load_combat_clips', return_value={'hit_spark': attack}):
             self.level.open()
         self.addCleanup(self.level.close)
         self.actor = self.level.player

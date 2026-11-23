@@ -19,6 +19,7 @@ from game import charge, mode, scene, teleport_link
 
 
 TARGETS = (2, 4, 1, 0, 1, 4, 2, 3, 2, 4, 1, 0, 1, 4)
+POSITIONS = ((-320, -80), (-160, 70), (140, -50), (320, 140), (0, 200))
 FRAME_COUNT = 180
 
 
@@ -77,11 +78,19 @@ def run_frames(art_class, renderer, width, height):
                                             lambda start, end, *args: old_link.TeleportLink(start, end)))
             if hasattr(scene, 'LinkArt'):
                 stack.enter_context(patch.object(scene, 'LinkArt', lambda images: None))
+        else:
+            stack.enter_context(patch.object(mode, 'TeleportLink',
+                                            lambda start, end, art, _: teleport_link.TeleportLink(start, end, art)))
+        # 재사용 전하의 과거 클릭 부하를 CPU와 PNG에 동일하게 재현한다.
+        stack.enter_context(patch.object(scene.Charge, 'spend', lambda _: None, create=True))
         level_scene = scene.CharacterScene()
         try:
             started = perf_counter_ns()
             level_scene.enter(app)
             load_ms = (perf_counter_ns() - started) / 1e6
+            level_scene.level.enemy.destroy()
+            for target, position in zip(level_scene.level.charges, POSITIONS, strict=True):
+                target.position = position
             image_bytes = sum(image.width * image.height * 4
                               for path, image in level_scene.images._images.items() if 'baked' in path.parts)
             clicks = dict(zip(range(18, FRAME_COUNT, 12), TARGETS, strict=True))

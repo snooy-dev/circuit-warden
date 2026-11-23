@@ -1,0 +1,27 @@
+{
+  "charge_spent": {
+    "route": "host_image",
+    "tool": "ImageGen",
+    "model": null,
+    "estimateUsd": null,
+    "prompt": "charge-spent.prompt.txt",
+    "reference": "../../charge/baked/charge-32.png",
+    "referenceCell": [0, 0, 68, 70],
+    "source": "charge-spent.png",
+    "sourceSize": [1254, 1254],
+    "sourceSha256": "8dcccb8eeb59662ca513acbff079a2ba895ed831f87378ee00560a61acf2c628",
+    "runtimeSha256": "1fd000cd98be07582ff7da24189039e0603343a84e61ca9cf2893caec478bcbb"
+  },
+  "hit_spark": {
+    "route": "pixelfx",
+    "revision": "a84159688af3ca37a4be05a0d422b94451b2e24e",
+    "effect": "impacts/hit-spark",
+    "options": "hit-spark.options.json",
+    "credit": "../../../licenses/pixelfx-LICENSE.txt",
+    "source": "hit-spark.png",
+    "sourceSha256": "344daaf11e40314bae0eb930611c83f1c4153a4f154084e784c968a931f86154",
+    "runtimeSha256": "7031f9ff9b254c61f4426db41fd4ca977b13c6e779af21a898eec19e2fe14baf"
+  },
+  "processing": "../../../scripts/bake-effects/combat.py",
+  "preview": "preview.png"
+}

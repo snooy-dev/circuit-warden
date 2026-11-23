@@ -1,0 +1,20 @@
+{
+  "charge_spent": {
+    "file": "charge-spent.png",
+    "frameSize": [64, 64],
+    "columns": 2,
+    "count": 4,
+    "pivot": [32, 32],
+    "durationsMs": [25, 25, 25, 25],
+    "loop": false
+  },
+  "hit_spark": {
+    "file": "hit-spark.png",
+    "frameSize": [136, 80],
+    "columns": 4,
+    "count": 14,
+    "pivot": [44, 50],
+    "durationsMs": [24, 24, 16, 16, 16, 16, 16, 16, 16, 8, 8, 8, 8, 8],
+    "loop": false
+  }
+}

@@ -4,12 +4,13 @@ from game_framework import GameObject, RenderItem, SpritePlayer, draw_sprite
 
 
 class SpriteEffect(GameObject):
-    def __init__(self, clip, position, facing, scale):
+    def __init__(self, clip, position, facing, scale, draw_order=-1):
         super().__init__()
         self.player = SpritePlayer(clip)
         self.position = position
         self.facing = facing
         self.scale = scale
+        self.draw_order = draw_order
 
     def update(self, dt):
         self.player.update(dt)
@@ -23,4 +24,4 @@ class SpriteEffect(GameObject):
                     (width * self.scale, height * self.scale), opacity, flip_x=self.facing < 0)
 
     def render_items(self):
-        return (RenderItem(self._draw, draw_order=-1),)
+        return (RenderItem(self._draw, draw_order=self.draw_order),)

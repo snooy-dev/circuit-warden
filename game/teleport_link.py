@@ -8,7 +8,7 @@ from pathlib import Path
 import pico2d.pico2d as pico
 from engine.rendering.drawing import _sdl
 
-from game_framework import GameObject, RenderItem, SpriteFrame, draw_image
+from game_framework import GameObject, RenderItem, SpriteFrame, SpritePlayer, draw_image, draw_sprite
 
 
 DURATION = 0.1
@@ -38,7 +38,7 @@ class LinkArt:
 
 
 class TeleportLink(GameObject):
-    def __init__(self, start, end, art):
+    def __init__(self, start, end, art, arrival=None):
         super().__init__()
         self._start, self._end = tuple(start), tuple(end)
         sx, sy = self._start
@@ -60,6 +60,7 @@ class TeleportLink(GameObject):
         self._bounds = (cx - rx, cy - ry, cx + rx, cy + ry)
         self._elapsed = 0.0
         self._fresh = True
+        self.arrival = SpritePlayer(arrival) if arrival is not None else None
 
     @property
     def start(self):
@@ -75,6 +76,7 @@ class TeleportLink(GameObject):
 
     def on_destroy(self):
         self._frames = None
+        self.arrival = None
 
     def update(self, dt):
         # 입력 단계에서 생성됐으므로 첫 dt는 생성 이전 프레임의 시간이다.
@@ -84,6 +86,8 @@ class TeleportLink(GameObject):
         self._elapsed += dt
         if self._elapsed + 1e-12 >= DURATION:
             self.destroy()
+        elif self.arrival is not None:
+            self.arrival.update(dt)
 
     def _draw(self, transform, opacity):
         self._fresh = False
@@ -94,4 +98,11 @@ class TeleportLink(GameObject):
                    source=frame.rect, angle=self._angle)
 
     def render_items(self):
-        return (RenderItem(self._draw, draw_order=-1, bounds=self._bounds),)
+        link = RenderItem(self._draw, draw_order=-1, bounds=self._bounds)
+        if self.arrival is None:
+            return (link,)
+        return link, RenderItem(self._draw_arrival, draw_order=1)
+
+    def _draw_arrival(self, transform, opacity):
+        frame = self.arrival.frame
+        draw_sprite(frame, transform, self.end, frame.rect[2:], opacity)

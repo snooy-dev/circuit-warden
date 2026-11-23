@@ -1,25 +1,46 @@
 """플레이 레벨 배치와 장면·창 조작."""
 
+import json
 from math import inf
 from pathlib import Path
 
 import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
+from engine.rendering.drawing import _sdl
 from game_framework import Collider, GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
 from game_framework.collision import TIME_EPSILON, blocking_contact, overlaps
 
-from .character import GROUND_Y, Character, load_clips
+from .character import GROUND_Y, Character, _load_clip, load_clips
 from .effects import SpriteEffect
 from .enemy import Enemy, load_enemy_clips
 from .charge import Charge, ChargeArt
 from .mode import GameplayMode
-from .teleport_link import LinkArt, TeleportLink
+from .teleport_link import DURATION, LinkArt, TeleportLink
 
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
+COMBAT_ASSETS = ASSETS.parent / 'combat'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
+
+
+def load_combat_clips(images):
+    path = COMBAT_ASSETS / 'animations.json'
+    try:
+        animations = json.loads(path.read_text(encoding='utf-8'))
+        clips = {name: _load_clip(images, animations[name], COMBAT_ASSETS)
+                 for name in ('hit_spark', 'charge_spent')}
+        if any(clip.loop for clip in clips.values()):
+            raise ValueError('전투 효과는 단발 클립이어야 합니다.')
+        if abs(sum(clips['charge_spent'].durations) - DURATION) > 1e-9:
+            raise ValueError('전하 소모 효과 길이는 연결 시간과 같아야 합니다.')
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise ValueError(f'전투 효과 설정 오류: {path}: {error}') from error
+    for clip in clips.values():
+        texture = clip.frames[0].image._borrow().texture
+        _sdl(pico.SDL_SetTextureScaleMode(texture, pico.SDL_ScaleModeNearest))
+    return clips
 
 
 class _Ground(GameObject):
@@ -43,6 +64,7 @@ class GameplayLevel(Level):
         self._last_contact_charge = None
         self.charges = []
         self.link_art = None
+        self.combat_clips = {}
 
     def on_open(self):
         self.spawn(_Ground())
@@ -53,6 +75,7 @@ class GameplayLevel(Level):
 
         art = ChargeArt(self.images)
         self.link_art = LinkArt(self.images)
+        self.combat_clips = load_combat_clips(self.images)
         self.charges = [self.spawn(Charge(art, position)) for position in
                         ((-320, -80), (-160, 70), (140, -127), (320, 90), (0, 200))]
 
@@ -85,6 +108,10 @@ class GameplayLevel(Level):
         self._resolve_sword()
         if self.enemy.level is self:
             self._resolve_enemy_contact(dt, player_position, protected_until)
+            if self.player.hp == 0:
+                for obj in self.objects:
+                    if isinstance(obj, SpriteEffect):
+                        obj.destroy()
 
     def _resolve_sword(self):
         attack = self.player.active_attack
@@ -96,10 +123,21 @@ class GameplayLevel(Level):
         for times, x, dx, _ in self.enemy.motion:
             relative_position = x, self.enemy.y - velocity_y * times[0]
             motion = dx, -velocity_y * (times[1] - times[0])
-            if self.enemy.body.overlap_contact(sword, relative_position, position,
-                                               times, motion, window) is not None:
+            contact = self.enemy.body.overlap_contact(sword, relative_position, position,
+                                                      times, motion, window)
+            if contact is not None:
+                enemy_x = x + dx * (contact - times[0]) / (times[1] - times[0])
+                left, bottom, right, top = self.enemy.hurt_box_at(enemy_x)
+                sword_x, sword_y = position
+                sword_left, sword_bottom, sword_right, sword_top = sword.bounds_at(
+                    (sword_x, sword_y + velocity_y * contact))
+                facing = 1 if sword is self.player.swords[1] else -1
+                point = (max(left, sword_left) if facing > 0 else min(right, sword_right),
+                         (max(bottom, sword_bottom) + min(top, sword_top)) / 2)
                 self._last_hit_attack = attack_id
                 self.enemy.take_hit()
+                self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, facing, 1,
+                                        draw_order=1))
                 break
 
     def _resolve_enemy_contact(self, dt, player_position, protected_until):

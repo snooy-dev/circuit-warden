@@ -51,6 +51,7 @@ class AuditSmoke(CharacterScene):
         self.capture('audit-after-resize')
 
         # SDL 입력은 그대로 전달하며 예약 공격 재현에만 고정 dt를 사용한다.
+        self.level.enemy.destroy()
         assert actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
         push_key(pico.SDLK_LSHIFT)
         yield from (0, .1, .1, .1, .0672)
