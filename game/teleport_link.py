@@ -71,6 +71,10 @@ class TeleportLink(GameObject):
         return self._end
 
     @property
+    def elapsed(self):
+        return self._elapsed
+
+    @property
     def frame_index(self):
         return min(_FRAME_COUNT - 1, floor(self._elapsed / DURATION * _FRAME_COUNT + 1e-6))
 

@@ -77,6 +77,8 @@
 
 ## 확정 범위와 가정
 
+- **전하 이동과 피격 피드백:** 사용자 실제 플레이 결과를 근거로 전류 첫 화면과 도착 자세를 같은 기준점에 맞췄다. 기존 상승 물리를 이어가며 실제 시작 속도로 재생 위상을 맞춘다. 접촉·피격 개선은 다음 증분에서 진행한다. [명세](../specs/019-combat-feedback/spec.md) · [계획](../specs/019-combat-feedback/plan.md) · [검증](../specs/019-combat-feedback/verification.md).
+
 - **전하 생성:** 사용자 요청으로 E 기술과 환경 구역의 전하 생성을 적용했다. 환경 배치는 R과 재생성 때 바뀌며 두 생성원 모두 이동에 성공하면 해당 전하가 소멸한다. 입력·구역·대기 시간과 기술 전하 한 개는 시험안이다. [명세](../specs/018-charge-generation/spec.md) · [계획](../specs/018-charge-generation/plan.md) · [검증](../specs/018-charge-generation/verification.md).
 
 - **워든 전투:** 2026-11-23 사용자 요청으로 일회성 전하 이동·돌진 회피·공중 공격 후 이탈을 연결했다. 직접 공격 J와 도착 직후 돌진 보호는 기술값이다. 새 전하 소모·검 적중 효과를 게임에 적용하고 실제 SDL에서 공중 명중·이탈과 돌진 회피를 확인했다. 사용자 조작감 평가는 남아 있다. [명세](../specs/017-warden-combat/spec.md) · [계획](../specs/017-warden-combat/plan.md) · [검증](../specs/017-warden-combat/verification.md).

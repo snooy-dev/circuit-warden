@@ -358,3 +358,5 @@ E는 SDL 커서 위치를 현재 창·출력·월드 좌표로 변환해 Gamepla
 전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R은 TeleportLink 객체와 예약 및 이전 전하를 제거하고 환경 구역에 새 전하를 생성한다. 공유 텍스처는 재사용한다.
 
 전하 소모 스프라이트는 TeleportLink의 도착점 좌표와 경과 시간을 공유한다. 검 적중 스파크는 적중을 검출한 시각의 검과 적 몸통 접점에서 SpriteEffect로 재생한다. 두 시트는 ImageStore에서 한 번 로드하고 최근접 필터로 그린다. 재시작과 사망은 남은 단발 효과를 정리하며 장면 종료 시 텍스처를 해제한다.
+
+Character.visual_center는 연결의 경과 시간을 읽어 첫 프레임을 도착점에 맞춘다. GameplayMode는 다음 이동 시 표시 중심으로 전류를 시작하고 선택·판정에는 기존 물리 중심을 사용한다. 점프 상승 재생은 일반 점프 혹은 순간이동에서 실제로 부여한 상승 속도를 기준으로 한다.

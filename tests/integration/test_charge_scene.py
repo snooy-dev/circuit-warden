@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pico2d.pico2d as pico
 
 from game.charge import ASSETS
-from game.character import GROUND_Y
+from game.character import ARRIVAL_BLEND_SECONDS, BODY_HEIGHT, GROUND_Y
 from game.scene import CAST_COOLDOWN, ENVIRONMENT_RECHARGE, CharacterScene
 from game.teleport_link import TeleportLink
 from tests.integration import test_character_scene as fixtures
@@ -336,6 +336,12 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIs(scene.level.mode.pending_charge, second_target)
         self.assertEqual(sum(isinstance(o, TeleportLink) for o in scene.level.objects), 1)
         scene.update(.05)
+        self.assertNotEqual(actor.center, first.end)
+        self.assertEqual(actor.visual_center, first.end)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(scene.transform, 1)
+        self.assertIs(draw.call_args.args[0], actor.clips['jump_rise_right'].frames[0])
+        self.assertEqual(draw.call_args.args[2], (first.end[0], first.end[1] - BODY_HEIGHT / 2))
         scene.draw()
         self.assertEqual(first.frame_index, 0)
         scene.update(.099)
@@ -346,6 +352,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(second.end, second_target.position)
         self.assertGreater(second.start[1], second_start[1])
         self.assertEqual(actor.center, second_target.position)
+        self.assertEqual(actor.visual_center, second.end)
         self.assertIsNone(actor.buffered_action)
         self.assertIsNone(scene.level.mode.pending_charge)
         scene.update(0)
@@ -354,6 +361,22 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIs(second.level, scene.level)
         scene.exit()
         self.assertIsNone(second._frames)
+
+    def test_ground_arrival_uses_braced_pose_then_returns_to_idle(self):
+        scene = self.open_scene()
+        actor = scene.character
+        target = scene.level.charges[2]
+        target.position = (120, actor.center[1])
+        self.click(target.position)
+        self.assertTrue(actor.grounded)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(scene.transform, 1)
+            frames = actor.clips['jump_land_right'].frames
+            self.assertIs(draw.call_args.args[0], frames[len(frames) // 3])
+            scene.update(0)
+            scene.update(ARRIVAL_BLEND_SECONDS)
+            actor._draw(scene.transform, 1)
+            self.assertIs(draw.call_args.args[0], actor.player.frame)
 
     def test_destination_activation_and_last_valid_buffer(self):
         scene = self.open_scene()

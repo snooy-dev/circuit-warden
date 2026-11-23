@@ -1,0 +1,37 @@
+# Implementation Plan: 전하 이동과 피격 피드백
+
+**Date**: 2026-11-23 | **Spec**: [명세](spec.md) | **Status**: Ready
+
+## Summary
+
+전류와 도착 스프라이트가 화면에서 동일한 기준점과 효과 시간을 공유한다. 캐릭터의 실제 상승 시작 속도로 재생 위상을 맞추고, 기존 물리는 입력 가능 상태와 함께 유지한다. 피해에는 별도 상태를 두고 접촉 방향에 따라 몸통 반동과 구분한다.
+
+## Technical Context
+
+- 기존 SDL/Pico2D, PNG 연결·점프 클립, GameObject와 AABB 스윕을 유지한다.
+- 신규 피격 키 자세는 워든 참조로 제작하고 게임 발 기준점과 팔레트를 맞춘다.
+- 대상 각도·좌표·시간은 자동 검사하고 창에서 실제 입력과 주요 프레임을 확인한다.
+
+## Constitution Check
+
+- [x] 사용자 요청·시험 수치를 구분했다.
+- [x] 전하·충돌·아트 문서에서 유지할 규칙을 확인했다.
+- [x] 표적 검증과 문서·로컬 커밋을 지정했다.
+
+## Decisions & Alternatives
+
+- 출발점은 입력 시 보이는 몸 중심, 도착점은 전하 위치다. 전류의 위치는 고정하고 캐릭터 렌더만 초기에 해당 점에서 시작시킨다.
+- 상단 접촉은 낙하 중 접촉점을 검출해 수직으로 분리한다. 돌진 피해는 같은 접촉 결과를 사용해 피격 상태·반동·제어 복귀를 연결한다.
+- 전체 화면 정지, 신규 입력 및 전투 규칙 추가는 범위 밖이다.
+
+## Project Structure & Interfaces
+
+game/character.py, game/mode.py, game/scene.py, game/teleport_link.py, assets/warden와 해당 테스트를 변경한다. feature/combat-feedback를 사용하고 GPT-6.2 Astra의 기본 추론으로 전류 좌표·기존 에셋을 독립 검토한다.
+
+## Documentation Impact (mandatory)
+
+전하 증분과 피격 증분을 나눠 전하·기본 적·조작·아트·기술 구조 및 progress와 verification을 동기화한다.
+
+## Verification & Risks
+
+각도와 첫 시각 좌표, 속도별 상승 자세, 지상·공중 피해와 보호, 몸통 위쪽·옆쪽 접촉, 기존 공중 검과 도착 직후 이탈을 검사한다. 영향을 받는 실제 SDL 창만 실행한다.

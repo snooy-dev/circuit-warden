@@ -32,21 +32,24 @@ class GameplayMode(GameMode):
         if (charge.level is not self.level or not charge.in_range(origin)
                 or not player.can_teleport(charge.position)):
             return
-        start = player.center
-        if hypot(start[0] - charge.position[0], start[1] - charge.position[1]) <= 1e-6:
+        x, y = player.center
+        if hypot(x - charge.position[0], y - charge.position[1]) <= 1e-6:
             return
+        start = player.visual_center
         if not player.teleport(charge.position):
             return
         self.level.spend_charge(charge)
         player.teleport_guard_remaining = DURATION
         self.teleport_link = self.level.spawn(TeleportLink(
             start, player.center, self.level.link_art, self.level.combat_clips['charge_spent']))
+        player.arrival_link = self.teleport_link
         for candidate in self.level.charges:
             candidate.active = candidate.in_range(self.activation_origin)
 
     def after_update(self):
         if self.level.player.hp == 0:
             self.pending_charge = None
+            self.level.player.arrival_link = None
             if self.teleport_link is not None:
                 self.teleport_link.destroy()
                 self.teleport_link = None
@@ -55,6 +58,7 @@ class GameplayMode(GameMode):
             self.pending_charge = None
         if self.teleport_link is not None and self.teleport_link.level is not self.level:
             finished, self.teleport_link = self.teleport_link, None
+            self.level.player.arrival_link = None
             charge, self.pending_charge = self.pending_charge, None
             if charge is not None:
                 self._teleport(charge, finished.end)

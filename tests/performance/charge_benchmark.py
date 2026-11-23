@@ -74,6 +74,8 @@ def run_frames(art_class, renderer, width, height):
             old_charge, old_link = art_class
             stack.enter_context(patch.object(scene, 'ChargeArt', lambda images: old_charge.ChargeArt()))
             stack.enter_context(patch.object(scene, 'Charge', old_charge.Charge))
+            stack.enter_context(patch.object(old_link.TeleportLink, 'elapsed',
+                                            property(lambda link: link._elapsed), create=True))
             stack.enter_context(patch.object(mode, 'TeleportLink',
                                             lambda start, end, *args: old_link.TeleportLink(start, end)))
             if hasattr(scene, 'LinkArt'):

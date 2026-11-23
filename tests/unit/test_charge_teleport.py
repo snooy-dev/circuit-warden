@@ -49,6 +49,7 @@ class ChargeTeleportTests(unittest.TestCase):
             actor.air_dash_used = True
             actor.teleport((0, 100))
             self.assertIs(actor.player.clip, self.clips['jump_rise_left'])
+            self.assertEqual(actor.player.elapsed, 0)
             for dt in steps:
                 actor.update(dt)
             self.assertAlmostEqual(actor.center[1], 159.76)

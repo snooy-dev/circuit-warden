@@ -26,6 +26,7 @@ JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
 TELEPORT_RISE_SECONDS = .24
+ARRIVAL_BLEND_SECONDS = .045
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
 ATTACK_ACTIVE_START = .10
@@ -120,6 +121,7 @@ class Character(GameObject):
         self.hp = self.MAX_HP
         self.invulnerability_remaining = 0.0
         self.teleport_guard_remaining = 0.0
+        self.arrival_link = None
         self.pushback_direction = 0
         self.pushback_remaining = 0.0
         self.pressed = set()
@@ -130,6 +132,7 @@ class Character(GameObject):
         self.active_attack = None
         self.jump_phase = None
         self.jump_elapsed = 0.0
+        self.rise_start_speed = JUMP_SPEED
         self.dash_remaining = 0.0
         self.dash_phase = None
         self.dash_effect = None
@@ -193,14 +196,11 @@ class Character(GameObject):
         self._move_horizontal(destination)
 
     def begin_enemy_push(self, direction, elapsed):
-        if self.dash_effect is not None and self.state == 'dash':
-            self.dash_effect.destroy()
-            self.dash_effect = None
         if self.hp == 0:
             return
         if self.state == 'dash':
+            self._cancel_dash()
             self._machine.end_dash()
-            self.dash_phase, self.dash_remaining = None, 0.0
             if self.jump_phase is None:
                 self.player.play(self.clips['idle'])
             else:
@@ -210,6 +210,12 @@ class Character(GameObject):
             self.pushback_direction = direction
             self.pushback_remaining = PUSHBACK_SECONDS
             self._advance_pushback(elapsed)
+
+    def _cancel_dash(self):
+        if self.dash_effect is not None:
+            self.dash_effect.destroy()
+            self.dash_effect = None
+        self.dash_phase, self.dash_remaining = None, 0.0
 
     def _advance_pushback(self, dt):
         step = min(dt, self.pushback_remaining)
@@ -227,6 +233,16 @@ class Character(GameObject):
     def center(self):
         return self.x, self.y + BODY_HEIGHT / 2
 
+    @property
+    def visual_center(self):
+        x, y = self.center
+        link = self.arrival_link
+        if link is None or link.level is None or link.elapsed >= ARRIVAL_BLEND_SECONDS:
+            return x, y
+        dx, dy = link.end
+        blend = link.elapsed / ARRIVAL_BLEND_SECONDS
+        return dx + (x - dx) * blend, dy + (y - dy) * blend
+
     def can_teleport(self, position):
         if self.view_bounds is None or not all(isfinite(v) for v in position):
             return False
@@ -243,12 +259,13 @@ class Character(GameObject):
     def teleport(self, position):
         if not self.can_teleport(position):
             return False
+        self.arrival_link = None
         self.active_attack = None
         self._machine.teleport()
         self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
         self.velocity_y = 0.0
         self.buffered_action, self.buffer_remaining = None, 0.0
-        self.dash_phase, self.dash_remaining = None, 0.0
+        self._cancel_dash()
         self.pushback_remaining = 0.0
         self.jump_phase, self.jump_elapsed = None, 0.0
         if self.grounded:
@@ -259,6 +276,7 @@ class Character(GameObject):
             headroom = max(0, self.view_bounds[3] - self.y - BODY_HEIGHT)
             self.velocity_y = min(GRAVITY * TELEPORT_RISE_SECONDS, sqrt(2 * GRAVITY * headroom))
             self.jump_phase = 'rise' if self.velocity_y > 0 else 'fall'
+            self.rise_start_speed = self.velocity_y
             self._show_jump()
         return True
 
@@ -471,6 +489,7 @@ class Character(GameObject):
                     break
                 self.jump_phase, self.jump_elapsed = 'rise', 0.0
                 self.velocity_y = JUMP_SPEED
+                self.rise_start_speed = JUMP_SPEED
             else:
                 step = self._advance_vertical(remaining)
                 airborne_time += step
@@ -484,7 +503,7 @@ class Character(GameObject):
         clip = self.clips[f'jump_{self.jump_phase}_{direction}']
         elapsed = self.jump_elapsed
         if self.jump_phase == 'rise':
-            elapsed = (JUMP_SPEED - self.velocity_y) / GRAVITY / JUMP_APEX_SECONDS * sum(clip.durations)
+            elapsed = (1 - self.velocity_y / self.rise_start_speed) * sum(clip.durations)
         elif self.jump_phase == 'fall':
             elapsed = max(0.0, -self.velocity_y / GRAVITY)
         self.player.play(clip, restart=True)
@@ -583,13 +602,23 @@ class Character(GameObject):
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
-        width, height = frame.rect[2:]
         flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
+        link = self.arrival_link
+        if (self.state == 'idle' and link is not None and link.level is not None
+                and link.elapsed < ARRIVAL_BLEND_SECONDS):
+            direction = 'right' if self.facing > 0 else 'left'
+            frames = self.clips[f'jump_land_{direction}'].frames
+            frame, flip_x = frames[len(frames) // 3], False
+        elif self.state == 'jump' and self.jump_phase == 'rise' and link is not None and link.elapsed == 0:
+            direction = 'right' if self.facing > 0 else 'left'
+            frame = self.clips[f'jump_rise_{direction}'].frames[0]
+        width, height = frame.rect[2:]
         if self.hp == 0 or (self.invulnerability_remaining > 0
                             and int(self.invulnerability_remaining / .0625) % 2 == 0):
             opacity *= .35
         # 공중 공격 시트는 몸 중심, 지상·점프 시트는 발 위치를 기준으로 그린다.
-        position = self.center if self.state == 'attack' and not self.grounded else (self.x, self.y)
+        x, y = self.visual_center
+        position = (x, y) if self.state == 'attack' and not self.grounded else (x, y - BODY_HEIGHT / 2)
         draw_sprite(frame, transform, position,
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
