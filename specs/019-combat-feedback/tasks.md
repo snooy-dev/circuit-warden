@@ -11,6 +11,6 @@
 
 ## Phase 3: User Story 2 - 접촉과 피격
 
-- [ ] T004 [US2] game/scene.py·game/character.py에서 상단·옆면과 돌진 피해를 구분하고 피격 상태와 복귀를 연결한다.
-- [ ] T005 [US2] assets/warden 피격 자세를 제작·검수하고 표적 및 실제 SDL 화면을 검사한다.
-- [ ] T006 문서·산출물·코드의 대응 및 검증 기록을 확인하고 로컬 커밋한다.
+- [x] T004 [US2] game/scene.py·game/character.py에서 상단·옆면과 돌진 피해를 구분하고 피격 상태와 복귀를 연결한다.
+- [x] T005 [US2] assets/warden 피격 자세를 제작·검수하고 표적 및 실제 SDL 화면을 검사한다.
+- [x] T006 문서·산출물·코드의 대응 및 검증 기록을 확인하고 로컬 커밋한다.

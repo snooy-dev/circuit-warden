@@ -223,6 +223,7 @@ class ChargeSceneTests(unittest.TestCase):
 
     def test_spent_charge_stays_excluded_after_landing_and_r_restores_it(self):
         scene = self.open_scene()
+        scene.level.enemy.destroy()
         actor = scene.character
         first, second = scene.level.charges[2:4]
         for charge in scene.level.charges:

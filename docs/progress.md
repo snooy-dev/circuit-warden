@@ -77,7 +77,7 @@
 
 ## 확정 범위와 가정
 
-- **전하 이동과 피격 피드백:** 사용자 실제 플레이 결과를 근거로 전류 첫 화면과 도착 자세를 같은 기준점에 맞췄다. 기존 상승 물리를 이어가며 실제 시작 속도로 재생 위상을 맞춘다. 접촉·피격 개선은 다음 증분에서 진행한다. [명세](../specs/019-combat-feedback/spec.md) · [계획](../specs/019-combat-feedback/plan.md) · [검증](../specs/019-combat-feedback/verification.md).
+- **전하 이동과 피격 피드백:** 사용자 실제 플레이 결과를 근거로 전류 첫 화면과 도착 자세를 같은 기준점에 맞췄다. 공중 상단 접촉에는 짧은 수직 반동을, 실제 돌진 피해에는 지상·공중 전용 반동과 피격 자세를 적용했다. 시간과 속도는 시험값이다. [명세](../specs/019-combat-feedback/spec.md) · [계획](../specs/019-combat-feedback/plan.md) · [검증](../specs/019-combat-feedback/verification.md).
 
 - **전하 생성:** 사용자 요청으로 E 기술과 환경 구역의 전하 생성을 적용했다. 환경 배치는 R과 재생성 때 바뀌며 두 생성원 모두 이동에 성공하면 해당 전하가 소멸한다. 입력·구역·대기 시간과 기술 전하 한 개는 시험안이다. [명세](../specs/018-charge-generation/spec.md) · [계획](../specs/018-charge-generation/plan.md) · [검증](../specs/018-charge-generation/verification.md).
 

@@ -93,6 +93,7 @@ class JumpAnimationTests(unittest.TestCase):
 
     def test_dash_returns_to_current_fall_and_focus_does_not_cancel_started_jump(self):
         scene = self.scene()
+        scene.level.enemy.destroy()
         actor = scene.character
         self.key(scene, pico.SDLK_SPACE)
         scene.update(.47)

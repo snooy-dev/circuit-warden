@@ -209,7 +209,7 @@ class GameplayLevel(Level):
         # shortcut: 한 갱신의 워든 궤적은 선형 근사, 프레임 내 세부 궤적이 필요해지면 행동별 경로를 전달한다.
         vx, vy = (self.player.x - x0) / dt, (self.player.y - y0) / dt
         player_box = self.player.body.bounds_at(player_position)
-        first_impact = None
+        first_impact = damage_impact = None
         for times, x, dx, charge_id in self.enemy.motion:
             start, end = times
             span = end - start
@@ -221,30 +221,44 @@ class GameplayLevel(Level):
             if fraction is None:
                 continue
             contact = start + span * fraction
-            if first_impact is None:
-                player_x = x0 + vx * contact
-                enemy_x = x + dx * fraction
+            player_x, player_y = x0 + vx * contact, y0 + vy * contact
+            enemy_x = x + dx * fraction
+            left, _, right, top = self.enemy.hurt_box_at(enemy_x)
+            if (vy < 0 and abs(player_y - top) <= TIME_EPSILON
+                    and player_box[0] + vx * contact < right and left < player_box[2] + vx * contact):
+                side = 0
+            else:
                 side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else self.enemy.facing
-                first_impact = contact, player_x, side
+            impact = contact, player_x, player_y, side
+            if first_impact is None:
+                first_impact = impact
             if charge_id is None or charge_id == self._last_contact_charge:
                 continue
             self._last_contact_charge = charge_id
             if contact + TIME_EPSILON >= protected_until:
-                self.player.take_hit()
-                protected_until = contact + self.player.invulnerability_remaining
-                self.player.invulnerability_remaining = max(0, protected_until - dt)
-                if self.player.hp == 0:
-                    break
+                damage_impact = impact
+                break
         if first_impact is not None:
-            contact, player_x, side = first_impact
-            self._push_player(player_x, side, dt - contact)
+            contact, player_x, player_y, side = damage_impact or first_impact
+            self._push_player(player_x, player_y, side, dt - contact, damage_impact is not None)
 
-    def _push_player(self, contact_x, side, elapsed):
+    def _push_player(self, contact_x, contact_y, side, elapsed, damaged):
         player, enemy = self.player, self.enemy
+        if not side:
+            player.y = enemy.hurt_box[3]
+            if damaged:
+                player.take_hit(0, elapsed)
+            else:
+                player.bounce_from_enemy(elapsed)
+            return
         # 접촉 뒤 밀고 들어간 이동만 되돌린다. 이미 적에서 멀어진 이동은 유지한다.
         if side * (player.x - contact_x) < 0:
             player.x = contact_x
-        player.begin_enemy_push(side, elapsed)
+        if damaged:
+            player.y = contact_y
+            player.take_hit(side, elapsed)
+        else:
+            player.begin_enemy_push(side, elapsed)
 
         _, bottom, _, top = player.hurt_box
         _, enemy_bottom, _, enemy_top = enemy.hurt_box

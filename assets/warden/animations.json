@@ -1,4 +1,13 @@
 {
+  "hurt": {
+    "file": "hurt.png",
+    "frameSize": [128, 104],
+    "columns": 1,
+    "count": 1,
+    "pivot": [64, 92],
+    "durationsMs": [120],
+    "loop": false
+  },
   "idle": {
     "file": "idle.png",
     "frameSize": [

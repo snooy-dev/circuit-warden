@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import GROUND_Y
+from game.character import GROUND_Y, HURT_SECONDS
 from game import enemy as enemy_rules
 from game.effects import SpriteEffect
 from game.scene import GameplayLevel
@@ -19,7 +19,11 @@ class CombatFixture(unittest.TestCase):
             frame = SpriteFrame(image, (0, 0, 128, 104), (.5, 92 / 104))
         idle = SpriteClip((frame,), (.5,))
         attack = SpriteClip((frame,) * 7, (.05,) * 7, loop=False)
-        clips = dict(idle=idle, run_left=idle, run_right=idle, attack=attack)
+        clips = dict(idle=idle, run_left=idle, run_right=idle, attack=attack,
+                     air_attack=attack, hurt=SpriteClip((frame,), (HURT_SECONDS,), loop=False))
+        for direction in ('left', 'right'):
+            for phase in ('start', 'rise', 'fall', 'land'):
+                clips[f'jump_{phase}_{direction}'] = idle
         clips.update(prepare_idle_right=SpriteClip((frame,), (.1,), loop=False),
                      dash_right=SpriteClip((frame,), (.2,), loop=False),
                      dash_fx_right=attack)
@@ -75,6 +79,19 @@ class BasicEnemyTests(CombatFixture):
         start_x = self.actor.x
         self.level.update(.03)
         self.assertGreater(self.actor.x, start_x)
+
+    def test_falling_onto_enemy_rebounds_up_without_side_push_or_damage(self):
+        top = self.enemy.hurt_box[3]
+        self.actor.x, self.actor.y = self.enemy.x, top + 4
+        self.actor.velocity_y = -170
+        self.actor._machine.jump()
+        self.actor.jump_phase = 'fall'
+        self.level.update(.05)
+        self.assertEqual(self.actor.x, self.enemy.x)
+        self.assertGreater(self.actor.y, top)
+        self.assertGreater(self.actor.velocity_y, 0)
+        self.assertEqual((self.actor.state, self.actor.jump_phase, self.actor.hp), ('jump', 'rise', 5))
+        self.assertEqual(self.actor.pushback_remaining, 0)
 
     def test_enemy_body_blocks_teleport_but_can_be_passed_above(self):
         self.assertFalse(self.actor.teleport((self.enemy.x, self.actor.center[1])))
@@ -166,6 +183,31 @@ class EnemyChargeTests(CombatFixture):
         self.level.update(.16)
         self.assertEqual((self.enemy.state, self.actor.hp), ('recover', 4))
 
+    def test_ground_damage_interrupts_attack_and_has_a_distinct_recovery(self):
+        self.start_charge()
+        self.click()
+        self.level.update(.04)
+        self.assertEqual((self.actor.state, self.actor.hp), ('hurt', 4))
+        self.assertIs(self.actor.player.clip, self.actor.clips['hurt'])
+        self.assertLess(self.actor.x, 0)
+        self.assertIsNone(self.actor.active_attack)
+        self.actor.update(HURT_SECONDS)
+        self.assertEqual((self.actor.state, self.actor.hurt_remaining), ('idle', 0))
+
+    def test_air_damage_replaces_fall_with_recoil_before_resuming_air_control(self):
+        self.start_charge()
+        self.actor.y = self.enemy.hurt_box[3] - 9
+        self.actor.velocity_y = -130
+        self.actor._machine.jump()
+        self.actor.jump_phase = 'fall'
+        self.level.update(.03)
+        self.assertEqual((self.actor.state, self.actor.hp), ('hurt', 4))
+        self.assertGreater(self.actor.velocity_y, 0)
+        self.assertLess(self.actor.x, 0)
+        self.actor.update(HURT_SECONDS)
+        self.assertEqual(self.actor.state, 'jump')
+        self.assertFalse(self.actor.grounded)
+
     def test_dash_movement_does_not_prevent_charge_damage(self):
         self.start_charge()
         self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_LSHIFT))
@@ -223,9 +265,10 @@ class EnemyChargeTests(CombatFixture):
             self.actor.invulnerability_remaining = 0
             self.actor.take_hit()
         self.assertEqual(self.actor.hp, 0)
+        stopped = self.actor.x
         self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
         self.level.update(3)
-        self.assertEqual((self.enemy.state, self.actor.x, self.actor.pressed), ('idle', 0, set()))
+        self.assertEqual((self.enemy.state, self.actor.x, self.actor.pressed), ('idle', stopped, set()))
 
         reset = SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r)
         self.level.handle_event(reset)

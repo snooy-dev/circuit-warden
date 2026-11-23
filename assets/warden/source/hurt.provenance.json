@@ -1,0 +1,15 @@
+{
+  "art_source": "host_image",
+  "tool": "ImageGen",
+  "prompt": "hurt.prompt.txt",
+  "reference": "../idle.png",
+  "referenceCell": [0, 0, 128, 104],
+  "source": "hurt-source.png",
+  "sourceSize": [1391, 1131],
+  "sourceSha256": "e23ccc671b7d9e1021f5dba0253d7f8e367b6ecfa27227ae69264c17ae141631",
+  "runtime": "../hurt.png",
+  "runtimeSha256": "7001fcc90d8e326a064113eeece81f11663f52512b7d2bf730de24e84637daea",
+  "runtimeBox": [30, 12, 104, 92],
+  "pivot": [64, 92],
+  "processing": "Source alpha threshold 16 for crop. 80px height with Lanczos, binary threshold 128, nearest of 16 RGB colors from the idle reference. Foot support midpoint from the final five occupied rows. Assemble Frames, 120ms; runtime uses the landing or rising pose for the last 40ms."
+}
