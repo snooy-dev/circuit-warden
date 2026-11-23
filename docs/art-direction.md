@@ -245,7 +245,7 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 2026-11-11 사용자 요청에 따라 idle v7·Run v4의 PNG 시트 3장을 `assets/warden/idle.png`, `run_left.png`, `run_right.png`로 복사했다. 이름의 버전을 제거했으며 원본 PNG 바이트와 프레임별 시간·기준점을 보존했다. [게임 자산 출처](../assets/warden/README.md)에 원본 경로·SHA-256을, animations.json에 런타임 규격을 기록한다. .gitattributes는 PNG를 일반 Git 바이너리로 관리한다. 걷기는 포함하지 않는다.
 
-2026-11-18 지상 공격 통합에서 `assets/warden/attack.png`는 FX v11 뒤쪽 효과→HK v6·팔 보정 v3 몸체→FX v11 앞쪽 효과 순서로 17개 표시 프레임을 합성한다. 발 기준점은 (96,120)이다. 공중 `assets/warden/air_attack.png`는 승인 v9·눈색/전류 v4의 18개 표시 프레임과 몸 중심 기준점 (96,112)을 사용한다. 둘 다 192×192이고 왼쪽을 볼 때 수평 반전한다. MIT 고지는 `licenses/pixelfx-LICENSE.txt`에서 공통 관리한다. 재생 시간·동작은 [기본 게임플레이](systems/basic-gameplay.md), 통합 상태는 [진행 상태](progress.md)를 따른다.
+훈련장의 `assets/warden/attack.png`는 크기를 조정한 FX v11 뒤쪽 효과→HK v6·팔 보정 v3 몸체→앞쪽 효과 순서로 합성한다. 효과는 100ms부터 같은 번호의 몸체 프레임에 맞춰 사용한다. 17프레임·256×224 셀·발 기준점 (128,136)이다. `assets/warden/air_attack.png`는 v9·눈색/전류 v4 몸체에 크기를 조정한 공중 pixelfx v2를 뒤에 합성한다. 18프레임·192×192 셀·몸 중심 기준점 (96,112)이며 117ms에 효과가 시작된다. 두 시트는 원본 몸체 위치와 색을 보존하고, 최대 가시 효과 높이가 83px이며 왼쪽 공격은 수평 반전한다. 크기와 시작 시점은 시험 적용값이다. MIT 고지는 `licenses/pixelfx-LICENSE.txt`에 둔다. [자산 규격과 출처](../assets/warden/README.md) · [기본 게임플레이](systems/basic-gameplay.md).
 
 이전 지상 v6 아웃라인 있음과 별도 전기 베기 v4의 규격·검증은 [011 당시 검증](../specs/011-basic-gameplay/verification.md)에 보존했다.
 

@@ -5,10 +5,11 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import BODY_HEIGHT, GROUND_Y, HURT_SECONDS
+from game.character import ATTACK_REACH, BODY_HEIGHT, GROUND_Y, HURT_SECONDS
 from game import enemy as enemy_rules
 from game.effects import SpriteEffect
 from game.scene import GameplayLevel
+from game.training_map import LOW_WALL
 from game_framework import Collider, GameObject, ImageRef, SpriteClip, SpriteFrame
 from game_framework.collision import overlaps
 
@@ -116,7 +117,7 @@ class BasicEnemyTests(CombatFixture):
         self.assertFalse(self.actor.teleport((self.enemy.x, self.actor.center[1])))
         self.actor.y = self.enemy.y + enemy_rules.BODY_HEIGHT + 1
         self.actor.pressed.add(pico.SDLK_d)
-        with patch.object(self.actor, '_advance_vertical', return_value=0):
+        with patch.object(self.actor, '_advance_vertical', side_effect=lambda dt: dt):
             self.level.update(.5)
         self.assertGreater(self.actor.x, self.enemy.x)
         self.assertEqual(self.actor.pushback_remaining, 0)
@@ -134,21 +135,40 @@ class BasicEnemyTests(CombatFixture):
         self.assertIsNone(self.enemy.level)
         self.assertNotIn(self.enemy, self.level.objects)
 
-    def test_ground_attack_advances_into_wall_and_uses_reached_position(self):
+    def test_moving_ground_attack_stops_at_wall_and_cannot_hit_past_reach(self):
         wall = GameObject()
         wall.colliders = (Collider((30, GROUND_Y, 31, 0), 'terrain', blocks={'player'}),)
         self.level.spawn(wall)
-        self.enemy.x = 220
+        self.enemy.x = 6 + ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + 1
         self.click()
+        self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
         self.level.update(.12)
         self.assertAlmostEqual(self.actor.x, 6)
         self.assertEqual(self.actor.hurt_box[2], 30)
-        self.assertEqual(self.actor.active_attack[2], self.actor.collision_position)
+        self.assertIsNotNone(self.actor.active_attack)
+        self.assertEqual(self.enemy.hp, 3)
+
+    def test_sword_hits_target_reached_only_during_active_horizontal_motion(self):
+        for facing, key in ((1, pico.SDLK_d), (-1, pico.SDLK_a)):
+            for gap, expected_hp in ((25, 2), (38, 3)):
+                with self.subTest(facing=facing, gap=gap):
+                    self.level.reset_combat()
+                    actor, enemy = self.level.player, self.level.enemy
+                    enemy.x = facing * (ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + gap)
+                    enemy.state, enemy.state_remaining = 'recover', 10
+                    actor.facing = facing
+                    self.click()
+                    self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
+                    self.level.update(.13)
+                    self.assertEqual(enemy.hp, 3)
+                    self.level.update(.10)
+                    self.assertGreater(facing * actor.x, gap)
+                    self.assertEqual(enemy.hp, expected_hp)
 
     def test_direction_and_strict_contact_edges(self):
         for facing, x, y, expected in ((-1, -70, GROUND_Y, 2),
                                         (-1, 70, GROUND_Y, 3),
-                                        (1, 139, GROUND_Y, 3),
+                                        (1, ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH, GROUND_Y, 3),
                                         (1, 70, GROUND_Y + 70, 3)):
             with self.subTest(facing=facing, x=x, y=y):
                 self.actor.x = 0
@@ -213,6 +233,17 @@ class EnemyChargeTests(CombatFixture):
         self.actor.invulnerability_remaining = 0
         self.level.update(.16)
         self.assertEqual((self.enemy.state, self.actor.hp), ('recover', 4))
+
+    def test_enemy_charge_stops_at_training_low_wall(self):
+        left, _, right, _ = LOW_WALL
+        for facing, edge in ((1, left), (-1, right)):
+            with self.subTest(facing=facing):
+                self.enemy.x = edge - facing * (enemy_rules.HURT_HALF_WIDTH + 20)
+                self.enemy.state, self.enemy.state_remaining = 'charge', enemy_rules.CHARGE_SECONDS
+                self.enemy.facing = facing
+                self.level.update(enemy_rules.CHARGE_SECONDS)
+                self.assertAlmostEqual(self.enemy.x + facing * enemy_rules.HURT_HALF_WIDTH, edge)
+                self.assertEqual(self.enemy.state, 'recover')
 
     def test_ground_damage_interrupts_attack_and_has_a_distinct_recovery(self):
         self.start_charge()
@@ -418,7 +449,7 @@ class EnemyChargeTests(CombatFixture):
 
     def test_enemy_entering_at_sword_window_end_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = 156.5, -1
+        self.enemy.x, self.enemy.facing = ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + 17.5, -1
         self.level.update(.1)
         self.assertEqual(self.enemy.hp, 3)
 

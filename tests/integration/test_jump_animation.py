@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import GROUND_Y, JUMP_HEIGHT
+from game.character import GROUND_Y, JUMP_HEIGHT, SPEED
 from game.scene import CharacterScene
 from tests.integration import test_character_scene
 
@@ -46,14 +46,14 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertIs(actor.player.clip, actor.clips['air_attack'])
         self.assertEqual(actor.player.elapsed, 0)
         scene.update(.2)
-        self.assertEqual(actor.x, 0)
+        self.assertAlmostEqual(actor.x, SPEED * .2)
         self.assertIs(actor.player.clip, actor.clips['air_attack'])
         self.assertAlmostEqual(actor.player.elapsed, .2)
         self.key(scene, pico.SDLK_d, pico.SDL_KEYUP)
         self.key(scene, pico.SDLK_a)
         scene.update(.2)
         self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
-        self.assertIs(actor.player.clip, actor.clips['jump_fall_right'])
+        self.assertIs(actor.player.clip, actor.clips['jump_fall_left'])
         scene.update(.01)
         self.assertIs(actor.player.clip, actor.clips['jump_fall_left'])
         with patch('game.character.draw_sprite') as draw:

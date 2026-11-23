@@ -95,7 +95,7 @@ class CharacterSmoke(CharacterScene):
         push_click()
         yield
 
-        assert actor.state == 'attack' and abs(actor.x - (stopped_x - 12)) < 1e-6 and actor.facing == -1
+        assert actor.state == 'attack' and actor.x == stopped_x and actor.attack_facing == -1
         push_key(pico.SDLK_d)
         yield
 
@@ -105,11 +105,12 @@ class CharacterSmoke(CharacterScene):
         push_click()
         yield
 
-        assert actor.state == 'attack' and abs(actor.x - (attack_x + 12)) < 1e-6 and actor.facing == 1
+        assert actor.state == 'attack' and actor.x > attack_x and actor.attack_facing == 1
+        attack_x = actor.x
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         yield
 
-        assert actor.state == 'idle' and abs(actor.x - (attack_x + 12)) < 1e-6 and actor.facing == 1
+        assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1
         stopped_x = actor.x
         self.capture('attack-release-idle')
         push_key(pico.SDLK_a)
@@ -262,8 +263,8 @@ class CharacterSmoke(CharacterScene):
             elapsed = actor.player.elapsed
             phase = 'first' if elapsed == 0 else 'active' if .1 <= elapsed < .2 else None
             if phase is not None:
-                kind = 'attack' if actor.grounded else 'air-attack'
-                side = 'right' if actor.facing > 0 else 'left'
+                kind = 'air-attack' if actor.airborne_swing else 'attack'
+                side = 'right' if actor.attack_facing > 0 else 'left'
                 name = f'{kind}-{phase}-{side}'
                 if name not in self.attack_captures:
                     self.capture(name)

@@ -2,7 +2,7 @@
 
 import json
 from ctypes import byref, c_int
-from math import hypot, inf
+from math import expm1, hypot
 from pathlib import Path
 from random import choice
 
@@ -10,15 +10,16 @@ import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
 from engine.rendering.drawing import _sdl
-from game_framework import Collider, GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
-from game_framework.collision import TIME_EPSILON, blocking_contact, overlaps
+from game_framework import ImageStore, Level, LevelScene
+from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_contact, overlaps
 
-from .character import GROUND_Y, PUSHBACK_SECONDS, Character, _load_clip, load_clips
+from .character import PUSHBACK_SECONDS, Character, _load_clip, load_clips
 from .effects import SpriteEffect
 from .enemy import CHARGE_SPEED, Enemy, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
 from .teleport_link import DURATION, LinkArt, TeleportLink
+from .training_map import WORLD_BOUNDS, TrainingMap
 
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
@@ -28,6 +29,7 @@ ALTERNATE_SIZE = (1024, 720)
 CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
 TOP_EXIT_MARGIN = 24
+CAMERA_FOLLOW_SECONDS = .22
 ENVIRONMENT_SITES = (
     ((-328, -84), (-320, -64), (-312, -92)),
     ((-172, 64), (-160, 70), (-148, 82)),
@@ -55,17 +57,6 @@ def load_combat_clips(images):
     return clips
 
 
-class _Ground(GameObject):
-    colliders = (Collider((-inf, -inf, inf, GROUND_Y), 'terrain', blocks={'player'}),)
-
-    def render_items(self):
-        return (RenderItem(self._draw, draw_order=-2),)
-
-    def _draw(self, transform, opacity):
-        left, bottom, right, _ = transform.bounds
-        draw_rect(transform, (left, bottom, right, GROUND_Y), (74, 79, 93), opacity)
-
-
 class GameplayLevel(Level):
     def __init__(self, images):
         super().__init__(GameplayMode())
@@ -82,8 +73,9 @@ class GameplayLevel(Level):
         self.combat_clips = {}
 
     def on_open(self):
-        self.spawn(_Ground())
+        self.spawn(TrainingMap())
         self.player = self.spawn(Character(load_clips(self.images)))
+        self.player.world_bounds = WORLD_BOUNDS
         self.enemy = self.spawn(Enemy(load_enemy_clips(self.images)))
         self._last_hit_attack = 0
         self._last_contact_charge = None
@@ -109,13 +101,13 @@ class GameplayLevel(Level):
             if charge.spent_elapsed + TIME_EPSILON < ENVIRONMENT_RECHARGE:
                 continue
             positions = [point for point in site if point != charge.position
-                         and self._valid_charge_position(point)]
+                         and self.player.can_place_center(point) and self._clear_of_charges(point)]
             if positions:
                 self.charges[index] = self.spawn(Charge(self.charge_art, choice(positions)))
                 charge.destroy()
 
-    def _valid_charge_position(self, position):
-        return self.player.can_teleport(position) and all(
+    def _clear_of_charges(self, position):
+        return all(
             hypot(position[0] - charge.position[0], position[1] - charge.position[1]) >= CLICK_RADIUS
             for charge in self.charges if charge.level is self and not charge.spent)
 
@@ -124,7 +116,8 @@ class GameplayLevel(Level):
             return
         x, y = self.mode.activation_origin
         distance = hypot(position[0] - x, position[1] - y)
-        if CLICK_RADIUS <= distance <= ACTIVATION_DISTANCE and self._valid_charge_position(position):
+        if (CLICK_RADIUS <= distance <= ACTIVATION_DISTANCE
+                and self.player.can_teleport(position) and self._clear_of_charges(position)):
             self.skill_charge = self.spawn(Charge(self.charge_art, position))
             self.charges.append(self.skill_charge)
             self._cast_cooldown = CAST_COOLDOWN
@@ -152,6 +145,7 @@ class GameplayLevel(Level):
         self.player.destroy()
         self.enemy.destroy()
         self.player = self.spawn(Character(clips))
+        self.player.world_bounds = WORLD_BOUNDS
         self.player.view_bounds = view_bounds
         self.enemy = self.spawn(Enemy(enemy_clips))
         self._reset_environment()
@@ -177,31 +171,40 @@ class GameplayLevel(Level):
                         obj.destroy()
 
     def _resolve_sword(self):
-        attack = self.player.active_attack
-        if attack is None:
-            return
-        attack_id, sword, position, window, velocity_y = attack
-        if attack_id == self._last_hit_attack:
-            return
-        for times, x, dx, _ in self.enemy.motion:
-            relative_position = x, self.enemy.y - velocity_y * times[0]
-            motion = dx, -velocity_y * (times[1] - times[0])
-            contact = self.enemy.body.overlap_contact(sword, relative_position, position,
-                                                      times, motion, window)
-            if contact is not None:
-                enemy_x = x + dx * (contact - times[0]) / (times[1] - times[0])
+        for sweep in self.player.attack_sweeps:
+            if sweep.attack_id == self._last_hit_attack:
+                continue
+            vx, vy = sweep.velocity
+            sword_x, sword_y = sweep.origin
+            sword_start, sword_end = sweep.times
+            for times, x, dx, _ in self.enemy.motion:
+                enemy_start, enemy_end = times
+                start, end = max(sword_start, enemy_start), min(sword_end, enemy_end)
+                if start > end:
+                    continue
+                enemy_vx = dx / (enemy_end - enemy_start)
+                span = end - start
+                x += enemy_vx * (start - enemy_start)
+                relative_position = x - vx * (start - sword_start), self.enemy.y - vy * (start - sword_start)
+                relative_motion = (enemy_vx - vx) * span, -vy * span
+                contact = self.enemy.body.overlap_contact(
+                    sweep.sword, relative_position, sweep.origin, (start, end), relative_motion,
+                    sweep.active_window)
+                if contact is None:
+                    continue
+                enemy_x = x + enemy_vx * (contact - start)
                 left, bottom, right, top = self.enemy.hurt_box_at(enemy_x)
-                sword_x, sword_y = position
-                sword_left, sword_bottom, sword_right, sword_top = sword.bounds_at(
-                    (sword_x, sword_y + velocity_y * contact))
-                facing = 1 if sword is self.player.swords[1] else -1
+                step = contact - sword_start
+                sword_left, sword_bottom, sword_right, sword_top = sweep.sword.bounds_at(
+                    (sword_x + vx * step, sword_y + vy * step))
+                facing = 1 if sweep.sword is self.player.swords[1] else -1
                 point = (max(left, sword_left) if facing > 0 else min(right, sword_right),
                          (max(bottom, sword_bottom) + min(top, sword_top)) / 2)
-                self._last_hit_attack = attack_id
+                self._last_hit_attack = sweep.attack_id
                 self.enemy.take_hit()
                 self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, facing, 1,
                                         draw_order=1))
-                break
+                return
 
     def _resolve_enemy_contact(self, dt, player_position, protected_until):
         if dt == 0:
@@ -330,7 +333,8 @@ class CharacterScene(LevelScene):
         pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):
-        self.character.view_bounds = self.transform.bounds
+        previous_player = self.character
+        previous_player.view_bounds = self.transform.bounds
         if event.type == pico.SDL_KEYDOWN:
             if event.key == pico.SDLK_F6:
                 size = ALTERNATE_SIZE if self.engine.window_size == DEFAULT_SIZE else DEFAULT_SIZE
@@ -338,11 +342,36 @@ class CharacterScene(LevelScene):
             elif event.key == pico.SDLK_F11:
                 self.engine.set_display(fullscreen=not self.engine.fullscreen)
         super().handle_event(event)
+        if self.character is not previous_player:
+            self.camera_center = (0, 0)
+        self._follow_camera(0, self.character.x)
+        self.character.view_bounds = self.transform.bounds
 
     def update(self, dt):
         self.character.view_bounds = self.transform.bounds
+        previous_x = self.character.x
         super().update(dt)
         self.level.mode.after_update()
+        self._follow_camera(dt, previous_x)
+        self.character.view_bounds = self.transform.bounds
+
+    def _follow_camera(self, dt, previous_x):
+        bounds = self.transform.bounds
+        if bounds is None:
+            return
+        left, _, right, _ = WORLD_BOUNDS
+        half_width = min((bounds[2] - bounds[0]) / 2, (right - left) / 2)
+        low, high = left + half_width, right - half_width
+        camera_x = min(max(self.camera_center[0], low), high)
+        player = self.character
+        target = min(max(player.x, low), high)
+        if target != camera_x and abs(player.x - previous_x) <= CONTACT_EPSILON:
+            direction = player.move_direction or (1 if target > camera_x else -1)
+            contact = self.level.blocking_contact(player, player.body, (direction, 0))
+            if contact is not None and contact <= CONTACT_EPSILON:
+                target = camera_x
+        camera_x += (target - camera_x) * -expm1(-dt / CAMERA_FOLLOW_SECONDS)
+        self.camera_center = (camera_x, 0)
 
 
 def main():

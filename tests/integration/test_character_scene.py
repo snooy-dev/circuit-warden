@@ -8,6 +8,8 @@ import pico2d.pico2d as pico
 
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.mode import GameplayMode
+from game.character import GROUND_Y, SPEED
+from game.training_map import LOW_WALL, PLATFORMS, WALLS, WORLD_BOUNDS
 from game_framework import GameObject
 
 
@@ -62,14 +64,18 @@ class CharacterSceneTests(unittest.TestCase):
                     attack = actor.clips['attack']
                     self.assertFalse(attack.loop)
                     self.assertEqual(attack.durations, (.02,) * 17)
-                    self.assertEqual(attack.frames[-1].rect, (768, 384, 192, 192))
-                    self.assertEqual(attack.frames[0].pivot, (96 / 192, 120 / 192))
                     self.assertNotIn('sword_trail', actor.clips)
                     air_attack = actor.clips['air_attack']
                     self.assertFalse(air_attack.loop)
                     self.assertEqual(air_attack.durations, (.017, .016, .017) * 6)
-                    self.assertEqual(air_attack.frames[-1].rect, (960, 384, 192, 192))
-                    self.assertEqual(air_attack.frames[0].pivot, (96 / 192, 112 / 192))
+                    for clip in (attack, air_attack):
+                        for frame in clip.frames:
+                            x, y, width, height = frame.rect
+                            self.assertGreaterEqual(min(x, y), 0)
+                            self.assertLessEqual(x + width, frame.image.width)
+                            self.assertLessEqual(y + height, frame.image.height)
+                            self.assertEqual(frame.pivot[0], .5)
+                            self.assertGreater(frame.pivot[1], .5)
                     refs = tuple(clip.frames[0].image for clip in actor.clips.values())
                 finally:
                     scene.exit()
@@ -110,10 +116,87 @@ class CharacterSceneTests(unittest.TestCase):
         self.app.viewport = (0, 0, 180, 600)
         scene.character.x = 200
         scene.update(.1)
-        self.assertEqual(scene.character.x, 25)
+        self.assertEqual(scene.character.x, 200)
+        self.assertGreater(scene.camera_center[0], 0)
+        self.assertLess(scene.camera_center[0], scene.character.x)
         self.app.viewport = (0, 0, 120, 600)
         scene.update(.1)
-        self.assertEqual(scene.character.x, 0)
+        self.assertEqual(scene.character.x, 200)
+
+    def test_camera_lags_motion_freezes_at_walls_and_resets_with_player(self):
+        for side, symbol, wall in ((-1, pico.SDLK_a, WALLS[0]), (1, pico.SDLK_d, WALLS[1])):
+            with self.subTest(side=side):
+                scene = CharacterScene()
+                scene.enter(self.app)
+                try:
+                    actor = scene.character
+                    scene.level.enemy.destroy()
+                    scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=symbol))
+                    scene.update(.1)
+                    self.assertGreater(scene.camera_center[0] * side, 0)
+                    self.assertLess(scene.camera_center[0] * side, actor.x * side)
+                    self.assertEqual(scene.event_to_world(SimpleNamespace(x=400, y=300)),
+                                     scene.camera_center)
+
+                    wall_edge = wall[0] if side > 0 else wall[2]
+                    actor.x = wall_edge - side * 40
+                    scene.update(.15)
+                    body_edge = actor.hurt_box[2] if side > 0 else actor.hurt_box[0]
+                    self.assertAlmostEqual(body_edge, wall_edge)
+                    stopped_center = scene.camera_center
+                    for _ in range(8):
+                        scene.update(.05)
+                    self.assertEqual(scene.camera_center, stopped_center)
+                    self.assertGreaterEqual(scene.transform.bounds[0], WORLD_BOUNDS[0])
+                    self.assertLessEqual(scene.transform.bounds[2], WORLD_BOUNDS[2])
+
+                    scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r))
+                    self.assertIsNot(scene.character, actor)
+                    self.assertEqual((scene.character.x, scene.character.y), (0, GROUND_Y))
+                    self.assertEqual(scene.camera_center, (0, 0))
+                finally:
+                    scene.exit()
+
+    def test_jump_onto_training_platform_and_walk_off(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        scene.level.enemy.destroy()
+        actor = scene.character
+        left, _, _, top = next(platform for platform in PLATFORMS if platform[0] > 0)
+        actor.x = left - 50
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_SPACE))
+        for _ in range(33):
+            scene.update(.01)
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
+        for _ in range(46):
+            scene.update(.01)
+        self.assertGreater(actor.x, left)
+        self.assertAlmostEqual(actor.y, top)
+        self.assertTrue(actor.grounded)
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYUP, key=pico.SDLK_d))
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_a))
+        for _ in range(85):
+            scene.update(.01)
+        self.assertLess(actor.x, left)
+        self.assertAlmostEqual(actor.y, GROUND_Y)
+        self.assertTrue(actor.grounded)
+
+    def test_camera_freezes_at_low_wall_inside_world_bounds(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        scene.level.enemy.destroy()
+        actor = scene.character
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
+        for _ in range(52):
+            scene.update(.1)
+        self.assertAlmostEqual(actor.hurt_box[2], LOW_WALL[0])
+        stopped_center = scene.camera_center
+        self.assertLess(stopped_center[0], actor.x)
+        self.assertLess(scene.transform.bounds[2], WORLD_BOUNDS[2])
+        scene.update(.5)
+        self.assertEqual(scene.camera_center, stopped_center)
 
     def test_gameplay_mode_delivers_once_and_keeps_player_reference(self):
         scene = CharacterScene()
@@ -211,7 +294,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual(actor.player.elapsed, .05)
         self.assertIs(actor.player.frame, actor.clips['attack'].frames[2])
 
-    def test_ground_attack_draws_composite_after_advance_and_clears_it_on_exit(self):
+    def test_ground_attack_draws_moving_composite_with_fixed_orientation_and_clears_on_exit(self):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
@@ -222,11 +305,12 @@ class CharacterSceneTests(unittest.TestCase):
         for facing, key in ((-1, pico.SDLK_d), (1, pico.SDLK_a)):
             with self.subTest(facing=facing):
                 actor.x, actor.facing = 0, facing
-                position = 12 * facing, actor.y
                 scene.handle_event(click)
                 scene.update(.1)
                 scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
                 scene.update(.12)
+                self.assertAlmostEqual(actor.x, -facing * SPEED * .12)
+                position = actor.x, actor.y
                 self.assertEqual(scene.level.objects, objects)
                 with patch('game.character.draw_sprite') as draw:
                     actor.render_items()[0].drawable(scene.transform, 1)

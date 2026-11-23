@@ -148,11 +148,12 @@ class ChargeSceneTests(unittest.TestCase):
         actor, level = scene.character, scene.level
         charge = level.charges[2]
         self.click(charge.position)
-        actor.teleport((-200, GROUND_Y + 83 / 2))
+        self.assertTrue(actor.teleport((-300, GROUND_Y + BODY_HEIGHT / 2)))
         level.enemy.x, level.enemy.state, level.enemy.state_remaining = 146, 'recover', 10
         scene.update(ENVIRONMENT_RECHARGE)
         self.assertIs(level.charges[2], charge)
         self.assertTrue(charge.spent)
+        self.assertLess(actor.view_bounds[2], charge.position[0])
         level.enemy.destroy()
         scene.update(.01)
         self.assertIsNot(level.charges[2], charge)

@@ -49,7 +49,7 @@ def load_enemy_clips(images):
 class Enemy(GameObject):
     MAX_HP = 3
     body = Collider((-HURT_HALF_WIDTH, 0, HURT_HALF_WIDTH, BODY_HEIGHT), 'enemy',
-                    overlaps={'player', 'sword'})
+                    blocks={'terrain'}, overlaps={'player', 'sword'})
     colliders = (body,)
 
     def __init__(self, clips):
@@ -94,32 +94,44 @@ class Enemy(GameObject):
         target = self.level.player
         elapsed = 0.0
         while dt > 0:
-            start_x = self.x
             charge_id = None
+            distance = 0.0
             if self.state == 'approach':
                 gap = target.x - self.x
                 if gap:
                     self.facing = 1 if gap > 0 else -1
                 time_to_windup = max(0.0, (abs(gap) - WINDUP_RANGE) / APPROACH_SPEED)
                 step = min(dt, time_to_windup)
-                self.x += self.facing * APPROACH_SPEED * step
+                distance = self.facing * APPROACH_SPEED * step
                 if step == time_to_windup:
                     self.state, self.state_remaining = 'windup', WINDUP_SECONDS
                     self._charge_id += 1
             else:
                 step = min(dt, self.state_remaining)
                 if self.state == 'charge':
-                    self.x += self.facing * CHARGE_SPEED * step
+                    distance = self.facing * CHARGE_SPEED * step
                     charge_id = self._charge_id
                 self.state_remaining -= step
                 if self.state_remaining == 0:
                     self.state, self.state_remaining = NEXT_PHASE[self.state]
             if step > 0:
                 self.animation.update(step)
-                self.motion.append(((elapsed, elapsed + step), start_x, self.x - start_x, charge_id))
+                self._record_motion(elapsed, step, distance, charge_id)
             self.animation.play(self.clips[self.state])
             elapsed += step
             dt -= step
+
+    def _record_motion(self, elapsed, step, distance, charge_id):
+        contact = self.level.blocking_contact(self, self.body, (distance, 0)) if distance else None
+        fraction = 1 if contact is None else contact
+        moved = distance * fraction
+        end = elapsed + step
+        travel_end = elapsed + step * fraction
+        if travel_end > elapsed:
+            self.motion.append(((elapsed, travel_end), self.x, moved, charge_id))
+        self.x += moved
+        if travel_end < end:
+            self.motion.append(((travel_end, end), self.x, 0.0, charge_id))
 
     def _draw(self, transform, opacity):
         if self.hit_remaining > 0 and int(self.hit_remaining / .045) % 2 == 0:

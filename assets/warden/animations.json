@@ -139,14 +139,14 @@
   "attack": {
     "file": "attack.png",
     "frameSize": [
-      192,
-      192
+      256,
+      224
     ],
     "columns": 6,
     "count": 17,
     "pivot": [
-      96,
-      120
+      128,
+      136
     ],
     "durationsMs": [
       20,

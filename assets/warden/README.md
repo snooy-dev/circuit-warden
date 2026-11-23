@@ -7,8 +7,8 @@
 | idle.png | art/warden/provisional-approved/idle-side-wind-v2/idle_right/sheet.png | 6cd0b5133576e6f73cb492a0f36e114c160371c33115bda0272d877f7735d506 |
 | run_left.png | art/warden/provisional-approved/run-v4/run_left/sheet.png | 618ef3377b2682ee6d15ab4052a208f041562adcaed406a0361977ca7460940e |
 | run_right.png | art/warden/provisional-approved/run-v4/run_right/sheet.png | c29d16562b7df8a8ec927b031ef1589bdf6252467afb648f1537af60977fc3aa |
-| attack.png | art/warden/provisional-approved/basic-attack-hk-v6-arm-v3/frames와 art/warden/provisional-approved/basic-attack-fx-v11의 back·front 프레임 합성 | 466e80a5008b8c0531b3fd05dd5170a56274dcf77fcd665da8ade95c38774b54 |
-| air_attack.png | art/warden/provisional-approved/air-rebound-v9-current-v4/sheet.png | 24f1b366b9318b8dc687c8d6e03de22514004e0cdedce58016593294793b96ea |
+| attack.png | `art/warden/provisional-approved/basic-attack-hk-v6-arm-v3/frames` 몸체와 `art/warden/basic-attack-fx-v11/final`의 back·front 효과를 합성 | a9331f8838124145514255912cc670d367facf74f24c193da0f46c76bcf193de |
+| air_attack.png | `art/warden/provisional-approved/air-rebound-v9-current-v4/frames` 몸체와 `art/warden/air-rebound-fx-v2/frames` 효과를 합성 | f69202c0f74a4663ad356a426df9d7e92250ea6761aea0b269d8588124599a19 |
 | prepare_idle_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_left/sheet.png | efb9df7c2c976ace57b8a0d2448dac120bf4616e414edaa58bac91e12ae1ce1e |
 | prepare_idle_right.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_right/sheet.png | 3ba433a4573f4cf45a085579ab10bf5a355c72e528446974023bc0fff342c3d0 |
 | prepare_run_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_run_left/sheet.png | f4db13401e9771a363a726689ad5ab573b1e519955e07a8eba3e757c5023f4f5 |
@@ -32,9 +32,9 @@
 
 프레임은 좌상단부터 행 우선이다. animations.json의 기준점은 셀 좌상단 픽셀, 시간은 밀리초다. 제작용 이벤트·previewSpeed는 게임 규칙으로 가져오지 않았다.
 
-지상 공격은 192×192·6열·17프레임·340ms, 기준점 (96,120)이다. 승인본 순서대로 뒤 효과 위에 캐릭터와 앞 효과를 합성했다. 베기는 40ms에 나타나 320ms에 사라진다. 이전 전기 베기 v4 시트는 `sword_trail.png`에 보관한다.
+지상 공격은 256×224·6열·17프레임·340ms, 피벗 (128,136)이다. 원본 몸체는 크기를 유지하고 back·front 효과를 최근접 보간으로 가로 230/192배, 세로 332/192배 확대해 최대 높이 83px로 합성했다. 효과 확대 기준은 x=99이며 y는 5~7프레임 90, 8~15프레임 145다. 효과는 100ms부터 표시되고 320ms에 사라진다. 효과의 원본 프레임 5~15를 동일 번호의 몸체 프레임과 합성했다.
 
-공중 공격은 승인 신체 시트를 그대로 복사했다. 192×192·6열·18프레임·300ms, 기준점 (96,112)이다. 두 공격 모두 단발이며 왼쪽은 런타임에서 수평 반전한다.
+공중 공격은 192×192·6열·18프레임·300ms, 피벗 (96,112)이다. 원본 몸체를 유지하고 분리 효과를 칼끝 (156,155)을 기준으로 최근접 보간해 최대 높이 83px로 축소하여 몸체 뒤에 합성했다. 효과는 117ms부터 표시되고 250ms에 사라진다.
 
 idle은 오른쪽 시트 48프레임·2초·기준점 (64,92)을 사용하고 왼쪽은 런타임에서 수평 반전한다. 원본 좌측 48프레임이 우측의 정확한 픽셀 반전임을 확인했다.
 
