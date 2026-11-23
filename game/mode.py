@@ -12,10 +12,12 @@ from .teleport_link import DURATION, TeleportLink
 class GameplayMode(GameMode):
     def on_start(self):
         self.reset_held = False
+        self.cast_held = False
 
     def __init__(self):
         super().__init__()
         self.event_to_world = None
+        self.cursor_to_world = None
         self.teleport_link = None
         self.pending_charge = None
 
@@ -35,7 +37,7 @@ class GameplayMode(GameMode):
             return
         if not player.teleport(charge.position):
             return
-        charge.spend()
+        self.level.spend_charge(charge)
         player.teleport_guard_remaining = DURATION
         self.teleport_link = self.level.spawn(TeleportLink(
             start, player.center, self.level.link_art, self.level.combat_clips['charge_spent']))
@@ -63,6 +65,7 @@ class GameplayMode(GameMode):
             candidate.active = candidate.in_range(self.activation_origin)
 
     def on_end(self):
+        self.level.charge_art = None
         self.level.link_art = None
         self.level.combat_clips.clear()
         self.pending_charge = self.teleport_link = None
@@ -73,17 +76,24 @@ class GameplayMode(GameMode):
                 self.level.reset_combat()
                 self.reset_held = True
             return
-        if (event.type == pico.SDL_KEYUP and event.key == pico.SDLK_r
-                or event.type == pico.SDL_WINDOWEVENT and event.event in (
-                    pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED)):
-            self.reset_held = False
+        if event.type == pico.SDL_KEYUP:
+            if event.key == pico.SDLK_r:
+                self.reset_held = False
+            elif event.key == pico.SDLK_e:
+                self.cast_held = False
+        if event.type == pico.SDL_WINDOWEVENT and event.event in (
+                pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
+            self.reset_held = self.cast_held = False
+            self.pending_charge = None
         player = self.level.player
         if player.level is self.level and player.hp > 0:
             if player.view_bounds is None:
                 self.pending_charge = None
-            if event.type == pico.SDL_WINDOWEVENT and event.event in (
-                    pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
-                self.pending_charge = None
+            if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_e:
+                if not self.cast_held and self.cursor_to_world is not None:
+                    self.cast_held = True
+                    self.level.cast_charge(self.cursor_to_world())
+                return
             if (event.type == pico.SDL_MOUSEBUTTONDOWN
                     and event.button in (pico.SDL_BUTTON_LEFT, pico.SDL_BUTTON_RIGHT)
                     and player.view_bounds is not None):

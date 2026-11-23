@@ -9,7 +9,7 @@ import pico2d.pico2d as pico
 
 from game.charge import ASSETS
 from game.character import GROUND_Y
-from game.scene import CharacterScene
+from game.scene import CAST_COOLDOWN, CharacterScene
 from game.teleport_link import TeleportLink
 from tests.integration import test_character_scene as fixtures
 
@@ -27,6 +27,98 @@ class ChargeSceneTests(unittest.TestCase):
         x, y = self.scene.transform.point(*position)
         self.scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
                                                 button=button, x=x, y=y))
+
+    def key(self, key, kind=pico.SDL_KEYDOWN):
+        self.scene.handle_event(SimpleNamespace(type=kind, key=key))
+
+    def test_skill_cast_preserves_air_action_and_is_spent_once(self):
+        scene = self.open_scene()
+        actor, level = scene.character, scene.level
+        level.enemy.destroy()
+        self.key(pico.SDLK_SPACE)
+        scene.update(.18)
+        self.assertFalse(actor.grounded)
+        before = actor.center, actor.state
+        aim = (-100, -25)
+        level.mode.cursor_to_world = lambda: aim
+
+        self.key(pico.SDLK_e)
+        charge = level.skill_charge
+        self.assertEqual((charge.position, charge.active), (aim, True))
+        self.assertIs(charge.art, level.charges[0].art)
+        self.assertEqual((actor.center, actor.state), before)
+
+        self.click(charge.position)
+        self.assertEqual(actor.center, aim)
+        self.assertTrue(charge.spent)
+        self.assertIsNone(charge.level)
+        self.assertNotIn(charge, level.charges)
+        aim = (75, -10)
+        scene.update(CAST_COOLDOWN - .001)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        self.assertIsNone(level.skill_charge)
+        scene.update(.001)
+        self.key(pico.SDLK_e)
+        self.assertIsNone(level.skill_charge, '키 반복은 재사용 대기가 끝나도 새 입력이 아니다.')
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        second = level.skill_charge
+        self.assertEqual(second.position, aim)
+
+        aim = (65, 75)
+        scene.update(CAST_COOLDOWN)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        self.assertIs(level.skill_charge, second)
+        self.key(pico.SDLK_r)
+        self.assertIsNone(second.level)
+        self.assertIsNone(level.skill_charge)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        self.assertEqual(level.skill_charge.position, aim)
+
+    def test_skill_rejects_unusable_aim_without_charging_cooldown(self):
+        scene = self.open_scene()
+        actor, level = scene.character, scene.level
+        for aim in (None, actor.center, (0, 205), (50, -220),
+                    level.charges[2].position, (level.enemy.x, actor.center[1])):
+            with self.subTest(aim=aim):
+                level.mode.cursor_to_world = lambda: aim
+                self.key(pico.SDLK_e)
+                self.key(pico.SDLK_e, pico.SDL_KEYUP)
+                self.assertIsNone(level.skill_charge)
+
+        low, high = (-100, -20), (100, -20)
+        level.mode.cursor_to_world = lambda: low
+        self.app.output_valid = False
+        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.assertIsNone(level.skill_charge)
+        self.app.output_valid = True
+        level.mode.cursor_to_world = lambda: high
+        self.key(pico.SDLK_e)
+        self.assertEqual(level.skill_charge.position, high)
+
+    def test_skill_cursor_uses_current_window_to_output_mapping(self):
+        scene = self.open_scene()
+        self.app.viewport = (20, 10, 1280, 720)
+        aim = (-100, -25)
+        x, y = scene.transform.point(*aim)
+        self.app.window_to_output.side_effect = lambda wx, wy: (wx * 2, wy * 2)
+
+        def mouse_state(wx, wy):
+            wx._obj.value, wy._obj.value = round(x / 2), round(y / 2)
+
+        with (patch.object(pico, 'SDL_GetWindowFlags', return_value=0) as flags,
+              patch.object(pico, 'SDL_GetMouseState', side_effect=mouse_state)):
+            self.key(pico.SDLK_e)
+            self.assertIsNone(scene.level.skill_charge)
+            self.key(pico.SDLK_e, pico.SDL_KEYUP)
+            flags.return_value = pico.SDL_WINDOW_MOUSE_FOCUS
+            self.key(pico.SDLK_e)
+            for actual, expected in zip(scene.level.skill_charge.position, aim):
+                self.assertAlmostEqual(actual, expected, delta=1)
 
     def test_right_click_nearest_ignores_cursor_and_filters_invalid_targets(self):
         scene = self.open_scene()

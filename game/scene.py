@@ -1,7 +1,8 @@
 """플레이 레벨 배치와 장면·창 조작."""
 
 import json
-from math import inf
+from ctypes import byref, c_int
+from math import hypot, inf
 from pathlib import Path
 
 import pico2d.pico2d as pico
@@ -14,7 +15,7 @@ from game_framework.collision import TIME_EPSILON, blocking_contact, overlaps
 from .character import GROUND_Y, Character, _load_clip, load_clips
 from .effects import SpriteEffect
 from .enemy import Enemy, load_enemy_clips
-from .charge import Charge, ChargeArt
+from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
 from .teleport_link import DURATION, LinkArt, TeleportLink
 
@@ -23,6 +24,7 @@ ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
 COMBAT_ASSETS = ASSETS.parent / 'combat'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
+CAST_COOLDOWN = .8
 
 
 def load_combat_clips(images):
@@ -63,6 +65,9 @@ class GameplayLevel(Level):
         self._last_hit_attack = 0
         self._last_contact_charge = None
         self.charges = []
+        self.charge_art = None
+        self.skill_charge = None
+        self._cast_cooldown = 0.0
         self.link_art = None
         self.combat_clips = {}
 
@@ -73,11 +78,37 @@ class GameplayLevel(Level):
         self._last_hit_attack = 0
         self._last_contact_charge = None
 
-        art = ChargeArt(self.images)
+        self.charge_art = ChargeArt(self.images)
         self.link_art = LinkArt(self.images)
         self.combat_clips = load_combat_clips(self.images)
-        self.charges = [self.spawn(Charge(art, position)) for position in
+        self.charges = [self.spawn(Charge(self.charge_art, position)) for position in
                         ((-320, -80), (-160, 70), (140, -127), (320, 90), (0, 200))]
+
+    def _valid_charge_position(self, position):
+        return self.player.can_teleport(position) and all(
+            hypot(position[0] - charge.position[0], position[1] - charge.position[1]) >= CLICK_RADIUS
+            for charge in self.charges if charge.level is self and not charge.spent)
+
+    def cast_charge(self, position):
+        if position is None or self.skill_charge is not None or self._cast_cooldown > TIME_EPSILON:
+            return
+        x, y = self.mode.activation_origin
+        distance = hypot(position[0] - x, position[1] - y)
+        if CLICK_RADIUS <= distance <= ACTIVATION_DISTANCE and self._valid_charge_position(position):
+            self.skill_charge = self.spawn(Charge(self.charge_art, position))
+            self.charges.append(self.skill_charge)
+            self._cast_cooldown = CAST_COOLDOWN
+
+    def spend_charge(self, charge):
+        charge.spend()
+        if charge is self.skill_charge:
+            self._remove_skill_charge()
+
+    def _remove_skill_charge(self):
+        if self.skill_charge is not None:
+            charge, self.skill_charge = self.skill_charge, None
+            self.charges.remove(charge)
+            charge.destroy()
 
     def reset_combat(self):
         clips, enemy_clips = self.player.clips, self.enemy.clips
@@ -86,6 +117,8 @@ class GameplayLevel(Level):
             if isinstance(obj, (SpriteEffect, TeleportLink)):
                 obj.destroy()
         self.mode.pending_charge = self.mode.teleport_link = None
+        self._remove_skill_charge()
+        self._cast_cooldown = 0.0
         self.player.destroy()
         self.enemy.destroy()
         self.player = self.spawn(Character(clips))
@@ -100,6 +133,7 @@ class GameplayLevel(Level):
     def update(self, dt):
         if self.player is None or self.player.level is not self or self.player.hp == 0:
             return
+        self._cast_cooldown = max(0.0, self._cast_cooldown - dt)
         player_position = self.player.collision_position
         protected_until = max(self.player.invulnerability_remaining, self.player.teleport_guard_remaining)
         super().update(dt)
@@ -203,6 +237,15 @@ class CharacterScene(LevelScene):
         images = ImageStore(ASSETS)
         super().__init__(GameplayLevel(images), view_height=HEIGHT, images=images)
         self.level.mode.event_to_world = self.event_to_world
+        self.level.mode.cursor_to_world = self.cursor_to_world
+
+    def cursor_to_world(self):
+        if not pico.SDL_GetWindowFlags(pico.window) & pico.SDL_WINDOW_MOUSE_FOCUS:
+            return None
+        x, y = c_int(), c_int()
+        pico.SDL_GetMouseState(byref(x), byref(y))
+        point = self.engine.window_to_output(x.value, y.value)
+        return None if point is None else self.transform.inverse(*point)
 
     @property
     def character(self):
@@ -211,7 +254,7 @@ class CharacterScene(LevelScene):
     def enter(self, engine):
         super().enter(engine)
         self.character.view_bounds = self.transform.bounds
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | J: attack | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):
         self.character.view_bounds = self.transform.bounds
@@ -230,5 +273,5 @@ class CharacterScene(LevelScene):
 
 
 def main():
-    print('게임플레이: A/D 이동 / Space 점프 / J 공격 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
+    print('게임플레이: A/D 이동 / Space 점프 / J 공격 / E 커서 위치에 전하 생성 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     Engine(*DEFAULT_SIZE).run(CharacterScene())
