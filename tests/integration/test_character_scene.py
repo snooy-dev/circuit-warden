@@ -102,6 +102,7 @@ class CharacterSceneTests(unittest.TestCase):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
+        scene.level.enemy.destroy()
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_F6))
         self.app.set_display.assert_called_with(fullscreen=False, window_size=(1024, 720))
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_F11))
@@ -191,6 +192,7 @@ class CharacterSceneTests(unittest.TestCase):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
+        scene.level.enemy.destroy()
         actor = scene.character
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_LSHIFT))
         for dt in (.1, .1, .1, .0672):

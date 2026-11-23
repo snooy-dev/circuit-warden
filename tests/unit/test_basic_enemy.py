@@ -7,8 +7,9 @@ import pico2d.pico2d as pico
 
 from game.character import GROUND_Y
 from game import enemy as enemy_rules
+from game.effects import SpriteEffect
 from game.scene import GameplayLevel
-from game_framework import ImageRef, SpriteClip, SpriteFrame
+from game_framework import Collider, GameObject, ImageRef, SpriteClip, SpriteFrame
 
 
 class CombatFixture(unittest.TestCase):
@@ -49,6 +50,39 @@ class BasicEnemyTests(CombatFixture):
     def setUp(self):
         super().setUp()
         self.enemy.state, self.enemy.state_remaining = 'recover', 10
+
+    def test_body_contact_rebounds_from_either_side_without_damage_or_crossing(self):
+        for side, key in ((-1, pico.SDLK_d), (1, pico.SDLK_a)):
+            with self.subTest(side=side):
+                self.level.reset_combat()
+                actor, enemy = self.level.player, self.level.enemy
+                enemy.x, enemy.state, enemy.state_remaining = -side * 70, 'recover', 10
+                actor.pressed.add(key)
+                self.level.update(1)
+                self.assertGreater(side * (actor.x - enemy.x), 66)
+                self.assertEqual(actor.hp, 5)
+
+    def test_rebound_persists_with_forward_input_then_gives_control_back(self):
+        self.actor.pressed.add(pico.SDLK_d)
+        self.level.update(.03)
+        self.assertGreater(self.actor.pushback_remaining, 0)
+        start_x = self.actor.x
+        self.level.update(.06)
+        self.assertLess(self.actor.x, start_x)
+        self.level.update(.06)
+        self.assertEqual(self.actor.pushback_remaining, 0)
+        start_x = self.actor.x
+        self.level.update(.03)
+        self.assertGreater(self.actor.x, start_x)
+
+    def test_enemy_body_blocks_teleport_but_can_be_passed_above(self):
+        self.assertFalse(self.actor.teleport((self.enemy.x, self.actor.center[1])))
+        self.actor.y = self.enemy.y + enemy_rules.BODY_HEIGHT + 1
+        self.actor.pressed.add(pico.SDLK_d)
+        with patch.object(self.actor, '_advance_vertical', return_value=0):
+            self.level.update(.5)
+        self.assertGreater(self.actor.x, self.enemy.x)
+        self.assertEqual(self.actor.pushback_remaining, 0)
 
     def test_active_window_once_per_swing_and_removal(self):
         for hp in (2, 1, 0):
@@ -135,8 +169,21 @@ class EnemyChargeTests(CombatFixture):
         self.start_charge()
         self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_LSHIFT))
         self.level.update(.14)
-        self.assertEqual((self.actor.state, self.actor.dash_phase), ('dash', 'dash'))
+        self.assertEqual((self.actor.state, self.actor.dash_phase), ('idle', None))
         self.assertEqual(self.actor.hp, 4)
+        self.assertFalse(any(isinstance(obj, SpriteEffect) for obj in self.level.objects))
+
+    def test_protected_player_at_wall_clips_the_charging_enemy(self):
+        wall = GameObject()
+        wall.colliders = (Collider((-25, GROUND_Y, -24, 0), 'terrain', blocks={'player'}),)
+        self.level.spawn(wall)
+        self.start_charge()
+        self.actor.invulnerability_remaining = .75
+        for _ in range(3):
+            self.level.update(.09)
+            self.assertAlmostEqual(self.actor.x, 0)
+            self.assertAlmostEqual(self.enemy.hurt_box[0], self.actor.hurt_box[2])
+            self.assertEqual(self.actor.hp, 5)
 
     def test_long_update_reaches_charge_but_height_can_avoid_it(self):
         for airborne, expected_hp in ((True, 5), (False, 4)):

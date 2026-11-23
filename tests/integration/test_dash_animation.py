@@ -133,6 +133,7 @@ class DashAnimationTests(unittest.TestCase):
 
     def test_near_wall_uses_idle_recovery_and_scene_exit_releases_live_effect(self):
         scene = self.enter_scene()
+        scene.level.enemy.destroy()
         actor = scene.character
         self.key(scene, pico.SDLK_d)
         scene.update(3)

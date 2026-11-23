@@ -79,6 +79,7 @@ class JumpAnimationTests(unittest.TestCase):
         outcomes = []
         for steps in ((1.1,), (.1,) * 11):
             scene = self.scene()
+            scene.level.enemy.destroy()
             self.key(scene, pico.SDLK_d)
             self.key(scene, pico.SDLK_SPACE)
             for dt in steps:

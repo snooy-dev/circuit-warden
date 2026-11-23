@@ -7,7 +7,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
 from game_framework import Collider, GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
-from game_framework.collision import TIME_EPSILON
+from game_framework.collision import TIME_EPSILON, blocking_contact, overlaps
 
 from .character import GROUND_Y, Character, load_clips
 from .effects import SpriteEffect
@@ -83,7 +83,7 @@ class GameplayLevel(Level):
             return
         self._resolve_sword()
         if self.enemy.level is self:
-            self._resolve_charge(dt, player_position, protected_until)
+            self._resolve_enemy_contact(dt, player_position, protected_until)
 
     def _resolve_sword(self):
         attack = self.player.active_attack
@@ -101,21 +101,31 @@ class GameplayLevel(Level):
                 self.enemy.take_hit()
                 break
 
-    def _resolve_charge(self, dt, player_position, protected_until):
+    def _resolve_enemy_contact(self, dt, player_position, protected_until):
         if dt == 0:
             return
         x0, y0 = player_position
         # shortcut: 한 갱신의 워든 궤적은 선형 근사, 프레임 내 세부 궤적이 필요해지면 행동별 경로를 전달한다.
         vx, vy = (self.player.x - x0) / dt, (self.player.y - y0) / dt
+        player_box = self.player.body.bounds_at(player_position)
+        first_impact = None
         for times, x, dx, charge_id in self.enemy.motion:
-            if charge_id is None or charge_id == self._last_contact_charge:
-                continue
             start, end = times
             span = end - start
             relative_position = x - vx * start, self.enemy.y - vy * start
-            contact = self.enemy.body.overlap_contact(self.player.body, relative_position,
-                                                      player_position, times, (dx - vx * span, -vy * span))
-            if contact is None:
+            enemy_box = self.enemy.body.bounds_at(relative_position)
+            relative_motion = dx - vx * span, -vy * span
+            fraction = 0 if overlaps(enemy_box, player_box) else blocking_contact(
+                enemy_box, player_box, relative_motion)
+            if fraction is None:
+                continue
+            contact = start + span * fraction
+            if first_impact is None:
+                player_x = x0 + vx * contact
+                enemy_x = x + dx * fraction
+                side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else self.enemy.facing
+                first_impact = contact, player_x, side
+            if charge_id is None or charge_id == self._last_contact_charge:
                 continue
             self._last_contact_charge = charge_id
             if contact + TIME_EPSILON >= protected_until:
@@ -124,6 +134,29 @@ class GameplayLevel(Level):
                 self.player.invulnerability_remaining = max(0, protected_until - dt)
                 if self.player.hp == 0:
                     break
+        if first_impact is not None:
+            contact, player_x, side = first_impact
+            self._push_player(player_x, side, dt - contact)
+
+    def _push_player(self, contact_x, side, elapsed):
+        player, enemy = self.player, self.enemy
+        # 접촉 뒤 밀고 들어간 이동만 되돌린다. 이미 적에서 멀어진 이동은 유지한다.
+        if side * (player.x - contact_x) < 0:
+            player.x = contact_x
+        player.begin_enemy_push(side, elapsed)
+
+        _, bottom, _, top = player.hurt_box
+        _, enemy_bottom, _, enemy_top = enemy.hurt_box
+        if bottom >= enemy_top or enemy_bottom >= top:
+            return
+        player_left, _, player_right, _ = player.body.bounds
+        enemy_left, _, enemy_right, _ = enemy.body.bounds
+        gap = enemy_right - player_left if side > 0 else player_right - enemy_left
+        target = enemy.x + side * gap
+        if side * (player.x - target) < 0:
+            player.move_enemy_push(target)
+            if side * (player.x - target) < 0:
+                enemy.x = player.x - side * gap
 
 
 class CharacterScene(LevelScene):

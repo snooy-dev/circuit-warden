@@ -16,6 +16,8 @@ from .effects import SpriteEffect
 
 GROUND_Y = -180
 SPEED = 180
+PUSHBACK_SPEED = 440
+PUSHBACK_SECONDS = .12
 DISPLAY_SCALE = 1
 # idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
 BODY_HEIGHT = 83 * DISPLAY_SCALE
@@ -117,6 +119,8 @@ class Character(GameObject):
         self.facing = 1
         self.hp = self.MAX_HP
         self.invulnerability_remaining = 0.0
+        self.pushback_direction = 0
+        self.pushback_remaining = 0.0
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
@@ -127,6 +131,7 @@ class Character(GameObject):
         self.jump_elapsed = 0.0
         self.dash_remaining = 0.0
         self.dash_phase = None
+        self.dash_effect = None
         self.air_dash_used = False
         self._machine = Machine(
             states=('idle', 'run', 'attack', 'dash', 'jump'), initial='idle', auto_transitions=False,
@@ -177,6 +182,41 @@ class Character(GameObject):
         hit = self._blocking_contact((distance, 0)) if distance else None
         self.x = destination if hit is None else self.x + distance * hit
 
+    def move_enemy_push(self, destination):
+        if self.view_bounds is not None:
+            left, _, right, _ = self.view_bounds
+            low, high = left + self._left_margin, right - self._right_margin
+            if low > high:
+                return
+            destination = min(max(destination, low), high)
+        self._move_horizontal(destination)
+
+    def begin_enemy_push(self, direction, elapsed):
+        if self.dash_effect is not None and self.state == 'dash':
+            self.dash_effect.destroy()
+            self.dash_effect = None
+        if self.hp == 0:
+            return
+        if self.state == 'dash':
+            self._machine.end_dash()
+            self.dash_phase, self.dash_remaining = None, 0.0
+            if self.jump_phase is None:
+                self.player.play(self.clips['idle'])
+            else:
+                self._machine.jump()
+                self._show_jump()
+        if self.pushback_remaining == 0 or self.pushback_direction != direction:
+            self.pushback_direction = direction
+            self.pushback_remaining = PUSHBACK_SECONDS
+            self._advance_pushback(elapsed)
+
+    def _advance_pushback(self, dt):
+        step = min(dt, self.pushback_remaining)
+        if step:
+            self.move_enemy_push(self.x + self.pushback_direction * PUSHBACK_SPEED * step)
+            self.pushback_remaining -= step
+        return step
+
     def take_hit(self):
         if self.hp > 0 and self.invulnerability_remaining == 0:
             self.hp -= 1
@@ -195,8 +235,9 @@ class Character(GameObject):
                 and GROUND_Y + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2):
             return False
         destination = x, y - BODY_HEIGHT / 2
-        return self.level is None or not self.level.collision_overlaps(
+        return self.level is None or not (self.level.collision_overlaps(
             self, self.body, destination, response=CollisionResponse.BLOCK)
+            or self.level.collision_overlaps(self, self.body, destination))
 
     def teleport(self, position):
         if not self.can_teleport(position):
@@ -207,6 +248,7 @@ class Character(GameObject):
         self.velocity_y = 0.0
         self.buffered_action, self.buffer_remaining = None, 0.0
         self.dash_phase, self.dash_remaining = None, 0.0
+        self.pushback_remaining = 0.0
         self.jump_phase, self.jump_elapsed = None, 0.0
         if self.grounded:
             self.air_dash_used = False
@@ -258,7 +300,7 @@ class Character(GameObject):
             allowed = self.jump_phase in ('rise', 'fall')
         if action == 'dash':
             allowed = (free or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
-                self.grounded or not self.air_dash_used)
+                self.grounded or not self.air_dash_used) and self.pushback_remaining == 0
         if action is None or not allowed or self.view_bounds is None:
             return None
         self.buffered_action = None
@@ -285,9 +327,11 @@ class Character(GameObject):
             self._update(dt - step, offset=step)
 
     def _update(self, dt, action=None, offset=0):
+        push_time = self._advance_pushback(dt)
         if action == 'dash':
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
+            self.dash_effect = None
             self._play_dash_phase(entry)
             self.air_dash_used = not self.grounded
         elif action == 'jump' and self.state != 'jump':
@@ -358,7 +402,8 @@ class Character(GameObject):
                 if (self.state == 'attack' or self.jump_phase in ('start', 'land')
                         and (move_dt == 0 or finished_dash)):
                     direction = 0
-                destination = min(max(start + direction * SPEED * move_dt, low), high)
+                walk_time = min(move_dt, dt - push_time)
+                destination = min(max(start + direction * SPEED * walk_time, low), high)
                 # 공격/대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
                 self.x = start
                 if not (attacking or finished_dash):
@@ -515,6 +560,7 @@ class Character(GameObject):
                     # shortcut: 고정 직선 잔상, 공중 궤적/벽 추종이 필요하면 효과 제작 방식을 바꾼다.
                     effect = self.level.spawn(SpriteEffect(self.clips[f'dash_fx_{direction}'],
                                                           (self.x, self.y), 1, DISPLAY_SCALE))
+                    self.dash_effect = effect
             elif self.dash_phase == 'dash':
                 direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
                 self._play_dash_phase('recover_run' if direction == self.facing and can_continue

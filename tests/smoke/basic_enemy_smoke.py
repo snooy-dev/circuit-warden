@@ -7,6 +7,7 @@ from time import monotonic
 import pico2d.pico2d as pico
 
 from engine import Engine
+from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from tests.smoke.character_smoke import CharacterSmoke, push_click, push_key
 
@@ -75,7 +76,17 @@ class BasicEnemySmoke(CharacterScene):
         self.capture('enemy-restarted')
 
         actor, enemy = self.character, self.level.enemy
-        actor.x, actor.facing = enemy.x - 60, 1
+        enemy.state, enemy.state_remaining = 'recover', 10.0
+        actor.x, actor.facing = enemy.x - 70, 1
+        push_key(pico.SDLK_LSHIFT)
+        yield .27
+        assert actor.hurt_box[2] < enemy.hurt_box[0]
+        assert actor.x < enemy.x - 70 and actor.state != 'dash' and actor.hp == 5
+        assert not any(isinstance(obj, SpriteEffect) for obj in self.level.objects)
+        self.capture('enemy-contact-rebound')
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+
+        actor.x = enemy.x - 70
         for hp in (2, 1, 0):
             actor.facing = 1 if enemy.x >= actor.x else -1
             push_click()
@@ -89,7 +100,7 @@ class BasicEnemySmoke(CharacterScene):
         actor, enemy = self.character, self.level.enemy
         assert enemy.hp == 3 and actor.hp == 5
         enemy.state, enemy.state_remaining = 'recover', 10.0
-        actor.x, actor.facing = enemy.x + 60, -1
+        actor.x, actor.facing = enemy.x + 70, -1
         push_click()
         yield .4
         assert enemy.hp == 2
@@ -127,4 +138,4 @@ if __name__ == '__main__':
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: enemy/render/windup/charge/recover/jump-evade/player-hit/death/reset/left-right-hit/resize/cleanup', flush=True)
+    print('PASS: enemy/render/windup/charge/recover/jump-evade/rebound/player-hit/death/reset/left-right-hit/resize/cleanup', flush=True)

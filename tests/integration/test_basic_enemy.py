@@ -67,7 +67,7 @@ class BasicEnemySceneTests(unittest.TestCase):
             scene.enter(self.app)
             try:
                 actor, enemy = scene.character, scene.level.enemy
-                actor.x = enemy.x - facing * 60
+                actor.x = enemy.x - facing * 70
                 actor.facing = facing
                 enemy.state = 'recover'
                 enemy.state_remaining = 10.0
@@ -204,13 +204,16 @@ class BasicEnemySceneTests(unittest.TestCase):
                     scene.update(dt)
                     self.assertIsNone(mode.pending_charge)
                     self.assertEqual(actor.hp, 0 if lethal else 5)
-                    self.assertEqual(actor.center, before if lethal else charge.position)
                     if lethal:
+                        self.assertLessEqual(actor.hurt_box[2], enemy.hurt_box[0])
+                        stopped = actor.center
                         self.assertIsNone(mode.teleport_link)
                         self.assertFalse(any(isinstance(obj, TeleportLink) for obj in scene.level.objects))
                         scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
                                                            button=pico.SDL_BUTTON_RIGHT))
-                        self.assertEqual(actor.center, before)
+                        self.assertEqual(actor.center, stopped)
+                    else:
+                        self.assertEqual(actor.center, charge.position)
                 finally:
                     scene.exit()
 
