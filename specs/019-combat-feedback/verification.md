@@ -26,3 +26,24 @@
 ## 대응 및 남은 확인
 
 FR-001·002는 전류 좌표와 도착 프레임·기존 공중 연계, FR-003은 상단·옆면과 지상·공중 피격 결과에 대응한다. 관련 문서와 산출물 경로를 확인했다. 45ms 표시 전환과 120ms 피격은 기술 시험값이다. 전체 회귀와 사용자 직접 조작감은 확인 범위 밖이었다.
+
+## 후속 사용자 재테스트
+
+실전 플레이의 05:58, 06:10, 06:56과 공식 Ferocious Foes의 00:07–00:08 구간을 프레임으로 확인했다. 접근·베기·위치 재조정, 피해 때의 실루엣 변화, 피격 후 착지 전 공격을 기록했다. 입력 표시가 없는 영상으로 입력 지연은 측정하지 않았다. [관찰과 출처](research.md).
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy.BasicEnemySceneTests tests.integration.test_charge_scene.ChargeSceneTests tests.integration.test_jump_animation tests.integration.test_dash_animation
+```
+
+66개 통과. 새 상단 검사는 수정 전 첫 접촉에서 수평 위치가 그대로여서 실패했다. 수정 뒤에는 입력 없이 무피해·돌진 피격 상단에서 한 번 분리하고 바닥에 닿는지 확인했다. 벽이 한쪽을 막을 때의 방향 전환, 지상 피격 들림, 공중 피격 상태가 풀린 뒤 착지 전 공격, 대시·전하 연계도 확인했다. FR-004와 US2의 두 시나리오를 충족한다.
+
+```powershell
+.\.venv\Scripts\python.exe -m tests.smoke.basic_enemy_smoke --output-dir $testOut
+.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOut
+```
+
+실제 SDL 창 검사 두 건 통과. 적 상단의 반동에서 지상 복귀까지 `character-player-top-clear.png`, 공중 피격에서 회복한 뒤 J 입력으로 착지 전 공격하는 화면을 `character-player-air-counter.png`로 캡처했다. 위치와 적의 공격 단계는 테스트에서 지정했다. 전하 검사는 순간이동 9회와 예약 2회, 소모·재생성·공중 연계·창 크기 변경을 통과했다. 첫 기본 적 검사에서 캡처 한 건이 `SDL_RenderReadPixels`로 실패했고, 재실행에서 전체 캡처와 검사가 완료됐다.
+
+새 피격 자세는 기존 idle을 참조해 내장 ImageGen으로 제작했다. 128×104 셀, 알파 범위 `(18,12)–(115,92)`, 발 기준점 `(64,92)`, 이진 알파와 idle 16색을 확인했다. `assemble_frames.py --strict`의 PNG·atlas RGBA 일치와 WebP 120ms를 확인했다. 단일 셀의 경계 침범과 반복 검사는 도구 적용 대상에서 제외되었다. 실제 화면에서 상체와 팔다리가 벌어지는 자세와 최초 접촉 섬광을 함께 관찰했다. [사용 에셋과 원본 해시](../../assets/warden/source/hurt-impact.provenance.json).
+
+전체 회귀와 할로우 나이트 직접 조작 비교는 실행하지 않았다. 워든 피격 시간과 이탈 거리는 플레이 조정용 값이다.

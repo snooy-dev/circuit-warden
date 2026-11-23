@@ -61,7 +61,7 @@ class BasicEnemySmoke(CharacterScene):
         assert actor.teleport((enemy.x - 70, GROUND_Y + BODY_HEIGHT / 2))
         enemy.state, enemy.state_remaining, enemy.facing = 'charge', .28, -1
         yield from self.wait_until(lambda: actor.hp < actor.MAX_HP)
-        assert actor.state == 'hurt' and actor.grounded
+        assert actor.state == 'hurt' and GROUND_Y < actor.y < GROUND_Y + 8
         self.capture('player-ground-recoil')
         yield from self.wait_until(lambda: actor.hp == 0)
         self.capture('enemy-player-defeated')
@@ -89,15 +89,31 @@ class BasicEnemySmoke(CharacterScene):
         actor.velocity_y, actor.jump_phase = -190, 'fall'
         actor._machine.jump()
         yield from self.wait_until(lambda: actor.velocity_y > 0)
-        assert actor.x == enemy.x and actor.hp == actor.MAX_HP and actor.state == 'jump'
+        assert actor.x != enemy.x and actor.hp == actor.MAX_HP and actor.state == 'jump'
         self.capture('player-top-rebound')
+        for _ in range(30):
+            if actor.grounded:
+                break
+            yield .025
+        assert actor.grounded
+        assert actor.hurt_box[2] <= enemy.hurt_box[0] or actor.hurt_box[0] >= enemy.hurt_box[2]
+        self.capture('player-top-clear')
 
         actor.x, actor.y = enemy.x - 70, enemy.hurt_box[3] - 9
         actor.velocity_y, actor.jump_phase = -130, 'fall'
+        if actor.state == 'idle':
+            actor._machine.jump()
         enemy.state, enemy.state_remaining, enemy.facing = 'charge', .28, -1
         yield from self.wait_until(lambda: actor.hp < actor.MAX_HP)
         assert actor.state == 'hurt' and not actor.grounded and actor.velocity_y > 0
         self.capture('player-air-recoil')
+        yield from self.wait_until(lambda: actor.state == 'jump')
+        push_key(pico.SDLK_j)
+        yield .025
+        push_key(pico.SDLK_j, pico.SDL_KEYUP)
+        assert actor.state == 'attack' and not actor.grounded
+        assert actor.invulnerability_remaining > 0
+        self.capture('player-air-counter')
 
         push_key(pico.SDLK_r)
         yield .05

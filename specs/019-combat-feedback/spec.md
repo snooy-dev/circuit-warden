@@ -8,7 +8,7 @@
 
 ## Intent & Scope
 
-짧은 이동에서도 출발·도착과 캐릭터 위치가 읽히고, 지상·공중에서 접촉과 체력 손실을 구분할 수 있게 한다. 순간이동 사거리·일회성 소비·선입력, 돌진 피해와 검 타격은 현 규칙을 따른다. 할로우 나이트 공식 자료에서 접촉 위험을 명확히 전달하고 자세로 짧은 피격을 분리하는 방향을 참고한다. [Team Cherry의 King’s Pass 자료](https://www.teamcherry.com.au/blog/kings-pass-gameplay-playtests-conventions-team-cherrys-working-hard) · [보스 전투 데모](https://www.youtube.com/watch?v=MqHmosJcY0s).
+짧은 이동에서도 출발·도착과 캐릭터 위치가 읽히고, 지상·공중에서 접촉과 체력 손실을 구분할 수 있게 한다. 순간이동 사거리·일회성 소비·선입력, 돌진 피해와 검 타격은 현 규칙을 따른다. 할로우 나이트 공식 자료와 독립 실전 영상에서 접촉 위험, 자세 변화, 공중 조작 복귀를 참고한다. [Team Cherry의 King’s Pass 자료](https://www.teamcherry.com.au/blog/kings-pass-gameplay-playtests-conventions-team-cherrys-working-hard) · [실전 영상 조사](research.md).
 
 ## Documentation Contract (mandatory)
 
@@ -25,8 +25,8 @@
 ### User Story 2 - 접촉과 실제 피격 (Priority: P1)
 
 **Independent Test**: 지상 몸통, 공중 옆면·상단, 돌진 피해와 보호 중 접촉을 비교한다.
-1. **Given** 워든이 공중에서 적 상단에 내려올 때, **When** 접촉하면, **Then** 옆으로 끌려가지 않고 위로 짧게 튕긴다.
-2. **Given** 적 돌진에 맞았을 때, **When** 피해가 적용되면, **Then** 진행 행동이 끊기고 별도 피격 자세·반동이 나온 뒤 지상/공중의 현재 조건으로 이어진다.
+1. **Given** 워든이 공중에서 적 상단에 내려올 때, **When** 접촉하면, **Then** 입력 없이도 한 번의 위·옆 반동으로 몸통 외곽까지 벗어나 바닥으로 돌아온다. 가까운 쪽이 막혔으면 반대쪽 공간을 사용한다.
+2. **Given** 적 돌진에 맞았을 때, **When** 피해가 적용되면, **Then** 진행 행동이 끊기고 섬광, 몸이 젖혀지는 피격 자세, 분리와 회복이 읽혀야 한다. 공중에서 회복했을 때 착지 전에도 일반 공격 입력을 받는다.
 
 ### Edge Cases
 
@@ -37,6 +37,7 @@
 - **FR-001**: 전류 첫 프레임의 양 끝과 이동 출발·도착 표시 기준을 맞춘다.
 - **FR-002**: 도착 자세부터 상승·낙하로 연결한다. 물리·공중 공격 가능 시간은 유지한다.
 - **FR-003**: 공중 위쪽 접촉을 옆면과 구분하고 지상·공중 실제 피해에 명시적인 자세와 반동을 재생한다.
+- **FR-004**: 상단 반동은 첫 접촉에서 이탈 경로를 정하고 같은 자리에서 반동만 반복되는 현상을 없앤다. 실제 플레이 영상으로 전투 흐름, 자세, 조작 복귀를 관찰해 동작을 조정한다.
 
 ### Constraints
 

@@ -1,6 +1,6 @@
 {
   "hurt": {
-    "file": "hurt.png",
+    "file": "hurt-impact.png",
     "frameSize": [128, 104],
     "columns": 1,
     "count": 1,

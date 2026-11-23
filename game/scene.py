@@ -13,9 +13,9 @@ from engine.rendering.drawing import _sdl
 from game_framework import Collider, GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
 from game_framework.collision import TIME_EPSILON, blocking_contact, overlaps
 
-from .character import GROUND_Y, Character, _load_clip, load_clips
+from .character import GROUND_Y, PUSHBACK_SECONDS, Character, _load_clip, load_clips
 from .effects import SpriteEffect
-from .enemy import Enemy, load_enemy_clips
+from .enemy import CHARGE_SPEED, Enemy, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
 from .teleport_link import DURATION, LinkArt, TeleportLink
@@ -27,6 +27,7 @@ DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
 CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
+TOP_EXIT_MARGIN = 24
 ENVIRONMENT_SITES = (
     ((-328, -84), (-320, -64), (-312, -92)),
     ((-172, 64), (-160, 70), (-148, 82)),
@@ -245,18 +246,19 @@ class GameplayLevel(Level):
     def _push_player(self, contact_x, contact_y, side, elapsed, damaged):
         player, enemy = self.player, self.enemy
         if not side:
-            player.y = enemy.hurt_box[3]
-            if damaged:
-                player.take_hit(0, elapsed)
-            else:
-                player.bounce_from_enemy(elapsed)
+            self._eject_from_enemy_top(contact_x, elapsed, damaged)
             return
         # 접촉 뒤 밀고 들어간 이동만 되돌린다. 이미 적에서 멀어진 이동은 유지한다.
         if side * (player.x - contact_x) < 0:
             player.x = contact_x
         if damaged:
             player.y = contact_y
-            player.take_hit(side, elapsed)
+            left, bottom, right, top = player.hurt_box
+            impact_x = right if side < 0 else left
+            impact_x += contact_x - player.x
+            impact_y = (max(bottom, enemy.y) + min(top, enemy.hurt_box[3])) / 2
+            if player.take_hit(side, elapsed):
+                self._show_player_hit((impact_x, impact_y), side)
         else:
             player.begin_enemy_push(side, elapsed)
 
@@ -272,6 +274,37 @@ class GameplayLevel(Level):
             player.move_enemy_push(target)
             if side * (player.x - target) < 0:
                 enemy.x = player.x - side * gap
+
+    def _eject_from_enemy_top(self, contact_x, elapsed, damaged):
+        player, enemy = self.player, self.enemy
+        player.x, player.y = contact_x, enemy.hurt_box[3]
+        preferred = 1 if contact_x > enemy.x else -1
+        if enemy.state == 'charge' or contact_x == enemy.x:
+            preferred = -enemy.facing
+        options = []
+        for side in (preferred, -preferred):
+            gap = (enemy.body.bounds[2] - player.body.bounds[0] if side > 0
+                   else player.body.bounds[2] - enemy.body.bounds[0])
+            pursuit = 0.0
+            if enemy.state == 'charge' and side == enemy.facing:
+                pursuit = CHARGE_SPEED * enemy.state_remaining
+            edge = enemy.x + side * (gap + pursuit)
+            target = player.enemy_push_target(edge + side * TOP_EXIT_MARGIN)
+            options.append((side * (target - edge), target, side))
+        clearance, target, side = options[0]
+        if clearance + TIME_EPSILON < TOP_EXIT_MARGIN and options[1][0] > clearance + TIME_EPSILON:
+            _, target, side = options[1]
+        speed = max(0.0, side * (target - player.x)) / PUSHBACK_SECONDS
+        if damaged:
+            height = player.y
+            if player.take_hit(side, elapsed, speed):
+                self._show_player_hit((contact_x, height), side)
+        else:
+            player.bounce_from_enemy(side, speed, elapsed)
+
+    def _show_player_hit(self, position, facing):
+        self.spawn(SpriteEffect(self.combat_clips['hit_spark'], position, facing, 1,
+                                draw_order=1))
 
 
 class CharacterScene(LevelScene):

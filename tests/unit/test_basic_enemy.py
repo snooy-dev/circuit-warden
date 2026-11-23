@@ -10,6 +10,7 @@ from game import enemy as enemy_rules
 from game.effects import SpriteEffect
 from game.scene import GameplayLevel
 from game_framework import Collider, GameObject, ImageRef, SpriteClip, SpriteFrame
+from game_framework.collision import overlaps
 
 
 class CombatFixture(unittest.TestCase):
@@ -34,11 +35,12 @@ class CombatFixture(unittest.TestCase):
             'charge': SpriteClip((frame,), (.28,), loop=False),
             'recover': SpriteClip((frame, frame), (.30, .30), loop=False),
         }
+        spark = SpriteClip((frame,), (.2,), loop=False)
         self.level = GameplayLevel(None)
         with patch('game.scene.load_clips', return_value=clips), patch(
                 'game.scene.load_enemy_clips', return_value=enemy_clips), patch(
                 'game.scene.ChargeArt'), patch('game.scene.LinkArt'), patch(
-                'game.scene.load_combat_clips', return_value={'hit_spark': attack}):
+                'game.scene.load_combat_clips', return_value={'hit_spark': spark}):
             self.level.open()
         self.addCleanup(self.level.close)
         self.actor = self.level.player
@@ -80,18 +82,35 @@ class BasicEnemyTests(CombatFixture):
         self.level.update(.03)
         self.assertGreater(self.actor.x, start_x)
 
-    def test_falling_onto_enemy_rebounds_up_without_side_push_or_damage(self):
+    def test_falling_onto_enemy_ejects_and_lands_without_another_bounce(self):
         top = self.enemy.hurt_box[3]
         self.actor.x, self.actor.y = self.enemy.x, top + 4
         self.actor.velocity_y = -170
         self.actor._machine.jump()
         self.actor.jump_phase = 'fall'
         self.level.update(.05)
-        self.assertEqual(self.actor.x, self.enemy.x)
+        self.assertNotEqual(self.actor.x, self.enemy.x)
         self.assertGreater(self.actor.y, top)
         self.assertGreater(self.actor.velocity_y, 0)
         self.assertEqual((self.actor.state, self.actor.jump_phase, self.actor.hp), ('jump', 'rise', 5))
-        self.assertEqual(self.actor.pushback_remaining, 0)
+        for _ in range(65):
+            self.level.update(.01)
+        self.assertTrue(self.actor.grounded)
+        self.assertFalse(overlaps(self.actor.hurt_box, self.enemy.hurt_box))
+
+    def test_falling_next_to_a_wall_ejects_to_the_open_side(self):
+        wall = GameObject()
+        wall.colliders = (Collider((0, GROUND_Y, 20, 0), 'terrain', blocks={'player'}),)
+        self.level.spawn(wall)
+        self.actor.x, self.actor.y = self.enemy.x - 4, self.enemy.hurt_box[3] + 4
+        self.actor.velocity_y = -170
+        self.actor._machine.jump()
+        self.actor.jump_phase = 'fall'
+        for _ in range(70):
+            self.level.update(.01)
+        self.assertTrue(self.actor.grounded)
+        self.assertGreater(self.actor.hurt_box[0], self.enemy.hurt_box[2])
+        self.assertEqual(self.actor.hp, 5)
 
     def test_enemy_body_blocks_teleport_but_can_be_passed_above(self):
         self.assertFalse(self.actor.teleport((self.enemy.x, self.actor.center[1])))
@@ -190,6 +209,7 @@ class EnemyChargeTests(CombatFixture):
         self.assertEqual((self.actor.state, self.actor.hp), ('hurt', 4))
         self.assertIs(self.actor.player.clip, self.actor.clips['hurt'])
         self.assertLess(self.actor.x, 0)
+        self.assertGreater(self.actor.y, GROUND_Y)
         self.assertIsNone(self.actor.active_attack)
         self.actor.update(HURT_SECONDS)
         self.assertEqual((self.actor.state, self.actor.hurt_remaining), ('idle', 0))
@@ -207,6 +227,25 @@ class EnemyChargeTests(CombatFixture):
         self.actor.update(HURT_SECONDS)
         self.assertEqual(self.actor.state, 'jump')
         self.assertFalse(self.actor.grounded)
+        self.actor._queue_action('attack')
+        self.actor.update(0)
+        self.assertEqual(self.actor.state, 'attack')
+        self.assertGreater(self.actor.invulnerability_remaining, 0)
+
+    def test_falling_onto_a_charging_enemy_ejects_once_with_damage(self):
+        self.start_charge()
+        self.actor.x, self.actor.y = self.enemy.x, self.enemy.hurt_box[3] + 4
+        self.actor.velocity_y = -170
+        self.actor._machine.jump()
+        self.actor.jump_phase = 'fall'
+        self.level.update(.05)
+        self.assertEqual((self.actor.state, self.actor.hp), ('hurt', 4))
+        self.assertGreater(self.actor.x, self.enemy.x)
+        for _ in range(65):
+            self.level.update(.01)
+        self.assertTrue(self.actor.grounded)
+        self.assertFalse(overlaps(self.actor.hurt_box, self.enemy.hurt_box))
+        self.assertEqual(self.actor.hp, 4)
 
     def test_dash_movement_does_not_prevent_charge_damage(self):
         self.start_charge()
@@ -214,7 +253,8 @@ class EnemyChargeTests(CombatFixture):
         self.level.update(.14)
         self.assertEqual((self.actor.state, self.actor.dash_phase), ('idle', None))
         self.assertEqual(self.actor.hp, 4)
-        self.assertFalse(any(isinstance(obj, SpriteEffect) for obj in self.level.objects))
+        effects = [obj.player.clip for obj in self.level.objects if isinstance(obj, SpriteEffect)]
+        self.assertEqual(effects, [self.level.combat_clips['hit_spark']])
 
     def test_protected_player_at_wall_clips_the_charging_enemy(self):
         wall = GameObject()

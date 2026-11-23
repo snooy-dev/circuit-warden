@@ -19,8 +19,9 @@ SPEED = 180
 PUSHBACK_SPEED = 440
 PUSHBACK_SECONDS = .12
 HURT_SECONDS = PUSHBACK_SECONDS
+GROUND_HURT_SPEED = 120
 AIR_HURT_SPEED = 230
-BODY_BOUNCE_SPEED = 185
+BODY_BOUNCE_SPEED = 245
 DISPLAY_SCALE = 1
 # idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
 BODY_HEIGHT = 83 * DISPLAY_SCALE
@@ -128,6 +129,7 @@ class Character(GameObject):
         self.arrival_link = None
         self.pushback_direction = 0
         self.pushback_remaining = 0.0
+        self.pushback_speed = PUSHBACK_SPEED
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
@@ -186,19 +188,25 @@ class Character(GameObject):
             return min(1, max(0, (GROUND_Y - self.y) / dy))
         return None
 
-    def _move_horizontal(self, destination):
+    def _horizontal_target(self, destination):
         distance = destination - self.x
         hit = self._blocking_contact((distance, 0)) if distance else None
-        self.x = destination if hit is None else self.x + distance * hit
+        return destination if hit is None else self.x + distance * hit
 
-    def move_enemy_push(self, destination):
+    def _move_horizontal(self, destination):
+        self.x = self._horizontal_target(destination)
+
+    def enemy_push_target(self, destination):
         if self.view_bounds is not None:
             left, _, right, _ = self.view_bounds
             low, high = left + self._left_margin, right - self._right_margin
             if low > high:
-                return
+                return self.x
             destination = min(max(destination, low), high)
-        self._move_horizontal(destination)
+        return self._horizontal_target(destination)
+
+    def move_enemy_push(self, destination):
+        self.x = self.enemy_push_target(destination)
 
     def begin_enemy_push(self, direction, elapsed):
         if self.hp == 0:
@@ -214,6 +222,7 @@ class Character(GameObject):
         if self.pushback_remaining == 0 or self.pushback_direction != direction:
             self.pushback_direction = direction
             self.pushback_remaining = PUSHBACK_SECONDS
+            self.pushback_speed = PUSHBACK_SPEED
             self._advance_pushback(elapsed)
 
     def _cancel_dash(self):
@@ -225,7 +234,7 @@ class Character(GameObject):
     def _advance_pushback(self, dt):
         step = min(dt, self.pushback_remaining)
         if step:
-            speed = PUSHBACK_SPEED * (2 * self.pushback_remaining - step) / PUSHBACK_SECONDS
+            speed = self.pushback_speed * (2 * self.pushback_remaining - step) / PUSHBACK_SECONDS
             self.move_enemy_push(self.x + self.pushback_direction * speed * step)
             self.pushback_remaining -= step
         return step
@@ -234,21 +243,23 @@ class Character(GameObject):
         self.jump_phase, self.jump_elapsed = 'rise', 0.0
         self.velocity_y = self.rise_start_speed = speed
 
-    def bounce_from_enemy(self, elapsed):
+    def bounce_from_enemy(self, direction, speed, elapsed):
         if self.state == 'dash':
             self._cancel_dash()
             self._machine.end_dash()
         if self.state in ('idle', 'run'):
             self._machine.jump()
-        self.pushback_remaining = 0.0
+        self.pushback_direction, self.pushback_speed = direction, speed
+        self.pushback_remaining = PUSHBACK_SECONDS
         self._start_rebound(BODY_BOUNCE_SPEED)
+        self._advance_pushback(elapsed)
         self._advance_vertical(elapsed)
         if self.state == 'jump':
             self._show_jump()
 
-    def take_hit(self, direction=None, elapsed=0):
+    def take_hit(self, direction=None, elapsed=0, push_speed=PUSHBACK_SPEED):
         if self.hp == 0 or self.invulnerability_remaining > 0:
-            return
+            return False
         self.hp -= 1
         self.invulnerability_remaining = max(0.0, .75 - elapsed)
         self.hurt_remaining = HURT_SECONDS
@@ -257,16 +268,15 @@ class Character(GameObject):
         self._cancel_dash()
         self.pushback_direction = -self.facing if direction is None else direction
         self.pushback_remaining = PUSHBACK_SECONDS if self.pushback_direction else 0.0
+        self.pushback_speed = push_speed
         if self.pushback_direction:
             self.facing = -self.pushback_direction
-        if not self.grounded:
-            self._start_rebound(AIR_HURT_SPEED)
-        else:
-            self.jump_phase, self.jump_elapsed = None, 0.0
+        self._start_rebound(GROUND_HURT_SPEED if self.grounded else AIR_HURT_SPEED)
         self._machine.hurt()
         self.player.play(self.clips['hurt'], restart=True)
         if self.hp:
             self._update_hurt(elapsed)
+        return True
 
     def _update_hurt(self, dt):
         step = min(dt, self.hurt_remaining)
