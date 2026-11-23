@@ -237,7 +237,7 @@ class CharacterTests(unittest.TestCase):
         focus = SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST)
         actor.control(focus)
         actor.update(.1)
-        self.assertEqual(actor.x, 0)
+        self.assertEqual(actor.x, 12)
         actor.x = 320
         actor.control(key(pico.SDLK_LSHIFT))
         actor.update(.15)
@@ -491,12 +491,13 @@ class CharacterTests(unittest.TestCase):
         actor.update(.05)
         self.assertEqual(actor.player.elapsed, .05)
         self.assertEqual(actor.facing, 1)
+        self.assertAlmostEqual(actor.x, start + 9)
         actor.update(.05)
         self.assertEqual(actor.state, 'run')
         self.assertEqual(actor.facing, -1)
-        self.assertEqual(actor.x, start)
+        self.assertEqual(actor.x, start + 12)
         actor.update(.1)
-        self.assertEqual(actor.x, start - 18)
+        self.assertEqual(actor.x, start + 12 - 18)
         actor.control(click)
         actor.update(.1)
         self.assertEqual(actor.state, 'attack')
@@ -522,7 +523,7 @@ class CharacterTests(unittest.TestCase):
                     actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST))
                 actor.update(.1)
                 self.assertEqual(actor.state, 'idle')
-                self.assertEqual(actor.x, start)
+                self.assertEqual(actor.x, start - 12)
                 self.assertEqual(actor.facing, -1)
 
     def test_right_click_and_pending_attack_on_focus_loss_or_invalid_output_are_ignored(self):

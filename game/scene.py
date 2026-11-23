@@ -287,7 +287,7 @@ class GameplayLevel(Level):
             if enemy.state == 'charge' and side == enemy.facing:
                 pursuit = CHARGE_SPEED * enemy.state_remaining
             edge = enemy.x + side * (gap + pursuit)
-            target = player.enemy_push_target(edge + side * TOP_EXIT_MARGIN)
+            target = player.clamped_horizontal_target(edge + side * TOP_EXIT_MARGIN)
             options.append((side * (target - edge), target, side))
         clearance, target, side = options[0]
         if clearance + TIME_EPSILON < TOP_EXIT_MARGIN and options[1][0] > clearance + TIME_EPSILON:

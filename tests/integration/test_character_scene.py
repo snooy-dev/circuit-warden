@@ -211,7 +211,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual(actor.player.elapsed, .05)
         self.assertIs(actor.player.frame, actor.clips['attack'].frames[2])
 
-    def test_ground_attack_draws_composite_at_locked_position_and_clears_it_on_exit(self):
+    def test_ground_attack_draws_composite_after_advance_and_clears_it_on_exit(self):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
@@ -221,8 +221,8 @@ class CharacterSceneTests(unittest.TestCase):
         attack = actor.clips['attack']
         for facing, key in ((-1, pico.SDLK_d), (1, pico.SDLK_a)):
             with self.subTest(facing=facing):
-                actor.facing = facing
-                position = actor.x, actor.y
+                actor.x, actor.facing = 0, facing
+                position = 12 * facing, actor.y
                 scene.handle_event(click)
                 scene.update(.1)
                 scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))

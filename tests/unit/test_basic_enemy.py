@@ -134,12 +134,24 @@ class BasicEnemyTests(CombatFixture):
         self.assertIsNone(self.enemy.level)
         self.assertNotIn(self.enemy, self.level.objects)
 
+    def test_ground_attack_advances_into_wall_and_uses_reached_position(self):
+        wall = GameObject()
+        wall.colliders = (Collider((30, GROUND_Y, 31, 0), 'terrain', blocks={'player'}),)
+        self.level.spawn(wall)
+        self.enemy.x = 220
+        self.click()
+        self.level.update(.12)
+        self.assertAlmostEqual(self.actor.x, 6)
+        self.assertEqual(self.actor.hurt_box[2], 30)
+        self.assertEqual(self.actor.active_attack[2], self.actor.collision_position)
+
     def test_direction_and_strict_contact_edges(self):
         for facing, x, y, expected in ((-1, -70, GROUND_Y, 2),
                                         (-1, 70, GROUND_Y, 3),
-                                        (1, 127, GROUND_Y, 3),
+                                        (1, 139, GROUND_Y, 3),
                                         (1, 70, GROUND_Y + 70, 3)):
             with self.subTest(facing=facing, x=x, y=y):
+                self.actor.x = 0
                 self.actor.facing = facing
                 self.enemy.x, self.enemy.y, self.enemy.hp = x, y, 3
                 self.click()
@@ -406,13 +418,13 @@ class EnemyChargeTests(CombatFixture):
 
     def test_enemy_entering_at_sword_window_end_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = 144.5, -1
+        self.enemy.x, self.enemy.facing = 156.5, -1
         self.level.update(.1)
         self.assertEqual(self.enemy.hp, 3)
 
     def test_enemy_entering_after_sword_active_window_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = 152, -1
+        self.enemy.x, self.enemy.facing = 164, -1
         self.level.update(.1)
         self.assertEqual(self.enemy.hp, 3)
 

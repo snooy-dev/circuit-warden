@@ -37,6 +37,7 @@ DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
 ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
+GROUND_ATTACK_ADVANCE = 12
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
 # 10ms 프레임 기준: 착지 6~8번의 압축 자세 → 시작 4번 자세.
@@ -199,7 +200,7 @@ class Character(GameObject):
     def _move_horizontal(self, destination):
         self.x = self._horizontal_target(destination)
 
-    def enemy_push_target(self, destination):
+    def clamped_horizontal_target(self, destination):
         if self.view_bounds is not None:
             left, _, right, _ = self.view_bounds
             low, high = left + self._left_margin, right - self._right_margin
@@ -209,7 +210,7 @@ class Character(GameObject):
         return self._horizontal_target(destination)
 
     def move_enemy_push(self, destination):
-        self.x = self.enemy_push_target(destination)
+        self.x = self.clamped_horizontal_target(destination)
 
     def begin_enemy_push(self, direction, elapsed):
         if self.hp == 0 or self.state == 'hurt':
@@ -459,6 +460,11 @@ class Character(GameObject):
         if attacking and not started:
             previous = self.player.elapsed
             self.player.update(flight_time)
+            if not airborne_attack and not push_time and previous < ATTACK_ACTIVE_START:
+                start = 1 - previous / ATTACK_ACTIVE_START
+                end = max(0, 1 - self.player.elapsed / ATTACK_ACTIVE_START)
+                advance = GROUND_ATTACK_ADVANCE * (start ** 2 - end ** 2)
+                self.x = self.clamped_horizontal_target(self.x + self.attack_facing * advance)
             if (self.active_attack is None and previous < ATTACK_ACTIVE_END
                     and self.player.elapsed >= ATTACK_ACTIVE_START):
                 start = offset + min(dt, max(0, ATTACK_ACTIVE_START - previous))

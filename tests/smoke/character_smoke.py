@@ -48,6 +48,7 @@ class CharacterSmoke(CharacterScene):
 
     def enter(self, engine):
         super().enter(engine)
+        self.level.enemy.destroy()
         self.refs = tuple(clip.frames[0].image for clip in self.character.clips.values())
         self.started = self.changed = monotonic()
         self.steps = self.exercise()
@@ -94,7 +95,7 @@ class CharacterSmoke(CharacterScene):
         push_click()
         yield
 
-        assert actor.state == 'attack' and actor.x == stopped_x and actor.facing == -1
+        assert actor.state == 'attack' and abs(actor.x - (stopped_x - 12)) < 1e-6 and actor.facing == -1
         push_key(pico.SDLK_d)
         yield
 
@@ -104,11 +105,11 @@ class CharacterSmoke(CharacterScene):
         push_click()
         yield
 
-        assert actor.state == 'attack' and actor.x == attack_x and actor.facing == 1
+        assert actor.state == 'attack' and abs(actor.x - (attack_x + 12)) < 1e-6 and actor.facing == 1
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         yield
 
-        assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1
+        assert actor.state == 'idle' and abs(actor.x - (attack_x + 12)) < 1e-6 and actor.facing == 1
         stopped_x = actor.x
         self.capture('attack-release-idle')
         push_key(pico.SDLK_a)

@@ -73,3 +73,14 @@ FR-005에 대해 실제 피해, 무피해 몸통 접촉, 회복, 지형 제한�
 ```
 
 자동 검사 69개와 실제 SDL 창 검사 한 건을 통과했다. 표적 검사에서 입력 없는 상승·정점·하강·착지 및 착지 후 정지를 검증했다. 실제 창은 정점을 지난 하강 중 27.2 월드 단위를 옆으로 이동하고 착지 전 J 공격을 시작했다. 이전 `fd26c45`와 현재 코드를 같은 시작점과 60Hz 갱신으로 렌더해 발 위치를 덧그렸다. 비교 장면에서 정점부터 착지까지 옆으로 이동한 거리가 0에서 58.5 월드 단위가 됐다. 로컬 비교 영상은 `tmp/air-recoil-arc/warden-air-recoil-before-after.gif`에 있다. 전체 회귀와 사용자 직접 조작감은 확인 범위 밖이었다.
+
+## 지상 기본 공격의 짧은 전진
+
+사용자가 전진 시안을 더 자연스럽게 평가했다. 지상 기본 공격의 첫 100ms에 최대 12 월드 단위를 적용하고, 100ms부터 검 판정을 실제 도달 좌표에 만든다. 비교 시안의 140ms는 초기 타격과 전진이 겹치지 않도록 100ms로 조정했다.
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest tests.unit.test_character tests.unit.test_basic_enemy tests.integration.test_character_scene tests.integration.test_basic_enemy tests.integration.test_charge_scene
+.\.venv\Scripts\python.exe -m tests.smoke.character_smoke --output-dir $wardensAttackTest
+```
+
+자동 94개를 통과했다. 좌우 전진과 고정 방향, 타격 시작 좌표, 벽 앞에서 6 월드 단위에서 멈춘 경우, 공중 공격과 전하 취소를 확인했다. 실제 SDL 조작 검사는 기본 적의 자동 접근을 제외한 뒤 좌우 지상 공격과 일반 이동 복귀를 통과했다. 대상을 포함한 타격과 충돌은 자동 검사로 확인했다. 같은 입력과 렌더 조건에서 기록한 로컬 GIF는 `tmp/attack-lunge/attack-movement-comparison.gif`다. 전체 회귀와 사용자의 실제 적용본 조작감은 검사하지 않았다.
