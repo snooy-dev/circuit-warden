@@ -44,14 +44,10 @@ class Charge(GameObject):
         self.elapsed = self.value = self.velocity = 0.0
         self.active = False
         self.spent = False
+        self.spent_elapsed = 0.0
 
     def on_spawn(self):
-        self.reset(self.level.mode.activation_origin)
-
-    def reset(self, origin):
-        self.spent = False
-        self.elapsed = self.value = self.velocity = 0.0
-        self.active = self.in_range(origin)
+        self.active = self.in_range(self.level.mode.activation_origin)
 
     def spend(self):
         self.spent = True
@@ -68,6 +64,7 @@ class Charge(GameObject):
         if not isfinite(dt) or dt < 0:
             raise ValueError('dt는 유한한 비음수 초여야 합니다.')
         if self.spent:
+            self.spent_elapsed += dt
             return
         self.active = self.in_range(self.level.mode.activation_origin)
         if dt == 0:

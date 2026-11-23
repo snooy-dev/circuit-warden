@@ -11,6 +11,6 @@
 
 ## Phase 3: User Story 2 - 환경
 
-- [ ] T004 [US2] game/scene.py·game/charge.py의 초기 위치 변동과 환경 소모 후 다른 위치에서 새로 생성되는 수명을 추가한다. FR-002·FR-003.
-- [ ] T005 [US2] tests/integration·tests/smoke·tests/performance의 고정 배치 전제를 갱신하고 실제 SDL 경로와 소비·재생성·R을 확인한다.
-- [ ] T006 현재 docs와 specs를 대조해 verification.md를 갱신하고 최종 증분을 커밋한다. SC-DOC.
+- [x] T004 [US2] game/scene.py·game/charge.py의 초기 위치 변동과 환경 소모 후 다른 위치에서 새로 생성되는 수명을 추가한다. FR-002·FR-003.
+- [x] T005 [US2] tests/integration·tests/smoke·tests/performance의 고정 배치 전제를 갱신하고 실제 SDL 경로와 소비·재생성·R을 확인한다.
+- [x] T006 현재 docs와 specs를 대조해 verification.md를 갱신하고 최종 증분을 커밋한다. SC-DOC.

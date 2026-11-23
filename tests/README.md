@@ -30,7 +30,7 @@
 | 변경 범위 | 선택 명령 |
 |---|---|
 | 기본 적의 이동·공격 포즈·양방향 전투·회피·체력·재시작 | `.\.venv\Scripts\python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir $testOutput` |
-| 이동·점프·공중 명중·돌진 회피·전하 소비·창 좌표 | `.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOutput` |
+| 이동·공중 명중·돌진 회피·전하 생성과 소비·창 좌표 | `.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOutput` |
 | 캐릭터 출력·입력 | `.\.venv\Scripts\python.exe -B tests/smoke/character_smoke.py --output-dir $testOutput` |
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |
 | 독립 UI·앵커·트리 | `.\.venv\Scripts\python.exe -B tests/smoke/ui_smoke.py $testOutput` |
@@ -50,7 +50,7 @@ SDL 이벤트 주입·픽셀 검사는 사람의 플레이 품질 평가와 다�
 
 관련 코드·테스트·의존성·실행 환경에 변화가 없어 유효한 결과는 재사용한다. 문서 수정만으로 게임 검사를 반복하지 않는다. 과거 001/008 실행 기록은 당시 커밋 기준이다.
 
-전하의 거리·상태 취소·선입력·반전은 tests.unit.test_charge_teleport, 구운 전류 원본 샘플·짧은 거리/방향별 끝점·수명은 tests.unit.test_teleport_link, 실제 자산·좌표·PNG 공유/로딩 실패·장면 해제는 tests.integration.test_charge_scene을 선택한다. 회전 그리기의 alpha/blend 복원은 tests.integration.test_drawing에서 확인한다. charge_smoke는 SDL 키·클릭으로 지상 공격, 점프, 공중 명중 후 즉시 이탈, 돌진 회피, 전하 소비·복구, 100ms 안의 예약, F6/F11을 확인하고 화면을 캡처한다.
+전하의 거리·상태 취소·선입력·반전은 tests.unit.test_charge_teleport, 구운 전류 원본 샘플·짧은 거리/방향별 끝점·수명은 tests.unit.test_teleport_link, 실제 자산·좌표·PNG 공유/로딩 실패·장면 해제는 tests.integration.test_charge_scene을 선택한다. 회전 그리기의 alpha/blend 복원은 tests.integration.test_drawing에서 확인한다. charge_smoke는 SDL 키·클릭으로 지상·공중 전투, 기술 전하 생성·소비, 환경 전하의 다른 위치 재생성, 100ms 안의 예약, F6/F11을 확인하고 화면을 캡처한다.
 
 감사 회귀의 실제 창 검사는 `tests/smoke/audit_smoke.py --output-dir $testOutput`이다. SDL 큐의 F6 다음 묶음 클릭과 예약 공격 첫 프레임을 검사하며, 공격 시간 경계만 고정 dt로 재현한다.
 

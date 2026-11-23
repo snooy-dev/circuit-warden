@@ -17,6 +17,12 @@ from game.teleport_link import TeleportLink
 from tests.smoke.character_smoke import CharacterSmoke, push_key
 
 
+def window_point(scene, position):
+    x, y = scene.transform.point(*position)
+    return (round(x * scene.engine.window_size[0] / scene.engine.output_size[0]),
+            round(y * scene.engine.window_size[1] / scene.engine.output_size[1]))
+
+
 class ChargeSmoke(CharacterScene):
     capture = CharacterSmoke.capture
 
@@ -34,16 +40,14 @@ class ChargeSmoke(CharacterScene):
         super().enter(engine)
         self.started = self.changed = monotonic()
         self.steps = self.exercise()
-        self.charges = tuple(self.level.charges)
+        self.observed_charges = set(self.level.charges)
         self.links = []
 
     def click(self, position, button=pico.SDL_BUTTON_LEFT):
-        x, y = self.transform.point(*position)
         event = pico.SDL_Event()
         event.type = pico.SDL_MOUSEBUTTONDOWN
         event.button.button = button
-        event.button.x = round(x * self.engine.window_size[0] / self.engine.output_size[0])
-        event.button.y = round(y * self.engine.window_size[1] / self.engine.output_size[1])
+        event.button.x, event.button.y = window_point(self, position)
         assert pico.SDL_PushEvent(byref(event)) == 1
 
     def handle_event(self, event):
@@ -91,7 +95,7 @@ class ChargeSmoke(CharacterScene):
         self.tap(pico.SDLK_r)
         yield .04
         actor, enemy = self.character, self.level.enemy
-        entry, escape = self.charges[2:4]
+        entry, escape = self.level.charges[2:4]
         self.click(entry.position)
         yield .02
         assert entry.spent and not entry.render_items()
@@ -112,6 +116,10 @@ class ChargeSmoke(CharacterScene):
 
         self.tap(pico.SDLK_r)
         yield .04
+        prior = entry, escape
+        entry, escape = self.level.charges[2:4]
+        assert all(old.level is None and old.position != fresh.position
+                   for old, fresh in zip(prior, (entry, escape), strict=True))
         assert not entry.spent and not escape.spent
         self.click(entry.position)
         self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
@@ -122,6 +130,7 @@ class ChargeSmoke(CharacterScene):
         self.tap(pico.SDLK_r)
         yield .04
         actor, enemy = self.character, self.level.enemy
+        entry = self.level.charges[2]
         for _ in range(200):
             if enemy.state == 'charge':
                 break
@@ -137,6 +146,7 @@ class ChargeSmoke(CharacterScene):
             self.tap(key)
             self.tap(pico.SDLK_r)
             yield .08
+            entry = self.level.charges[2]
             count = self.teleports
             self.click((entry.position[0] + 44, entry.position[1]))
             yield .035
@@ -146,6 +156,43 @@ class ChargeSmoke(CharacterScene):
         yield .2
         assert not any(isinstance(o, TeleportLink) for o in self.level.objects)
         self.capture('charge-settled')
+
+        self.tap(pico.SDLK_r)
+        yield .04
+        target = (-90, -30)
+        for _ in range(20):
+            point = self.cursor_to_world()
+            if point is not None and all(abs(a - b) < 1 for a, b in zip(point, target, strict=True)):
+                break
+            pico.SDL_WarpMouseInWindow(pico.window, *window_point(self, target))
+            yield .025
+        else:
+            raise AssertionError('SDL 커서가 생성 위치에 도달하지 않았습니다.')
+        self.tap(pico.SDLK_e)
+        yield .025
+        skill = self.level.skill_charge
+        assert skill is not None and skill.active, (
+            self.cursor_to_world(), pico.SDL_GetWindowFlags(pico.window), self.character.center,
+            self.level.mode.cast_held, self.engine.window_size)
+        assert all(abs(a - b) < 1 for a, b in zip(skill.position, target, strict=True))
+        self.capture('charge-skill-created')
+        self.click(skill.position)
+        yield .025
+        assert skill.spent and skill.level is None and self.level.skill_charge is None
+        environmental = self.level.charges[1]
+        self.click(environmental.position)
+        yield .16
+        assert environmental.spent and not environmental.render_items()
+        self.capture('charge-environment-spent')
+        for _ in range(30):
+            if self.level.charges[1] is not environmental:
+                break
+            yield .1
+        replacement = self.level.charges[1]
+        assert environmental.level is None and replacement.position != environmental.position
+        assert not replacement.spent
+        self.capture('charge-environment-regenerated')
+
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield .1
@@ -153,6 +200,7 @@ class ChargeSmoke(CharacterScene):
     def update(self, dt):
         assert monotonic() - self.started < 20, '전하 SDL 검사 시간 초과'
         super().update(dt)
+        self.observed_charges.update(self.level.charges)
         self.record_link()
 
     def draw(self):
@@ -177,11 +225,11 @@ if __name__ == '__main__':
         parser.error('프로젝트 밖 기존 폴더를 지정해야 합니다.')
     scene = ChargeSmoke(output)
     Engine(*DEFAULT_SIZE).run(scene)
-    assert scene.passed and scene.teleports == 7 and scene.buffered_clicks >= 1
-    assert all(c.art is None and c.level is None for c in scene.charges)
+    assert scene.passed and scene.teleports == 9 and scene.buffered_clicks >= 1
+    assert all(c.art is None and c.level is None for c in scene.observed_charges)
     assert all(link._frames is None and link.arrival is None and link.level is None for link in scene.links)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print(f'PASS: run/jump/swing/air-hit/dodge/spend/chain/resize/fullscreen/cleanup; '
+    print(f'PASS: run/jump/swing/air-hit/dodge/cast/spend/regenerate/chain/resize/fullscreen/cleanup; '
           f'teleports={scene.teleports}, buffered={scene.buffered_clicks}, '
           f'max draw={scene.max_draw_seconds * 1000:.1f}ms, '
           f'median draw={sorted(scene.draw_times)[len(scene.draw_times)//2] * 1000:.1f}ms', flush=True)

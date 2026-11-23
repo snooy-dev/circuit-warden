@@ -9,7 +9,7 @@ import pico2d.pico2d as pico
 
 from game.charge import ASSETS
 from game.character import GROUND_Y
-from game.scene import CAST_COOLDOWN, CharacterScene
+from game.scene import CAST_COOLDOWN, ENVIRONMENT_RECHARGE, CharacterScene
 from game.teleport_link import TeleportLink
 from tests.integration import test_character_scene as fixtures
 
@@ -48,7 +48,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIs(charge.art, level.charges[0].art)
         self.assertEqual((actor.center, actor.state), before)
 
-        self.click(charge.position)
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
         self.assertEqual(actor.center, aim)
         self.assertTrue(charge.spent)
         self.assertIsNone(charge.level)
@@ -119,6 +119,44 @@ class ChargeSceneTests(unittest.TestCase):
             self.key(pico.SDLK_e)
             for actual, expected in zip(scene.level.skill_charge.position, aim):
                 self.assertAlmostEqual(actual, expected, delta=1)
+
+    def test_environment_replaces_consumed_charge_after_delay_even_after_enemy_defeat(self):
+        scene = self.open_scene()
+        level = scene.level
+        level.enemy.destroy()
+        charge = level.charges[2]
+        self.click(charge.position)
+        scene.update(0)
+        scene.update(ENVIRONMENT_RECHARGE - .001)
+        self.assertIs(level.charges[2], charge)
+        self.assertTrue(charge.spent)
+        self.assertEqual(charge.render_items(), ())
+
+        scene.update(.001)
+        fresh = level.charges[2]
+        self.assertIsNone(charge.level)
+        self.assertNotEqual(fresh.position, charge.position)
+        self.assertIs(fresh.art, level.charge_art)
+        self.assertTrue(fresh.render_items())
+        self.assertFalse(fresh.spent)
+        self.click(fresh.position)
+        self.assertEqual(scene.character.center, fresh.position)
+        self.assertTrue(fresh.spent)
+
+    def test_environment_retries_a_blocked_site_without_reusing_spent_object(self):
+        scene = self.open_scene()
+        actor, level = scene.character, scene.level
+        charge = level.charges[2]
+        self.click(charge.position)
+        actor.teleport((-200, GROUND_Y + 83 / 2))
+        level.enemy.x, level.enemy.state, level.enemy.state_remaining = 146, 'recover', 10
+        scene.update(ENVIRONMENT_RECHARGE)
+        self.assertIs(level.charges[2], charge)
+        self.assertTrue(charge.spent)
+        level.enemy.destroy()
+        scene.update(.01)
+        self.assertIsNot(level.charges[2], charge)
+        self.assertFalse(level.charges[2].spent)
 
     def test_right_click_nearest_ignores_cursor_and_filters_invalid_targets(self):
         scene = self.open_scene()
@@ -215,11 +253,14 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(actor.center, before)
 
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r))
-        self.assertFalse(first.spent or second.spent)
-        self.assertTrue(first.render_items())
-        self.click(first.position)
-        self.assertEqual(scene.character.center, first.position)
-        self.assertTrue(first.spent)
+        self.assertIsNone(first.level)
+        self.assertIsNone(second.level)
+        fresh = scene.level.charges[2]
+        self.assertFalse(fresh.spent)
+        self.assertTrue(fresh.render_items())
+        self.click(fresh.position)
+        self.assertEqual(scene.character.center, fresh.position)
+        self.assertTrue(fresh.spent)
 
     def test_right_click_same_position_does_not_create_link(self):
         scene = self.open_scene()
@@ -263,10 +304,10 @@ class ChargeSceneTests(unittest.TestCase):
 
     def test_resize_dpi_and_invalid_output_use_current_coordinates(self):
         scene = self.open_scene()
-        target = scene.level.charges[2]
         for viewport, ratio in (((20, 10, 1280, 720), 1), ((0, 0, 1920, 1080), 2),
                                 ((0, 0, 1024, 720), 1)):
             scene.level.reset_combat()
+            target = scene.level.charges[2]
             self.app.viewport = viewport
             scene.update(0)
             scene.character.teleport((0, GROUND_Y + 83 / 2))

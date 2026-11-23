@@ -140,7 +140,8 @@ class BasicEnemySceneTests(unittest.TestCase):
                     scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r, repeat=0))
                     scene.update(0)
                     self.assertTrue(all(obj.level is None for obj in (actor, enemy, *effects)))
-                    self.assertTrue(all(charge.level is scene.level for charge in charges))
+                    self.assertTrue(all(charge.level is None for charge in charges))
+                    self.assertTrue(all(charge.level is scene.level for charge in scene.level.charges))
                     self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
                     self.assertEqual(scene.character.invulnerability_remaining, 0)
                     self.assertIs(scene.character.clips, actor.clips)
@@ -235,17 +236,19 @@ class BasicEnemySceneTests(unittest.TestCase):
             self.assertIsNone(link.level)
             self.assertFalse(any(isinstance(obj, TeleportLink) for obj in scene.level.objects))
             self.assertEqual((mode.pending_charge, mode.teleport_link), (None, None))
-            self.assertEqual(tuple(scene.level.charges), charges)
-            self.assertTrue(all(not c.spent for c in charges))
+            current = tuple(scene.level.charges)
+            self.assertTrue(all(old.level is None and old.position != new.position
+                                for old, new in zip(charges, current, strict=True)))
+            self.assertTrue(all(not c.spent for c in current))
             self.assertEqual(scene.character.teleport_guard_remaining, 0)
-            self.assertIs(charges[0].art, art)
+            self.assertIs(current[0].art, art)
             self.assertIs(scene.level.link_art, link_art)
-            self.assertTrue(all(c.active == c.in_range(scene.character.center) for c in charges))
-            charges[0].position = (301, scene.character.center[1])
-            charges[0].active = False
+            self.assertTrue(all(c.active == c.in_range(scene.character.center) for c in current))
+            current[0].position = (301, scene.character.center[1])
+            current[0].active = False
             scene.character.pressed.add(pico.SDLK_d)
             scene.update(.02)
-            self.assertTrue(charges[0].active)
+            self.assertTrue(current[0].active)
         finally:
             scene.exit()
 

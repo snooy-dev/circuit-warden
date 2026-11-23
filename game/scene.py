@@ -4,6 +4,7 @@ import json
 from ctypes import byref, c_int
 from math import hypot, inf
 from pathlib import Path
+from random import choice
 
 import pico2d.pico2d as pico
 
@@ -25,6 +26,14 @@ COMBAT_ASSETS = ASSETS.parent / 'combat'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
 CAST_COOLDOWN = .8
+ENVIRONMENT_RECHARGE = 2.5
+ENVIRONMENT_SITES = (
+    ((-328, -84), (-320, -64), (-312, -92)),
+    ((-172, 64), (-160, 70), (-148, 82)),
+    ((140, -133), (146, -131), (152, -130)),
+    ((312, 80), (320, 90), (332, 92)),
+    ((-12, 190), (0, 200), (12, 212)),
+)
 
 
 def load_combat_clips(images):
@@ -81,8 +90,28 @@ class GameplayLevel(Level):
         self.charge_art = ChargeArt(self.images)
         self.link_art = LinkArt(self.images)
         self.combat_clips = load_combat_clips(self.images)
-        self.charges = [self.spawn(Charge(self.charge_art, position)) for position in
-                        ((-320, -80), (-160, 70), (140, -127), (320, 90), (0, 200))]
+        self._reset_environment()
+
+    def _reset_environment(self):
+        previous = tuple(charge.position for charge in self.charges)
+        for charge in self.charges:
+            charge.destroy()
+        self.charges = [
+            self.spawn(Charge(self.charge_art, choice([point for point in site if point != last])))
+            for site, last in zip(ENVIRONMENT_SITES, previous or (None,) * len(ENVIRONMENT_SITES),
+                                  strict=True)
+        ]
+
+    def _update_environment(self):
+        for index, site in enumerate(ENVIRONMENT_SITES):
+            charge = self.charges[index]
+            if charge.spent_elapsed + TIME_EPSILON < ENVIRONMENT_RECHARGE:
+                continue
+            positions = [point for point in site if point != charge.position
+                         and self._valid_charge_position(point)]
+            if positions:
+                self.charges[index] = self.spawn(Charge(self.charge_art, choice(positions)))
+                charge.destroy()
 
     def _valid_charge_position(self, position):
         return self.player.can_teleport(position) and all(
@@ -124,9 +153,7 @@ class GameplayLevel(Level):
         self.player = self.spawn(Character(clips))
         self.player.view_bounds = view_bounds
         self.enemy = self.spawn(Enemy(enemy_clips))
-        for charge in self.charges:
-            if charge.level is self:
-                charge.reset(self.player.center)
+        self._reset_environment()
         self._last_hit_attack = 0
         self._last_contact_charge = None
 
@@ -137,6 +164,7 @@ class GameplayLevel(Level):
         player_position = self.player.collision_position
         protected_until = max(self.player.invulnerability_remaining, self.player.teleport_guard_remaining)
         super().update(dt)
+        self._update_environment()
         if self.enemy.level is not self:
             return
         self._resolve_sword()

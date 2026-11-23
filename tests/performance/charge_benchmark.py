@@ -83,6 +83,7 @@ def run_frames(art_class, renderer, width, height):
                                             lambda start, end, art, _: teleport_link.TeleportLink(start, end, art)))
         # 재사용 전하의 과거 클릭 부하를 CPU와 PNG에 동일하게 재현한다.
         stack.enter_context(patch.object(scene.Charge, 'spend', lambda _: None, create=True))
+        stack.enter_context(patch.object(scene.GameplayLevel, '_update_environment'))
         level_scene = scene.CharacterScene()
         try:
             started = perf_counter_ns()

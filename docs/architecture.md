@@ -341,7 +341,7 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 
 CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 지상 도착은idle, 공중 도착은상승(상단 여유0이면 낙하)으로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 공중 도착 수직 속도는 min(GRAVITY×TELEPORT_RISE_SECONDS, sqrt(2×GRAVITY×상단 여유))로 교체하며 기존 중력·정점 분할·상승/낙하 모션을 재사용한다. 속도는 누적하지 않고 공중 대시 소모 이력을 유지한다. 시간·높이 시험값은 전하 시스템 문서를 따른다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
 
-GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.activation_origin은 진행 중 연결의 도착점, 평소에는 캐릭터 중심이다. 시작 이벤트에서 즉시 전하 논리 상태를 갱신하고 이후 Charge.update도 같은 기준을 사용한다. ChargeArt는 오프라인으로 구운33단계×72위상 PNG를 장면 ImageStore에서 공유한다. Charge는 개별 텍스처를 만들지 않고 연속 상태값에 가장 가까운 SpriteFrame을 선택해 그린다. 24fps·3초 위상과 중간 반전 값·속도는 유지하며 bob은 위상 중간 시각으로 구웠다. 안정 상태의 원본 RGBA를 보존하고 중간 표시의 단계화·최대1px bob 차이는 사용자가 허용한 미세 차이에 해당한다. 투명 여백을 자른 전하 이미지 RGBA 크기는43.14MiB다. 게임에서는 NumPy·픽셀 합성·전하 업로드를 사용하지 않는다. 생성 도구는 scripts/bake-effects/charge.py다.
+GameplayLevel은 환경 구역마다 Charge 하나를 등록하고 기술 전하는 생성 시 목록 끝에 추가한다. GameplayMode.activation_origin은 진행 중 연결의 도착점, 평소에는 캐릭터 중심이다. 시작 이벤트에서 즉시 전하 논리 상태를 갱신하고 이후 Charge.update도 같은 기준을 사용한다. ChargeArt는 오프라인으로 구운33단계×72위상 PNG를 장면 ImageStore에서 공유한다. Charge는 개별 텍스처를 만들지 않고 연속 상태값에 가장 가까운 SpriteFrame을 선택해 그린다. 24fps·3초 위상과 중간 반전 값·속도는 유지하며 bob은 위상 중간 시각으로 구웠다. 안정 상태의 원본 RGBA를 보존하고 중간 표시의 단계화·최대1px bob 차이는 사용자가 허용한 미세 차이에 해당한다. 투명 여백을 자른 전하 이미지 RGBA 크기는43.14MiB다. 게임에서는 NumPy·픽셀 합성·전하 업로드를 사용하지 않는다. 생성 도구는 scripts/bake-effects/charge.py다.
 
 기본 동작 검증은 [012 verification](../specs/012-charge-teleport/verification.md)에 기록한다. TeleportLink는 고정 출발/도착 좌표에서 승인 v4의30fps·12프레임 형상을100ms에 시간 매핑해 소멸한다. 이벤트에서 생성된 효과의 첫 갱신은 생성 전 프레임 시간을 건너뛰어 첫 섬광을 보존한다. 최초 draw가 먼저 일어나면 그 뒤 갱신부터 시간을 소비한다. GameplayMode는 진행 중 효과와 마지막 예약 전하를 보관하고 CharacterScene의 Level 갱신 직후 after_update에서 완료·재검사·예약 실행을 처리한다. 이 단계에서 생성된 효과는 같은 프레임에 처음 출력한다. LinkArt는 승인 pixelfx 원본을 오프라인으로 구운72길이×12프레임을 장면 시작에 공유 로딩한다. 길이는1~32px 정수,36~64px의4px 간격,72~320px의8px 간격이다. 가까운 길이를 선택하고 중앙 기준 회전·가로 배율로 연결하며 세로 배율은 유지한다. 8px 미만은 광륜 왜곡을 피하려고 가로 배율도 유지하고 이론상 끝점 오차를0.25px 이내로 제한한다. 길이 선택에 따른 경로·가지 및 회전의 픽셀 차이는 사용자 허용 범위이며 원본과 화면 픽셀 일치를 주장하지 않는다. 현재 활성 거리보다 긴320px 초과의 품질은 미검증이다.
 
@@ -349,10 +349,12 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 
 전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
 
-GameplayMode는 실제 이동 성공 후에만 Charge.spent를 설정한다. 소비된 객체는 레벨의 배치로 남으며 거리 활성화와 렌더에서 빠진다. 같은 좌표나 막힌 도착, 취소·실패한 예약은 소비 상태를 바꾸지 않는다. GameplayLevel은 돌진 접촉 시각을 피격 보호와 전하 이동 보호 중 늦은 만료 시점에 비교한다.
+GameplayMode는 실제 이동 성공을 GameplayLevel.spend_charge에 전달한다. 소모 전하는 거리 활성화와 렌더에서 빠진다. 같은 좌표나 막힌 도착, 취소·실패한 예약은 소비 상태를 바꾸지 않는다. GameplayLevel은 돌진 접촉 시각을 피격 보호와 전하 이동 보호 중 늦은 만료 시점에 비교한다.
 
 E는 SDL 커서 위치를 현재 창·출력·월드 좌표로 변환해 GameplayLevel.cast_charge에 전달한다. 기술 전하는 공유 ChargeArt를 사용하며 성공한 순간이동이나 R에서 레벨 객체를 해제한다.
 
-전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R은 TeleportLink 객체와 예약을 제거하고 전하의 소비·시각 상태를 초기화한다. 전하 배치와 공유 텍스처를 재사용한다.
+환경 전하가 소모된 뒤에는 Charge가 경과 시간을 기록하고 GameplayLevel이 대기 시간을 충족한 구역의 유효 후보를 찾는다. 성공하면 다른 위치에 새 Charge를 등록하고 소비 객체를 해제한다. 예전 객체를 가리키는 순간이동 예약은 새 전하로 이전되지 않는다. 장면 종료는 공유 ChargeArt 참조를 해제한다.
+
+전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R은 TeleportLink 객체와 예약 및 이전 전하를 제거하고 환경 구역에 새 전하를 생성한다. 공유 텍스처는 재사용한다.
 
 전하 소모 스프라이트는 TeleportLink의 도착점 좌표와 경과 시간을 공유한다. 검 적중 스파크는 적중을 검출한 시각의 검과 적 몸통 접점에서 SpriteEffect로 재생한다. 두 시트는 ImageStore에서 한 번 로드하고 최근접 필터로 그린다. 재시작과 사망은 남은 단발 효과를 정리하며 장면 종료 시 텍스처를 해제한다.

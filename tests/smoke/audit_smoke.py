@@ -45,7 +45,7 @@ class AuditSmoke(CharacterScene):
         self.click(target.position)
         yield
 
-        assert self.engine.window_size == ALTERNATE_SIZE and actor.x == 140
+        assert self.engine.window_size == ALTERNATE_SIZE and actor.x == target.position[0]
         self.link = self.level.mode.teleport_link
         assert self.link.end == target.position
         self.capture('audit-after-resize')
