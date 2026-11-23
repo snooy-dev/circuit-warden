@@ -95,6 +95,24 @@ class CombatSmoke(CharacterScene):
         print(f'점프 높이 / 거리: 짧게 {short[0]:.1f} / {short[1]:.1f}, '
               f'길게 {long[0]:.1f} / {long[1]:.1f}', flush=True)
 
+        actor.x = 0
+        push_key(pico.SDLK_SPACE)
+        yield from self.wait_until(lambda: actor.jump_phase == 'fall')
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: actor.y <= GROUND_Y + 65)
+        assert not actor.grounded
+        push_key(pico.SDLK_SPACE)
+        for _ in self.wait_until(lambda: actor.jump_phase == 'rise'):
+            assert not actor.grounded, '선입력 재점프가 착지에서 멈췄습니다.'
+            yield 0
+        self.screenshot = 'buffered-jump-takeoff'
+        yield .05
+        assert actor.y > GROUND_Y
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: actor.jump_phase == 'land')
+        yield .19
+        print('착지 직전 Space 선입력으로 즉시 재이륙', flush=True)
+
         actor.x = 385
         push_key(pico.SDLK_d)
         push_key(pico.SDLK_SPACE)

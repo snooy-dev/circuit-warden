@@ -41,10 +41,7 @@ ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
-# 착지 6~8번의 압축 자세 → 시작 4번 자세.
-LAND_CROUCH_START = .06
-LAND_CROUCH_END = .09
-JUMP_CROUCH_START = .01
+AIR_JUMP_BUFFER_SECONDS = .12
 DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
@@ -420,25 +417,14 @@ class Character(GameObject):
 
     def _queue_action(self, action):
         self.buffered_action = action
-        self.buffer_remaining = INPUT_BUFFER_SECONDS
+        self.buffer_remaining = (AIR_JUMP_BUFFER_SECONDS if action == 'jump' and not self.grounded
+                                 else INPUT_BUFFER_SECONDS)
 
     def _release_jump(self):
         if self.jump_held:
             self.jump_held = False
 
-    def _link_landing_jump(self):
-        if (self.buffered_action == 'jump' and self.state == 'jump'
-                and self.jump_phase == 'land' and self.grounded and self.view_bounds is not None
-                and LAND_CROUCH_START - 1e-9 <= self.jump_elapsed < LAND_CROUCH_END - 1e-9):
-            self.buffered_action = None
-            self.jump_phase, self.jump_elapsed = 'start', JUMP_CROUCH_START
-            self.jump_held = pico.SDLK_SPACE in self.pressed
-            return True
-        return False
-
     def _consume_action(self):
-        if self._link_landing_jump():
-            return 'jump'
         action = self.buffered_action
         free = self.state in ('idle', 'run')
         allowed = free and self.grounded
@@ -626,33 +612,39 @@ class Character(GameObject):
         remaining, airborne_time = dt, 0.0
         while self.state == 'jump':
             if self.jump_phase in ('start', 'land'):
+                if (self.jump_phase == 'land' and self.buffered_action == 'jump'
+                        and self.grounded and self.view_bounds is not None):
+                    self.buffered_action = None
+                    self.jump_held = pico.SDLK_SPACE in self.pressed
+                    self._take_off()
+                    continue
                 direction = 'right' if self.facing > 0 else 'left'
                 duration = sum(self.clips[f'jump_{self.jump_phase}_{direction}'].durations)
-                if (self.jump_phase == 'land' and self.buffered_action == 'jump'
-                        and self.view_bounds is not None and self.jump_elapsed < LAND_CROUCH_START):
-                    duration = LAND_CROUCH_START
                 step = min(remaining, max(0, duration - self.jump_elapsed))
                 self.jump_elapsed += step
                 remaining = max(0.0, remaining - step)
                 if duration - self.jump_elapsed > 1e-9:
                     break
                 if self.jump_phase == 'land':
-                    if self._link_landing_jump():
-                        continue
                     self.jump_phase = None
                     self._machine.end_jump()
                     break
-                self.jump_phase, self.jump_elapsed = 'rise', 0.0
-                self.velocity_y = JUMP_SPEED
-                self._apply_jump_release()
-                self.rise_start_speed = self.velocity_y
+                self._take_off()
             else:
                 step = self._advance_vertical(remaining)
                 airborne_time += step
                 remaining = max(0.0, remaining - step)
+                if self.jump_phase == 'land':
+                    continue
             if remaining <= 1e-9:
                 break
         return airborne_time
+
+    def _take_off(self):
+        self.jump_phase, self.jump_elapsed = 'rise', 0.0
+        self.velocity_y = JUMP_SPEED
+        self._apply_jump_release()
+        self.rise_start_speed = self.velocity_y
 
     def _show_jump(self):
         direction = 'right' if self.facing > 0 else 'left'

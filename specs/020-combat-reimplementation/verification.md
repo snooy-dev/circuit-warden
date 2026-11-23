@@ -88,3 +88,18 @@ $combatRecheck = @(
 powershell -NoProfile -ExecutionPolicy Bypass -File .specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireSpec -RequireTasks -IncludeTasks
 git diff --check
 ```
+
+## 착지 시점의 재점프
+
+- **레퍼런스와 시험값** — Celeste는 착지 직전에 점프를 입력하고 유지하면 착지 프레임에 뛰도록 한다. 워든의 120ms는 훈련장 시험값이며, 먼저 놓은 입력은 기존 짧은 점프로 처리한다. 2단 점프는 보류한다. [Celeste 개발자 설명](https://www.mattmakesgames.com/articles/celeste_and_forgiveness/index.html)
+- **FR-009·SC-005 자동 검사** — 평지 좌우에서 접촉 전에는 하강하고 정확히 120ms에 재이륙했다. 120.1ms 전 입력은 만료했으며 착지 모션 중 새로 누르면 즉시 이륙했다. 발판의 짧은 탭은 단일·분할 갱신의 높이와 수직 속도가 같았다. 유지 입력 1회 소비, 공중 공격의 접촉 종료와 대시 해제 직후 실행도 확인했다. 아래 표적 검사 75개가 통과했다.
+- **SDL 창 검사** — 실제 게임 창에 Space 키를 주입해 착지 프레임에서 착지 정지 없이 상승하는 것을 확인하고 `character-buffered-jump-takeoff.png`를 열어 이륙 자세를 관찰했다. 발판 착지와 벽 접촉, 재시작도 함께 통과했다. 사용자 직접 조작감 평가는 남아 있다.
+- **기존 대시 검사** — `tests.integration.test_dash_animation`에서 상승 상태, 벽 앞 효과, 벽 앞 복귀 클립에 관한 실패 4건을 현재 코드와 수정 전 `a7123e7`의 `game/character.py`에서 동일하게 재현했다. 착지 중 대시 잠금 검사는 이번 통합 검사에서 통과했다. 전체 회귀는 요청 범위 밖으로 실행하지 않았다.
+- **수렴** — FR-009와 SC-005를 코드·표적 검사·SDL 검사 및 조작·기술 구조 문서와 대조했다. 전하 순간이동이 지우는 선입력의 설명도 현재 규칙에 맞췄다. 원격을 가져와 비교했고 기존 브랜치에 합칠 `origin/main` 커밋은 0개였다.
+
+```powershell
+.\.venv\Scripts\python.exe -B -m unittest tests.integration.test_jump_animation tests.unit.test_input_buffer tests.unit.test_character tests.integration.test_charge_scene tests.integration.test_character_scene -q
+$landingSmokeOutput = Join-Path $env:TEMP 'circuit-warden-landing-smoke'
+.\.venv\Scripts\python.exe -B -m tests.smoke.combat_reimplementation_smoke --output-dir $landingSmokeOutput
+git diff --check
+```

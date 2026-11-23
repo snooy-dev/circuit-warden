@@ -4,8 +4,9 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import GROUND_Y, JUMP_HEIGHT, SPEED
+from game.character import GRAVITY, GROUND_Y, JUMP_HEIGHT, JUMP_SPEED, SPEED
 from game.scene import CharacterScene
+from game.training_map import PLATFORMS
 from tests.integration import test_character_scene
 
 
@@ -132,55 +133,97 @@ class JumpAnimationTests(unittest.TestCase):
         scene.update(.01)
         self.assertLess(actor.x, x)
 
-    def test_landing_crouch_links_to_start_crouch_in_both_directions(self):
+    def test_buffered_jump_takes_off_at_ground_contact_in_both_directions(self):
         for facing in (-1, 1):
             scene = self.scene()
             actor = scene.character
             actor.facing = facing
             self.key(scene, pico.SDLK_SPACE)
-            scene.update(.83)
-            self.assertEqual(actor.jump_phase, 'land')
+            scene.update(.71)
             self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
             self.key(scene, pico.SDLK_SPACE)
-            scene.update(.059)
-            self.assertEqual(actor.jump_phase, 'land')
+            scene.update(.119)
+            self.assertEqual(actor.jump_phase, 'fall')
             scene.update(.001)
-            self.assertEqual(actor.jump_phase, 'start')
-            self.assertAlmostEqual(actor.jump_elapsed, .01)
+            self.assertEqual(actor.jump_phase, 'rise')
+            self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED)
             direction = 'left' if facing < 0 else 'right'
-            self.assertIs(actor.player.frame, actor.clips[f'jump_start_{direction}'].frames[4])
+            self.assertIs(actor.player.frame, actor.clips[f'jump_rise_{direction}'].frames[0])
             self.assertIsNone(actor.buffered_action)
             self.assertEqual((actor.x, actor.facing), (0, facing))
             self.assertAlmostEqual(actor.y, GROUND_Y)
-            scene.update(.02)
-            self.assertEqual(actor.jump_phase, 'rise')
             scene.update(.4)
             self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
             scene.update(.58)
             self.assertTrue(actor.grounded)
             self.assertEqual(actor.state, 'idle')  # Holding Space does not chain again.
 
-    def test_landing_link_matches_split_updates_and_late_input_uses_full_start(self):
+    def test_platform_buffered_tap_matches_split_updates(self):
         outcomes = []
-        for steps in ((.2,), (.05,) * 4):
+        for steps in ((.16,), (.04,) * 4):
             scene = self.scene()
             actor = scene.character
+            platform = PLATFORMS[3]
             self.key(scene, pico.SDLK_SPACE)
-            scene.update(.83)
+            scene.update(.57)
+            actor.x = (platform[0] + platform[2]) / 2
             self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
             self.key(scene, pico.SDLK_SPACE)
+            self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
             for dt in steps:
                 scene.update(dt)
             self.assertEqual(actor.jump_phase, 'rise')
+            self.assertGreater(actor.y, platform[3])
+            self.assertLess(actor.velocity_y, JUMP_SPEED * .65)
             outcomes.append((actor.y, actor.velocity_y))
         for a, b in zip(*outcomes):
             self.assertAlmostEqual(a, b)
+
+    def test_expired_buffer_lands_and_fresh_late_press_takes_off_immediately(self):
         scene = self.scene()
         actor = scene.character
         self.key(scene, pico.SDLK_SPACE)
-        scene.update(.93)  # Landing recovery has passed the crouch window.
+        scene.update(.7099)
         self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
         self.key(scene, pico.SDLK_SPACE)
-        scene.update(.08)
-        self.assertEqual(actor.jump_phase, 'start')
-        self.assertAlmostEqual(actor.jump_elapsed, 0)
+        scene.update(.25)
+        self.assertEqual(actor.jump_phase, 'land')
+        self.assertTrue(actor.grounded)
+        self.assertIsNone(actor.buffered_action)
+        self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(0)
+        self.assertEqual(actor.jump_phase, 'rise')
+        self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED)
+
+    def test_air_attack_landing_can_consume_jump_at_contact(self):
+        scene = self.scene()
+        actor = scene.character
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.69)
+        self.key(scene, pico.SDLK_j)
+        scene.update(.03)
+        self.assertEqual(actor.state, 'attack')
+        self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.12)
+        self.assertEqual((actor.state, actor.jump_phase), ('jump', 'rise'))
+        self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED - GRAVITY * .01)
+
+    def test_grounded_dash_consumes_jump_only_after_dash_finishes(self):
+        scene = self.scene()
+        scene.level.enemy.destroy()
+        actor = scene.character
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.73)
+        self.key(scene, pico.SDLK_LSHIFT)
+        scene.update(.4)
+        self.assertTrue(actor.grounded)
+        self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.066)
+        self.assertEqual(actor.state, 'dash')
+        self.assertTrue(actor.grounded)
+        scene.update(.001)
+        self.assertEqual((actor.state, actor.jump_phase), ('jump', 'rise'))
+        self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED)
