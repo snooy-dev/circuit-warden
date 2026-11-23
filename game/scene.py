@@ -54,7 +54,7 @@ class GameplayLevel(Level):
         art = ChargeArt(self.images)
         self.link_art = LinkArt(self.images)
         self.charges = [self.spawn(Charge(art, position)) for position in
-                        ((-320, -80), (-160, 70), (140, -50), (320, 140), (0, 200))]
+                        ((-320, -80), (-160, 70), (140, -127), (320, 90), (0, 200))]
 
     def reset_combat(self):
         clips, enemy_clips = self.player.clips, self.enemy.clips
@@ -62,14 +62,15 @@ class GameplayLevel(Level):
         for obj in self.objects:
             if isinstance(obj, (SpriteEffect, TeleportLink)):
                 obj.destroy()
-        self.mode.pending_charge = self.mode.teleport_link = self.mode.last_charge = None
+        self.mode.pending_charge = self.mode.teleport_link = None
         self.player.destroy()
         self.enemy.destroy()
         self.player = self.spawn(Character(clips))
         self.player.view_bounds = view_bounds
         self.enemy = self.spawn(Enemy(enemy_clips))
         for charge in self.charges:
-            charge.active = charge.in_range(self.player.center)
+            if charge.level is self:
+                charge.reset(self.player.center)
         self._last_hit_attack = 0
         self._last_contact_charge = None
 
@@ -77,7 +78,7 @@ class GameplayLevel(Level):
         if self.player is None or self.player.level is not self or self.player.hp == 0:
             return
         player_position = self.player.collision_position
-        protected_until = self.player.invulnerability_remaining
+        protected_until = max(self.player.invulnerability_remaining, self.player.teleport_guard_remaining)
         super().update(dt)
         if self.enemy.level is not self:
             return
@@ -172,7 +173,7 @@ class CharacterScene(LevelScene):
     def enter(self, engine):
         super().enter(engine)
         self.character.view_bounds = self.transform.bounds
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | J: attack | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):
         self.character.view_bounds = self.transform.bounds
@@ -191,5 +192,5 @@ class CharacterScene(LevelScene):
 
 
 def main():
-    print('게임플레이: A/D 이동 / Space 점프 / Shift 대시 / 왼쪽 클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
+    print('게임플레이: A/D 이동 / Space 점프 / J 공격 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     Engine(*DEFAULT_SIZE).run(CharacterScene())

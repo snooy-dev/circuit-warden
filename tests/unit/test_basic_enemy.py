@@ -285,6 +285,19 @@ class EnemyChargeTests(CombatFixture):
         self.level.update(.1)
         self.assertEqual(self.actor.hp, 5)
 
+    def test_teleport_guard_only_prevents_damage_before_contact_deadline(self):
+        for gap, expected_hp in ((34, 5), (36, 4)):
+            with self.subTest(gap=gap):
+                self.level.reset_combat()
+                actor, enemy = self.level.player, self.level.enemy
+                actor.teleport_guard_remaining = .1
+                enemy.x, enemy.facing = 66 + gap, -1
+                enemy.state, enemy.state_remaining = 'charge', enemy_rules.CHARGE_SECONDS
+                self.level.update(.11)
+                self.assertEqual(actor.hp, expected_hp)
+                self.assertEqual(actor.teleport_guard_remaining, 0)
+                self.assertGreater(actor.pushback_remaining, 0)
+
     def test_charge_can_hit_warden_before_the_warden_moves_away(self):
         self.enemy.state, self.enemy.state_remaining = 'charge', enemy_rules.CHARGE_SECONDS
         self.enemy.x, self.enemy.facing = 0, 1

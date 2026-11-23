@@ -349,6 +349,6 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 
 전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
 
-GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 공중 도착만 기록하고 지상 도착은 비운다. after_update에서 grounded이면 착지 모션 종료를 기다리지 않고 비우며 on_end에서도 해제한다.
+GameplayMode는 실제 이동 성공 후에만 Charge.spent를 설정한다. 소비된 객체는 레벨의 배치로 남으며 거리 활성화와 렌더에서 빠진다. 같은 좌표나 막힌 도착, 취소·실패한 예약은 소비 상태를 바꾸지 않는다. GameplayLevel은 돌진 접촉 시각을 피격 보호와 전하 이동 보호 중 늦은 만료 시점에 비교한다.
 
-전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R 이후에도 전하 활성 상태는 후처리에서 현재 위치에 맞춘다. R은 TeleportLink 객체·예약·마지막 전하를 제거하고 전하 배치·아트는 재사용한다.
+전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R은 TeleportLink 객체와 예약을 제거하고 전하의 소비·시각 상태를 초기화한다. 전하 배치와 공유 텍스처를 재사용한다.

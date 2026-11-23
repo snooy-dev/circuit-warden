@@ -119,6 +119,7 @@ class Character(GameObject):
         self.facing = 1
         self.hp = self.MAX_HP
         self.invulnerability_remaining = 0.0
+        self.teleport_guard_remaining = 0.0
         self.pushback_direction = 0
         self.pushback_remaining = 0.0
         self.pressed = set()
@@ -266,9 +267,11 @@ class Character(GameObject):
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()
             self.buffered_action = None
-        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE}:
+        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE, pico.SDLK_j}:
             if event.key == pico.SDLK_SPACE and event.key not in self.pressed:
                 self._queue_action('jump')
+            if event.key == pico.SDLK_j and event.key not in self.pressed:
+                self._queue_action('attack')
             if event.key in DASH_KEYS and not self.pressed & DASH_KEYS:
                 self._queue_action('dash')
             self.pressed.add(event.key)
@@ -308,6 +311,7 @@ class Character(GameObject):
 
     def update(self, dt):
         self.invulnerability_remaining = max(0.0, self.invulnerability_remaining - dt)
+        self.teleport_guard_remaining = max(0.0, self.teleport_guard_remaining - dt)
         self.active_attack = None
         if self.view_bounds is None:
             self.buffered_action = None

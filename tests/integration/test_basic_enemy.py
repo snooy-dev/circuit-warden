@@ -9,7 +9,7 @@ import pico2d.pico2d as pico
 
 from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
-from game.teleport_link import TeleportLink
+from game.teleport_link import DURATION, TeleportLink
 
 
 class BasicEnemySceneTests(unittest.TestCase):
@@ -205,6 +205,7 @@ class BasicEnemySceneTests(unittest.TestCase):
                     self.assertIsNone(mode.pending_charge)
                     self.assertEqual(actor.hp, 0 if lethal else 5)
                     if lethal:
+                        self.assertFalse(charge.spent)
                         self.assertLessEqual(actor.hurt_box[2], enemy.hurt_box[0])
                         stopped = actor.center
                         self.assertIsNone(mode.teleport_link)
@@ -214,6 +215,7 @@ class BasicEnemySceneTests(unittest.TestCase):
                         self.assertEqual(actor.center, stopped)
                     else:
                         self.assertEqual(actor.center, charge.position)
+                        self.assertTrue(charge.spent)
                 finally:
                     scene.exit()
 
@@ -227,14 +229,15 @@ class BasicEnemySceneTests(unittest.TestCase):
             mode._teleport(charges[2], scene.character.center)
             link = mode.teleport_link
             self.assertIsNotNone(link)
-            self.assertIsNotNone(mode.last_charge)
+            self.assertTrue(charges[2].spent)
             mode.pending_charge = charges[1]
             scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r))
             self.assertIsNone(link.level)
             self.assertFalse(any(isinstance(obj, TeleportLink) for obj in scene.level.objects))
-            self.assertEqual((mode.pending_charge, mode.teleport_link, mode.last_charge),
-                             (None, None, None))
+            self.assertEqual((mode.pending_charge, mode.teleport_link), (None, None))
             self.assertEqual(tuple(scene.level.charges), charges)
+            self.assertTrue(all(not c.spent for c in charges))
+            self.assertEqual(scene.character.teleport_guard_remaining, 0)
             self.assertIs(charges[0].art, art)
             self.assertIs(scene.level.link_art, link_art)
             self.assertTrue(all(c.active == c.in_range(scene.character.center) for c in charges))
@@ -245,3 +248,34 @@ class BasicEnemySceneTests(unittest.TestCase):
             self.assertTrue(charges[0].active)
         finally:
             scene.exit()
+
+    def test_low_charge_enables_an_air_hit_and_immediate_cancel_to_next_charge(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        actor, enemy = scene.character, scene.level.enemy
+        entry, escape = scene.level.charges[2:4]
+        click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
+        self.app.event_to_output.return_value = scene.transform.point(*entry.position)
+        scene.handle_event(click)
+        self.assertEqual(actor.center, entry.position)
+        self.assertEqual(actor.teleport_guard_remaining, DURATION)
+
+        attack = SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_j)
+        scene.handle_event(attack)
+        scene.update(0)
+        self.assertIs(actor.player.clip, actor.clips['air_attack'])
+        scene.handle_event(attack)
+        self.assertIsNone(actor.buffered_action)
+        scene.update(DURATION + .01)
+        self.assertEqual((actor.state, enemy.hp), ('attack', 2))
+        self.assertFalse(actor.grounded)
+
+        self.app.event_to_output.return_value = scene.transform.point(*escape.position)
+        scene.handle_event(click)
+        self.assertEqual(actor.center, escape.position)
+        self.assertIsNone(actor.active_attack)
+        self.assertEqual(actor.state, 'jump')
+        self.assertTrue(entry.spent and escape.spent)
+        scene.update(.1)
+        self.assertEqual(enemy.hp, 2)
