@@ -253,6 +253,33 @@ class EnemyChargeTests(CombatFixture):
         self.actor.update(0)
         self.assertEqual(self.actor.state, 'attack')
         self.assertGreater(self.actor.invulnerability_remaining, 0)
+        attack_x = self.actor.x
+        self.actor.update(.02)
+        self.assertAlmostEqual(self.actor.x, attack_x)
+
+    def test_air_damage_keeps_moving_sideways_through_apex_and_until_landing(self):
+        self.start_charge()
+        self.actor.y = self.enemy.hurt_box[3] - 9
+        self.actor.velocity_y, self.actor.jump_phase = -130, 'fall'
+        self.actor._machine.jump()
+        self.level.update(.16)
+        self.assertEqual((self.actor.state, self.actor.hp), ('jump', 4))
+        rise_x = self.actor.x
+        self.assertGreater(self.actor.velocity_y, 0)
+        self.level.update(.12)
+        self.assertLess(self.actor.velocity_y, 0)
+        fall_x, fall_y = self.actor.x, self.actor.y
+        self.assertLess(fall_x, rise_x - 15)
+        self.level.update(.13)
+        self.assertLess(self.actor.y, fall_y)
+        low_x = self.actor.x
+        self.assertLess(low_x, fall_x - 15)
+        self.level.update(.20)
+        self.assertTrue(self.actor.grounded)
+        landed_x = self.actor.x
+        self.assertLess(landed_x, low_x - 15)
+        self.level.update(.1)
+        self.assertAlmostEqual(self.actor.x, landed_x)
 
     def test_falling_onto_a_charging_enemy_ejects_once_with_damage(self):
         self.start_charge()

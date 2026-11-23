@@ -121,6 +121,15 @@ class BasicEnemySmoke(CharacterScene):
         self.capture('player-air-recoil-displacement')
         print(f'Knockback: ground={ground_distance:.1f}, air={air_distance:.1f} world units', flush=True)
         yield from self.wait_until(lambda: actor.state == 'jump')
+        yield from self.wait_until(lambda: actor.velocity_y < 0)
+        descent_x, descent_y = actor.x, actor.y
+        self.capture('player-air-recoil-apex')
+        yield .12
+        assert not actor.grounded and actor.y < descent_y
+        descent_distance = descent_x - actor.x
+        assert descent_distance > 15
+        self.capture('player-air-recoil-descent')
+        print(f'Air recoil descent: {descent_distance:.1f} world units sideways', flush=True)
         push_key(pico.SDLK_j)
         yield .025
         push_key(pico.SDLK_j, pico.SDL_KEYUP)

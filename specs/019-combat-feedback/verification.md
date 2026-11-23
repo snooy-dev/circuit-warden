@@ -62,3 +62,14 @@ FR-001·002는 전류 좌표와 도착 프레임·기존 공중 연계, FR-003�
 관련 자동 검사 68개 통과. 지상 좌우 이동 키 유지, 공중 낙하 속도의 즉시 전환, 벽에서 통과 없이 상승, 착지 전 공격 복귀를 확인했다. 실제 SDL 창에서는 돌진 전 시작점에서 피격을 관측하고 약 70ms 더 진행했을 때 지상 114.2, 공중 113.1을 이동했다. 지상 재현은 전진 키를 계속 눌렀다. `character-player-ground-recoil-displacement.png`와 `character-player-air-recoil-displacement.png`에서 최초 접촉점과 떨어진 위치를 관찰했다. `tmp/hurt-knockback/warden-before-after.gif`는 이전 코드와 현재 코드를 동일한 조건으로 SDL에 그린 로컬 비교 영상이다.
 
 FR-005에 대해 실제 피해, 무피해 몸통 접촉, 회복, 지형 제한을 확인했다. 전체 회귀와 사용자의 직접 조작감 판단은 실시하지 않았다.
+
+## 공중 피격의 착지 궤적
+
+수정 전에는 초기 수평 반동이 120ms 뒤 끝났다. 새 회귀 검사에서 상승 중 x=-120.0과 정점을 지나 하강 중 x=-120.0으로 같아서 실패했다. 수정 후에는 기존 중력을 따르면서 수평 속도를 정점과 하강에도 유지한다. 수직 이동이 착지로 끝난 시점까지 수평 관성을 적용한다. 피해 회복 뒤 공중 공격이 시작되면 공격 중 수평 정지 규칙을 적용한다.
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy.BasicEnemySceneTests tests.integration.test_charge_scene.ChargeSceneTests tests.integration.test_jump_animation tests.integration.test_dash_animation
+.\.venv\Scripts\python.exe -m tests.smoke.basic_enemy_smoke --output-dir tmp/air-recoil-arc/sdl
+```
+
+자동 검사 69개와 실제 SDL 창 검사 한 건을 통과했다. 표적 검사에서 입력 없는 상승·정점·하강·착지 및 착지 후 정지를 검증했다. 실제 창은 정점을 지난 하강 중 27.2 월드 단위를 옆으로 이동하고 착지 전 J 공격을 시작했다. 이전 `fd26c45`와 현재 코드를 같은 시작점과 60Hz 갱신으로 렌더해 발 위치를 덧그렸다. 비교 장면에서 정점부터 착지까지 옆으로 이동한 거리가 0에서 58.5 월드 단위가 됐다. 로컬 비교 영상은 `tmp/air-recoil-arc/warden-air-recoil-before-after.gif`에 있다. 전체 회귀와 사용자 직접 조작감은 확인 범위 밖이었다.

@@ -22,6 +22,7 @@ HURT_SECONDS = PUSHBACK_SECONDS
 HURT_PUSH_SPEED = 1000
 GROUND_HURT_SPEED = 320
 AIR_HURT_SPEED = 420
+AIR_HURT_DRIFT_SPEED = 200
 BODY_BOUNCE_SPEED = 245
 DISPLAY_SCALE = 1
 # idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
@@ -131,6 +132,7 @@ class Character(GameObject):
         self.pushback_direction = 0
         self.pushback_remaining = 0.0
         self.pushback_speed = PUSHBACK_SPEED
+        self.air_recoil_velocity = 0.0
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
@@ -221,6 +223,7 @@ class Character(GameObject):
                 self._machine.jump()
                 self._show_jump()
         if self.pushback_remaining == 0 or self.pushback_direction != direction:
+            self.air_recoil_velocity = 0.0
             self.pushback_direction = direction
             self.pushback_remaining = PUSHBACK_SECONDS
             self.pushback_speed = PUSHBACK_SPEED
@@ -252,6 +255,7 @@ class Character(GameObject):
             self._machine.jump()
         self.pushback_direction, self.pushback_speed = direction, speed
         self.pushback_remaining = PUSHBACK_SECONDS
+        self.air_recoil_velocity = 0.0
         self._start_rebound(BODY_BOUNCE_SPEED)
         self._advance_pushback(elapsed)
         self._advance_vertical(elapsed)
@@ -267,12 +271,16 @@ class Character(GameObject):
         self.active_attack = self.arrival_link = None
         self.buffered_action, self.buffer_remaining = None, 0.0
         self._cancel_dash()
+        airborne = not self.grounded
         self.pushback_direction = -self.facing if direction is None else direction
         self.pushback_remaining = PUSHBACK_SECONDS if self.pushback_direction else 0.0
-        self.pushback_speed = max(HURT_PUSH_SPEED, push_speed)
+        drift_speed = AIR_HURT_DRIFT_SPEED if airborne else 0.0
+        self.air_recoil_velocity = self.pushback_direction * drift_speed
+        # 잔여 속도가 더해져도 초기 반동 거리는 유지한다.
+        self.pushback_speed = max(HURT_PUSH_SPEED, push_speed) - drift_speed
         if self.pushback_direction:
             self.facing = -self.pushback_direction
-        self._start_rebound(GROUND_HURT_SPEED if self.grounded else AIR_HURT_SPEED)
+        self._start_rebound(AIR_HURT_SPEED if airborne else GROUND_HURT_SPEED)
         self._machine.hurt()
         self.player.play(self.clips['hurt'], restart=True)
         if self.hp:
@@ -335,6 +343,7 @@ class Character(GameObject):
         self.buffered_action, self.buffer_remaining = None, 0.0
         self._cancel_dash()
         self.pushback_remaining = 0.0
+        self.air_recoil_velocity = 0.0
         self.jump_phase, self.jump_elapsed = None, 0.0
         if self.grounded:
             self.air_dash_used = False
@@ -423,6 +432,9 @@ class Character(GameObject):
                 return
             dt, offset = dt - step, offset + step
         push_time = self._advance_pushback(dt)
+        direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
+        if direction or action in ('attack', 'dash'):
+            self.air_recoil_velocity = 0.0
         if action == 'dash':
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
@@ -493,7 +505,6 @@ class Character(GameObject):
             low, high = left + self._left_margin, right - self._right_margin
             if low <= high:
                 start = min(max(self.x, low), high)
-                direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
                 if (self.state == 'attack' or self.jump_phase in ('start', 'land')
                         and (move_dt == 0 or finished_dash)):
                     direction = 0
@@ -612,7 +623,12 @@ class Character(GameObject):
                 self.jump_phase, self.jump_elapsed = 'land', 0.0
             else:
                 self.jump_phase = 'rise' if self.velocity_y > 1e-9 else 'fall'
-        return dt - max(0.0, remaining)
+        airborne_time = dt - max(0.0, remaining)
+        if self.air_recoil_velocity:
+            self.move_enemy_push(self.x + self.air_recoil_velocity * airborne_time)
+            if self.jump_phase == 'land':
+                self.air_recoil_velocity = 0.0
+        return airborne_time
 
     def _play_dash_phase(self, phase):
         self.dash_phase = phase
