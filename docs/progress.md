@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **지상 공격 접지·베기 효과 조정:** 사용자 피드백에 따라 지상 타격 중 이동을 멈추고 240ms부터 유지 중인 방향으로 달리기를 이어간다. 기존 타격 포즈 편집과 로컬 생성 회복 자세, 짧은 검끝 궤적을 훈련장에 적용했다. 관련 자동 검사 116개와 SDL 창 검사 두 개를 통과했다. 사용자 직접 조작감과 미술 평가는 남아 있다. [미리보기](../art/warden/ground-step-slash-v1/light.gif) · [검증](../specs/020-combat-reimplementation/verification.md#지상-공격-접지와-베기).
+
 - **착지 재점프 반응 조정:** 2026-11-23 사용자 피드백에 따라 Celeste의 착지 선입력을 참고했다. 공중 Space를 120ms 동안 저장하고 바닥이나 발판에 닿으면 즉시 재이륙한다. 기본 착지 모션 중 새 Space도 즉시 실행한다. 2단 점프는 보류하며 실제 조작감은 사용자 플레이로 재확인한다. [명세](../specs/020-combat-reimplementation/spec.md) · [검증](../specs/020-combat-reimplementation/verification.md#착지-시점의-재점프).
 
 - **점프 반응·기본 이동 후속 조정:** 2026-11-23 사용자 플레이 피드백으로 Space 이륙 준비를 단축하고, 해제 시점에 따른 높이 차이를 조정하고, 기본 이동을 33% 높였다. 관련 자동 검사와 캐릭터·훈련장 SDL 검사를 통과했다. 사용자 조작감 재확인은 남아 있다. [변경 명세](../specs/020-combat-reimplementation/spec.md) · [검증](../specs/020-combat-reimplementation/verification.md#점프-반응과-이동-속도-후속-조정).

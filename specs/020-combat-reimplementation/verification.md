@@ -103,3 +103,19 @@ $landingSmokeOutput = Join-Path $env:TEMP 'circuit-warden-landing-smoke'
 .\.venv\Scripts\python.exe -B -m tests.smoke.combat_reimplementation_smoke --output-dir $landingSmokeOutput
 git diff --check
 ```
+
+## 지상 공격 접지와 베기
+
+- **레퍼런스** — Motion Twin의 제작기에서 픽셀 캐릭터 모션을 게임 해상도로 내보내는 구성, Game Anim에서 빠른 베기 궤적을 효과로 읽히게 하는 방법을 참고했다. [Dead Cells 제작기](https://www.gamedeveloper.com/production/art-design-deep-dive-using-a-3d-pipeline-for-2d-animation-in-i-dead-cells-i-) · [Game Anim](https://www.routledge.com/rsc/downloads/GDC_2019_FreeBook.pdf)
+- **FR-010** — 지상 공격 시작과 타격 동안 A/D 변위는 0이다. 240ms 이후 방향을 누르고 있으면 달리기로 돌아가며 남은 갱신 시간만 이동에 쓴다. 피해 유효 시간은 100~200ms다. 전방 검끝이 나오는 자세와 효과를 100ms에 맞췄고 효과는 220ms에 끝난다. 앞·뒤 효과를 합친 최대 가시 높이는 45px다. 게임 시트의 17개 셀에서 이진 알파, 잘림 없음, 기존 피벗을 확인했다.
+- **모션 생성과 선택** — 로컬 ComfyUI LTX-2.5의 768×512·24fps 영상 두 편을 확인했다. 첫 테이크 49프레임은 발 모양과 칼자루 일관성이 떨어져 보류했다. 두 번째 25프레임에서 4·9·11번을 골라 팔레트와 발 기준을 정리하고 원래 준비·타격 포즈 뒤에 사용했다. 어두운 배경과 밝은 배경의 [미리보기](../../art/warden/ground-step-slash-v1/light.gif)에 재생을 보존했다.
+- **SC-006** — 아래 자동 검사 116개가 통과했다. 좌우 접지·239ms까지 이동 잠금·남은 시간의 역방향 달리기·벽 충돌과 공중 이동 타격을 확인했다. 실제 SDL 창 검사 두 개가 통과했고 좌우 베기 캡처를 열어 게임 배율에서 포즈와 궤적을 관찰했다. 사용자 직접 플레이와 전체 회귀는 이번 검사 범위에 포함하지 않았다.
+- **수렴** — FR-010과 SC-006을 코드·본 실행 시트·표적 검사·SDL 창에서 확인했다. 게임 규칙·기술 구조·아트 적용 상태·게임 시트 출처를 동기화했다. 원격 `main`에 반영할 추가 커밋은 없었다.
+
+```powershell
+.\.venv\Scripts\python.exe -B -m unittest tests.unit.test_character tests.unit.test_basic_enemy tests.unit.test_input_buffer tests.integration.test_character_scene tests.integration.test_basic_enemy tests.integration.test_jump_animation tests.integration.test_charge_scene -q
+$groundSmoke = Join-Path $env:TEMP 'circuit-warden-ground-contact-smoke'
+.\.venv\Scripts\python.exe -B -m tests.smoke.combat_reimplementation_smoke --output-dir $groundSmoke
+.\.venv\Scripts\python.exe -B -m tests.smoke.character_smoke --output-dir $groundSmoke
+git diff --check
+```

@@ -538,19 +538,19 @@ class CharacterTests(unittest.TestCase):
                 actor.update(.02)
                 self.assertEqual(actor.state, 'attack')
                 self.assertEqual(actor.player.elapsed, 0)
-                self.assertAlmostEqual(actor.x, start + facing * SPEED * .02)
+                self.assertAlmostEqual(actor.x, start)
                 actor.control(key(forward, pico.SDL_KEYUP))
                 actor.control(key(reverse))
                 actor.update(.05)
                 self.assertEqual(actor.player.elapsed, .05)
                 self.assertEqual(actor.attack_facing, facing)
-                self.assertAlmostEqual(actor.x, start - facing * SPEED * .03)
+                self.assertAlmostEqual(actor.x, start)
                 with patch('game.character.draw_sprite') as draw:
                     actor._draw(WorldTransform((0, 0, 800, 600), view_height=600), 1)
                 self.assertEqual(draw.call_args.kwargs['flip_x'], facing < 0)
                 actor.update(.10)
                 self.assertEqual((actor.state, actor.facing), ('run', -facing))
-                self.assertAlmostEqual(actor.x, start - facing * SPEED * .13)
+                self.assertAlmostEqual(actor.x, start - facing * SPEED * .05)
 
     def test_attack_release_opposite_keys_and_focus_return_to_idle(self):
         for finish in ('release', 'opposite', 'focus'):

@@ -39,6 +39,7 @@ DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
 ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
+GROUND_ATTACK_MOVE_UNLOCK = .24
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
 AIR_JUMP_BUFFER_SECONDS = .12
@@ -571,12 +572,13 @@ class Character(GameObject):
 
     def _update_attack(self, dt, offset, direction, push_time, started, start_x):
         previous = self.player.elapsed
-        step = dt if started else min(dt, sum(self.player.clip.durations) - previous)
+        duration = sum(self.player.clip.durations)
         start_y = self.y
         grounded = self.grounded
-        if grounded:
-            self._walk_during_attack(direction, step - push_time)
-        if not self.grounded and self.jump_phase is None:
+        if grounded and not self.airborne_swing and direction and self.view_bounds is not None:
+            duration = min(duration, GROUND_ATTACK_MOVE_UNLOCK)
+        step = dt if started else min(dt, max(0, duration - previous))
+        if not grounded and self.jump_phase is None:
             self.jump_phase, self.jump_elapsed = 'fall', 0.0
         flight = self._advance_vertical(step)
         if not grounded:
@@ -596,7 +598,7 @@ class Character(GameObject):
                     self.attack_id, self.swords[self.attack_facing], (start_x, start_y), (vx, vy),
                     (offset, offset + attack_time), (offset + min(first, attack_time), offset + last)))
 
-        if landed or self.player.finished:
+        if landed or (not started and duration - self.player.elapsed <= CONTACT_EPSILON):
             self._machine.finish()
             if self.jump_phase is not None:
                 self._machine.jump()

@@ -11,3 +11,7 @@
 - [x] T009 [FR-009] `game/character.py`에서 공중 점프 선입력과 충돌 시점의 재이륙을 연결한다.
 - [x] T010 [SC-005] `tests/integration/test_jump_animation.py`와 `tests/smoke/combat_reimplementation_smoke.py`에서 접촉·만료·입력 처리의 경계를 확인한다.
 - [x] T011 [FR-009, SC-005] 기준 문서·진행 상태·검증 기록을 갱신하고 착지 반응 증분을 커밋한다.
+- [x] T012 [FR-010] `game/character.py`에서 지상 공격 접지와 회복 이동을 연결한다.
+- [x] T013 [FR-010] 새 동작을 품질 검토하고 게임 시트 `assets/warden/attack.png`와 베기 효과를 정리한다.
+- [x] T014 [SC-006] 지상·공중 공격, 타격과 이동 전환을 자동 검사와 실제 SDL 창에서 확인한다.
+- [x] T015 기준 문서·진행 상태·검증 기록을 갱신하고 커밋한다.

@@ -135,7 +135,7 @@ class BasicEnemyTests(CombatFixture):
         self.assertIsNone(self.enemy.level)
         self.assertNotIn(self.enemy, self.level.objects)
 
-    def test_moving_ground_attack_stops_at_wall_and_cannot_hit_past_reach(self):
+    def test_ground_attack_plants_then_recovery_movement_stops_at_wall(self):
         wall = GameObject()
         wall.colliders = (Collider((30, GROUND_Y, 31, 0), 'terrain', blocks={'player'}),)
         self.level.spawn(wall)
@@ -143,17 +143,21 @@ class BasicEnemyTests(CombatFixture):
         self.click()
         self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
         self.level.update(.12)
-        self.assertAlmostEqual(self.actor.x, 6)
-        self.assertEqual(self.actor.hurt_box[2], 30)
+        self.assertAlmostEqual(self.actor.x, 0)
         self.assertIsNotNone(self.actor.active_attack)
         self.assertEqual(self.enemy.hp, 3)
+        self.level.update(.15)
+        self.assertAlmostEqual(self.actor.x, 6)
+        self.assertEqual(self.actor.hurt_box[2], 30)
+        self.assertEqual(self.enemy.hp, 3)
 
-    def test_sword_hits_target_reached_only_during_active_horizontal_motion(self):
+    def test_air_sword_hits_target_reached_only_during_active_horizontal_motion(self):
         for facing, key in ((1, pico.SDLK_d), (-1, pico.SDLK_a)):
             for gap, expected_hp in ((36, 2), (50, 3)):
                 with self.subTest(facing=facing, gap=gap):
                     self.level.reset_combat()
                     actor, enemy = self.level.player, self.level.enemy
+                    actor.y, enemy.y = GROUND_Y + 95, GROUND_Y + 60
                     enemy.x = facing * (ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + gap)
                     enemy.state, enemy.state_remaining = 'recover', 10
                     actor.facing = facing
