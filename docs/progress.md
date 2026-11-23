@@ -77,7 +77,7 @@
 
 ## 확정 범위와 가정
 
-- **전하 이동과 피격 피드백:** 전류 첫 화면과 도착 자세를 같은 기준점에 맞췄다. 사용자 재테스트에서 확인된 상단 반복 반동을 몸통 바깥으로 한 번에 벗어나는 위·옆 반동으로 수정하고, 실전 영상 비교를 바탕으로 접촉 섬광과 새 피격 자세를 적용했다. [실전 영상 조사](../specs/019-combat-feedback/research.md) · [명세](../specs/019-combat-feedback/spec.md) · [계획](../specs/019-combat-feedback/plan.md) · [검증](../specs/019-combat-feedback/verification.md).
+- **전하 이동과 피격 피드백:** 전류 첫 화면과 도착 자세를 같은 기준점에 맞췄다. 적 상단에서는 한 번 튕겨 몸통을 벗어난다. 사용자 재테스트와 유튜브 호넷전 프레임 비교를 바탕으로 실제 돌진 피해 시 워든이 접촉 위치에서 빠르게 위·옆으로 밀려나도록 조정했다. [실전 영상 조사](../specs/019-combat-feedback/research.md) · [명세](../specs/019-combat-feedback/spec.md) · [계획](../specs/019-combat-feedback/plan.md) · [검증](../specs/019-combat-feedback/verification.md).
 
 - **전하 생성:** 사용자 요청으로 E 기술과 환경 구역의 전하 생성을 적용했다. 환경 배치는 R과 재생성 때 바뀌며 두 생성원 모두 이동에 성공하면 해당 전하가 소멸한다. 입력·구역·대기 시간과 기술 전하 한 개는 시험안이다. [명세](../specs/018-charge-generation/spec.md) · [계획](../specs/018-charge-generation/plan.md) · [검증](../specs/018-charge-generation/verification.md).
 

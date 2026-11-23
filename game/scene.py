@@ -248,18 +248,16 @@ class GameplayLevel(Level):
         if not side:
             self._eject_from_enemy_top(contact_x, elapsed, damaged)
             return
-        # 접촉 뒤 밀고 들어간 이동만 되돌린다. 이미 적에서 멀어진 이동은 유지한다.
-        if side * (player.x - contact_x) < 0:
-            player.x = contact_x
         if damaged:
-            player.y = contact_y
+            player.x, player.y = contact_x, contact_y
             left, bottom, right, top = player.hurt_box
             impact_x = right if side < 0 else left
-            impact_x += contact_x - player.x
             impact_y = (max(bottom, enemy.y) + min(top, enemy.hurt_box[3])) / 2
             if player.take_hit(side, elapsed):
                 self._show_player_hit((impact_x, impact_y), side)
         else:
+            if side * (player.x - contact_x) < 0:
+                player.x = contact_x
             player.begin_enemy_push(side, elapsed)
 
         _, bottom, _, top = player.hurt_box

@@ -19,8 +19,9 @@ SPEED = 180
 PUSHBACK_SPEED = 440
 PUSHBACK_SECONDS = .12
 HURT_SECONDS = PUSHBACK_SECONDS
-GROUND_HURT_SPEED = 120
-AIR_HURT_SPEED = 230
+HURT_PUSH_SPEED = 1000
+GROUND_HURT_SPEED = 320
+AIR_HURT_SPEED = 420
 BODY_BOUNCE_SPEED = 245
 DISPLAY_SCALE = 1
 # idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
@@ -209,7 +210,7 @@ class Character(GameObject):
         self.x = self.enemy_push_target(destination)
 
     def begin_enemy_push(self, direction, elapsed):
-        if self.hp == 0:
+        if self.hp == 0 or self.state == 'hurt':
             return
         if self.state == 'dash':
             self._cancel_dash()
@@ -257,7 +258,7 @@ class Character(GameObject):
         if self.state == 'jump':
             self._show_jump()
 
-    def take_hit(self, direction=None, elapsed=0, push_speed=PUSHBACK_SPEED):
+    def take_hit(self, direction=None, elapsed=0, push_speed=HURT_PUSH_SPEED):
         if self.hp == 0 or self.invulnerability_remaining > 0:
             return False
         self.hp -= 1
@@ -268,7 +269,7 @@ class Character(GameObject):
         self._cancel_dash()
         self.pushback_direction = -self.facing if direction is None else direction
         self.pushback_remaining = PUSHBACK_SECONDS if self.pushback_direction else 0.0
-        self.pushback_speed = push_speed
+        self.pushback_speed = max(HURT_PUSH_SPEED, push_speed)
         if self.pushback_direction:
             self.facing = -self.pushback_direction
         self._start_rebound(GROUND_HURT_SPEED if self.grounded else AIR_HURT_SPEED)

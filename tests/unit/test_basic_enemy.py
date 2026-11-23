@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import GROUND_Y, HURT_SECONDS
+from game.character import BODY_HEIGHT, GROUND_Y, HURT_SECONDS
 from game import enemy as enemy_rules
 from game.effects import SpriteEffect
 from game.scene import GameplayLevel
@@ -212,7 +212,26 @@ class EnemyChargeTests(CombatFixture):
         self.assertGreater(self.actor.y, GROUND_Y)
         self.assertIsNone(self.actor.active_attack)
         self.actor.update(HURT_SECONDS)
-        self.assertEqual((self.actor.state, self.actor.hurt_remaining), ('idle', 0))
+        self.assertEqual((self.actor.state, self.actor.hurt_remaining), ('jump', 0))
+        self.actor.update(.24)
+        self.assertTrue(self.actor.grounded)
+
+    def test_charge_knocks_the_player_clear_with_movement_held(self):
+        for side, key in ((-1, pico.SDLK_d), (1, pico.SDLK_a)):
+            with self.subTest(side=side):
+                self.level.reset_combat()
+                self.actor, self.enemy = self.level.player, self.level.enemy
+                self.enemy.x = -side * 70
+                self.start_charge()
+                self.actor.pressed.add(key)
+                self.level.update(.05)
+                self.assertEqual((self.actor.state, self.actor.hp), ('hurt', 4))
+                self.assertGreater(side * self.actor.x, BODY_HEIGHT / 2)
+                self.level.update(.06)
+                self.assertEqual(self.actor.state, 'hurt')
+                self.assertGreater(side * self.actor.x, BODY_HEIGHT)
+                self.assertGreater(self.actor.y - GROUND_Y, BODY_HEIGHT / 5)
+                self.assertGreater(side * (self.actor.x - self.enemy.x), 90)
 
     def test_air_damage_replaces_fall_with_recoil_before_resuming_air_control(self):
         self.start_charge()
@@ -224,6 +243,9 @@ class EnemyChargeTests(CombatFixture):
         self.assertEqual((self.actor.state, self.actor.hp), ('hurt', 4))
         self.assertGreater(self.actor.velocity_y, 0)
         self.assertLess(self.actor.x, 0)
+        self.level.update(.05)
+        self.assertGreater(-self.actor.x, BODY_HEIGHT)
+        self.assertGreater(self.actor.y - (self.enemy.hurt_box[3] - 9), BODY_HEIGHT / 4)
         self.actor.update(HURT_SECONDS)
         self.assertEqual(self.actor.state, 'jump')
         self.assertFalse(self.actor.grounded)
@@ -251,7 +273,7 @@ class EnemyChargeTests(CombatFixture):
         self.start_charge()
         self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_LSHIFT))
         self.level.update(.14)
-        self.assertEqual((self.actor.state, self.actor.dash_phase), ('idle', None))
+        self.assertEqual((self.actor.state, self.actor.dash_phase), ('jump', None))
         self.assertEqual(self.actor.hp, 4)
         effects = [obj.player.clip for obj in self.level.objects if isinstance(obj, SpriteEffect)]
         self.assertEqual(effects, [self.level.combat_clips['hit_spark']])
@@ -267,6 +289,18 @@ class EnemyChargeTests(CombatFixture):
             self.assertAlmostEqual(self.actor.x, 0)
             self.assertAlmostEqual(self.enemy.hurt_box[0], self.actor.hurt_box[2])
             self.assertEqual(self.actor.hp, 5)
+
+    def test_damage_at_wall_lifts_without_crossing_the_wall(self):
+        wall = GameObject()
+        wall.colliders = (Collider((-25, GROUND_Y, -24, 0), 'terrain', blocks={'player'}),)
+        self.level.spawn(wall)
+        self.start_charge()
+        for _ in range(6):
+            self.level.update(.02)
+            self.assertAlmostEqual(self.actor.hurt_box[0], -24)
+        self.assertEqual(self.actor.hp, 4)
+        self.assertGreater(self.actor.y - GROUND_Y, BODY_HEIGHT / 5)
+        self.assertAlmostEqual(self.enemy.hurt_box[0], self.actor.hurt_box[2])
 
     def test_long_update_reaches_charge_but_height_can_avoid_it(self):
         for airborne, expected_hp in ((True, 5), (False, 4)):

@@ -57,12 +57,19 @@ class BasicEnemySmoke(CharacterScene):
         self.capture('enemy-recover-middle')
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
 
-        # 점프 회피와 지상 피격을 분리해 피격 순간의 포즈를 확인한다.
+        # 점프 회피와 지상 피격을 분리하고 전진 키를 유지한 채 반동 거리를 확인한다.
         assert actor.teleport((enemy.x - 70, GROUND_Y + BODY_HEIGHT / 2))
+        ground_start = actor.x
         enemy.state, enemy.state_remaining, enemy.facing = 'charge', .28, -1
+        push_key(pico.SDLK_d)
         yield from self.wait_until(lambda: actor.hp < actor.MAX_HP)
-        assert actor.state == 'hurt' and GROUND_Y < actor.y < GROUND_Y + 8
+        assert actor.state == 'hurt' and actor.y > GROUND_Y
         self.capture('player-ground-recoil')
+        yield .07
+        ground_distance = ground_start - actor.x
+        assert ground_distance > BODY_HEIGHT and actor.y - GROUND_Y > BODY_HEIGHT / 5
+        self.capture('player-ground-recoil-displacement')
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: actor.hp == 0)
         self.capture('enemy-player-defeated')
         stopped = actor.x, actor.y, enemy.x, enemy.state, enemy.state_remaining
@@ -100,6 +107,7 @@ class BasicEnemySmoke(CharacterScene):
         self.capture('player-top-clear')
 
         actor.x, actor.y = enemy.x - 70, enemy.hurt_box[3] - 9
+        air_start = actor.x
         actor.velocity_y, actor.jump_phase = -130, 'fall'
         if actor.state == 'idle':
             actor._machine.jump()
@@ -107,6 +115,11 @@ class BasicEnemySmoke(CharacterScene):
         yield from self.wait_until(lambda: actor.hp < actor.MAX_HP)
         assert actor.state == 'hurt' and not actor.grounded and actor.velocity_y > 0
         self.capture('player-air-recoil')
+        yield .07
+        air_distance = air_start - actor.x
+        assert air_distance > BODY_HEIGHT
+        self.capture('player-air-recoil-displacement')
+        print(f'Knockback: ground={ground_distance:.1f}, air={air_distance:.1f} world units', flush=True)
         yield from self.wait_until(lambda: actor.state == 'jump')
         push_key(pico.SDLK_j)
         yield .025

@@ -47,3 +47,18 @@ FR-001·002는 전류 좌표와 도착 프레임·기존 공중 연계, FR-003�
 새 피격 자세는 기존 idle을 참조해 내장 ImageGen으로 제작했다. 128×104 셀, 알파 범위 `(18,12)–(115,92)`, 발 기준점 `(64,92)`, 이진 알파와 idle 16색을 확인했다. `assemble_frames.py --strict`의 PNG·atlas RGBA 일치와 WebP 120ms를 확인했다. 단일 셀의 경계 침범과 반복 검사는 도구 적용 대상에서 제외되었다. 실제 화면에서 상체와 팔다리가 벌어지는 자세와 최초 접촉 섬광을 함께 관찰했다. [사용 에셋과 원본 해시](../../assets/warden/source/hurt-impact.provenance.json).
 
 전체 회귀와 할로우 나이트 직접 조작 비교는 실행하지 않았다. 워든 피격 시간과 이탈 거리는 플레이 조정용 값이다.
+
+## 돌진 피해의 실제 밀림
+
+유튜브 pikatPlays 호넷전 14:26–14:28을 브라우저에서 느리게 재생하고 프레임을 전진해, 체력 감소와 접촉점 이후 기사 몸의 이동을 비교했다. [프레임 관찰과 출처](research.md#유튜브-호넷전의-실제-피해-반동).
+
+수정 전에는 몸통 접촉과 돌진 옆면 피해가 평균 440의 수평 반동을 공유했다. 지장물이 없는 곳에서 최대 수평 반동은 52.8이었다. 재현 검사에서 접근 방향 키를 누른 지상 워든은 50ms 표본에서 좌우 각각 29.4를 이동했고, 공중은 80ms 표본에서 43.1을 이동했다. 새 검사 기준을 넘지 못했다. 피해 반동에 별도 수평 속도와 지상·공중 상승 속도를 적용하고 계산된 접촉 위치에서 시작하도록 수정했다.
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest tests.unit.test_basic_enemy tests.integration.test_basic_enemy.BasicEnemySceneTests tests.integration.test_charge_scene.ChargeSceneTests tests.integration.test_jump_animation tests.integration.test_dash_animation
+.\.venv\Scripts\python.exe -m tests.smoke.basic_enemy_smoke --output-dir tmp/hurt-knockback/sdl
+```
+
+관련 자동 검사 68개 통과. 지상 좌우 이동 키 유지, 공중 낙하 속도의 즉시 전환, 벽에서 통과 없이 상승, 착지 전 공격 복귀를 확인했다. 실제 SDL 창에서는 돌진 전 시작점에서 피격을 관측하고 약 70ms 더 진행했을 때 지상 114.2, 공중 113.1을 이동했다. 지상 재현은 전진 키를 계속 눌렀다. `character-player-ground-recoil-displacement.png`와 `character-player-air-recoil-displacement.png`에서 최초 접촉점과 떨어진 위치를 관찰했다. `tmp/hurt-knockback/warden-before-after.gif`는 이전 코드와 현재 코드를 동일한 조건으로 SDL에 그린 로컬 비교 영상이다.
+
+FR-005에 대해 실제 피해, 무피해 몸통 접촉, 회복, 지형 제한을 확인했다. 전체 회귀와 사용자의 직접 조작감 판단은 실시하지 않았다.
