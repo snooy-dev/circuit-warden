@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from game_framework import GameObject, RenderItem, SpritePlayer, draw_sprite
+from game_framework import Collider, GameObject, RenderItem, SpritePlayer, draw_sprite
 
 from .character import GROUND_Y, _load_clip
 
@@ -48,6 +48,9 @@ def load_enemy_clips(images):
 
 class Enemy(GameObject):
     MAX_HP = 3
+    body = Collider((-HURT_HALF_WIDTH, 0, HURT_HALF_WIDTH, BODY_HEIGHT), 'enemy',
+                    overlaps={'player', 'sword'})
+    colliders = (body,)
 
     def __init__(self, clips):
         super().__init__()
@@ -71,7 +74,11 @@ class Enemy(GameObject):
         return self.hurt_box_at(self.x)
 
     def hurt_box_at(self, x):
-        return x - HURT_HALF_WIDTH, self.y, x + HURT_HALF_WIDTH, self.y + BODY_HEIGHT
+        return self.body.bounds_at((x, self.y))
+
+    @property
+    def collision_position(self):
+        return self.x, self.y
 
     def take_hit(self):
         if self.hp > 0:

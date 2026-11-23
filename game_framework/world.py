@@ -1,8 +1,11 @@
 """객체·모드·레벨의 소유와 수명."""
 
+from .collision import CollisionResponse, blocking_contact, overlaps
 
 
 class GameObject:
+    colliders = ()
+
     def __init__(self):
         self._level = None
         self._id = None
@@ -15,6 +18,10 @@ class GameObject:
     @property
     def id(self):
         return self._id
+
+    @property
+    def collision_position(self):
+        return 0, 0
 
     def on_spawn(self):
         pass
@@ -84,6 +91,32 @@ class Level:
 
     def get(self, object_id):
         return self._objects.get(object_id)
+
+    def _collision_candidates(self, owner, collider, response):
+        if owner.level is not self:
+            raise ValueError('충돌 조회에는 이 레벨의 객체가 필요합니다.')
+        # shortcut: 레벨 객체를 순회한다. 후보 수가 병목이면 공간 인덱스를 둔다.
+        for obj in self._objects.values():
+            if obj is not owner:
+                for other in obj.colliders:
+                    if collider.response_to(other) == response:
+                        yield obj, other
+
+    def blocking_contact(self, owner, collider, movement):
+        """이동을 막는 첫 접촉 비율(0~1)을 돌려준다."""
+        bounds = collider.bounds_at(owner.collision_position)
+        first = None
+        for obj, other in self._collision_candidates(owner, collider, CollisionResponse.BLOCK):
+            hit = blocking_contact(bounds, other.bounds_at(obj.collision_position), movement)
+            if hit is not None and (first is None or hit < first):
+                first = hit
+        return first
+
+    def collision_overlaps(self, owner, collider, position=None, *, response=CollisionResponse.OVERLAP):
+        """지정 위치에서 양의 면적으로 겹친 (객체, 콜라이더) 쌍을 돌려준다."""
+        bounds = collider.bounds_at(owner.collision_position if position is None else position)
+        return tuple((obj, other) for obj, other in self._collision_candidates(owner, collider, response)
+                     if overlaps(bounds, other.bounds_at(obj.collision_position)))
 
     def on_open(self):
         """레벨을 열 때마다 새 객체로 초기 배치를 구성한다."""

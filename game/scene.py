@@ -1,14 +1,15 @@
 """플레이 레벨 배치와 장면·창 조작."""
 
+from math import inf
 from pathlib import Path
 
 import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
-from game_framework import GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
+from game_framework import Collider, GameObject, ImageStore, Level, LevelScene, RenderItem, draw_rect
+from game_framework.collision import TIME_EPSILON
 
 from .character import GROUND_Y, Character, load_clips
-from .combat import TIME_EPSILON, first_contact
 from .effects import SpriteEffect
 from .enemy import Enemy, load_enemy_clips
 from .charge import Charge, ChargeArt
@@ -22,6 +23,8 @@ ALTERNATE_SIZE = (1024, 720)
 
 
 class _Ground(GameObject):
+    colliders = (Collider((-inf, -inf, inf, GROUND_Y), 'terrain', blocks={'player'}),)
+
     def render_items(self):
         return (RenderItem(self._draw, draw_order=-2),)
 
@@ -73,47 +76,45 @@ class GameplayLevel(Level):
     def update(self, dt):
         if self.player is None or self.player.level is not self or self.player.hp == 0:
             return
-        player_box = self.player.hurt_box
+        player_position = self.player.collision_position
         protected_until = self.player.invulnerability_remaining
         super().update(dt)
         if self.enemy.level is not self:
             return
         self._resolve_sword()
         if self.enemy.level is self:
-            self._resolve_charge(dt, player_box, protected_until)
+            self._resolve_charge(dt, player_position, protected_until)
 
     def _resolve_sword(self):
         attack = self.player.active_attack
         if attack is None:
             return
-        attack_id, box, window, velocity_y = attack
+        attack_id, sword, position, window, velocity_y = attack
         if attack_id == self._last_hit_attack:
             return
         for times, x, dx, _ in self.enemy.motion:
-            left, bottom, right, top = self.enemy.hurt_box_at(x)
-            shift = velocity_y * times[0]
-            relative_box = left, bottom - shift, right, top - shift
+            relative_position = x, self.enemy.y - velocity_y * times[0]
             motion = dx, -velocity_y * (times[1] - times[0])
-            if first_contact(relative_box, box, times, motion, window) is not None:
+            if self.enemy.body.overlap_contact(sword, relative_position, position,
+                                               times, motion, window) is not None:
                 self._last_hit_attack = attack_id
                 self.enemy.take_hit()
                 break
 
-    def _resolve_charge(self, dt, player_box, protected_until):
+    def _resolve_charge(self, dt, player_position, protected_until):
         if dt == 0:
             return
-        end_box = self.player.hurt_box
+        x0, y0 = player_position
         # shortcut: 한 갱신의 워든 궤적은 선형 근사, 프레임 내 세부 궤적이 필요해지면 행동별 경로를 전달한다.
-        vx, vy = (end_box[0] - player_box[0]) / dt, (end_box[1] - player_box[1]) / dt
+        vx, vy = (self.player.x - x0) / dt, (self.player.y - y0) / dt
         for times, x, dx, charge_id in self.enemy.motion:
             if charge_id is None or charge_id == self._last_contact_charge:
                 continue
             start, end = times
             span = end - start
-            left, bottom, right, top = self.enemy.hurt_box_at(x)
-            relative_box = (left - vx * start, bottom - vy * start,
-                            right - vx * start, top - vy * start)
-            contact = first_contact(relative_box, player_box, times, (dx - vx * span, -vy * span))
+            relative_position = x - vx * start, self.enemy.y - vy * start
+            contact = self.enemy.body.overlap_contact(self.player.body, relative_position,
+                                                      player_position, times, (dx - vx * span, -vy * span))
             if contact is None:
                 continue
             self._last_contact_charge = charge_id

@@ -7,7 +7,9 @@ from pathlib import Path
 import pico2d.pico2d as pico
 from transitions import Machine
 
-from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
+from game_framework import (Collider, CollisionResponse, GameObject, RenderItem, SpriteClip,
+                            SpriteFrame, SpritePlayer, draw_sprite)
+from game_framework.collision import CONTACT_EPSILON
 
 from .effects import SpriteEffect
 
@@ -98,6 +100,12 @@ def _margins(clip):
 
 class Character(GameObject):
     MAX_HP = 5
+    body = Collider((-24, 0, 24, BODY_HEIGHT), 'player', blocks={'terrain'}, overlaps={'enemy'})
+    colliders = (body,)
+    swords = {
+        -1: Collider((-ATTACK_REACH, 8, 0, 70), 'sword', overlaps={'enemy'}),
+        1: Collider((0, 8, ATTACK_REACH, 70), 'sword', overlaps={'enemy'}),
+    }
 
     def __init__(self, clips):
         super().__init__()
@@ -142,11 +150,32 @@ class Character(GameObject):
 
     @property
     def grounded(self):
-        return self.y == GROUND_Y and self.velocity_y == 0
+        if self.velocity_y != 0:
+            return False
+        hit = self._blocking_contact((0, -1))
+        return hit is not None and hit <= CONTACT_EPSILON
+
+    @property
+    def collision_position(self):
+        return self.x, self.y
 
     @property
     def hurt_box(self):
-        return self.x - 24, self.y, self.x + 24, self.y + BODY_HEIGHT
+        return self.body.bounds_at(self.collision_position)
+
+    def _blocking_contact(self, movement):
+        if self.level is not None:
+            return self.level.blocking_contact(self, self.body, movement)
+        # 단독 캐릭터 시뮬레이션에는 레벨의 바닥 객체가 없다.
+        dy = movement[1]
+        if dy < 0 and self.y + dy <= GROUND_Y + 1e-9:
+            return min(1, max(0, (GROUND_Y - self.y) / dy))
+        return None
+
+    def _move_horizontal(self, destination):
+        distance = destination - self.x
+        hit = self._blocking_contact((distance, 0)) if distance else None
+        self.x = destination if hit is None else self.x + distance * hit
 
     def take_hit(self):
         if self.hp > 0 and self.invulnerability_remaining == 0:
@@ -162,8 +191,12 @@ class Character(GameObject):
             return False
         x, y = position
         left, _, right, top = self.view_bounds
-        return (left + self._left_margin <= x <= right - self._right_margin
-                and GROUND_Y + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2)
+        if not (left + self._left_margin <= x <= right - self._right_margin
+                and GROUND_Y + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2):
+            return False
+        destination = x, y - BODY_HEIGHT / 2
+        return self.level is None or not self.level.collision_overlaps(
+            self, self.body, destination, response=CollisionResponse.BLOCK)
 
     def teleport(self, position):
         if not self.can_teleport(position):
@@ -270,27 +303,26 @@ class Character(GameObject):
         airborne_attack = attacking and self.jump_phase in ('rise', 'fall')
         flight_time = dt
         if airborne_attack:
-            landing_time = (self.velocity_y + sqrt(self.velocity_y ** 2
-                            + 2 * GRAVITY * (self.y - GROUND_Y))) / GRAVITY
-            flight_time = min(dt, landing_time)
+            attack_y, attack_velocity = self.y, self.velocity_y
+            flight_time = self._advance_vertical(dt)
         if attacking and not started:
             previous = self.player.elapsed
             self.player.update(flight_time)
             if (self.active_attack is None and previous < ATTACK_ACTIVE_END
                     and self.player.elapsed >= ATTACK_ACTIVE_START):
-                end = self.x + self.attack_facing * ATTACK_REACH
-                box = min(self.x, end), self.y + 8, max(self.x, end), self.y + 70
                 start = offset + min(dt, max(0, ATTACK_ACTIVE_START - previous))
                 stop = offset + ATTACK_ACTIVE_END - previous
+                y = self.y
                 velocity = 0
                 if airborne_attack:
-                    stop = min(stop, offset + landing_time)
+                    if self.grounded:
+                        stop = min(stop, offset + flight_time)
                     # 활성 구간 양 끝의 높이를 잇는 속도로 검과 적의 상대 이동을 검사한다.
                     t0, t1 = start - offset, stop - offset
-                    velocity = self.velocity_y - .5 * GRAVITY * (t0 + t1)
-                    dy = self.velocity_y * t0 - .5 * GRAVITY * t0 ** 2 - velocity * start
-                    box = box[0], box[1] + dy, box[2], box[3] + dy
-                self.active_attack = self.attack_id, box, (start, stop), velocity
+                    velocity = attack_velocity - .5 * GRAVITY * (t0 + t1)
+                    y = attack_y + attack_velocity * t0 - .5 * GRAVITY * t0 ** 2 - velocity * start
+                self.active_attack = (self.attack_id, self.swords[self.attack_facing],
+                                      (self.x, y), (start, stop), velocity)
             if self.player.finished:
                 self._machine.finish()
 
@@ -304,7 +336,6 @@ class Character(GameObject):
                 self._machine.jump()
                 self._update_jump(remaining)
         elif airborne_attack:
-            self._advance_vertical(flight_time)
             if self.grounded and self.state == 'attack':
                 self._machine.finish()
             if self.state != 'attack':
@@ -329,7 +360,10 @@ class Character(GameObject):
                     direction = 0
                 destination = min(max(start + direction * SPEED * move_dt, low), high)
                 # 공격/대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
-                self.x = start if attacking or finished_dash else destination
+                self.x = start
+                if not (attacking or finished_dash):
+                    self._move_horizontal(destination)
+                    destination = self.x
                 if destination != start:
                     self.facing = direction
                     clip = self.clips['run_right' if direction > 0 else 'run_left']
@@ -389,13 +423,7 @@ class Character(GameObject):
                 self.jump_phase, self.jump_elapsed = 'rise', 0.0
                 self.velocity_y = JUMP_SPEED
             else:
-                if self.velocity_y > 1e-9:
-                    boundary = self.velocity_y / GRAVITY
-                else:
-                    boundary = (self.velocity_y + sqrt(self.velocity_y ** 2 +
-                                2 * GRAVITY * max(0, self.y - GROUND_Y))) / GRAVITY
-                step = min(remaining, max(0.0, boundary))
-                self._advance_vertical(step)
+                step = self._advance_vertical(remaining)
                 airborne_time += step
                 remaining = max(0.0, remaining - step)
             if remaining <= 1e-9:
@@ -414,16 +442,36 @@ class Character(GameObject):
         self.player.update(elapsed)
 
     def _advance_vertical(self, dt):
-        if not self.grounded:
-            self.y += self.velocity_y * dt - .5 * GRAVITY * dt ** 2
-            self.velocity_y -= GRAVITY * dt
-            if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
-                self.y, self.velocity_y = float(GROUND_Y), 0.0
+        remaining = dt
+        while remaining > 0 and not self.grounded:
+            velocity = self.velocity_y
+            rising = velocity > 0
+            apex = velocity / GRAVITY
+            step = min(remaining, apex) if rising else remaining
+            distance = velocity * step - .5 * GRAVITY * step ** 2
+            hit = self._blocking_contact((0, distance))
+            if hit is None:
+                self.y += distance
+                self.velocity_y = 0.0 if rising and step == apex else velocity - GRAVITY * step
+                remaining -= step
+                continue
+            distance *= hit
+            self.y += distance
+            speed = sqrt(max(0, velocity ** 2 - 2 * GRAVITY * distance))
+            # 이차식의 작은 양의 근을 유리화해 접촉 직전의 정밀도를 유지한다.
+            remaining -= abs(2 * distance) / (abs(velocity) + speed) if distance else 0
+            self.velocity_y = 0.0
+            if not rising:
+                if self.level is None:
+                    self.y = float(GROUND_Y)
                 self.air_dash_used = False
-                if self.jump_phase in ('rise', 'fall'):
-                    self.jump_phase, self.jump_elapsed = 'land', 0.0
-            elif self.jump_phase in ('rise', 'fall'):
+                break
+        if self.jump_phase in ('rise', 'fall'):
+            if self.grounded:
+                self.jump_phase, self.jump_elapsed = 'land', 0.0
+            else:
                 self.jump_phase = 'rise' if self.velocity_y > 1e-9 else 'fall'
+        return dt - max(0.0, remaining)
 
     def _play_dash_phase(self, phase):
         self.dash_phase = phase
@@ -446,8 +494,11 @@ class Character(GameObject):
                 if low <= high:
                     start = min(max(self.x, low), high)
                     distance = DASH_DISTANCE / DASH_SECONDS * step if self.dash_phase == 'dash' else 0
-                    self.x = min(max(start + self.facing * distance, low), high)
-                    can_continue = self.x < high if self.facing > 0 else self.x > low
+                    self.x = start
+                    self._move_horizontal(min(max(start + self.facing * distance, low), high))
+                    hit = self._blocking_contact((self.facing, 0))
+                    can_continue = ((self.x < high if self.facing > 0 else self.x > low)
+                                    and (hit is None or hit > CONTACT_EPSILON))
                 else:
                     self.x = (left + right) / 2
             self.player.update(step)

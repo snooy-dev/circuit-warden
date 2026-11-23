@@ -7,7 +7,8 @@ import pico2d.pico2d as pico
 
 from game.character import Character, BODY_HEIGHT, GROUND_Y, JUMP_HEIGHT, JUMP_APEX_SECONDS
 from game.character import DASH_DISTANCE, DASH_SECONDS
-from game_framework import ImageRef, SpriteClip, SpriteFrame, WorldTransform
+from game.scene import _Ground
+from game_framework import Collider, GameObject, ImageRef, Level, SpriteClip, SpriteFrame, WorldTransform
 
 
 def key(symbol, kind=pico.SDL_KEYDOWN):
@@ -43,6 +44,49 @@ class CharacterTests(unittest.TestCase):
         character = Character(self.clips)
         character.view_bounds = (-400, -300, 400, 300)
         return character
+
+    def test_terrain_stops_running_and_dash_and_rejects_teleport_destination(self):
+        level = Level()
+        level.open()
+        self.addCleanup(level.close)
+        level.spawn(_Ground())
+        wall = GameObject()
+        wall.colliders = (Collider((80, GROUND_Y, 81, 20), 'terrain', blocks={'player'}),)
+        level.spawn(wall)
+        actor = level.spawn(self.character)
+        actor.clips['dash_fx_right'] = actor.clips['dash_right']
+        actor.control(key(pico.SDLK_d))
+        level.update(.5)
+        self.assertEqual(actor.x, 56)
+        actor.x = 0
+        actor.control(key(pico.SDLK_LSHIFT))
+        level.update(.4)
+        self.assertAlmostEqual(actor.x, 56)
+        self.assertEqual(actor.dash_phase, 'recover_idle')
+        self.assertFalse(actor.teleport((80, -100)))
+        self.assertAlmostEqual(actor.x, 56)
+        self.assertTrue(actor.teleport((140, -100)))
+
+    def test_lands_on_platform_and_stops_rise_at_ceiling(self):
+        level = Level()
+        level.open()
+        self.addCleanup(level.close)
+        level.spawn(_Ground())
+        terrain = GameObject()
+        terrain.colliders = (Collider((-40, -160, 40, -150), 'terrain', blocks={'player'}),
+                             Collider((-40, -50, 40, -40), 'terrain', blocks={'player'}))
+        level.spawn(terrain)
+        actor = level.spawn(self.character)
+        actor.y, actor.velocity_y = -140, 300
+        actor._machine.jump()
+        actor.jump_phase = 'rise'
+        level.update(.03)
+        self.assertLessEqual(actor.y + BODY_HEIGHT, -50)
+        self.assertEqual(actor.jump_phase, 'fall')
+        level.update(.2)
+        self.assertAlmostEqual(actor.y, -150)
+        self.assertTrue(actor.grounded)
+        self.assertEqual(actor.jump_phase, 'land')
 
     def test_dash_world_distance_and_partition(self):
         self.assertEqual(DASH_DISTANCE, BODY_HEIGHT * 2)
