@@ -11,13 +11,13 @@
     "bounds": [0, 0, 3840, 720]
   },
   "layers": [
-    {"name": "far", "kind": "image", "image": "far-overview.png", "sha256": "ccf4e401faa1fd847ddc4a033816d18143e3bd9f9d45f83ac4b5a3d69d580665", "art_source": "host_image", "runtime_image": "far.png", "runtime_height": 1080, "parallax_x": 0.35, "runtime_sha256": "43a8e49864f8b05321ed6725182c64156d0eb04539b249b47c5f0123ea3b7860", "rotor": {"prop": "fan-rotor", "center_px": [126, 161], "diameter_px": 190, "degrees_per_second": 72}},
+    {"name": "far", "kind": "image", "image": "far-overview.png", "sha256": "a8ce38d2099cfc879fd0358911c799caadb7bfaf1d1b9436318085679aa3b3b2", "art_source": "host_image", "runtime_image": "far.png", "runtime_height": 1080, "parallax_x": 0.35, "runtime_sha256": "43a8e49864f8b05321ed6725182c64156d0eb04539b249b47c5f0123ea3b7860", "rotor": {"prop": "fan-rotor", "center_px": [126, 161], "diameter_px": 190, "degrees_per_second": 72}},
     {"name": "rear", "kind": "objects"},
     {"name": "structure", "kind": "objects"},
     {"name": "front", "kind": "objects"}
   ],
   "props": {
-    "fan-rotor": {"image": "fan-rotor.png", "art_source": "host_image", "sha256": "7c233e1eb974238571fa448a1fa41ae918ee9b51c4b561bc016c4315e07f5720"},
+    "fan-rotor": {"image": "fan-rotor.png", "art_source": "host_image", "sha256": "517f8b8c6f190fa6c2db827e2e6accc71f249b9de2d6102eed9f71866f54fb22"},
     "lint-sparse": {"image": "lint-sparse.png", "art_source": "host_image", "sha256": "4666517d6552f4f68ee45c6e6b7cfe8b334dd123135237f2639c20657ffec0a9"},
     "lint-clump": {"image": "lint-clump.png", "art_source": "host_image", "sha256": "ac2fd9ec53d7d3ef68447574a06420fa30e0728ee110fe4a12a35886d4089b64"},
     "lint-ridge": {"image": "lint-ridge.png", "art_source": "host_image", "sha256": "8adcda367576d33d9edbf63b136312fea91586897465cdb3ec18913c9b198ce1"},
