@@ -23,3 +23,5 @@
 - [x] T007 먼지 원경·솜털·팬 회전자 생성 및 hi-bit 가공 (`art/levels/power-supply/dust-revision/`)
 - [x] T008 먼지 배치와 흡기 팬 회전 통합 (`assets/levels/power-supply/map.json`, `game/power_supply_map.py`)
 - [x] T009 맵·실제 SDL 검증 및 기준 갱신 (`verification.md`, `docs/`)
+- [x] T010 첫 레벨 공통 픽셀 격자 출력 (`game/scene.py`)
+- [x] T011 실제 SDL 픽셀·창 전환·입력 검증 및 기준 갱신 (`verification.md`, `docs/`)

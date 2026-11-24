@@ -28,6 +28,7 @@ ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
 COMBAT_ASSETS = ASSETS.parent / 'combat'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
+POWER_SUPPLY_PIXEL_HEIGHT = 240
 CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
 TOP_EXIT_MARGIN = 24
@@ -331,6 +332,46 @@ class CharacterScene(LevelScene):
                          view_height=DEFAULT_SIZE[1] if power_supply else HEIGHT, images=images)
         self.level.mode.event_to_world = self.event_to_world
         self.level.mode.cursor_to_world = self.cursor_to_world
+        self._pixel_target = None
+        self._pixel_size = None
+
+    def draw(self):
+        if not self.level.power_supply or not self.engine.output_valid:
+            return super().draw()
+
+        width, height = self.engine.output_size
+        grid_height = POWER_SUPPLY_PIXEL_HEIGHT
+        grid_width = max(1, round(width * grid_height / height))
+        if self._pixel_size != (grid_width, grid_height):
+            target = pico.SDL_CreateTexture(pico.renderer, pico.SDL_PIXELFORMAT_RGBA8888,
+                                            pico.SDL_TEXTUREACCESS_TARGET, grid_width, grid_height)
+            if not target:
+                raise RuntimeError(f'픽셀 격자 텍스처 생성 실패: {pico.SDL_GetError()!r}')
+            try:
+                _sdl(pico.SDL_SetTextureScaleMode(target, pico.SDL_ScaleModeNearest))
+            except BaseException:
+                pico.SDL_DestroyTexture(target)
+                raise
+            if self._pixel_target:
+                pico.SDL_DestroyTexture(self._pixel_target)
+            self._pixel_target = target
+            self._pixel_size = grid_width, grid_height
+
+        _sdl(pico.SDL_SetRenderTarget(pico.renderer, self._pixel_target))
+        try:
+            # 월드·입력 좌표를 유지한 채 같은 픽셀 격자에 합성한다.
+            _sdl(pico.SDL_RenderSetScale(pico.renderer, grid_width / width, grid_height / height))
+            _sdl(pico.SDL_RenderClear(pico.renderer))
+            super().draw()
+        finally:
+            _sdl(pico.SDL_SetRenderTarget(pico.renderer, None))
+        _sdl(pico.SDL_RenderCopy(pico.renderer, self._pixel_target, None, None))
+
+    def exit(self):
+        if self._pixel_target:
+            pico.SDL_DestroyTexture(self._pixel_target)
+            self._pixel_target = self._pixel_size = None
+        super().exit()
 
     def cursor_to_world(self):
         if not pico.SDL_GetWindowFlags(pico.window) & pico.SDL_WINDOW_MOUSE_FOCUS:

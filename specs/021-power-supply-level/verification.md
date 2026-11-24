@@ -38,3 +38,13 @@
 - `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict`, `export_tiled.py export`를 위 명령과 같은 도구로 최신 번들에 실행했다. 브라우저 경로 4개 통과, 경고 0개, Tiled 재렌더 차이 0픽셀이다. 브라우저와 Tiled의 원경은 팬 한 자세를 합성한 정적 이미지다. [번들](../../assets/levels/power-supply/map.json) · [브라우저 기록](../../art/levels/power-supply/dust-revision/preview-final/preview-qa.json) · [Tiled 기록](../../art/levels/power-supply/dust-revision/tiled-final/export-report.json)
 
 전체 회귀, Tiled GUI, 사용자 직접 플레이는 미실행이다. GIF는 실제 SDL 화면 100프레임을 20fps로 담았다.
+
+## 공통 픽셀 격자 검증
+
+사용자 정정에 따라 1:1 고해상도 시안을 철회했다. 첫 레벨의 배경, 팬, 지형, 워든과 전하를 같은 세로 240픽셀 타깃에 합성하고 최근접 확대한다. 원경과 팬에는 먼지와 통풍망을 포함한 이전 hi-bit 에셋을 사용한다. 월드·충돌·시작점·전하·도착 데이터는 변경 전과 일치한다.
+
+- `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/pixel-grid/sdl-final` 통과. SDL 기본 427×240 및 F6의 341×240 타깃, 방열판과 발판 착지, 실제 좌클릭 순간이동, 도착·재시작을 확인했다. 추가 SDL 입력 검사에서 F11 왕복, 매 프레임 창 타깃 복원과 종료 시 텍스처 해제를 확인했다.
+- 기본 창 캡처 네 장에서 세 행씩 픽셀이 동일하고 427열 최근접 확대 경계 안에서는 색이 바뀌지 않는 것을 확인했다. [실제 프레임 100장의 GIF](../../art/levels/power-supply/pixel-grid/fan-in-game.gif) · [워든과 출력 단자](../../art/levels/power-supply/pixel-grid/sdl-final/character-power-supply-output.png)
+- `.venv\Scripts\python.exe -m unittest tests.integration.test_character_scene tests.integration.test_resize_input`는 SDL 더미 드라이버에서 14개를 통과했다. `map_bundle.py validate` 오류와 경고는 0개였고 `export_tiled.py export`의 픽셀 차이도 0개였다. 맵 탐색의 충돌 입력은 이전 검사와 같고 독립적인 탐색 재검사는 생략했다.
+
+전체 회귀와 사용자 직접 미술 평가는 미실행이다. 창 크기에 따라 물리 출력 픽셀 배율은 달라진다.
