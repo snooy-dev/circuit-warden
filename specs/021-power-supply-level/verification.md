@@ -56,3 +56,13 @@
 `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/pixel-grid-comparison/sdl`로 기본 640×360과 F6 512×360 타깃, 발판 착지·순간이동·도착·재시작을 확인했다. 전체화면 왕복과 전체 회귀는 이번 비교에서 재실행하지 않았다.
 
 2026-11-24 사용자가 2픽셀을 확정했다. 실행 코드와 에셋 변경 없이 결정만 기록해 기존 SDL 검사 결과를 재사용했다.
+
+## 전원선 등장 검증
+
+FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워든을 배치하고 전원선의 접점 (241, 498)에서 소모 효과를 재생한 뒤 약 100ms부터 워든 중심까지 전류를 연결한다. 340ms에 완전히 드러나고 조작 입력은 즉시 처리한다. 배치의 좌표는 맵 좌상단 기준이다. [실제 SDL GIF](../../art/levels/power-supply/power-entry/power-entry.gif)
+
+- 내장 ImageGen(`host_image`, `codex-image_gen`)으로 전원선 원화를 만들고 기존 환경 24색과 이진 알파로 114×21에 가공한 뒤 2배 최근접 확대해 배치했다. 도입에 기존 전하·전류 에셋을 사용했다. [원본과 생성 기록](../../art/levels/power-supply/power-entry/source/job.json) · [프롬프트](../../art/levels/power-supply/power-entry/prompt.txt) · [가공 스크립트](../../art/levels/power-supply/power-entry/prepare.py)
+- `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/power-entry/sdl`에서 처음 숨김, 정확한 전류 양 끝, 드러나기, R 재생, 조기 방향키 이동을 확인했다. 기존 발판 착지·순간이동·출력 도착·F6도 통과했다.
+- SDL 더미 드라이버로 `.venv\Scripts\python.exe -m unittest tests.integration.test_character_scene tests.integration.test_charge_scene` 34개 통과. `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict`의 경고·실패는 0개이며 브라우저 경로 4개가 통과했다. `export_tiled.py export` 재렌더 차이는 0픽셀이었다. 브라우저는 정적 배치를 확인하고 등장 연출은 SDL에서 확인했다.
+
+전체 회귀와 사용자 직접 플레이는 미실행이다.

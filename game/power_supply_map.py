@@ -27,6 +27,8 @@ class PowerSupplyMap(GameObject):
             for rect in data['collision']['rects'])
         spawns = {entry['id']: self._point(entry['x'], entry['feet_y']) for entry in data['spawns']}
         self.player_start, self.enemy_start = spawns['start'], spawns['metal-dust']
+        player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
+        self.power_entry = self._point(*player_spawn['entry_origin'])
         self.charge_sites = tuple(tuple(self._point(*point) for point in anchor['variants'])
                                   for anchor in data['anchors'].values())
         output = next(item for item in data['interactions'] if item['id'] == 'output')

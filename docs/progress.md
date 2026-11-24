@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **첫 레벨 전원선 등장:** 2026-11-24 사용자 요청으로 흡기구 옆 전원선과 워든의 등장 연출을 연결했다. 단자에서 전류가 흐른 뒤 기존 스폰 바닥에서 워든이 나타나며, R이나 빠른 이동 입력으로 재생과 즉시 조작을 확인했다. [실제 화면](../art/levels/power-supply/power-entry/power-entry.gif) · [검증](../specs/021-power-supply-level/verification.md#전원선-등장-검증).
+
 - **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
 
 - **파워서플라이 먼지·흡기 팬:** 2026-11-24 요청과 사용자 피드백으로 바닥·발판에 낮은 보풀과 먼지 띠를 배치했다. 원경 부품에도 먼지층을 더했다. 팬 금속과 먼지는 원경 팔레트의 12색을 사용하며, 회전하는 날개 뒤로 먼지 낀 고정 통풍망이 보인다. [실제 게임의 팬](../art/levels/power-supply/dust-revision/fan-cavity/fan-in-game.gif) · [레벨 검증](../specs/021-power-supply-level/verification.md#먼지와-흡기-팬-후속-검증).

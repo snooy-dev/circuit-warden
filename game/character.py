@@ -135,6 +135,7 @@ class Character(GameObject):
         self.velocity_y = 0.0
         self.facing = 1
         self.hp = self.MAX_HP
+        self.spawn_opacity = 1.0
         self.invulnerability_remaining = 0.0
         self.hurt_remaining = 0.0
         self.teleport_guard_remaining = 0.0
@@ -793,4 +794,4 @@ class Character(GameObject):
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
     def render_items(self):
-        return (RenderItem(self._draw),)
+        return (RenderItem(self._draw, opacity=self.spawn_opacity),)

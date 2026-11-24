@@ -17,6 +17,7 @@
     {"name": "front", "kind": "objects"}
   ],
   "props": {
+    "power-inlet": {"image": "power-inlet.png", "art_source": "host_image", "sha256": "b9eee00be4f1ce1c597fd95d7714cb8a239879f11082e96a48a3dadb35f1c7ef"},
     "fan-rotor": {"image": "fan-rotor.png", "art_source": "host_image", "sha256": "39644cf75eed9477375b7bb412974e36d9a6409843836cb84a447811ec357fd0"},
     "lint-sparse": {"image": "lint-sparse.png", "art_source": "host_image", "sha256": "13fed8070045ab077cf89a2e6c31d78977cdc0615eeb061211441ebc7772a537"},
     "lint-clump": {"image": "lint-clump.png", "art_source": "host_image", "sha256": "61bcf1f69e02438db9fcb5ee68d8fc85939bf194e13ca0182e852d162caf1112"},
@@ -41,6 +42,7 @@
     "lint-mat-l": {"image": "lint-mat-l.png", "art_source": "host_image", "sha256": "b5f931c4bdb2645fb9f5cb3cba5e327fe21bc3e077f05d018a88df1fef045f11"}
   },
   "objects": [
+    {"id": "power-inlet", "prop": "power-inlet", "x": 20, "y": 475, "anchor_px": [0, 0], "solid": false, "layer": "rear", "sortY": 49},
     {"id": "input-capacitors", "prop": "capacitors", "x": 830, "y": 540, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0},
     {"id": "main-inductor", "prop": "coil", "x": 1834, "y": 540, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0},
     {"id": "bulk-capacitors", "prop": "capacitors", "x": 2205, "y": 540, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "flip_x": true},
@@ -148,7 +150,7 @@
     ]
   },
   "spawns": [
-    {"id": "start", "x": 288, "y": 498.5, "feet_y": 540},
+    {"id": "start", "x": 288, "y": 498.5, "feet_y": 540, "entry_origin": [241, 498]},
     {"id": "metal-dust", "x": 2112, "y": 498.5, "feet_y": 540}
   ],
   "interactions": [

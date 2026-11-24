@@ -8,6 +8,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.scene import ALTERNATE_SIZE, DEFAULT_SIZE, CharacterScene
+from game.teleport_link import TeleportLink
 from tests.smoke.character_smoke import push_key
 from tests.smoke.combat_reimplementation_smoke import CombatSmoke
 
@@ -51,7 +52,17 @@ class PowerSupplySmoke(CombatSmoke):
         assert actor.collision_position == layout.player_start and actor.grounded
         assert self.level.enemy.collision_position == layout.enemy_start
         assert all(actor.can_place_center(point) for site in layout.charge_sites for point in site)
+        assert actor.spawn_opacity == 0.0
         initial_angle = layout.rotor_angle
+        self.screenshot = 'power-entry-inlet'
+        yield from self.wait_until(lambda: any(isinstance(obj, TeleportLink) for obj in self.level.objects))
+        link = next(obj for obj in self.level.objects if isinstance(obj, TeleportLink))
+        assert link.start == layout.power_entry and link.end == actor.center
+        self.screenshot = 'power-entry-arc'
+        yield .04
+        assert 0 < actor.spawn_opacity < 1
+        yield from self.wait_until(lambda: actor.spawn_opacity == 1.0)
+        assert actor.collision_position == layout.player_start
         self.screenshot = 'power-supply-intake'
         yield .24
         assert self._pixel_size == (640, 360)
@@ -118,6 +129,11 @@ class PowerSupplySmoke(CombatSmoke):
         assert not layout.reached_output and self.character.collision_position == layout.player_start
         assert self.level.enemy.collision_position == layout.enemy_start
         push_key(pico.SDLK_r, pico.SDL_KEYUP)
+        assert self.character.spawn_opacity == 0.0
+        push_key(pico.SDLK_d)
+        yield from self.wait_until(lambda: self.character.x > layout.player_start[0])
+        assert self.character.spawn_opacity == 1.0
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
         print('PSU SDL PASS: intake, two heatsinks, reverse crossing, gallery, charge, output, R, F6', flush=True)
 
 

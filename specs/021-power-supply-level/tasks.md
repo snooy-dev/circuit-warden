@@ -25,3 +25,6 @@
 - [x] T009 맵·실제 SDL 검증 및 기준 갱신 (`verification.md`, `docs/`)
 - [x] T010 첫 레벨 공통 픽셀 격자 출력 (`game/scene.py`)
 - [x] T011 실제 SDL 픽셀·창 전환·입력 검증 및 기준 갱신 (`verification.md`, `docs/`)
+- [x] T012 전원선 에셋과 등장 전류 시작점 배치 (`assets/levels/power-supply/`)
+- [x] T013 첫 로드·R·빠른 입력에 등장 연출 연결 (`game/scene.py`, `game/character.py`)
+- [x] T014 실제 SDL과 맵 검사, 기준 및 검증 결과 갱신 (`tests/smoke/power_supply_smoke.py`, `docs/`)

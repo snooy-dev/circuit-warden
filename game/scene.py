@@ -14,7 +14,7 @@ from engine.rendering.drawing import _sdl
 from game_framework import ImageStore, Level, LevelScene
 from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_contact, overlaps
 
-from .character import PUSHBACK_SECONDS, Character, _load_clip, load_clips
+from .character import DASH_KEYS, MOVE_KEYS, PUSHBACK_SECONDS, Character, _load_clip, load_clips
 from .effects import SpriteEffect
 from .enemy import CHARGE_SPEED, Enemy, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
@@ -29,6 +29,8 @@ COMBAT_ASSETS = ASSETS.parent / 'combat'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
 POWER_SUPPLY_PIXEL_HEIGHT = 360
+POWER_ENTRY_REVEAL = .24
+POWER_ENTRY_KEYS = MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE, pico.SDLK_j, pico.SDLK_e}
 CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
 TOP_EXIT_MARGIN = 24
@@ -75,6 +77,7 @@ class GameplayLevel(Level):
         self.link_art = None
         self.combat_clips = {}
         self.power_supply = power_supply
+        self.power_entry_elapsed = None
         self.world_bounds = WORLD_BOUNDS
         self.environment_sites = ENVIRONMENT_SITES
 
@@ -93,6 +96,30 @@ class GameplayLevel(Level):
         self.link_art = LinkArt(self.images)
         self.combat_clips = load_combat_clips(self.images)
         self._reset_environment()
+        if self.power_supply:
+            self._start_power_entry()
+
+    def _start_power_entry(self):
+        self.power_entry_elapsed = 0.0
+        self.player.spawn_opacity = 0.0
+        self.spawn(SpriteEffect(self.combat_clips['charge_spent'], self.layout.power_entry,
+                                1, 1, draw_order=1))
+
+    def finish_power_entry(self):
+        self.power_entry_elapsed = None
+        self.player.spawn_opacity = 1.0
+
+    def _update_power_entry(self, dt):
+        previous = self.power_entry_elapsed
+        elapsed = previous + dt
+        if elapsed >= DURATION + POWER_ENTRY_REVEAL:
+            self.finish_power_entry()
+            return
+        if previous < DURATION <= elapsed:
+            self.spawn(TeleportLink(self.layout.power_entry, self.player.center, self.link_art,
+                                    self.combat_clips['charge_spent']))
+        self.power_entry_elapsed = elapsed
+        self.player.spawn_opacity = max(0.0, (elapsed - DURATION) / POWER_ENTRY_REVEAL)
 
     def _spawn_combatants(self, clips, enemy_clips):
         self.player = self.spawn(Character(clips))
@@ -165,6 +192,7 @@ class GameplayLevel(Level):
         self.player.view_bounds = view_bounds
         if self.power_supply:
             self.layout.reached_output = False
+            self._start_power_entry()
         self._reset_environment()
         self._last_hit_attack = 0
         self._last_contact_charge = None
@@ -176,6 +204,8 @@ class GameplayLevel(Level):
         player_position = self.player.collision_position
         protected_until = max(self.player.invulnerability_remaining, self.player.teleport_guard_remaining)
         super().update(dt)
+        if self.power_entry_elapsed is not None:
+            self._update_power_entry(dt)
         self._update_environment()
         if self.enemy.level is not self:
             return
@@ -404,6 +434,11 @@ class CharacterScene(LevelScene):
     def handle_event(self, event):
         previous_player = self.character
         previous_player.view_bounds = self.transform.bounds
+        if self.level.power_entry_elapsed is not None and (
+                event.type == pico.SDL_KEYDOWN and event.key in POWER_ENTRY_KEYS
+                or event.type == pico.SDL_MOUSEBUTTONDOWN
+                and event.button in (pico.SDL_BUTTON_LEFT, pico.SDL_BUTTON_RIGHT)):
+            self.level.finish_power_entry()
         if event.type == pico.SDL_KEYDOWN:
             if event.key == pico.SDLK_F6:
                 size = ALTERNATE_SIZE if self.engine.window_size == DEFAULT_SIZE else DEFAULT_SIZE
