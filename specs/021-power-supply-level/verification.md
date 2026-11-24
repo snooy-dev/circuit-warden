@@ -118,3 +118,12 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 
 - `.venv\Scripts\python.exe art/levels/power-supply/entry-camera-shake/smoke.py art/levels/power-supply/entry-camera-shake/frames`로 실제 SDL에서 12.5ms 간격으로 진행하며 타격 전과 직후의 카메라 위치, 그리기 직후 입력 좌표 복원, R 재시작과 조기 이동 중단을 확인했다.
 - 실제 화면 5장에서 케이스 벽의 같은 영역을 픽셀 단위로 대조해 예상 변위와 최종 원위치를 확인했다. 전체 레벨 주행과 사용자 직접 플레이는 미실행이다.
+
+## 레벨 동선 재설계
+
+2026-11-24 FR-008~FR-010을 확인했다. 변경 전에는 네 발판의 하부가 72px로 워든 키 83px보다 낮았다. 실제 충돌 계산에서 32px 중앙 틈에 폭 48px인 몸통이 양쪽으로 8px씩 걸렸다. 대기·달리기 프레임의 발 기준점과 불투명 발끝은 0~1px 차이였다.
+
+- **배치 검사** `map_bundle.py validate --bundle assets/levels/power-supply/map.json`은 오류·경고 0개, `map_nav.py check --bundle assets/levels/power-supply/map.json --output-dir .local-tools/level-redesign-nav`는 목표 4곳 도달과 얇은 틈 0개를 보고했다. 텍스처 알파 경계를 대조해 발판 9개와 방열판 2개의 그림·충돌 경계가 일치하는 것을 확인했다. 하부 최소 높이는 110px, 상부 중앙 틈은 80px다.
+- **실제 SDL 입력** `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir .local-tools/level-redesign-sdl` 통과. 입구 발판 아래로 양방향 주행, 연습 발판 착지, 두 방열판 왕복, 변환부 하부 주행, 중앙 발판 양방향 점프와 틈에서 바닥까지 낙하, 상부 전하 좌클릭 순간이동, 경로 합류, 출력 점등, R·F6을 확인했다. 전하 후보 48곳의 배치도 검사했다. 적의 접근을 확인한 뒤 지형 반복 검사에서는 적을 제거했다. SDL 캡처에서 방열판 착지, 중앙 틈 낙하, 출력 점등을 관찰했다.
+- **훈련장** `test_jump_onto_training_platform_and_walk_off`, `test_camera_freezes_at_low_wall_inside_world_bounds`, `test_lands_on_platform_and_stops_rise_at_ceiling`을 `unittest`로 실행해 3개가 통과했다. 하부 최소 높이는 104px이며 기존 훈련장 검사에 발판 하부를 달리는 입력을 추가했다.
+- 점프를 재현하는 SDL을 경로 검증에 사용했다. 이전 브라우저·Tiled 산출물은 재생성하지 않았다. 이번 범위의 전체 회귀와 사용자 직접 플레이는 미실행이다.

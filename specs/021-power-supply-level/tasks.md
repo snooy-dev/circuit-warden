@@ -35,3 +35,9 @@
 - [x] T019 갈라진 번개와 바닥 충격의 등장 전용 시트 제작·통합·SDL 확인 (`scripts/bake-effects/`, `assets/levels/power-supply/`, `game/scene.py`, `verification.md`, `docs/`)
 - [x] T020 시작 케이블의 피복 손상과 구리 심선 제작, 낙뢰 접점 정합 및 SDL 확인 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
 - [x] T021 낙뢰 타격의 카메라 흔들림과 정상 복귀 구현·SDL 확인 (`game/scene.py`, `verification.md`, `docs/`)
+
+## 레벨 동선 재설계
+
+- [x] T022 [US1] 전원 구역의 연습·방열판·상하 경로·출력 동선과 구조물의 표시 및 충돌을 맞춘다 (`assets/levels/power-supply/map.json`, FR-008~FR-010)
+- [x] T023 [US1] 훈련장 공중 발판 아래의 보행 높이를 확보한다 (`game/training_map.py`, FR-009)
+- [x] T024 [US1] 양방향 착지와 하부 보행, 중앙 틈 낙하와 경로 합류를 검증하고 현재 기준을 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-008~FR-010)

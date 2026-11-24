@@ -163,7 +163,16 @@ class CharacterSceneTests(unittest.TestCase):
         self.addCleanup(scene.exit)
         scene.level.enemy.destroy()
         actor = scene.character
-        left, _, _, top = next(platform for platform in PLATFORMS if platform[0] > 0)
+        left, _, right, top = next(platform for platform in PLATFORMS if platform[0] > 0)
+        actor.x = left - 50
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
+        for _ in range(150):
+            scene.update(.01)
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYUP, key=pico.SDLK_d))
+        self.assertGreater(actor.x, right - actor.body.bounds[0])
+        self.assertAlmostEqual(actor.y, GROUND_Y)
+        self.assertTrue(actor.grounded)
+
         actor.x = left - 50
         scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_SPACE))
         for _ in range(33):
