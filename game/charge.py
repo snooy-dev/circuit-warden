@@ -45,6 +45,7 @@ class Charge(GameObject):
         self.active = False
         self.spent = False
         self.spent_elapsed = 0.0
+        self.spawn_opacity = 1.0
 
     def on_spawn(self):
         self.active = self.in_range(self.level.mode.activation_origin)
@@ -85,4 +86,5 @@ class Charge(GameObject):
         draw_sprite(frame, transform, self.position, frame.rect[2:], opacity)
 
     def render_items(self):
-        return () if self.spent else (RenderItem(self._draw, draw_order=-1),)
+        return () if self.spent else (RenderItem(self._draw, draw_order=-1,
+                                                opacity=self.spawn_opacity),)

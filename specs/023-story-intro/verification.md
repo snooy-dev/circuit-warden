@@ -1,6 +1,17 @@
 # Verification: 오프닝 스토리 컷신
 
-## 2026-11-24
+## 2026-11-24 실시간 재연출
+
+| 구분 | 실제 명령 | 결과 |
+|---|---|---|
+| 실제 SDL 창·입력 | `$env:PYTHONPATH='.'` 설정 후 `.\.venv\Scripts\python.exe -X utf8 -B tmp/power_opening_smoke.py` | 정상 재생에서 팬 기동·정지·재기동, 낙뢰 타격, 조작 전 최종 카메라와 일반 카메라의 일치, 같은 레벨·워든의 유지와 첫 이동을 확인했다. 1024×720 클릭과 전체화면 Escape 건너뛰기에서 같은 장면의 즉시 조작을 확인했다. 연출 중 D와 R은 플레이에 적용되지 않았고, 인계 후 R·짧은 낙뢰·조기 이동과 `--training` 경로를 확인했다. |
+| 출력 관찰 | SDL 실제 출력 프레임을 저장한 후 프로젝트 FFmpeg로 `tmp/power-opening-preview.mp4`와 `tmp/power-opening-sheet.png`를 생성 | 전선 스파크, 팬의 정지와 카메라 후퇴, 낙뢰와 워든 등장, 검은 띠가 걷히는 순서와 첫 움직임을 확인했다. |
+| 집중 자동 검사 | `.\.venv\Scripts\python.exe -B -m unittest tests.unit.test_ui_input tests.unit.test_charge_teleport tests.unit.test_engine.EngineTests.test_pending_fullscreen_uses_old_output_for_click_then_refreshes -q` | 8개 통과. 컷신에 사용하는 버튼 입력과 화면 모드 좌표, 전하 조작을 확인했다. |
+| 변경 공백 | `git diff --cached --check` | 커밋 대상의 공백 검사를 통과했다. |
+
+정지 삽화는 이전 커밋 `45c9172`에 보존돼 있다. 현재 컷신은 같은 레벨의 팬·카메라·밝기·방전과 기존 낙뢰를 사용한다. 처음 본 플레이어의 이야기 이해도, 사용자 직접 평가는 미확인이다. 전체 회귀는 실행하지 않았다.
+
+## 2026-11-24 정지 삽화 시안 기록
 
 | 구분 | 실제 명령 | 결과 |
 |---|---|---|

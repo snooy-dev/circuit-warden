@@ -20,7 +20,7 @@ from .enemy import CHARGE_SPEED, Enemy, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
 from .power_supply_map import PowerSupplyMap
-from .story_intro import StoryIntroScene
+from .story_intro import PowerOpening
 from .teleport_link import DURATION, LinkArt, TeleportLink
 from .title import TitleScene
 from .training_map import WORLD_BOUNDS, TrainingMap
@@ -365,7 +365,7 @@ class GameplayLevel(Level):
 
 
 class CharacterScene(LevelScene):
-    def __init__(self, *, power_supply=False):
+    def __init__(self, *, power_supply=False, story_intro=False):
         images = ImageStore(ASSETS)
         super().__init__(GameplayLevel(images, power_supply=power_supply),
                          view_height=DEFAULT_SIZE[1] if power_supply else HEIGHT, images=images)
@@ -373,6 +373,8 @@ class CharacterScene(LevelScene):
         self.level.mode.cursor_to_world = self.cursor_to_world
         self._pixel_target = None
         self._pixel_size = None
+        self._story_intro = story_intro
+        self.opening = None
 
     def draw(self):
         if not self.level.power_supply or not self.engine.output_valid:
@@ -396,30 +398,44 @@ class CharacterScene(LevelScene):
             self._pixel_target = target
             self._pixel_size = grid_width, grid_height
 
-        camera_center = self.camera_center
+        camera_center, view_height = self.camera_center, self.view_height
         _sdl(pico.SDL_SetRenderTarget(pico.renderer, self._pixel_target))
         try:
             # 월드·입력 좌표를 유지한 채 같은 픽셀 격자에 합성한다.
             _sdl(pico.SDL_RenderSetScale(pico.renderer, grid_width / width, grid_height / height))
             _sdl(pico.SDL_RenderClear(pico.renderer))
+            if self.opening is not None:
+                self.camera_center, self.view_height = self.opening.camera(
+                    camera_center, view_height, width / height)
             entry = self.level.power_entry_effect
             if entry is not None:
                 since_impact = entry.player.elapsed - self.level.power_entry_impact
                 if 0 <= since_impact < POWER_ENTRY_SHAKE_STEP * len(POWER_ENTRY_SHAKE):
                     dx, dy = POWER_ENTRY_SHAKE[int(since_impact / POWER_ENTRY_SHAKE_STEP)]
                     pixel = self.view_height / grid_height
-                    self.camera_center = camera_center[0] + dx * pixel, camera_center[1] + dy * pixel
+                    cx, cy = self.camera_center
+                    self.camera_center = cx + dx * pixel, cy + dy * pixel
             super().draw()
+            if self.opening is not None:
+                self.opening.draw(self.transform)
         finally:
-            self.camera_center = camera_center
+            self.camera_center, self.view_height = camera_center, view_height
             _sdl(pico.SDL_SetRenderTarget(pico.renderer, None))
         _sdl(pico.SDL_RenderCopy(pico.renderer, self._pixel_target, None, None))
+        if self.opening is not None:
+            canvas = self.opening.canvas
+            self.renderer.draw_ui(canvas, canvas.transform(self.engine.viewport))
 
     def exit(self):
-        if self._pixel_target:
-            pico.SDL_DestroyTexture(self._pixel_target)
-            self._pixel_target = self._pixel_size = None
-        super().exit()
+        try:
+            if self._pixel_target:
+                pico.SDL_DestroyTexture(self._pixel_target)
+                self._pixel_target = self._pixel_size = None
+            if self.opening is not None:
+                opening, self.opening = self.opening, None
+                opening.close()
+        finally:
+            super().exit()
 
     def cursor_to_world(self):
         if not pico.SDL_GetWindowFlags(pico.window) & pico.SDL_WINDOW_MOUSE_FOCUS:
@@ -438,6 +454,8 @@ class CharacterScene(LevelScene):
         if self.level.power_supply:
             self.camera_center = (self.character.x, 0)
             self._follow_camera(0, self.character.x)
+            if self._story_intro:
+                self.opening = PowerOpening(self.level, DEFAULT_SIZE)
         self.character.view_bounds = self.transform.bounds
         self._set_title()
 
@@ -450,6 +468,19 @@ class CharacterScene(LevelScene):
         pico.SDL_SetWindowTitle(pico.window, name + b' | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):
+        if event.type == pico.SDL_KEYDOWN:
+            if event.key == pico.SDLK_F6:
+                size = ALTERNATE_SIZE if self.engine.window_size == DEFAULT_SIZE else DEFAULT_SIZE
+                self.engine.set_display(fullscreen=False, window_size=size)
+            elif event.key == pico.SDLK_F11:
+                self.engine.set_display(fullscreen=not self.engine.fullscreen)
+        if self.opening is not None:
+            if event.type in (pico.SDL_RENDER_DEVICE_RESET, pico.SDL_RENDER_TARGETS_RESET):
+                super().handle_event(event)
+            viewport = self.engine.viewport if self.engine.output_valid else (0, 0, 0, 0)
+            self.opening.input.handle_event(event, self.opening.canvas.transform(viewport),
+                                            self.engine.event_to_output(event))
+            return
         previous_player = self.character
         previous_player.view_bounds = self.transform.bounds
         if self.level.power_entry_effect is not None and (
@@ -457,12 +488,6 @@ class CharacterScene(LevelScene):
                 or event.type == pico.SDL_MOUSEBUTTONDOWN
                 and event.button in (pico.SDL_BUTTON_LEFT, pico.SDL_BUTTON_RIGHT)):
             self.level.finish_power_entry()
-        if event.type == pico.SDL_KEYDOWN:
-            if event.key == pico.SDLK_F6:
-                size = ALTERNATE_SIZE if self.engine.window_size == DEFAULT_SIZE else DEFAULT_SIZE
-                self.engine.set_display(fullscreen=False, window_size=size)
-            elif event.key == pico.SDLK_F11:
-                self.engine.set_display(fullscreen=not self.engine.fullscreen)
         super().handle_event(event)
         if self.character is not previous_player:
             self.camera_center = (self.character.x, 0)
@@ -470,7 +495,20 @@ class CharacterScene(LevelScene):
         self._follow_camera(0, self.character.x)
         self.character.view_bounds = self.transform.bounds
 
+    def handle_escape(self):
+        if self.opening is None:
+            return False
+        self.opening.skip()
+        return True
+
     def update(self, dt):
+        if self.opening is not None:
+            self._follow_camera(0, self.character.x)
+            if self.opening.skipped or (self.engine.output_valid and self.opening.update(dt)):
+                opening, self.opening = self.opening, None
+                opening.close()
+                self.character.view_bounds = self.transform.bounds
+            return
         self.character.view_bounds = self.transform.bounds
         previous_x = self.character.x
         super().update(dt)
@@ -505,7 +543,7 @@ def main():
     args = parser.parse_args()
     print('게임플레이: A/D 이동 / Space 점프 / J 공격 / E 커서 위치에 전하 생성 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     scene = CharacterScene() if args.training else TitleScene(
-        lambda: StoryIntroScene(lambda: CharacterScene(power_supply=True)),
+        lambda: CharacterScene(power_supply=True, story_intro=True),
         sizes=(DEFAULT_SIZE, ALTERNATE_SIZE),
         art_path=POWER_SUPPLY_ASSETS / 'far.png')
     Engine(*DEFAULT_SIZE).run(scene)

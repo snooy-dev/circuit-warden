@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **오프닝 스토리 컷신:** 2026-11-24 사용자 요청으로 New Game에 별도 두 컷을 연결했다. 컴퓨터 재가동과 내부 고장을 본 뒤 기존 낙뢰로 전원 구역에 들어간다. [명세](../specs/023-story-intro/spec.md) · [컷 구성](../specs/023-story-intro/plan.md) · [검증](../specs/023-story-intro/verification.md).
+- **오프닝 스토리 컷신:** 2026-11-24 사용자 피드백으로 정지 삽화 시안을 전원 구역의 실시간 연출로 교체했다. 팬 기동과 전선 스파크, 낙뢰와 워든 등장을 같은 카메라에서 보여준 뒤 조작을 넘긴다. 출력에 전류가 닿지 않는다는 서사는 제안 상태다. [명세](../specs/023-story-intro/spec.md) · [연출 구성](../specs/023-story-intro/plan.md) · [검증](../specs/023-story-intro/verification.md).
 
 - **타이틀 메뉴:** 2026-11-24 사용자 후속 요청으로 화면의 키 가이드를 삭제했다. New Game, Settings, Quit은 전원 구역 원경 위 텍스트로 표시하고, 설정은 항목명과 값을 열로 정렬한다. 기본 창·축소 창·전체화면의 실제 SDL 출력과 키보드·마우스 입력을 확인했다. [명세](../specs/022-title-menu/spec.md) · [계획](../specs/022-title-menu/plan.md) · [검증](../specs/022-title-menu/verification.md).
 
