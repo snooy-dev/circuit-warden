@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **파워서플라이 2픽셀 시안:** 2026-11-24 사용자 요청으로 약 3×3과 2×2 출력 격자를 같은 카메라·팬 각도에서 비교했다. 현재 기본값은 2×2다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
+- **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
 
 - **파워서플라이 먼지·흡기 팬:** 2026-11-24 요청과 사용자 피드백으로 바닥·발판에 낮은 보풀과 먼지 띠를 배치했다. 원경 부품에도 먼지층을 더했다. 팬 금속과 먼지는 원경 팔레트의 12색을 사용하며, 회전하는 날개 뒤로 먼지 낀 고정 통풍망이 보인다. [실제 게임의 팬](../art/levels/power-supply/dust-revision/fan-cavity/fan-in-game.gif) · [레벨 검증](../specs/021-power-supply-level/verification.md#먼지와-흡기-팬-후속-검증).
 

@@ -53,4 +53,6 @@
 
 기본 1280×720 SDL 창에서 427×240(약 3픽셀)과 640×360(2픽셀)을 같은 카메라 및 같은 팬 각도 두 곳에서 캡처했다. 두 해상도 모두 캡처 배열에서 최근접 확대 경계를 확인했다. 2픽셀 시안에서 워든의 얼굴·팔 윤곽과 발판 모서리가 더 잘 구분되고, 3픽셀 시안은 팬과 바닥의 픽셀 덩어리가 더 굵게 보인다. [나란히 비교](../../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png)
 
-현재 기본은 2픽셀 시안이다. `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/pixel-grid-comparison/sdl`로 기본 640×360과 F6 512×360 타깃, 발판 착지·순간이동·도착·재시작을 확인했다. 전체화면 왕복과 전체 회귀는 이번 비교에서 재실행하지 않았다.
+`.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/pixel-grid-comparison/sdl`로 기본 640×360과 F6 512×360 타깃, 발판 착지·순간이동·도착·재시작을 확인했다. 전체화면 왕복과 전체 회귀는 이번 비교에서 재실행하지 않았다.
+
+2026-11-24 사용자가 2픽셀을 확정했다. 실행 코드와 에셋 변경 없이 결정만 기록해 기존 SDL 검사 결과를 재사용했다.
