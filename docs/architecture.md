@@ -35,7 +35,8 @@
 | `tests/fixtures/framework_scenes.py` | 회귀 검사 전용 월드·UI·통합 장면 |
 | `main.py`, `game/` | 게임 진입·캐릭터 상태·레벨/장면 구현 |
 | `game/title.py` | 타이틀·설정 패널, 화면 모드와 게임 시작 |
-| `assets/ui/` | 타이틀에서 사용하는 Barlow Condensed 글꼴 · [라이선스](../licenses/barlow-OFL.txt) |
+| `game/story_intro.py` | New Game 뒤 컷·자막 재생, 건너뛰기, 첫 레벨 연결 |
+| `assets/ui/` | 타이틀과 컷신에서 사용하는 Barlow Condensed 글꼴 · [라이선스](../licenses/barlow-OFL.txt) |
 | `game/training_map.py` | 훈련장 지형 충돌과 월드 표시 |
 | `tests/unit/`, `tests/integration/`, `tests/smoke/` | 모의 단위 검사·조합/실제 SDL 소프트웨어 검사·별도 실제 창 검사 |
 
@@ -49,7 +50,7 @@
 - Scene의 enter(engine), handle_event(event), update(dt), draw(), exit()가 연결 지점이다. 기본 메서드는 아무 동작도 하지 않는다. 필요한 메서드만 재정의한다.
 - 활성 장면 하나만 실행한다. 입력 묶음 → update → clear/draw/present → 전환 → 남은 시간 대기 순서다.
 - Engine.change_scene(scene)은 요청만 저장한다. 같은 프레임의 마지막 요청을 프레임 끝에 적용하고 이전 exit → 새 enter 순서로 호출한다. 새 장면의 첫 갱신은 다음 프레임이다. 전환 콜백이 만든 후속 요청은 다음 경계까지 보류한다.
-- Engine.stop()과 창 닫기·Escape는 종료를 요청한다. 종료 이후 나머지 이벤트·갱신·그리기·전환은 생략한다. 퇴장에서 종료하면 새 장면에 진입하지 않는다.
+- Engine.stop()과 창 닫기는 종료를 요청한다. Escape는 장면의 `handle_escape()`가 True를 반환하면 장면에서 소비한다. 타이틀 설정은 메뉴로 돌아가고 오프닝은 첫 레벨로 진행한다. 엔진 종료 이후 나머지 이벤트·갱신·그리기·전환은 생략한다. 퇴장에서 종료하면 새 장면에 진입하지 않는다.
 - 입력은 프로젝트 poll_events가 보존한 Pico2D 형식 이벤트를 좌표 변환 없이 전달한다. 마우스 이벤트 좌표는 좌상단, 그리기 좌표는 좌하단 원점이다. 기존 Pico2D와 같은 반복 키 필터를 유지한다.
 - 진입한 장면(진입 시도 중 실패 포함)은 퇴장을 한 번 시도한다. 퇴장 실패를 재시도하지 않는다. 장면 정리 실패와 무관하게 창 정리를 시도하며 예외를 숨기지 않는다. 중첩 예외는 Python 예외 연결로 원인을 보존한다.
 - 창 생성 후 실제 window/renderer 포인터를 확인한다. Pico2D의 불완전한 실패 처리를 보완하기 위해 구현 모듈을 직접 참조한다. 생성 시작 전에 두 핸들을 None으로 초기화해 부분 실패도 close_canvas로 정리할 수 있게 한다.
