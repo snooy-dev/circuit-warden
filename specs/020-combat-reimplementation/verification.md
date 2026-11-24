@@ -173,3 +173,19 @@ New-Item -ItemType Directory -Force $out | Out-Null
 .\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $out
 git diff --check
 ```
+
+## 할로우 나이트 일반 검격 참고
+
+- **참고** — [공식 전투 영상의 기존 프레임 관찰](../019-combat-feedback/research.md)에서 공격 방향과 접점에 짧게 나타나는 효과, 다음 행동으로 넘어가는 흐름을 사용했다. 45ms 정지와 최대 8 월드 단위·65ms 적 밀림은 워든 기준의 조정값이다.
+- **FR-013, SC-009** — 자동 검사 14개로 좌우 밀림, 벽 정지, 돌진 상태 잔여 시간, 지상·공중의 검 피해, 헛스윙·선입력·재시작과 순간이동을 확인했다. 전원 구역·훈련장 1280×720 SDL 창에서 좌우 지상 적중, 공중 적중, 헛스윙을 비교했다. 적중 후 적이 열린 공간에서 8 월드 단위 이동했고 그리기 투영이 평상시 카메라와 일치했다. 전하 SDL도 통과했다.
+- **수렴** — 기존 스파크와 45ms 히트스톱, 워든의 이동 공격, 적 밀림과 일반 카메라 추적을 코드·명세·기술 구조·적 전투·진행 상태에서 대조했다. 전체 회귀와 사용자 직접 플레이 평가는 수행하지 않았다.
+
+```powershell
+$checks = Get-Content '.local-tools/verification/sword-impact/test-names.txt'
+.\.venv\Scripts\python.exe -B -m unittest -q @checks tests.unit.test_basic_enemy.BasicEnemyTests.test_sword_recoil_stops_at_a_wall_and_suspends_a_charge
+.\.venv\Scripts\python.exe -B .local-tools/verification/hollow-knight-impact/smoke.py
+$externalOut = Join-Path $env:TEMP 'circuit-warden-hollow-knight-impact'
+New-Item -ItemType Directory -Force $externalOut | Out-Null
+.\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $externalOut
+git diff --check
+```

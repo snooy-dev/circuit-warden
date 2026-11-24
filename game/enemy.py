@@ -20,6 +20,8 @@ CHARGE_SPEED = 350
 CHARGE_SECONDS = .28
 RECOVER_SECONDS = .60
 HIT_REACTION_SECONDS = .18
+HIT_RECOIL_SECONDS = .065
+HIT_RECOIL_SPEED = 8 / HIT_RECOIL_SECONDS
 
 NEXT_PHASE = {
     'idle': ('approach', 0),
@@ -61,6 +63,8 @@ class Enemy(GameObject):
         self.facing = -1
         self.hp = self.MAX_HP
         self.hit_remaining = 0.0
+        self._recoil_remaining = 0.0
+        self._recoil_direction = 0
         self.state = 'idle'
         self.state_remaining = IDLE_SECONDS
         self.motion = []
@@ -81,10 +85,12 @@ class Enemy(GameObject):
     def collision_position(self):
         return self.x, self.y
 
-    def take_hit(self):
+    def take_hit(self, direction=0):
         if self.hp > 0:
             self.hp -= 1
             self.hit_remaining = HIT_REACTION_SECONDS
+            self._recoil_remaining = HIT_RECOIL_SECONDS if direction else 0.0
+            self._recoil_direction = direction
             if self.hp == 0:
                 self.destroy()
 
@@ -93,7 +99,11 @@ class Enemy(GameObject):
         self.hit_remaining = max(0.0, self.hit_remaining - dt)
         self.animation.play(self.clips[self.state])
         target = self.level.player
-        elapsed = 0.0
+        elapsed = min(dt, self._recoil_remaining)
+        if elapsed:
+            self._record_motion(0.0, elapsed, self._recoil_direction * HIT_RECOIL_SPEED * elapsed, None)
+            self._recoil_remaining -= elapsed
+            dt -= elapsed
         while dt > 0:
             charge_id = None
             distance = 0.0
