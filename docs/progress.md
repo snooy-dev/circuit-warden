@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **첫 레벨 낙뢰 등장:** 2026-11-24 사용자 요청으로 상단 케이블의 찢어진 피복 아래 구리 심선이 드러나도록 수정했다. 실제 SDL에서 노출 심선과 방전의 접점, 워든 등장, R 재시작과 조기 이동을 확인했다. [실제 화면](../art/levels/power-supply/exposed-cable/exposed-cable.gif) · [검증](../specs/021-power-supply-level/verification.md#노출-구리-심선-검증).
+- **첫 레벨 낙뢰 등장:** 2026-11-24 사용자 요청으로 노출된 구리 심선에서 떨어지는 번개에 타격 순간의 짧은 카메라 흔들림을 추가했다. 실제 SDL에서 타격 동기화, 시야 복귀, R 재시작과 조기 이동을 확인했다. [실제 화면](../art/levels/power-supply/entry-camera-shake/entry-camera-shake.gif) · [검증](../specs/021-power-supply-level/verification.md#낙뢰-카메라-흔들림-검증).
 
 - **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
 

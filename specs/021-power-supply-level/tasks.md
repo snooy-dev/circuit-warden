@@ -34,3 +34,4 @@
 - [x] T018 상단 케이블 낙뢰로 등장 연출 교체, 인렛 제거, SDL 등장·입력 및 맵 검사 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
 - [x] T019 갈라진 번개와 바닥 충격의 등장 전용 시트 제작·통합·SDL 확인 (`scripts/bake-effects/`, `assets/levels/power-supply/`, `game/scene.py`, `verification.md`, `docs/`)
 - [x] T020 시작 케이블의 피복 손상과 구리 심선 제작, 낙뢰 접점 정합 및 SDL 확인 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
+- [x] T021 낙뢰 타격의 카메라 흔들림과 정상 복귀 구현·SDL 확인 (`game/scene.py`, `verification.md`, `docs/`)

@@ -111,3 +111,10 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 
 - `map_bundle.py validate --bundle assets/levels/power-supply/map.json` 오류·경고 0개. 이전 맵과 대조해 첫 케이블과 전류 시작점만 바뀌었고 시작점은 구리색 불투명 픽셀에 닿는다.
 - `node scripts/bake-effects/power-entry.mjs`에서 케이블과 착지 접점, 여백, 종료 프레임을 확인했다. `.venv\Scripts\python.exe art/levels/power-supply/lightning-strike/smoke.py art/levels/power-supply/exposed-cable/frames`로 실제 SDL에서 심선 방전, 워든 등장, R 재시작과 조기 이동을 확인했다. 전체 레벨 주행은 미실행이다.
+
+## 낙뢰 카메라 흔들림 검증
+
+낙뢰 타격부터 100ms 동안 논리 픽셀 단위로 카메라를 흔들고 진폭을 줄인다. 기본 창에서는 상하 최대 6px, 좌우 최대 4px 이동한다. [실제 SDL 캡처](../../art/levels/power-supply/entry-camera-shake/entry-camera-shake.gif)
+
+- `.venv\Scripts\python.exe art/levels/power-supply/entry-camera-shake/smoke.py art/levels/power-supply/entry-camera-shake/frames`로 실제 SDL에서 12.5ms 간격으로 진행하며 타격 전과 직후의 카메라 위치, 그리기 직후 입력 좌표 복원, R 재시작과 조기 이동 중단을 확인했다.
+- 실제 화면 5장에서 케이스 벽의 같은 영역을 픽셀 단위로 대조해 예상 변위와 최종 원위치를 확인했다. 전체 레벨 주행과 사용자 직접 플레이는 미실행이다.

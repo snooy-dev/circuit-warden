@@ -30,6 +30,8 @@ POWER_SUPPLY_ASSETS = ASSETS.parent / 'levels' / 'power-supply'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
 POWER_SUPPLY_PIXEL_HEIGHT = 360
+POWER_ENTRY_SHAKE_STEP = .025
+POWER_ENTRY_SHAKE = ((2, 3), (0, -2), (1, 1), (0, -1))
 POWER_ENTRY_KEYS = MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE, pico.SDLK_j, pico.SDLK_e}
 CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
@@ -392,13 +394,22 @@ class CharacterScene(LevelScene):
             self._pixel_target = target
             self._pixel_size = grid_width, grid_height
 
+        camera_center = self.camera_center
         _sdl(pico.SDL_SetRenderTarget(pico.renderer, self._pixel_target))
         try:
             # 월드·입력 좌표를 유지한 채 같은 픽셀 격자에 합성한다.
             _sdl(pico.SDL_RenderSetScale(pico.renderer, grid_width / width, grid_height / height))
             _sdl(pico.SDL_RenderClear(pico.renderer))
+            entry = self.level.power_entry_effect
+            if entry is not None:
+                since_impact = entry.player.elapsed - self.level.power_entry_impact
+                if 0 <= since_impact < POWER_ENTRY_SHAKE_STEP * len(POWER_ENTRY_SHAKE):
+                    dx, dy = POWER_ENTRY_SHAKE[int(since_impact / POWER_ENTRY_SHAKE_STEP)]
+                    pixel = self.view_height / grid_height
+                    self.camera_center = camera_center[0] + dx * pixel, camera_center[1] + dy * pixel
             super().draw()
         finally:
+            self.camera_center = camera_center
             _sdl(pico.SDL_SetRenderTarget(pico.renderer, None))
         _sdl(pico.SDL_RenderCopy(pico.renderer, self._pixel_target, None, None))
 
