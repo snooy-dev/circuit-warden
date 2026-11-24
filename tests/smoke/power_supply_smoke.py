@@ -81,57 +81,22 @@ class PowerSupplySmoke(CombatSmoke):
         push_key(pico.SDLK_F6, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: self.engine.window_size == DEFAULT_SIZE)
 
-        yield from self.move_to(760)
-        yield from self.move_to(500)
-        assert actor.grounded and isclose(actor.y, -180)
-        yield from self.step_to(640, 406)
-        yield from self.move_to(962)
+        yield from self.move_to(374)
+        yield from self.step_to(488, 416)
+        yield from self.move_to(720)
         yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -180))
-        assert self.level.enemy.x < layout.enemy_start[0]
-        yield from self.step_to(1108, 406)
-        yield from self.move_to(1162)
-        yield from self.step_to(1315, 348)
-        self.screenshot = 'power-supply-heatsink'
-        yield .06
-        # 전투 검사 후 지형 경로를 동일 조건으로 검증한다.
-        push_key(pico.SDLK_j)
-        yield from self.wait_until(lambda: actor.state == 'attack')
-        push_key(pico.SDLK_j, pico.SDL_KEYUP)
-        self.level.enemy.destroy()
-        yield .32
-        yield from self.move_to(1375)
-        yield from self.step_to(1540, 406)
-        yield from self.move_to(1505)
-        yield from self.step_to(1350, 348)
-        yield from self.move_to(1375)
-        yield from self.step_to(1540, 406)
-        yield from self.move_to(2070)
-        yield from self.move_to(2450)
-        yield from self.wait_until(lambda: actor.grounded)
-        assert isclose(actor.y, -180)
-        yield from self.move_to(2020)
-        yield from self.move_to(1696)
-        assert actor.grounded and isclose(actor.y, -180)
-        yield from self.step_to(1850, 406)
-        yield from self.move_to(1900)
-        yield from self.step_to(2033, 286)
-        self.screenshot = 'power-supply-gallery'
-        yield .06
+        yield from self.step_to(837, 418)
+        yield from self.move_to(900)
+        yield from self.step_to(1017, 330)
+        yield from self.move_to(1258)
+        candidate = self.level.charges[3]
+        assert candidate.active
+        left, bottom, right, top = self.transform.bounds
+        assert all(left <= x <= right and bottom <= y <= top for x, y in
+                   (actor.center, candidate.position, self.level.enemy.collision_position))
+        self.screenshot = 'power-supply-overlook'
+        yield .15
 
-        yield from self.move_to(2114)
-        yield from self.step_to(2260, 286)
-        yield from self.move_to(2244)
-        yield from self.step_to(2090, 286)
-        yield from self.move_to(2180)
-        assert not actor.grounded and actor.y < layout._point(2180, 286)[1]
-        self.screenshot = 'power-supply-gallery-gap'
-        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -180))
-        yield from self.move_to(1696)
-        yield from self.step_to(1850, 406)
-        yield from self.move_to(1900)
-        yield from self.step_to(2033, 286)
-
-        candidate = self.level.charges[9]
         point = self.transform.point(*candidate.position)
         event = pico.SDL_Event()
         event.type = pico.SDL_MOUSEBUTTONDOWN
@@ -140,27 +105,40 @@ class PowerSupplySmoke(CombatSmoke):
         assert pico.SDL_PushEvent(event) == 1
         yield from self.wait_until(lambda: candidate.spent and self.level.mode.teleport_link is not None)
         self.screenshot = 'power-supply-discharge'
-        yield .2
+        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, 74))
 
-        yield from self.move_to(2556)
+        yield from self.move_to(1600)
+        yield from self.wait_until(lambda: layout.arc_phase == 0)
+        yield from self.wait_until(lambda: layout.arc_phase == 1)
+        hp = actor.hp
+        yield from self.move_to(1640)
+        assert layout.arc_phase == 1 and actor.hp == hp
+        self.screenshot = 'power-supply-warning'
+        yield from self.wait_until(lambda: actor.hp < hp)
+        assert layout.arc_phase == 2 and actor.hp == hp - 1
+        self.screenshot = 'power-supply-live-arc'
+        yield from self.wait_until(lambda: layout.arc_phase == 0 and actor.grounded)
+        assert isclose(actor.y, 74)
+        yield from self.move_to(1845)
+        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -56))
+        self.screenshot = 'power-supply-recovery'
+        yield .06
+        yield from self.move_to(1938)
         yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -180))
-        yield from self.step_to(2700, 406)
-        yield from self.move_to(2746)
-        yield from self.step_to(2900, 348)
-        yield from self.move_to(2914)
-        yield from self.step_to(3130, 406)
-        yield from self.move_to(3089)
-        yield from self.step_to(2934, 348)
-        yield from self.move_to(2914)
-        yield from self.step_to(3130, 406)
-        yield from self.move_to(3490)
+        yield from self.step_to(1846, 416)
+        yield from self.move_to(1880)
+        yield from self.step_to(2016, 310)
+        yield from self.move_to(2240)
+        yield from self.move_to(2800)
         yield from self.wait_until(lambda: layout.reached_output)
         self.screenshot = 'power-supply-output'
-        yield .45
+        yield .18
         assert self.transform.bounds[2] <= layout.bounds[2] + 1e-6
+
         push_key(pico.SDLK_r)
         yield from self.wait_until(lambda: self.character is not actor)
-        assert not layout.reached_output and self.character.collision_position == layout.player_start
+        assert not layout.reached_output and layout.arc_phase == 0
+        assert self.character.collision_position == layout.player_start
         assert self.level.enemy.collision_position == layout.enemy_start
         push_key(pico.SDLK_r, pico.SDL_KEYUP)
         assert self.character.spawn_opacity == 0.0
@@ -169,7 +147,27 @@ class PowerSupplySmoke(CombatSmoke):
         assert self.character.spawn_opacity == 1.0
         assert self.level.power_entry_effect is None
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
-        print('PSU SDL PASS: underpasses, two-way heatsinks, gallery jump and drop, charge, output, R, F6', flush=True)
+        actor = self.character
+        for x in (700, 1140, 1308):
+            yield from self.move_to(x)
+        push_key(pico.SDLK_d)
+        push_key(pico.SDLK_SPACE)
+        yield from self.wait_until(lambda: actor.velocity_y < 0 and actor.y <= -42)
+        push_key(pico.SDLK_LSHIFT)
+        yield from self.wait_until(lambda: actor.state == 'dash')
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        self.screenshot = 'power-supply-lower-bay'
+        yield from self.wait_until(lambda: actor.x >= layout._point(1662, 0)[0])
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: actor.grounded and actor.state in ('idle', 'run'))
+        yield from self.step_to(1734, 484)
+        for x in (2160, 2640, 2800):
+            yield from self.move_to(x)
+        yield from self.wait_until(lambda: layout.reached_output)
+        assert self.level.enemy.hp > 0 and all(not charge.spent for charge in self.level.charges)
+        print('PSU SDL PASS: intake, overlook, upper charge, arc timing, drop and return, lower bypass, output, R, F6',
+              flush=True)
 
 
 if __name__ == '__main__':

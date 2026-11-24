@@ -41,3 +41,9 @@
 - [x] T022 [US1] 전원 구역의 연습·방열판·상하 경로·출력 동선과 구조물의 표시 및 충돌을 맞춘다 (`assets/levels/power-supply/map.json`, FR-008~FR-010)
 - [x] T023 [US1] 훈련장 공중 발판 아래의 보행 높이를 확보한다 (`game/training_map.py`, FR-009)
 - [x] T024 [US1] 양방향 착지와 하부 보행, 중앙 틈 낙하와 경로 합류를 검증하고 현재 기준을 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-008~FR-010)
+
+## 전망대와 전력 변환부 재제작
+
+- [x] T025 [US1] 안전한 연습 발판과 정비 전망대, 두 경로, 낙하·복귀, 출력의 충돌·시야·전하 배치를 실제 입력으로 확인한다 (`assets/levels/power-supply/map.json`, `tests/smoke/power_supply_smoke.py`, FR-011~FR-012)
+- [x] T026 [US1] 새 원경과 정비 구조물 및 방전 단서를 제작하고 화면에서 착지면·위험의 가독성을 확인한다 (`assets/levels/power-supply/`, `game/power_supply_map.py`, FR-013)
+- [x] T027 [US1] 맵·경로·기본 진입·재시작을 검사하고 기준 문서와 증거를 갱신한다 (`docs/`, `specs/021-power-supply-level/verification.md`, FR-011~FR-013)

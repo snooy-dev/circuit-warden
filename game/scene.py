@@ -202,7 +202,7 @@ class GameplayLevel(Level):
         self._spawn_combatants(clips, enemy_clips)
         self.player.view_bounds = view_bounds
         if self.power_supply:
-            self.layout.reached_output = False
+            self.layout.reset()
             self._start_power_entry()
         self._reset_environment()
         self._last_hit_attack = 0
@@ -225,15 +225,16 @@ class GameplayLevel(Level):
         if self.power_entry_effect is not None:
             self._update_power_entry()
         self._update_environment()
-        if self.enemy.level is not self:
-            return
-        self._resolve_sword()
+        if self.enemy.level is self:
+            self._resolve_sword()
         if self.enemy.level is self:
             self._resolve_enemy_contact(dt, player_position, protected_until)
-            if self.player.hp == 0:
-                for obj in self.objects:
-                    if isinstance(obj, SpriteEffect):
-                        obj.destroy()
+        if self.power_supply:
+            self.layout.check_arc(self.player)
+        if self.player.hp == 0:
+            for obj in self.objects:
+                if isinstance(obj, SpriteEffect):
+                    obj.destroy()
 
     def _resolve_sword(self):
         for sweep in self.player.attack_sweeps:

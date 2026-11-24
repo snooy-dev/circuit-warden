@@ -9,10 +9,14 @@ import pico2d.pico2d as pico
 
 from engine.rendering.drawing import _sdl
 from game_framework import Collider, GameObject, RenderItem, draw_image
+from game_framework.collision import overlaps
 
 
 MAP_FILE = Path(__file__).resolve().parents[1] / 'assets/levels/power-supply/map.json'
 DRAW_ORDER = {'rear': -4, 'structure': -2, 'front': 4}
+ARC_PERIOD = 3.2
+ARC_WARNING_START = 2.1
+ARC_LIVE_START = 2.7
 
 
 class PowerSupplyMap(GameObject):
@@ -34,7 +38,7 @@ class PowerSupplyMap(GameObject):
         output = next(item for item in data['interactions'] if item['id'] == 'output')
         self.output = self._point(output['x'], output['y'])
         self.output_reach = output['reach']
-        self.reached_output = False
+        self.reset()
 
         def load(file):
             image = images.load(MAP_FILE.parent / file)._borrow()
@@ -64,6 +68,10 @@ class PowerSupplyMap(GameObject):
             if obj['id'] == 'output-socket':
                 lit = load(data['props']['output-lit']['image'])
                 draw = partial(self._draw_socket, image, lit, bounds)
+            elif obj['id'] == 'arc-emitter':
+                self.arc_images = (image, *(load(data['props'][prop]['image']) for prop in obj['active_props']))
+                self.arc_hit_box = self._rect(*obj['hit_rect'])
+                draw = partial(self._draw_arc, bounds)
             else:
                 draw = partial(self._draw, image, bounds, flip)
             self.items.append(RenderItem(draw, DRAW_ORDER[obj['layer']], bounds))
@@ -77,6 +85,22 @@ class PowerSupplyMap(GameObject):
 
     def update(self, dt):
         self.rotor_angle = (self.rotor_angle + self.rotor_speed * dt) % 360
+        self.arc_elapsed = (self.arc_elapsed + dt) % ARC_PERIOD
+
+    def reset(self):
+        self.reached_output = False
+        self.arc_elapsed = 0.0
+
+    @property
+    def arc_phase(self):
+        if self.arc_elapsed >= ARC_LIVE_START:
+            return 2
+        return int(self.arc_elapsed >= ARC_WARNING_START)
+
+    def check_arc(self, player):
+        if self.arc_phase == 2 and overlaps(player.hurt_box, self.arc_hit_box):
+            left, _, right, _ = self.arc_hit_box
+            player.take_hit(direction=-1 if player.x < (left + right) / 2 else 1)
 
     def check_output(self, player):
         if self.reached_output or not player.hp or not player.grounded:
@@ -102,6 +126,9 @@ class PowerSupplyMap(GameObject):
 
     def _draw_socket(self, image, lit, bounds, transform, opacity):
         draw_image(lit if self.reached_output else image, transform, bounds, opacity)
+
+    def _draw_arc(self, bounds, transform, opacity):
+        draw_image(self.arc_images[self.arc_phase], transform, bounds, opacity)
 
     @staticmethod
     def _draw(image, bounds, flip, transform, opacity):

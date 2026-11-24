@@ -127,3 +127,14 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **실제 SDL 입력** `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir .local-tools/level-redesign-sdl` 통과. 입구 발판 아래로 양방향 주행, 연습 발판 착지, 두 방열판 왕복, 변환부 하부 주행, 중앙 발판 양방향 점프와 틈에서 바닥까지 낙하, 상부 전하 좌클릭 순간이동, 경로 합류, 출력 점등, R·F6을 확인했다. 전하 후보 48곳의 배치도 검사했다. 적의 접근을 확인한 뒤 지형 반복 검사에서는 적을 제거했다. SDL 캡처에서 방열판 착지, 중앙 틈 낙하, 출력 점등을 관찰했다.
 - **훈련장** `test_jump_onto_training_platform_and_walk_off`, `test_camera_freezes_at_low_wall_inside_world_bounds`, `test_lands_on_platform_and_stops_rise_at_ceiling`을 `unittest`로 실행해 3개가 통과했다. 하부 최소 높이는 104px이며 기존 훈련장 검사에 발판 하부를 달리는 입력을 추가했다.
 - 점프를 재현하는 SDL을 경로 검증에 사용했다. 이전 브라우저·Tiled 산출물은 재생성하지 않았다. 이번 범위의 전체 회귀와 사용자 직접 플레이는 미실행이다.
+
+## 전망대와 전력 변환부 재제작
+
+2026-11-24 사용자 요청으로 FR-011~FR-013을 기본 `New Game`에 적용했다. 블록아웃에서 적과 겹친 전하 후보를 이동하고, 몸통보다 좁던 하강 틈 및 하부 턱과 회수 발판의 간격을 넓혔다. `host_image` 경로의 ImageGen으로 원경과 투명 구조물 원본을 각각 생성했다. 원경은 `hibit_plate.py plate --size 980x400 --colors 20 --preview-scale 1`로 가공했다. 구조물은 투명 셀을 추출해 착지 사각형에 맞춰 가공했다. 증분에서 생성한 출력등은 워든에 가려지지 않도록 옆으로 옮겼다. 회전 날개·시작 전선·바닥·코일은 기존 에셋을 사용했다. [원경 원본](../../art/levels/power-supply/maintenance/scenery-source.png) · [구조물 원본](../../art/levels/power-supply/maintenance/structures-source.png).
+
+- **SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/maintenance/sdl` 통과. 연습 발판, 전망대 시야, 상부 클릭 순간이동, 예고 중 안전과 방전 시 피해 1회, 중앙 낙하·재등반, 상부 출력, 전하 소비·적 처치 없이 하부 출력, R과 F6을 확인했다. 전하 후보 24곳에서 몸통 배치를 확인했다. [전망대](../../art/levels/power-supply/maintenance/sdl/character-power-supply-overlook.png) · [방전](../../art/levels/power-supply/maintenance/sdl/character-power-supply-live-arc.png) · [출력](../../art/levels/power-supply/maintenance/sdl/character-power-supply-output.png).
+- **기본 진입** 게임 Python으로 `.local-tools/verify-maintenance-entry.py`를 실행해 `main()`에서 Enter로 New Game 선택, 낙뢰, 조작 인계 후 우측 이동을 확인했다. [오프닝](../../art/levels/power-supply/maintenance/sdl/character-maintenance-opening.png).
+- **맵 데이터** `map_bundle.py validate --bundle assets/levels/power-supply/map.json` 오류·경고 0개. 같은 맵에 대한 `map_nav.py check`는 목표 3곳 도달, 좁은 틈 경고 0개다. 웹 미리보기는 런타임의 오브젝트 레이어를 한 밴드로 평탄화한 사본에 `build_scene_preview.py --verify --strict`를 실행했다. Chromium에서 전망대·회수 발판·출력 경로 3곳이 통과했다. 점프와 방전은 SDL에서 검사했다. [브라우저 미리보기](../../art/levels/power-supply/maintenance/preview/preview.html) · [경로 결과](../../art/levels/power-supply/maintenance/preview/scene-snapshot.json).
+- **접촉 회귀** 게임 Python `-m unittest`로 `EnemyChargeTests.test_lethal_sword_hit_prevents_same_frame_charge_damage`와 `EnemyChargeTests.test_teleport_guard_only_prevents_damage_before_contact_deadline` 두 개를 실행해 통과했다.
+
+`docs/game-design.md`, `docs/art-direction.md`, `docs/progress.md`를 갱신했다. 전체 회귀와 사용자 직접 플레이는 미실행이다. 초심자가 도움 없이 두 경로를 읽는지는 플레이 평가가 남아 있다.
