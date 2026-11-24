@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **첫 레벨 낙뢰 등장:** 2026-11-24 사용자 피드백으로 벽면 인렛을 제거했다. 케이스 상단 케이블에서 전류가 떨어지면 워든이 아래쪽 바닥에 나타난다. 실제 SDL에서 첫 등장, R 재시작과 조기 이동을 확인했다. [실제 화면](../art/levels/power-supply/ceiling-entry/ceiling-entry.gif) · [검증](../specs/021-power-supply-level/verification.md#상단-케이블-낙뢰-등장-검증).
+- **첫 레벨 낙뢰 등장:** 2026-11-24 사용자 요청으로 상단 케이블의 선행 방전, 굵게 갈라지는 번개, 바닥 섬광과 불꽃을 적용했다. 실제 SDL에서 타격과 등장, R 재시작과 조기 이동을 확인했다. [실제 화면](../art/levels/power-supply/lightning-strike/lightning-strike.gif) · [검증](../specs/021-power-supply-level/verification.md#낙뢰-타격과-등장-강화-검증).
 
 - **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
 

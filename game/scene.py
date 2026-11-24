@@ -26,10 +26,10 @@ from .training_map import WORLD_BOUNDS, TrainingMap
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets' / 'warden'
 COMBAT_ASSETS = ASSETS.parent / 'combat'
+POWER_SUPPLY_ASSETS = ASSETS.parent / 'levels' / 'power-supply'
 DEFAULT_SIZE = (1280, 720)
 ALTERNATE_SIZE = (1024, 720)
 POWER_SUPPLY_PIXEL_HEIGHT = 360
-POWER_ENTRY_REVEAL = .24
 POWER_ENTRY_KEYS = MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE, pico.SDLK_j, pico.SDLK_e}
 CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
@@ -77,7 +77,7 @@ class GameplayLevel(Level):
         self.link_art = None
         self.combat_clips = {}
         self.power_supply = power_supply
-        self.power_entry_elapsed = None
+        self.power_entry_effect = None
         self.world_bounds = WORLD_BOUNDS
         self.environment_sites = ENVIRONMENT_SITES
 
@@ -97,29 +97,34 @@ class GameplayLevel(Level):
         self.combat_clips = load_combat_clips(self.images)
         self._reset_environment()
         if self.power_supply:
+            data = json.loads((POWER_SUPPLY_ASSETS / 'power-entry.json').read_text(encoding='utf-8'))
+            self.power_entry_clip = _load_clip(self.images, data, POWER_SUPPLY_ASSETS)
+            self.power_entry_scale = data['scale']
+            self.power_entry_impact = data['impactMs'] / 1000
+            self.power_entry_reveal = sum(self.power_entry_clip.durations) - self.power_entry_impact
+            if self.power_entry_clip.loop or not (0 < self.power_entry_impact and self.power_entry_reveal > 0):
+                raise ValueError('등장 효과는 타격 시점이 있는 단발 클립이어야 합니다.')
+            texture = self.power_entry_clip.frames[0].image._borrow().texture
+            _sdl(pico.SDL_SetTextureScaleMode(texture, pico.SDL_ScaleModeNearest))
             self._start_power_entry()
 
     def _start_power_entry(self):
-        self.power_entry_elapsed = 0.0
         self.player.spawn_opacity = 0.0
-        self.spawn(SpriteEffect(self.combat_clips['charge_spent'], self.layout.power_entry,
-                                1, 1, draw_order=1))
+        self.power_entry_effect = self.spawn(SpriteEffect(
+            self.power_entry_clip, self.layout.power_entry, 1, self.power_entry_scale, draw_order=1))
 
     def finish_power_entry(self):
-        self.power_entry_elapsed = None
+        self.power_entry_effect.destroy()
+        self.power_entry_effect = None
         self.player.spawn_opacity = 1.0
 
-    def _update_power_entry(self, dt):
-        previous = self.power_entry_elapsed
-        elapsed = previous + dt
-        if elapsed >= DURATION + POWER_ENTRY_REVEAL:
+    def _update_power_entry(self):
+        animation = self.power_entry_effect.player
+        if animation.finished:
             self.finish_power_entry()
             return
-        if previous < DURATION <= elapsed:
-            self.spawn(TeleportLink(self.layout.power_entry, self.player.center, self.link_art,
-                                    self.combat_clips['charge_spent']))
-        self.power_entry_elapsed = elapsed
-        self.player.spawn_opacity = max(0.0, (elapsed - DURATION) / POWER_ENTRY_REVEAL)
+        elapsed = max(0.0, animation.elapsed - self.power_entry_impact)
+        self.player.spawn_opacity = elapsed / self.power_entry_reveal
 
     def _spawn_combatants(self, clips, enemy_clips):
         self.player = self.spawn(Character(clips))
@@ -204,8 +209,8 @@ class GameplayLevel(Level):
         player_position = self.player.collision_position
         protected_until = max(self.player.invulnerability_remaining, self.player.teleport_guard_remaining)
         super().update(dt)
-        if self.power_entry_elapsed is not None:
-            self._update_power_entry(dt)
+        if self.power_entry_effect is not None:
+            self._update_power_entry()
         self._update_environment()
         if self.enemy.level is not self:
             return
@@ -434,7 +439,7 @@ class CharacterScene(LevelScene):
     def handle_event(self, event):
         previous_player = self.character
         previous_player.view_bounds = self.transform.bounds
-        if self.level.power_entry_elapsed is not None and (
+        if self.level.power_entry_effect is not None and (
                 event.type == pico.SDL_KEYDOWN and event.key in POWER_ENTRY_KEYS
                 or event.type == pico.SDL_MOUSEBUTTONDOWN
                 and event.button in (pico.SDL_BUTTON_LEFT, pico.SDL_BUTTON_RIGHT)):

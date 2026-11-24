@@ -96,3 +96,11 @@ FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워�
 - `.venv\Scripts\python.exe art/levels/power-supply/ceiling-entry/entry_review.py current`에서 초기 착지, 전류의 양 끝, 등장 완료, R 재시작과 조기 이동을 통과했다. `tmp/power-entry/capture.py`로 실제 화면 27장을 캡처했고 케이블에서 워든까지 이어지는 방전을 확인했다.
 - `map_bundle.py validate`는 오류·경고 0개, `map_nav.py check`는 목표 4개 중 도달 불가 0개, `export_tiled.py export`는 재렌더 차이 0픽셀이다.
 - `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/ceiling-entry/sdl`은 등장 확인 뒤 주행 단계에서 시간 초과했다. 변경 전 `ec617f4` 맵에서도 같은 주행 단계의 시간 초과를 재현해 전체 레벨 SDL 완주는 확인하지 못했다. 사용자 직접 플레이는 미실행이다.
+
+## 낙뢰 타격과 등장 강화 검증
+
+사용자 요청에 따라 상단 케이블의 선행 방전, 굵게 갈라지는 본줄기, 착지점 섬광과 바닥 불꽃을 등장 전용 pixelfx 시트로 적용했다. 논리 한 칸은 기본 창에서 2×2 화면 픽셀이다. 타격은 80ms에 시작하고 워든은 타격부터 드러나며 340ms에 등장 연출을 마친다. [실제 SDL 캡처](../../art/levels/power-supply/lightning-strike/lightning-strike.gif)
+
+- `node scripts/bake-effects/power-entry.mjs`에서 맵의 케이블·착지 좌표, 타격 프레임의 두 접점, 이미지 여백 및 마지막 프레임의 투명성을 확인했다.
+- `.venv\Scripts\python.exe art/levels/power-supply/lightning-strike/smoke.py art/levels/power-supply/lightning-strike/final-frames`로 첫 타격·등장 완료, 효과 정리, R 재시작과 조기 이동을 실제 SDL에서 확인했다.
+- `.venv\Scripts\python.exe -m unittest tests.unit.test_teleport_link` 4개 통과. 전체 레벨 주행과 사용자 직접 플레이는 미실행이다.
