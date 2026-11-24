@@ -51,8 +51,13 @@ class PowerSupplySmoke(CombatSmoke):
         assert actor.collision_position == layout.player_start and actor.grounded
         assert self.level.enemy.collision_position == layout.enemy_start
         assert all(actor.can_place_center(point) for site in layout.charge_sites for point in site)
+        initial_angle = layout.rotor_angle
         self.screenshot = 'power-supply-intake'
-        yield .06
+        yield .24
+        angle_delta = (layout.rotor_angle - initial_angle) % 360
+        assert 0 < angle_delta < layout.rotor_speed
+        self.screenshot = 'power-supply-fan-rotated'
+        yield .04
         push_key(pico.SDLK_F6)
         push_key(pico.SDLK_F6, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: self.engine.window_size == ALTERNATE_SIZE)

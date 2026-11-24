@@ -43,6 +43,12 @@ class PowerSupplyMap(GameObject):
         self.parallax = background['parallax_x']
         self.background = load(background['runtime_image'])
         self.background_height = background['runtime_height']
+        rotor = background['rotor']
+        self.rotor = load(data['props'][rotor['prop']]['image'])
+        self.rotor_center = rotor['center_px']
+        self.rotor_diameter = rotor['diameter_px']
+        self.rotor_speed = rotor['degrees_per_second']
+        self.rotor_angle = 0.0
         self.items = [RenderItem(self._draw_background, draw_order=-5)]
         for obj in data['objects']:
             image = load(data['props'][obj['prop']]['image'])
@@ -67,6 +73,9 @@ class PowerSupplyMap(GameObject):
         left, top = self._point(x, y)
         return left, top - h, left + w, top
 
+    def update(self, dt):
+        self.rotor_angle = (self.rotor_angle + self.rotor_speed * dt) % 360
+
     def check_output(self, player):
         if self.reached_output or not player.hp or not player.grounded:
             return False
@@ -83,6 +92,11 @@ class PowerSupplyMap(GameObject):
         center = min(max(camera_x * (1 - self.parallax), right - half_width), left + half_width)
         bounds = center - half_width, camera_y - half_height, center + half_width, camera_y + half_height
         draw_image(self.background, transform, bounds, opacity)
+        rotor_x = bounds[0] + self.rotor_center[0] * scale
+        rotor_y = bounds[3] - self.rotor_center[1] * scale
+        radius = self.rotor_diameter * scale / 2
+        rotor_bounds = rotor_x - radius, rotor_y - radius, rotor_x + radius, rotor_y + radius
+        draw_image(self.rotor, transform, rotor_bounds, opacity, angle=self.rotor_angle)
 
     def _draw_socket(self, image, lit, bounds, transform, opacity):
         draw_image(lit if self.reached_output else image, transform, bounds, opacity)

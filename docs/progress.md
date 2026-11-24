@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **파워서플라이 먼지·흡기 팬:** 2026-11-24 요청과 사용자 피드백으로 바닥·발판의 긴 줄기형 시안을 낮은 보풀과 먼지 띠로 교체했다. 원경 부품 표면의 축적 먼지와 흡기 팬 회전을 적용했다. [검증](../specs/021-power-supply-level/verification.md#먼지와-흡기-팬-후속-검증).
+
 - **첫 레벨 전원 구역:** 2026-11-24 사용자 요청으로 컴퓨터 파워서플라이 내부를 기본 실행에 연결하고 환경 원화에 hi-bit 가공을 적용했다. 흡기구, 방열판, 코일·콘덴서, 출력 단자를 배치했다. [명세](../specs/021-power-supply-level/spec.md) · [계획](../specs/021-power-supply-level/plan.md) · [검증](../specs/021-power-supply-level/verification.md).
 
 - **지상 기본 공격 분기 방전 초승달:** 2026-11-24 사용자 요청으로 선택한 효과를 기본 레벨과 훈련장이 공유하는 지상 공격 시트에 적용했다. 효과가 들어가는 6셀을 교체했고, 실제 기본 레벨 SDL 창에서 좌우 시작·정점·소멸을 확인했다. 사용자 직접 플레이 평가는 남아 있다. [합성 미리보기](../art/warden/ground-crescent-discharge-refined/preview-dark-quarter.gif) · [검증](../specs/020-combat-reimplementation/verification.md#지상-기본-공격-분기-방전-초승달).
