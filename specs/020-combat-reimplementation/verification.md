@@ -134,3 +134,24 @@ git diff --check
 .\.venv\Scripts\python.exe -m unittest tests.integration.test_basic_enemy.BasicEnemySceneTests.test_real_attack_sheet_hits_three_times_in_both_directions
 git diff --check
 ```
+
+## 이동 공격과 속도·효과 조정
+
+- **FR-010, SC-006** — 지상 공격 시작부터 A/D로 이동한다. 입력을 반전해도 진행 중인 스윙 방향이 고정된다. 표적 자동 검사에서 지상·공중 이동 타격, 타격 범위 경계, 벽 정지, 입력 버퍼와 착지·순간이동·피격의 취소를 확인했다. 30개를 통과했다.
+- **FR-012, SC-008** — 원본 클립 시계에 0.7배를 적용해 지상 약 486ms, 공중 약 429ms로 진행한다. 타격 시작과 종료는 실제 경과 약 143ms와 286ms다. 기존 합성을 픽셀 단위로 재현한 뒤 몸체·피벗 및 비활성 셀을 보존하면서 효과를 최근접 방식으로 확대했다. 지상 최대 높이 82→98px, 공중 83→100px이며 셀 경계에서 잘리지 않았다.
+- **SDL** — 기본 전원 구역의 1280×720 창에서 J와 A/D를 주입하고 지상 좌우 전후 프레임과 공중 이동 공격을 캡처했다. 좌우 및 공중 타격 프레임을 열어 확대된 베기를 확인했다. 훈련장과 캐릭터 입력·감사·전하 SDL 검사도 통과했다.
+- **수렴** — 명세·계획·작업을 런타임 코드 및 시트, 표적 검사, 기술 구조, 조작·적 전투, 아트 기준 및 자산 출처와 대조했다. 사용자 직접 플레이와 전체 회귀는 실행하지 않았다.
+
+```powershell
+$localCheck = '.local-tools/verification/attack-tuning'
+$out = Join-Path $env:TEMP 'circuit-warden-attack-tuning'
+$checks = .\.venv\Scripts\python.exe "$localCheck/test_names.py"
+.\.venv\Scripts\python.exe -B -m unittest -q @checks tests.unit.test_input_buffer.InputBufferTests.test_focus_loss_clears_buffer
+.\.local-tools\python\Scripts\python.exe "$localCheck/bake.py"
+.\.venv\Scripts\python.exe -B "$localCheck/smoke.py" $localCheck
+.\.venv\Scripts\python.exe -B -m tests.smoke.combat_reimplementation_smoke --output-dir $localCheck
+.\.venv\Scripts\python.exe -B -m tests.smoke.character_smoke --output-dir $out
+.\.venv\Scripts\python.exe -B -m tests.smoke.audit_smoke --output-dir $out
+.\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $out
+git diff --check
+```

@@ -80,7 +80,7 @@ class BasicEnemySceneTests(unittest.TestCase):
                     self.assertEqual(enemy.hp, hp)
                     scene.update(.02)
                     self.assertEqual(enemy.hp, hp)
-                    scene.update(.23)
+                    scene.update(.32)
                 self.assertIsNone(enemy.level)
                 self.assertNotIn(enemy, scene.level.objects)
             finally:
@@ -165,7 +165,7 @@ class BasicEnemySceneTests(unittest.TestCase):
             enemy.x, enemy.state, enemy.state_remaining = 70, 'recover', 10
             actor._queue_action('attack')
             scene.update(0)
-            scene.update(.11)
+            scene.update(.15)
             self.assertIsNotNone(actor.active_attack)
             self.assertEqual(enemy.hp, 2)
             actor.hp, actor.invulnerability_remaining = 4, .4
@@ -270,7 +270,7 @@ class BasicEnemySceneTests(unittest.TestCase):
         self.assertIs(actor.player.clip, actor.clips['air_attack'])
         scene.handle_event(attack)
         self.assertIsNone(actor.buffered_action)
-        scene.update(DURATION + .01)
+        scene.update(.15)
         self.assertEqual((actor.state, enemy.hp), ('attack', 2))
         self.assertFalse(actor.grounded)
         hit_spark, = (obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))

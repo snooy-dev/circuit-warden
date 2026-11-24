@@ -296,7 +296,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. Character가 transitions.Machine의 idle/run/attack 명시 전이(auto_transitions=False)를 소유한다. SpritePlayer의 loop=False·finished를 재사용하며 로더는 정확한 bool loop와 클립별 반복 정책을 검사한다.
 
-`_consume_action`에서 허용한 예약 행동을 `_update`에 전달한다. 공격 시작 갱신은 재생 시각 0초를 표시한다. `attack_facing`은 한 스윙의 표시·판정을 고정한다. 지상 공격은 방향키로 인한 수평 이동을 멈추고, 방향 입력이 있을 때 240ms 경계에서 일반 이동으로 복귀한다. 남은 갱신 시간만 일반 이동에 전달해 긴 갱신에서도 타격 구간과 수평 이동을 구분한다. 공중 공격은 수평 조향과 중력·점프 키 해제를 함께 적용하며 착지 시 그 이후의 검 판정을 제외한다. 시작점과 충돌 해결 후 끝점을 잇는 `AttackSweep`를 구간별로 남긴다. `GameplayLevel`은 검의 이동 구간과 활성 시간, 적의 구간별 이동을 교차시켜 상대 AABB 접촉 시각을 구한다. 검의 프레임 내 경로는 선형 근사다.
+`_consume_action`에서 허용한 예약 행동을 `_update`에 전달한다. 공격 시작 갱신은 재생 시각 0초를 표시한다. `attack_facing`은 한 스윙의 표시·판정을 고정한다. 지상·공중 공격 중 A/D를 수평 충돌에 적용한다. 공격 재생 시계는 실제 시간의 0.7배로 진행하며, 검의 활성 시간은 실제 시간으로 환산한다. 모션이 끝난 뒤 남은 갱신 시간은 다음 상태에서 소비한다. 공중 공격은 수평 조향과 중력·점프 키 해제를 함께 적용하며 착지 시 그 이후의 검 판정을 제외한다. 시작점과 충돌 해결 후 끝점을 잇는 `AttackSweep`를 구간별로 남긴다. `GameplayLevel`은 검의 이동 구간과 활성 시간, 적의 구간별 이동을 교차시켜 상대 AABB 접촉 시각을 구한다. 검의 프레임 내 경로는 선형 근사다.
 
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 

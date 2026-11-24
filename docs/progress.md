@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **이동 공격과 베기 조정:** 2026-11-24 사용자 요청으로 지상·공중 공격 중 A/D 이동을 적용하고, 공격 재생률을 30% 낮췄다. 지상·공중의 베기 효과는 각각 가로·세로를 20% 확대했다. 자동 검사 30개와 전원 구역·훈련장 SDL 검사를 통과했다. 사용자 조작감 확인이 남아 있다. [명세](../specs/020-combat-reimplementation/spec.md) · [검증](../specs/020-combat-reimplementation/verification.md#이동-공격과-속도효과-조정).
+
 - **오프닝 스토리 컷신:** 2026-11-24 사용자 피드백으로 정지 삽화 시안을 전원 구역의 실시간 연출로 교체했다. 팬 기동과 전선 스파크, 낙뢰와 워든 등장을 같은 카메라에서 보여준 뒤 조작을 넘긴다. 출력에 전류가 닿지 않는다는 서사는 제안 상태다. [명세](../specs/023-story-intro/spec.md) · [연출 구성](../specs/023-story-intro/plan.md) · [검증](../specs/023-story-intro/verification.md).
 
 - **타이틀 메뉴:** 2026-11-24 사용자 후속 요청으로 화면의 키 가이드를 삭제했다. New Game, Settings, Quit은 전원 구역 원경 위 텍스트로 표시하고, 설정은 항목명과 값을 열로 정렬한다. 기본 창·축소 창·전체화면의 실제 SDL 출력과 키보드·마우스 입력을 확인했다. [명세](../specs/022-title-menu/spec.md) · [계획](../specs/022-title-menu/plan.md) · [검증](../specs/022-title-menu/verification.md).

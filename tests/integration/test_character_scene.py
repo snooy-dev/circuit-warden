@@ -291,13 +291,14 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual(actor.player.elapsed, 0)
         self.assertIs(actor.player.frame, actor.clips['attack'].frames[0])
         scene.update(.05)
-        self.assertEqual(actor.player.elapsed, .05)
-        self.assertIs(actor.player.frame, actor.clips['attack'].frames[2])
+        self.assertAlmostEqual(actor.player.elapsed, .035)
+        self.assertIs(actor.player.frame, actor.clips['attack'].frames[1])
 
-    def test_ground_attack_plants_then_runs_in_latest_direction(self):
+    def test_ground_attack_moves_then_runs_in_latest_direction(self):
         scene = CharacterScene()
         scene.enter(self.app)
         self.addCleanup(scene.exit)
+        scene.level.enemy.destroy()
         actor = scene.character
         objects = scene.level.objects
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0)
@@ -308,19 +309,19 @@ class CharacterSceneTests(unittest.TestCase):
                 scene.handle_event(click)
                 scene.update(.1)
                 scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
-                scene.update(.12)
-                self.assertAlmostEqual(actor.x, 0)
+                scene.update(.18)
+                self.assertAlmostEqual(actor.x, -facing * SPEED * .18)
                 position = actor.x, actor.y
                 self.assertEqual(scene.level.objects, objects)
                 with patch('game.character.draw_sprite') as draw:
                     actor.render_items()[0].drawable(scene.transform, 1)
                 draw.assert_called_once_with(attack.frames[6], scene.transform, position,
                                              attack.frames[6].rect[2:], 1, flip_x=facing < 0)
-                scene.update(.119)
-                self.assertAlmostEqual(actor.x, 0)
+                scene.update(.30)
+                self.assertAlmostEqual(actor.x, -facing * SPEED * .48)
                 self.assertEqual(actor.state, 'attack')
                 scene.update(.031)
-                self.assertAlmostEqual(actor.x, -facing * SPEED * .03)
+                self.assertAlmostEqual(actor.x, -facing * SPEED * .511)
                 self.assertEqual((actor.state, actor.facing), ('run', -facing))
                 scene.handle_event(SimpleNamespace(type=pico.SDL_KEYUP, key=key))
                 scene.update(0)

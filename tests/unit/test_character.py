@@ -362,7 +362,7 @@ class CharacterTests(unittest.TestCase):
         actor.update(0)
         actor.control(key(pico.SDLK_a))
         elapsed = 0
-        for dt in (0, .15, .14):
+        for dt in (0, .15, .27):
             actor.update(dt)
             reference.update(dt)
             elapsed += dt
@@ -396,6 +396,7 @@ class CharacterTests(unittest.TestCase):
         self.assertNotEqual(actor.state, 'attack')
         actor.control(click)
         actor.update(.01)
+        actor.update(.045)
         actor.control(key(pico.SDLK_SPACE, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_SPACE))
         actor.update(.05)
@@ -538,19 +539,19 @@ class CharacterTests(unittest.TestCase):
                 actor.update(.02)
                 self.assertEqual(actor.state, 'attack')
                 self.assertEqual(actor.player.elapsed, 0)
-                self.assertAlmostEqual(actor.x, start)
+                self.assertAlmostEqual(actor.x, start + facing * SPEED * .02)
                 actor.control(key(forward, pico.SDL_KEYUP))
                 actor.control(key(reverse))
                 actor.update(.05)
-                self.assertEqual(actor.player.elapsed, .05)
+                self.assertAlmostEqual(actor.player.elapsed, .035)
                 self.assertEqual(actor.attack_facing, facing)
-                self.assertAlmostEqual(actor.x, start)
+                self.assertAlmostEqual(actor.x, start - facing * SPEED * .03)
                 with patch('game.character.draw_sprite') as draw:
                     actor._draw(WorldTransform((0, 0, 800, 600), view_height=600), 1)
                 self.assertEqual(draw.call_args.kwargs['flip_x'], facing < 0)
                 actor.update(.10)
                 self.assertEqual((actor.state, actor.facing), ('run', -facing))
-                self.assertAlmostEqual(actor.x, start - facing * SPEED * .05)
+                self.assertAlmostEqual(actor.x, start - facing * SPEED * .13)
 
     def test_attack_release_opposite_keys_and_focus_return_to_idle(self):
         for finish in ('release', 'opposite', 'focus'):
@@ -567,7 +568,7 @@ class CharacterTests(unittest.TestCase):
                     actor.control(key(pico.SDLK_d))
                 else:
                     actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT, event=pico.SDL_WINDOWEVENT_FOCUS_LOST))
-                actor.update(.1)
+                actor.update(.15)
                 self.assertEqual(actor.state, 'idle')
                 self.assertEqual(actor.x, start)
                 self.assertEqual(actor.facing, -1)

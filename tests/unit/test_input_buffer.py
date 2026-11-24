@@ -21,10 +21,10 @@ class InputBufferTests(unittest.TestCase):
         actor = self.character
         self.attack()
         actor.update(0)
-        actor.update(.05)
+        actor.update(.075)
         self.press(pico.SDLK_LSHIFT)
         self.press(pico.SDLK_SPACE)
-        actor.update(.05)
+        actor.update(.075)
         self.assertEqual((actor.state, actor.jump_phase), ('jump', 'start'))
         self.assertIsNone(actor.buffered_action)
         actor.update(1.1)
@@ -74,7 +74,7 @@ class InputBufferTests(unittest.TestCase):
         self.press(pico.SDLK_SPACE)
         actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT,
                                       event=pico.SDL_WINDOWEVENT_FOCUS_LOST))
-        actor.update(.1)
+        actor.update(.15)
         self.assertEqual(actor.state, 'idle')
         self.assertIsNone(actor.buffered_action)
 

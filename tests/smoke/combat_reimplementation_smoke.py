@@ -77,12 +77,13 @@ class CombatSmoke(CharacterScene):
         start = actor.x
         push_key(pico.SDLK_j)
         yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .14)
-        assert isclose(actor.x, start) and actor.attack_facing == 1
-        self.screenshot = 'ground-planted-swing-right'
+        assert actor.x > start and actor.attack_facing == 1
+        self.screenshot = 'ground-moving-swing-right'
+        start = actor.x
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_key(pico.SDLK_a)
         yield .055
-        assert isclose(actor.x, start) and actor.attack_facing == 1
+        assert actor.state == 'attack' and actor.x < start and actor.attack_facing == 1
         yield from self.wait_until(lambda: actor.state == 'run' and actor.x < start)
         assert actor.facing == -1
         push_key(pico.SDLK_j, pico.SDL_KEYUP)
@@ -90,8 +91,8 @@ class CombatSmoke(CharacterScene):
         start = actor.x
         push_key(pico.SDLK_j)
         yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .14)
-        assert isclose(actor.x, start) and actor.attack_facing == -1
-        self.screenshot = 'ground-planted-swing-left'
+        assert actor.x < start and actor.attack_facing == -1
+        self.screenshot = 'ground-moving-swing-left'
         push_key(pico.SDLK_j, pico.SDL_KEYUP)
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
         yield .25

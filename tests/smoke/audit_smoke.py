@@ -68,8 +68,8 @@ class AuditSmoke(CharacterScene):
         self.capture('audit-buffered-attack-first')
         yield .05
 
-        assert actor.player.elapsed == .05 and actor.player.frame is attack.frames[2]
-        self.capture('audit-buffered-attack-fx')
+        assert abs(actor.player.elapsed - .035) < 1e-9 and actor.player.frame is attack.frames[1]
+        self.capture('audit-buffered-attack-next')
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield

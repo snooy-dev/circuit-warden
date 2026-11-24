@@ -86,7 +86,7 @@ class ChargeSmoke(CharacterScene):
         yield .04
         assert actor.player.clip is actor.clips['attack'] and actor.grounded
         self.capture('combat-ground-swing')
-        yield .36
+        yield .47
         self.tap(pico.SDLK_SPACE)
         yield .20
         assert actor.jump_phase == 'rise' and not actor.grounded
@@ -100,9 +100,8 @@ class ChargeSmoke(CharacterScene):
         yield .02
         assert entry.spent and not entry.render_items()
         self.tap(pico.SDLK_j)
-        for _ in range(24):
-            if enemy.hp < enemy.MAX_HP:
-                break
+        hit_deadline = monotonic() + .3
+        while enemy.hp == enemy.MAX_HP and monotonic() < hit_deadline:
             yield .001
         assert actor.player.clip is actor.clips['air_attack'] and not actor.grounded
         assert enemy.hp == enemy.MAX_HP - 1

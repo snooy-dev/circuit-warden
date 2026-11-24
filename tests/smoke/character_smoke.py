@@ -99,6 +99,9 @@ class CharacterSmoke(CharacterScene):
         push_key(pico.SDLK_d)
         yield
 
+        while actor.state == 'attack':
+            yield
+
         assert actor.state == 'run' and actor.x > stopped_x and actor.facing == 1
         self.capture('attack-resume-right')
         attack_x = actor.x
@@ -107,7 +110,8 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert actor.state == 'attack' and actor.x == attack_x and actor.attack_facing == 1
-        yield
+        while actor.state == 'attack':
+            yield
 
         assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1
         stopped_x = actor.x
