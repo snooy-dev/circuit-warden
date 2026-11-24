@@ -82,3 +82,9 @@ FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워�
 - ImageGen 원화를 기존 환경 팔레트로 가공한 128×112 에셋을 썼다. 고정판이 왼쪽 벽과 겹치는 모습과 전류가 구리 단자에 닿는 모습을 실제 캡처로 확인했다. [생성 기록](../../art/levels/power-supply/chassis-inlet/source/job.json) · [가공 스크립트](../../art/levels/power-supply/chassis-inlet/prepare.py)
 - `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/chassis-inlet/sdl`에서 새 스폰, 전류의 양 끝, R·조기 이동과 기존 경로를 확인했다.
 - `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict` 통과. 브라우저 경로 4개에서 실패 및 경고는 0개이고 `export_tiled.py export` 재렌더 차이는 0픽셀이었다. 전체 회귀와 사용자 직접 플레이는 미실행이다.
+
+## 전원 인렛 외형과 돌출 보정
+
+사용자 피드백에 따라 제품 사진과 치수도에서 검은 삽입구의 깎인 모서리, 삼각형으로 배치된 세 핀, 양쪽 나사 자리를 반영했다. 원화를 86×40으로 가공해 벽 오른쪽으로 보이는 배치 폭을 120px에서 64px로 줄였다. 전류는 오른쪽 짧은 구리 접점 (93, 486)에서 시작하고 워든은 (172, 540)에 선다. [제조사 사진과 도면](https://www.schurter.com/en/part/6100.3100) · [생성 기록](../../art/levels/power-supply/recognizable-inlet/source/job.json) · [실제 SDL GIF](../../art/levels/power-supply/recognizable-inlet/chassis-entry.gif)
+
+`.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/recognizable-inlet/sdl`에서 전류의 양 끝, 새 스폰, R·조기 이동과 기존 경로를 확인했다. 맵 번들·탐색·브라우저 경로 4개와 Tiled 재렌더를 통과했고, 경고 0개와 재렌더 차이 0픽셀을 확인했다. 전체 회귀와 사용자 직접 플레이는 미실행이다.

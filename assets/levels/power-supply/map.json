@@ -17,7 +17,7 @@
     {"name": "front", "kind": "objects"}
   ],
   "props": {
-    "chassis-inlet": {"image": "chassis-inlet.png", "art_source": "host_image", "sha256": "bfc95465426665ea0957636e5e413430709c19308dfb3203faf3ae4625c055d4"},
+    "chassis-inlet": {"image": "chassis-inlet.png", "art_source": "host_image", "sha256": "f922aea64e5ad049924367a348e70e300e7e5afb9b9aa904c92844280d3f0db7"},
     "fan-rotor": {"image": "fan-rotor.png", "art_source": "host_image", "sha256": "39644cf75eed9477375b7bb412974e36d9a6409843836cb84a447811ec357fd0"},
     "lint-sparse": {"image": "lint-sparse.png", "art_source": "host_image", "sha256": "13fed8070045ab077cf89a2e6c31d78977cdc0615eeb061211441ebc7772a537"},
     "lint-clump": {"image": "lint-clump.png", "art_source": "host_image", "sha256": "61bcf1f69e02438db9fcb5ee68d8fc85939bf194e13ca0182e852d162caf1112"},
@@ -109,7 +109,7 @@
     {"id": "pcb-deck-11", "prop": "floor", "x": 3200, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
     {"id": "pcb-deck-12", "prop": "floor", "x": 3840, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
     {"id": "wall-0", "prop": "wall", "x": 0, "y": 0, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
-    {"id": "chassis-inlet", "prop": "chassis-inlet", "x": 24, "y": 420, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 101},
+    {"id": "chassis-inlet", "prop": "chassis-inlet", "x": 10, "y": 466, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 101},
     {"id": "wall-3808", "prop": "wall", "x": 3808, "y": 0, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
     {"id": "ledge-584", "prop": "ledge", "x": 584, "y": 432, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
     {"id": "ledge-1046", "prop": "ledge", "x": 1046, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
@@ -150,7 +150,7 @@
     ]
   },
   "spawns": [
-    {"id": "start", "x": 224, "y": 498.5, "feet_y": 540, "entry_origin": [147, 468]},
+    {"id": "start", "x": 172, "y": 498.5, "feet_y": 540, "entry_origin": [93, 486]},
     {"id": "metal-dust", "x": 2112, "y": 498.5, "feet_y": 540}
   ],
   "interactions": [
