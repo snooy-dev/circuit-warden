@@ -25,7 +25,8 @@
 | `game_framework/world.py` | GameObject·GameMode·Level 수명과 전달 |
 | `game_framework/collision.py` | 로컬 AABB·레이어 응답·연속 접촉 계산 |
 | `game_framework/transforms.py` | WorldTransform·UITransform 게임 좌표 변환 |
-| `game_framework/ui.py` | UIElement·Canvas 트리 소유와 업데이트 |
+| `game_framework/ui.py` | UIElement·Canvas 트리 소유와 업데이트, 렌더링과 입력의 공통 순회 |
+| `game_framework/widgets.py` | Label·Button·ButtonInput의 텍스트와 버튼 상호작용 |
 | `game_framework/rendering.py` | RenderItem·Renderer의 소유 모델 수집·가드·월드/UI 두 패스 |
 | `game_framework/drawing.py` | 게임용 draw_rect/draw_image 값 검사·좌표 투영 후 엔진 호출 |
 | `game_framework/level_scene.py` | LevelScene의 엔진·레벨·Canvas 연결 |
@@ -33,6 +34,8 @@
 | `game_framework/core.py`, `scene.py` | 직전 패키지 import 경로의 재노출 호환 |
 | `tests/fixtures/framework_scenes.py` | 회귀 검사 전용 월드·UI·통합 장면 |
 | `main.py`, `game/` | 게임 진입·캐릭터 상태·레벨/장면 구현 |
+| `game/title.py` | 타이틀·설정 패널, 화면 모드와 게임 시작 |
+| `assets/ui/` | 타이틀에서 사용하는 Barlow Condensed 글꼴 · [라이선스](../licenses/barlow-OFL.txt) |
 | `game/training_map.py` | 훈련장 지형 충돌과 월드 표시 |
 | `tests/unit/`, `tests/integration/`, `tests/smoke/` | 모의 단위 검사·조합/실제 SDL 소프트웨어 검사·별도 실제 창 검사 |
 
@@ -222,7 +225,7 @@ UI는 화면 전체를 사용하고 남는 공간을 논리 영역의 확장으�
 
 루트 anchor=(ax,ay)는 0~1이며 origin=(ax*logical_width,ay*logical_height)+offset으로 배치한다. 기본은 좌상단 (0,0), 우상단은 (1,0), 중앙은 (0.5,0.5)다. anchor는 루트의 원점을 고정하며 루트 전체를 자동 정렬하는 pivot 기능은 아니다. 오른쪽 여백에는 패널 폭을 고려한 음수 offset 또는 원점 왼쪽으로 그리는 로컬 범위를 사용한다. 자식은 기존 부모 로컬 좌표를 사용한다. 따라서 크기 변경 시 저장 좌표를 재작성하지 않고도 HUD의 화면 기준점을 유지한다. 자동 재배치·줄바꿈·최소 창 크기 정책은 별도 미정이다.
 
-입력 위치는 window→output 픽셀 비율을 적용하고 viewport 원점을 뺀 뒤 월드/Canvas 변환을 각각 역으로 적용한다. SDL의 마우스 이동/버튼 위치에만 적용하고 휠 x/y는 이동량이므로 좌표 변환하지 않는다. 원본 Scene.handle_event(event) 계약은 유지하며 프레임워크에 좌표 변환 함수를 제공한다. UI 포커스/클릭 분배 시스템은 아직 포함하지 않는다.
+입력 위치는 window→output 픽셀 비율을 적용하고 viewport 원점을 뺀 뒤 월드/Canvas 변환을 각각 역으로 적용한다. SDL의 마우스 이동/버튼 위치에만 적용하고 휠 x/y는 이동량으로 전달한다. 타이틀은 `ButtonInput`에 실제 출력 좌표와 Canvas 변환을 전달한다. 포커스 이동은 표시 순서를 따르고 클릭은 좌표가 겹치는 가장 앞 버튼에서 누르고 뗐을 때 확정한다. 패널 전환 시 포커스와 클릭 대기를 초기화한다. 타이틀의 `MenuItem`은 `Button`의 입력 계약 위에 선택 표시를 그린다. `Label`은 문자열·크기·색·글꼴 경로가 바뀔 때 텍스트 텍스처를 갱신하며 Canvas 종료 때 정리한다.
 
 Engine은 창 크기와 SDL renderer 실제 출력 크기를 구분해 조회한다. 프레임 입력 처리 전에 출력 상태를 확인하고 크기/전체화면/DPI 변경 시 갱신한다. 프레임워크가 요청한 화면 모드 변경은 프레임 경계에 적용하며 입력·그리기 사이 외부 크기 변경이 확인되면 그 프레임 표시를 건너뛰고 다음 프레임에서 일치시킨다. 최소화/0 크기는 나눗셈·입력 역변환·그리기를 생략하되 종료 이벤트 처리는 계속한다. 월드 상태 유지·업데이트를 임의 중지하는 게임 규칙은 추가하지 않는다.
 
@@ -251,7 +254,7 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 아래는 P5에 구현된 결합 단계다. LevelScene은 선택적 Canvas를 연결하고 UIDemo는 Level 없이 UI를 독립 실행한다.
 
-1. 입력: 엔진이 이벤트마다 Level.handle_event를 호출한다. 이벤트 전달 시작 전에 대상 스냅샷을 만들고 모드→객체 순으로 처리한다. UI 입력 시스템은 별도 범위다.
+1. 입력: LevelScene은 Level.handle_event를 호출한다. 이벤트 전달 시작 전에 대상 스냅샷을 만들고 모드→객체 순으로 처리한다. 독립 타이틀 장면은 ButtonInput을 직접 호출한다. `Scene.handle_escape()`에서 True를 반환하면 장면이 Escape를 처리하고 그 외에는 엔진이 정상 종료한다.
 2. 업데이트: LevelScene이 Level·Canvas 스냅샷을 모두 취득한다. 모드→월드 객체→UI 노드 순으로 상태와 dt에 따른 이동을 갱신한다.
 3. 렌더링: 출력 viewport와 월드/UI 변환을 확정하고 현재 Level·Canvas에서 항목을 검사해 화면 밖/숨김/알파 0인 자기 그림을 제외한다. 월드 전역 정렬·UI 형제 정렬을 적용해 월드→UI를 뒤에서 앞으로 알파 합성한다.
 

@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **타이틀 메뉴:** 2026-11-24 사용자 후속 요청으로 화면의 키 가이드를 삭제했다. New Game, Settings, Quit은 전원 구역 원경 위 텍스트로 표시하고, 설정은 항목명과 값을 열로 정렬한다. 기본 창·축소 창·전체화면의 실제 SDL 출력과 키보드·마우스 입력을 확인했다. [명세](../specs/022-title-menu/spec.md) · [계획](../specs/022-title-menu/plan.md) · [검증](../specs/022-title-menu/verification.md).
+
 - **첫 레벨 낙뢰 등장:** 2026-11-24 사용자 요청으로 노출된 구리 심선에서 떨어지는 번개에 타격 순간의 짧은 카메라 흔들림을 추가했다. 실제 SDL에서 타격 동기화, 시야 복귀, R 재시작과 조기 이동을 확인했다. [실제 화면](../art/levels/power-supply/entry-camera-shake/entry-camera-shake.gif) · [검증](../specs/021-power-supply-level/verification.md#낙뢰-카메라-흔들림-검증).
 
 - **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).

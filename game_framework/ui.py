@@ -68,6 +68,31 @@ def _ui_snapshot(roots):
     return tuple(nodes)
 
 
+def _visible_ui(canvas, transform):
+    if not transform.valid or canvas._closed:
+        return
+    width, height = transform.logical_size
+    stack = [(root, (0, 0)) for root in reversed(sorted(canvas.roots, key=lambda n: n.draw_order))]
+    while stack:
+        element, (x, y) = stack.pop()
+        element._validate()
+        if not element.visible:
+            continue
+        x, y = x + element.x, y + element.y
+        if element.parent is None:
+            x += element.anchor[0] * width
+            y += element.anchor[1] * height
+        origin = x, y
+        if element.opacity > 0:
+            bounds = None
+            if element.bounds is not None:
+                left, top, right, bottom = _bounds(element.bounds)
+                bounds = left + x, top + y, right + x, bottom + y
+            yield element, origin, bounds
+        stack.extend((child, origin) for child in
+                     reversed(sorted(element.children, key=lambda n: n.draw_order)))
+
+
 class Canvas:
     def __init__(self, reference_size):
         self._reference_size = UITransform((0, 0, 0, 0), reference_size).reference_size

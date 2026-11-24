@@ -21,6 +21,7 @@ from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
 from .power_supply_map import PowerSupplyMap
 from .teleport_link import DURATION, LinkArt, TeleportLink
+from .title import TitleScene
 from .training_map import WORLD_BOUNDS, TrainingMap
 
 
@@ -502,4 +503,7 @@ def main():
     parser.add_argument('--training', action='store_true', help='플랫폼 훈련장으로 시작')
     args = parser.parse_args()
     print('게임플레이: A/D 이동 / Space 점프 / J 공격 / E 커서 위치에 전하 생성 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
-    Engine(*DEFAULT_SIZE).run(CharacterScene(power_supply=not args.training))
+    scene = CharacterScene() if args.training else TitleScene(
+        lambda: CharacterScene(power_supply=True), sizes=(DEFAULT_SIZE, ALTERNATE_SIZE),
+        art_path=POWER_SUPPLY_ASSETS / 'far.png')
+    Engine(*DEFAULT_SIZE).run(scene)
