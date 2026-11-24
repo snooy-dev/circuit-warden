@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **파워서플라이 환경 픽셀 크기 통일:** 2026-11-24 사용자 피드백으로 원경·팬·발판·소품을 배치 크기에 맞춰 다시 가공했다. 먼지 크기 변형을 텍스처로 만들어 기본 화면에서 환경과 워든의 픽셀 배율을 1:1로 맞췄다. [실제 게임 화면](../art/levels/power-supply/pixel-scale/fan-in-game.gif) · [게임 설계](game-design.md#첫-레벨-전원-구역).
+
 - **파워서플라이 먼지·흡기 팬:** 2026-11-24 요청과 사용자 피드백으로 바닥·발판에 낮은 보풀과 먼지 띠를 배치했다. 원경 부품에도 먼지층을 더했다. 팬 금속과 먼지는 원경 팔레트의 12색을 사용하며, 회전하는 날개 뒤로 먼지 낀 고정 통풍망이 보인다. [실제 게임의 팬](../art/levels/power-supply/dust-revision/fan-cavity/fan-in-game.gif) · [레벨 검증](../specs/021-power-supply-level/verification.md#먼지와-흡기-팬-후속-검증).
 
 - **첫 레벨 전원 구역:** 2026-11-24 사용자 요청으로 컴퓨터 파워서플라이 내부를 기본 실행에 연결하고 환경 원화에 hi-bit 가공을 적용했다. 흡기구, 방열판, 코일·콘덴서, 출력 단자를 배치했다. [명세](../specs/021-power-supply-level/spec.md) · [계획](../specs/021-power-supply-level/plan.md) · [검증](../specs/021-power-supply-level/verification.md).
