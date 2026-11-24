@@ -1,0 +1,227 @@
+{
+  "schema": "generate2dmap.map_bundle.v2",
+  "id": "power-supply",
+  "name": "Power Supply",
+  "world": {
+    "width": 3840,
+    "height": 720,
+    "unit": "px"
+  },
+  "camera": {
+    "bounds": [0, 0, 3840, 720]
+  },
+  "layers": [
+    {"name": "far", "kind": "image", "image": "far-overview.png", "sha256": "6953e54bf50bd8626bb06fa6f9d1a8694321ee74948382fdbfbf796ae7d140e7", "art_source": "host_image", "runtime_image": "far.png", "runtime_height": 1080, "parallax_x": 0.35, "runtime_sha256": "b0b990cd374c937dc1421cde46a123b67dd3be7f7d6890ad8400d427c9e59d46", "rotor": {"prop": "fan-rotor", "center_px": [126, 161], "diameter_px": 190, "degrees_per_second": 72}},
+    {"name": "rear", "kind": "objects"},
+    {"name": "structure", "kind": "objects"},
+    {"name": "front", "kind": "objects"}
+  ],
+  "props": {
+    "fan-rotor": {"image": "fan-rotor.png", "art_source": "host_image", "sha256": "39644cf75eed9477375b7bb412974e36d9a6409843836cb84a447811ec357fd0"},
+    "lint-sparse": {"image": "lint-sparse.png", "art_source": "host_image", "sha256": "13fed8070045ab077cf89a2e6c31d78977cdc0615eeb061211441ebc7772a537"},
+    "lint-clump": {"image": "lint-clump.png", "art_source": "host_image", "sha256": "61bcf1f69e02438db9fcb5ee68d8fc85939bf194e13ca0182e852d162caf1112"},
+    "lint-ridge": {"image": "lint-ridge.png", "art_source": "host_image", "sha256": "0c8c0dfd5696c04c3f6a661132042ec7a2877114269c0b24ef29fb36a669191b"},
+    "lint-mat": {"image": "lint-mat.png", "art_source": "host_image", "sha256": "26b6d775c55b295c8e8b5e0ab6e5d46a52bf2a15ef2f75e55384e9232c9a8889"},
+    "capacitors": {"image": "capacitors.png", "art_source": "host_image", "sha256": "e1b946b82eba6b4d84681c184d4025a2f96323ead58f6477ff81e2d3e8abd4d0"},
+    "coil": {"image": "coil.png", "art_source": "host_image", "sha256": "f6af3435daae092aaec9f5079419d14aca04856d5e7f2b8d350f4af64f5aff76"},
+    "output": {"image": "output.png", "art_source": "host_image", "sha256": "fd264bb7e3864483ea9d67cf0c50525f0acf9151f8dc9037dd623acd343da463"},
+    "floor": {"image": "floor.png", "art_source": "host_image", "sha256": "ba1362db55f07b141d2fb960f8085c6bcafffbe1910596870e76859839906f7e"},
+    "wall": {"image": "wall.png", "art_source": "host_image", "sha256": "379fb557b3c9bafb6716c049d8dd808c1b836bc9c0ef686412758b016eb3f7d9"},
+    "ledge": {"image": "ledge.png", "art_source": "host_image", "sha256": "b86c80f35b3f1d3443f58a0fc3dcfdee2ffa9ca2b05181b13adec150a8796631"},
+    "barrier": {"image": "barrier.png", "art_source": "host_image", "sha256": "873063116497094eb55aa98e043d0506fb78f92a2d6a272ae3573cd7f120d648"},
+    "cable": {"image": "cable.png", "art_source": "host_image", "sha256": "39096972d2bc94abf232acad99dfb8252dcf98b02af56cf4bb7b599a131eeb9c"},
+    "exposed-cable": {"image": "exposed-cable.png", "art_source": "host_image", "sha256": "c5a6acb7634971c60ed878a3b2e65623e783e2731440378dea3b7ff4b651a09e"},
+    "output-lit": {"image": "output-lit.png", "art_source": "host_image", "sha256": "7de9b0008723974017ba5286799ee96cd3e02e5d8e848a87c93370f9ad6034d6"},
+    "lint-sparse-s": {"image": "lint-sparse-s.png", "art_source": "host_image", "sha256": "90fd9d02dd28d21fbe840ed6641d19ae63349b111ebe12af0e3b971fce3c17ba"},
+    "lint-sparse-l": {"image": "lint-sparse-l.png", "art_source": "host_image", "sha256": "1e3458df80c56d4e7152fa1f0c72877bf7c1d91021f1b7e8601fcdafb512fc5b"},
+    "lint-clump-s": {"image": "lint-clump-s.png", "art_source": "host_image", "sha256": "134aaa2a3397caa7093a977fca3f0e648a89eb9ebce4fd7a1dd3b5adf658eeeb"},
+    "lint-clump-l": {"image": "lint-clump-l.png", "art_source": "host_image", "sha256": "d01165a04c247308b1cd44d08dac2a44bf37d4f8d3d0a64018b2face3d7d02e2"},
+    "lint-ridge-s": {"image": "lint-ridge-s.png", "art_source": "host_image", "sha256": "112a1b8f4be26a714c654cfd5d4dad2931c2ba1108fd33a6be664527963feba6"},
+    "lint-ridge-l": {"image": "lint-ridge-l.png", "art_source": "host_image", "sha256": "ee55ccec014fa0e2b3bc2dab7bf9d8601d6ea98e56b3be88eb1f8ee1120751c0"},
+    "lint-mat-s": {"image": "lint-mat-s.png", "art_source": "host_image", "sha256": "e3ec2b9b9758fff87f3ca31e5e9197ea151d7b8bd867bea62d0452fb194dd015"},
+    "lint-mat-l": {"image": "lint-mat-l.png", "art_source": "host_image", "sha256": "b5f931c4bdb2645fb9f5cb3cba5e327fe21bc3e077f05d018a88df1fef045f11"}
+  },
+  "objects": [
+    {"id": "input-capacitors", "prop": "capacitors", "x": 830, "y": 540, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0},
+    {"id": "main-inductor", "prop": "coil", "x": 1834, "y": 540, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0},
+    {"id": "bulk-capacitors", "prop": "capacitors", "x": 2205, "y": 540, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "flip_x": true},
+    {"id": "output-inductor", "prop": "coil", "x": 3011, "y": 540, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0, "flip_x": true},
+    {"id": "output-socket", "prop": "output", "x": 3490, "y": 540, "anchor_px": [124, 103], "solid": false, "layer": "rear", "sortY": 0},
+    {"id": "lint-01", "prop": "lint-mat-l", "x": 81, "y": 541, "anchor_px": [36, 21], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-02", "prop": "lint-ridge", "x": 141, "y": 542, "anchor_px": [62, 14], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-03", "prop": "lint-clump", "x": 208, "y": 541, "anchor_px": [34, 22], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-04", "prop": "lint-sparse", "x": 383, "y": 541, "anchor_px": [37, 24], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-05", "prop": "lint-ridge", "x": 486, "y": 542, "anchor_px": [62, 14], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-06", "prop": "lint-clump", "x": 525, "y": 541, "anchor_px": [34, 22], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-07", "prop": "lint-clump-s", "x": 607, "y": 433, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-08", "prop": "lint-sparse-s", "x": 697, "y": 433, "anchor_px": [26, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-09", "prop": "lint-mat", "x": 753, "y": 541, "anchor_px": [32, 18], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-10", "prop": "lint-ridge-l", "x": 815, "y": 542, "anchor_px": [74, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-11", "prop": "lint-sparse-l", "x": 924, "y": 541, "anchor_px": [46, 30], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-12", "prop": "lint-clump-l", "x": 1012, "y": 541, "anchor_px": [42, 27], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-13", "prop": "lint-clump-s", "x": 1069, "y": 445, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-14", "prop": "lint-ridge-s", "x": 1151, "y": 445, "anchor_px": [30, 7], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-15", "prop": "lint-sparse-s", "x": 1229, "y": 349, "anchor_px": [26, 17], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-16", "prop": "lint-mat-s", "x": 1316, "y": 349, "anchor_px": [21, 12], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-17", "prop": "lint-ridge-s", "x": 1383, "y": 445, "anchor_px": [30, 7], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-18", "prop": "lint-clump-s", "x": 1474, "y": 445, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-19", "prop": "lint-ridge-l", "x": 1448, "y": 542, "anchor_px": [74, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-20", "prop": "lint-clump-l", "x": 1525, "y": 541, "anchor_px": [42, 27], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-21", "prop": "lint-sparse", "x": 1664, "y": 541, "anchor_px": [37, 24], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-22", "prop": "lint-clump-l", "x": 1745, "y": 541, "anchor_px": [42, 27], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-23", "prop": "lint-ridge-l", "x": 1850, "y": 542, "anchor_px": [74, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-24", "prop": "lint-mat", "x": 1919, "y": 541, "anchor_px": [32, 18], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-25", "prop": "lint-sparse-s", "x": 1816, "y": 421, "anchor_px": [26, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-26", "prop": "lint-clump-s", "x": 1989, "y": 325, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-27", "prop": "lint-ridge-s", "x": 2081, "y": 325, "anchor_px": [30, 7], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-28", "prop": "lint-sparse-s", "x": 2167, "y": 325, "anchor_px": [26, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-29", "prop": "lint-mat-s", "x": 2261, "y": 325, "anchor_px": [21, 12], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-30", "prop": "lint-ridge-l", "x": 2175, "y": 542, "anchor_px": [74, 17], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-31", "prop": "lint-clump-l", "x": 2236, "y": 541, "anchor_px": [42, 27], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-32", "prop": "lint-sparse-l", "x": 2342, "y": 541, "anchor_px": [46, 30], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-33", "prop": "lint-ridge-s", "x": 2429, "y": 421, "anchor_px": [30, 7], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-34", "prop": "lint-ridge", "x": 2497, "y": 542, "anchor_px": [62, 14], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-35", "prop": "lint-clump-s", "x": 2558, "y": 445, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-36", "prop": "lint-mat-s", "x": 2651, "y": 445, "anchor_px": [21, 12], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-37", "prop": "lint-sparse-s", "x": 2723, "y": 349, "anchor_px": [26, 17], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-38", "prop": "lint-clump-s", "x": 2808, "y": 349, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-39", "prop": "lint-sparse-s", "x": 2960, "y": 445, "anchor_px": [26, 17], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-40", "prop": "lint-mat", "x": 2862, "y": 541, "anchor_px": [32, 18], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-41", "prop": "lint-ridge", "x": 2917, "y": 542, "anchor_px": [62, 14], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-42", "prop": "lint-clump-l", "x": 3068, "y": 541, "anchor_px": [42, 27], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-43", "prop": "lint-ridge", "x": 3126, "y": 542, "anchor_px": [62, 14], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-44", "prop": "lint-clump-s", "x": 3170, "y": 433, "anchor_px": [24, 16], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-45", "prop": "lint-ridge-s", "x": 3255, "y": 433, "anchor_px": [30, 7], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-46", "prop": "lint-sparse", "x": 3308, "y": 541, "anchor_px": [37, 24], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-47", "prop": "lint-mat-l", "x": 3651, "y": 541, "anchor_px": [36, 21], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "lint-48", "prop": "lint-ridge", "x": 3711, "y": 542, "anchor_px": [62, 14], "solid": false, "layer": "rear", "sortY": 48, "flip_x": true},
+    {"id": "lint-49", "prop": "lint-clump", "x": 3767, "y": 541, "anchor_px": [34, 22], "solid": false, "layer": "rear", "sortY": 48},
+    {"id": "pcb-deck-01", "prop": "floor", "x": 0, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-02", "prop": "floor", "x": 640, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-03", "prop": "floor", "x": 640, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-04", "prop": "floor", "x": 1280, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-05", "prop": "floor", "x": 1600, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-06", "prop": "floor", "x": 1600, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-07", "prop": "floor", "x": 1920, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-08", "prop": "floor", "x": 2560, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-09", "prop": "floor", "x": 2560, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-10", "prop": "floor", "x": 3200, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-11", "prop": "floor", "x": 3200, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-12", "prop": "floor", "x": 3840, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "wall-0", "prop": "wall", "x": 0, "y": 0, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "wall-3808", "prop": "wall", "x": 3808, "y": 0, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-584", "prop": "ledge", "x": 584, "y": 432, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1046", "prop": "ledge", "x": 1046, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "barrier-1200", "prop": "barrier", "x": 1200, "y": 348, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1354", "prop": "ledge", "x": 1354, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1788", "prop": "ledge", "x": 1788, "y": 420, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1964", "prop": "ledge", "x": 1964, "y": 324, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2140", "prop": "ledge", "x": 2140, "y": 324, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2316", "prop": "ledge", "x": 2316, "y": 420, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2534", "prop": "ledge", "x": 2534, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "barrier-2688", "prop": "barrier", "x": 2688, "y": 348, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2842", "prop": "ledge", "x": 2842, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-3144", "prop": "ledge", "x": 3144, "y": 432, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "near-cable-1", "prop": "exposed-cable", "x": 72, "y": 96, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
+    {"id": "near-cable-2", "prop": "cable", "x": 1396, "y": 114, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "flip_x": true},
+    {"id": "near-cable-3", "prop": "cable", "x": 2492, "y": 92, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
+    {"id": "near-cable-4", "prop": "cable", "x": 3785, "y": 80, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "flip_x": true}
+  ],
+  "collision": {
+    "actorRadius": 24,
+    "ySquash": 1.7,
+    "rects": [
+      [0, 540, 3840, 180],
+      [0, 0, 32, 540],
+      [3808, 0, 32, 540],
+      [584, 432, 144, 24],
+      [1046, 444, 144, 24],
+      [1200, 348, 144, 192],
+      [1354, 444, 144, 24],
+      [1788, 420, 144, 24],
+      [1964, 324, 144, 24],
+      [2140, 324, 144, 24],
+      [2316, 420, 144, 24],
+      [2534, 444, 144, 24],
+      [2688, 348, 144, 192],
+      [2842, 444, 144, 24],
+      [3144, 432, 144, 24]
+    ]
+  },
+  "spawns": [
+    {"id": "start", "x": 172, "y": 498.5, "feet_y": 540, "entry_origin": [142, 92]},
+    {"id": "metal-dust", "x": 2112, "y": 498.5, "feet_y": 540}
+  ],
+  "interactions": [
+    {"id": "input-heatsink", "x": 1272, "y": 306.5},
+    {"id": "conversion-gallery", "x": 2036, "y": 282.5},
+    {"id": "output-heatsink", "x": 2760, "y": 306.5},
+    {"id": "output", "x": 3490, "y": 498.5, "reach": 58}
+  ],
+  "anchors": {
+    "charge-01": {
+      "point": [455, 468],
+      "variants": [[447, 471], [455, 468], [463, 465]]
+    },
+    "charge-02": {
+      "point": [660, 367],
+      "variants": [[652, 370], [660, 367], [668, 364]]
+    },
+    "charge-03": {
+      "point": [937, 465],
+      "variants": [[929, 468], [937, 465], [945, 462]]
+    },
+    "charge-04": {
+      "point": [1120, 379],
+      "variants": [[1112, 382], [1120, 379], [1128, 376]]
+    },
+    "charge-05": {
+      "point": [1268, 279],
+      "variants": [[1260, 282], [1268, 279], [1276, 276]]
+    },
+    "charge-06": {
+      "point": [1460, 376],
+      "variants": [[1452, 379], [1460, 376], [1468, 373]]
+    },
+    "charge-07": {
+      "point": [1680, 467],
+      "variants": [[1672, 470], [1680, 467], [1688, 464]]
+    },
+    "charge-08": {
+      "point": [1870, 354],
+      "variants": [[1862, 357], [1870, 354], [1878, 351]]
+    },
+    "charge-09": {
+      "point": [2028, 251],
+      "variants": [[2020, 254], [2028, 251], [2036, 248]]
+    },
+    "charge-10": {
+      "point": [2225, 257],
+      "variants": [[2217, 260], [2225, 257], [2233, 254]]
+    },
+    "charge-11": {
+      "point": [2410, 353],
+      "variants": [[2402, 356], [2410, 353], [2418, 350]]
+    },
+    "charge-12": {
+      "point": [2603, 377],
+      "variants": [[2595, 380], [2603, 377], [2611, 374]]
+    },
+    "charge-13": {
+      "point": [2760, 278],
+      "variants": [[2752, 281], [2760, 278], [2768, 275]]
+    },
+    "charge-14": {
+      "point": [2920, 372],
+      "variants": [[2912, 375], [2920, 372], [2928, 369]]
+    },
+    "charge-15": {
+      "point": [3210, 369],
+      "variants": [[3202, 372], [3210, 369], [3218, 366]]
+    },
+    "charge-16": {
+      "point": [3405, 466],
+      "variants": [[3397, 469], [3405, 466], [3413, 463]]
+    }
+  }
+}

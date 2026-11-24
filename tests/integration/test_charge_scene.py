@@ -8,8 +8,8 @@ from unittest.mock import patch
 import pico2d.pico2d as pico
 
 from game.charge import ASSETS
-from game.character import GROUND_Y
-from game.scene import CharacterScene
+from game.character import ARRIVAL_BLEND_SECONDS, BODY_HEIGHT, GROUND_Y
+from game.scene import CAST_COOLDOWN, ENVIRONMENT_RECHARGE, CharacterScene
 from game.teleport_link import TeleportLink
 from tests.integration import test_character_scene as fixtures
 
@@ -27,6 +27,137 @@ class ChargeSceneTests(unittest.TestCase):
         x, y = self.scene.transform.point(*position)
         self.scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN,
                                                 button=button, x=x, y=y))
+
+    def key(self, key, kind=pico.SDL_KEYDOWN):
+        self.scene.handle_event(SimpleNamespace(type=kind, key=key))
+
+    def test_skill_cast_preserves_air_action_and_is_spent_once(self):
+        scene = self.open_scene()
+        actor, level = scene.character, scene.level
+        level.enemy.destroy()
+        self.key(pico.SDLK_SPACE)
+        scene.update(.18)
+        self.assertFalse(actor.grounded)
+        before = actor.center, actor.state
+        aim = (-100, -25)
+        level.mode.cursor_to_world = lambda: aim
+
+        self.key(pico.SDLK_e)
+        charge = level.skill_charge
+        self.assertEqual((charge.position, charge.active), (aim, True))
+        self.assertIs(charge.art, level.charges[0].art)
+        self.assertEqual((actor.center, actor.state), before)
+
+        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
+        self.assertEqual(actor.center, aim)
+        self.assertTrue(charge.spent)
+        self.assertIsNone(charge.level)
+        self.assertNotIn(charge, level.charges)
+        aim = (75, -10)
+        scene.update(CAST_COOLDOWN - .001)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        self.assertIsNone(level.skill_charge)
+        scene.update(.001)
+        self.key(pico.SDLK_e)
+        self.assertIsNone(level.skill_charge, '키 반복은 재사용 대기가 끝나도 새 입력이 아니다.')
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        second = level.skill_charge
+        self.assertEqual(second.position, aim)
+
+        aim = (65, 75)
+        scene.update(CAST_COOLDOWN)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        self.assertIs(level.skill_charge, second)
+        self.key(pico.SDLK_r)
+        self.assertIsNone(second.level)
+        self.assertIsNone(level.skill_charge)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.key(pico.SDLK_e)
+        self.assertEqual(level.skill_charge.position, aim)
+
+    def test_skill_rejects_unusable_aim_without_charging_cooldown(self):
+        scene = self.open_scene()
+        actor, level = scene.character, scene.level
+        for aim in (None, actor.center, (0, 205), (50, -220),
+                    level.charges[2].position, (level.enemy.x, actor.center[1])):
+            with self.subTest(aim=aim):
+                level.mode.cursor_to_world = lambda: aim
+                self.key(pico.SDLK_e)
+                self.key(pico.SDLK_e, pico.SDL_KEYUP)
+                self.assertIsNone(level.skill_charge)
+
+        low, high = (-100, -20), (100, -20)
+        level.mode.cursor_to_world = lambda: low
+        self.app.output_valid = False
+        self.key(pico.SDLK_e)
+        self.key(pico.SDLK_e, pico.SDL_KEYUP)
+        self.assertIsNone(level.skill_charge)
+        self.app.output_valid = True
+        level.mode.cursor_to_world = lambda: high
+        self.key(pico.SDLK_e)
+        self.assertEqual(level.skill_charge.position, high)
+
+    def test_skill_cursor_uses_current_window_to_output_mapping(self):
+        scene = self.open_scene()
+        self.app.viewport = (20, 10, 1280, 720)
+        aim = (-100, -25)
+        x, y = scene.transform.point(*aim)
+        self.app.window_to_output.side_effect = lambda wx, wy: (wx * 2, wy * 2)
+
+        def mouse_state(wx, wy):
+            wx._obj.value, wy._obj.value = round(x / 2), round(y / 2)
+
+        with (patch.object(pico, 'SDL_GetWindowFlags', return_value=0) as flags,
+              patch.object(pico, 'SDL_GetMouseState', side_effect=mouse_state)):
+            self.key(pico.SDLK_e)
+            self.assertIsNone(scene.level.skill_charge)
+            self.key(pico.SDLK_e, pico.SDL_KEYUP)
+            flags.return_value = pico.SDL_WINDOW_MOUSE_FOCUS
+            self.key(pico.SDLK_e)
+            for actual, expected in zip(scene.level.skill_charge.position, aim):
+                self.assertAlmostEqual(actual, expected, delta=1)
+
+    def test_environment_replaces_consumed_charge_after_delay_even_after_enemy_defeat(self):
+        scene = self.open_scene()
+        level = scene.level
+        level.enemy.destroy()
+        charge = level.charges[2]
+        self.click(charge.position)
+        scene.update(0)
+        scene.update(ENVIRONMENT_RECHARGE - .001)
+        self.assertIs(level.charges[2], charge)
+        self.assertTrue(charge.spent)
+        self.assertEqual(charge.render_items(), ())
+
+        scene.update(.001)
+        fresh = level.charges[2]
+        self.assertIsNone(charge.level)
+        self.assertNotEqual(fresh.position, charge.position)
+        self.assertIs(fresh.art, level.charge_art)
+        self.assertTrue(fresh.render_items())
+        self.assertFalse(fresh.spent)
+        self.click(fresh.position)
+        self.assertEqual(scene.character.center, fresh.position)
+        self.assertTrue(fresh.spent)
+
+    def test_environment_retries_a_blocked_site_without_reusing_spent_object(self):
+        scene = self.open_scene()
+        actor, level = scene.character, scene.level
+        charge = level.charges[2]
+        self.click(charge.position)
+        self.assertTrue(actor.teleport((-300, GROUND_Y + BODY_HEIGHT / 2)))
+        level.enemy.x, level.enemy.state, level.enemy.state_remaining = 146, 'recover', 10
+        scene.update(ENVIRONMENT_RECHARGE)
+        self.assertIs(level.charges[2], charge)
+        self.assertTrue(charge.spent)
+        self.assertLess(actor.view_bounds[2], charge.position[0])
+        level.enemy.destroy()
+        scene.update(.01)
+        self.assertIsNot(level.charges[2], charge)
+        self.assertFalse(level.charges[2].spent)
 
     def test_right_click_nearest_ignores_cursor_and_filters_invalid_targets(self):
         scene = self.open_scene()
@@ -67,6 +198,7 @@ class ChargeSceneTests(unittest.TestCase):
 
     def test_right_click_shares_last_valid_buffer_and_destination_origin(self):
         scene = self.open_scene()
+        scene.level.enemy.destroy()
         actor = scene.character
         first, nearest, last = scene.level.charges[2:5]
         self.click(first.position)
@@ -78,7 +210,7 @@ class ChargeSceneTests(unittest.TestCase):
         actor.x = last.position[0]
         self.click(last.position, pico.SDL_BUTTON_RIGHT)
         self.assertIs(scene.level.mode.pending_charge, nearest)
-        self.assertIs(scene.level.mode.last_charge, first)
+        self.assertTrue(first.spent)
         self.assertIs(scene.level.mode.teleport_link, link)
         self.click(last.position)
         self.assertIs(scene.level.mode.pending_charge, last)
@@ -86,92 +218,66 @@ class ChargeSceneTests(unittest.TestCase):
         scene.update(0)
         scene.update(.1)
         self.assertEqual(actor.center, nearest.position)
-        self.assertIs(scene.level.mode.last_charge, nearest)
+        self.assertTrue(nearest.spent)
         self.assertIsNone(scene.level.mode.pending_charge)
         self.assertIsNone(actor.buffered_action)
 
-    def test_right_click_exclusion_changes_only_on_arrival_and_clears_on_exit(self):
+    def test_spent_charge_stays_excluded_after_landing_and_r_restores_it(self):
         scene = self.open_scene()
+        scene.level.enemy.destroy()
+        actor = scene.character
         first, second = scene.level.charges[2:4]
         for charge in scene.level.charges:
             charge.position = (1000, 0)
         first.position, second.position = (100, 0), (160, 0)
         self.click(first.position)
         self.click((0, 0), pico.SDL_BUTTON_RIGHT)
-        self.assertIs(scene.level.mode.last_charge, first)
+        self.assertTrue(first.spent)
+        self.assertFalse(first.active)
+        self.assertEqual(first.render_items(), ())
+        self.assertFalse(second.spent)
         self.assertIs(scene.level.mode.pending_charge, second)
         scene.update(0)
         scene.update(.1)
-        self.assertIs(scene.level.mode.last_charge, second)
-        scene.update(.1)
+        self.assertTrue(second.spent)
+        self.assertEqual(actor.center, second.position)
+        for _ in range(80):
+            scene.update(.01)
+            if actor.grounded:
+                break
+        self.assertTrue(actor.grounded)
+        before = actor.center
         self.click((0, 0), pico.SDL_BUTTON_RIGHT)
-        self.assertEqual(scene.character.center, first.position)
-        self.assertIs(scene.level.mode.last_charge, first)
-        scene.exit()
-        self.assertIsNone(scene.level.mode.last_charge)
-
-    def test_right_click_only_last_target_is_noop_but_left_click_still_selects(self):
-        scene = self.open_scene()
-        first = scene.level.charges[2]
-        self.click(first.position)
-        for charge in scene.level.charges:
-            if charge is not first:
-                charge.position = (1000, 0)
-        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
-        self.assertIsNone(scene.level.mode.pending_charge)
-        scene.update(0)
-        scene.update(.1)
-        before = scene.character.center, scene.character.velocity_y
-        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
-        self.assertEqual((scene.character.center, scene.character.velocity_y), before)
+        self.assertEqual(actor.center, before)
         self.assertIsNone(scene.level.mode.teleport_link)
         self.click(first.position)
-        self.assertEqual(scene.character.center, first.position)
-        self.assertIs(scene.level.mode.last_charge, first)
+        self.assertEqual(actor.buffered_action, 'attack')
+        self.assertEqual(actor.center, before)
+
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r))
+        self.assertIsNone(first.level)
+        self.assertIsNone(second.level)
+        fresh = scene.level.charges[2]
+        self.assertFalse(fresh.spent)
+        self.assertTrue(fresh.render_items())
+        self.click(fresh.position)
+        self.assertEqual(scene.character.center, fresh.position)
+        self.assertTrue(fresh.spent)
 
     def test_right_click_same_position_does_not_create_link(self):
         scene = self.open_scene()
         target = scene.level.charges[2]
         scene.character.teleport(target.position)
+        velocity = scene.character.velocity_y
         self.click((0, 0), pico.SDL_BUTTON_RIGHT)
         self.assertEqual(scene.character.center, target.position)
+        self.assertEqual(scene.character.velocity_y, velocity)
+        self.assertFalse(target.spent)
         self.assertIsNone(scene.level.mode.teleport_link)
 
-    def test_landing_clears_exclusion_before_landing_animation_finishes(self):
+    def test_selection_priority_overlap_and_inactive_fallback(self):
         scene = self.open_scene()
-        actor = scene.character
-        target = scene.level.charges[2]
-        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
-        self.assertIs(scene.level.mode.last_charge, target)
-        scene.update(0)
-        scene.update(.1)
-        self.assertFalse(actor.grounded)
-        self.assertIs(scene.level.mode.last_charge, target)
-        for _ in range(100):
-            scene.update(.01)
-            if actor.grounded:
-                break
-        self.assertTrue(actor.grounded)
-        self.assertEqual(actor.jump_phase, 'land')
-        self.assertIsNone(scene.level.mode.last_charge)
-        self.click((0, 0), pico.SDL_BUTTON_RIGHT)
-        self.assertEqual(actor.center, target.position)
-        self.assertEqual(actor.jump_phase, 'rise')
-        self.assertIs(scene.level.mode.last_charge, target)
-
-    def test_ground_destination_clears_exclusion_immediately(self):
-        scene = self.open_scene()
-        target = scene.level.charges[2]
-        self.click(target.position)
-        scene.update(0)
-        scene.update(.1)
-        target.position = (140, GROUND_Y + 83 / 2)
-        self.click(target.position)
-        self.assertTrue(scene.character.grounded)
-        self.assertIsNone(scene.level.mode.last_charge)
-
-    def test_selection_priority_overlap_reuse_and_inactive_fallback(self):
-        scene = self.open_scene()
+        scene.level.enemy.destroy()
         actor = scene.character
         target = scene.level.charges[2]
         self.click((target.position[0] + 50, target.position[1]))
@@ -182,9 +288,6 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(actor.jump_phase, 'rise')
         scene.update(0)
         scene.update(.1)
-        self.click(target.position)
-        self.assertEqual(actor.center, target.position)
-        self.assertIsNone(actor.buffered_action)
         overlap = scene.level.charges[0]
         overlap.position = (target.position[0] + 70, target.position[1])
         scene.update(0)
@@ -203,11 +306,10 @@ class ChargeSceneTests(unittest.TestCase):
 
     def test_resize_dpi_and_invalid_output_use_current_coordinates(self):
         scene = self.open_scene()
-        target = scene.level.charges[2]
         for viewport, ratio in (((20, 10, 1280, 720), 1), ((0, 0, 1920, 1080), 2),
                                 ((0, 0, 1024, 720), 1)):
-            scene.update(0)
-            scene.update(.1)
+            scene.level.reset_combat()
+            target = scene.level.charges[2]
             self.app.viewport = viewport
             scene.update(0)
             scene.character.teleport((0, GROUND_Y + 83 / 2))
@@ -236,6 +338,12 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIs(scene.level.mode.pending_charge, second_target)
         self.assertEqual(sum(isinstance(o, TeleportLink) for o in scene.level.objects), 1)
         scene.update(.05)
+        self.assertNotEqual(actor.center, first.end)
+        self.assertEqual(actor.visual_center, first.end)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(scene.transform, 1)
+        self.assertIs(draw.call_args.args[0], actor.clips['jump_rise_right'].frames[0])
+        self.assertEqual(draw.call_args.args[2], (first.end[0], first.end[1] - BODY_HEIGHT / 2))
         scene.draw()
         self.assertEqual(first.frame_index, 0)
         scene.update(.099)
@@ -246,6 +354,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(second.end, second_target.position)
         self.assertGreater(second.start[1], second_start[1])
         self.assertEqual(actor.center, second_target.position)
+        self.assertEqual(actor.visual_center, second.end)
         self.assertIsNone(actor.buffered_action)
         self.assertIsNone(scene.level.mode.pending_charge)
         scene.update(0)
@@ -255,10 +364,27 @@ class ChargeSceneTests(unittest.TestCase):
         scene.exit()
         self.assertIsNone(second._frames)
 
+    def test_ground_arrival_uses_braced_pose_then_returns_to_idle(self):
+        scene = self.open_scene()
+        actor = scene.character
+        target = scene.level.charges[2]
+        target.position = (120, actor.center[1])
+        self.click(target.position)
+        self.assertTrue(actor.grounded)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(scene.transform, 1)
+            frames = actor.clips['jump_land_right'].frames
+            self.assertIs(draw.call_args.args[0], frames[len(frames) // 3])
+            scene.update(0)
+            scene.update(ARRIVAL_BLEND_SECONDS)
+            actor._draw(scene.transform, 1)
+            self.assertIs(draw.call_args.args[0], actor.player.frame)
+
     def test_destination_activation_and_last_valid_buffer(self):
         scene = self.open_scene()
         actor = scene.character
         first, second, last = scene.level.charges[2:5]
+        first.position = 140, -50
         self.assertFalse(last.in_range(actor.center))
         self.click(first.position)
         self.assertTrue(last.active)
@@ -289,7 +415,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertIsNone(scene.level.mode.teleport_link)
 
     def test_buffer_clears_on_focus_invalid_output_or_invalid_destination(self):
-        for reason in ('focus', 'output', 'destination', 'destroyed'):
+        for reason in ('focus', 'output', 'destination', 'blocked', 'destroyed'):
             with self.subTest(reason=reason):
                 scene = self.open_scene()
                 first, target = scene.level.charges[2:4]
@@ -303,10 +429,13 @@ class ChargeSceneTests(unittest.TestCase):
                     self.app.output_valid = False
                 elif reason == 'destination':
                     target.position = (1000, 0)
+                elif reason == 'blocked':
+                    target.position = (scene.level.enemy.x, GROUND_Y + 83 / 2)
                 else:
                     target.destroy()
                 scene.update(.1)
                 self.assertEqual(scene.character.x, first.position[0])
+                self.assertFalse(target.spent)
                 self.assertIsNone(scene.level.mode.pending_charge)
                 scene.exit()
                 self.app.output_valid = True

@@ -1,4 +1,4 @@
-"""실제 SDL 입력으로 전하 선택·취소·연결·창 좌표를 확인한다."""
+"""실제 SDL 입력으로 전투·전하 소비·연결·창 좌표를 확인한다."""
 
 import argparse
 import sys
@@ -11,10 +11,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import pico2d.pico2d as pico
 
 from engine import Engine
-from game.character import BODY_HEIGHT, GROUND_Y
+from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.teleport_link import TeleportLink
 from tests.smoke.character_smoke import CharacterSmoke, push_key
+
+
+def window_point(scene, position):
+    x, y = scene.transform.point(*position)
+    return (round(x * scene.engine.window_size[0] / scene.engine.output_size[0]),
+            round(y * scene.engine.window_size[1] / scene.engine.output_size[1]))
 
 
 class ChargeSmoke(CharacterScene):
@@ -23,7 +29,7 @@ class ChargeSmoke(CharacterScene):
     def __init__(self, output_dir):
         super().__init__()
         self.output_dir, self.passed = output_dir, False
-        self.wait = .7
+        self.wait = .1
         self.teleports = 0
         self.buffered_clicks = 0
         self.max_draw_seconds = 0
@@ -34,27 +40,24 @@ class ChargeSmoke(CharacterScene):
         super().enter(engine)
         self.started = self.changed = monotonic()
         self.steps = self.exercise()
-        self.charges = tuple(self.level.charges)
+        self.observed_charges = set(self.level.charges)
         self.links = []
 
     def click(self, position, button=pico.SDL_BUTTON_LEFT):
-        x, y = self.transform.point(*position)
         event = pico.SDL_Event()
         event.type = pico.SDL_MOUSEBUTTONDOWN
         event.button.button = button
-        event.button.x = round(x * self.engine.window_size[0] / self.engine.output_size[0])
-        event.button.y = round(y * self.engine.window_size[1] / self.engine.output_size[1])
+        event.button.x, event.button.y = window_point(self, position)
         assert pico.SDL_PushEvent(byref(event)) == 1
 
     def handle_event(self, event):
-        before = self.character.center
+        before, previous = self.character.center, self.level.mode.pending_charge
         super().handle_event(event)
-        if self.level.mode.pending_charge is not None:
+        if self.level.mode.pending_charge is not None and self.level.mode.pending_charge is not previous:
             assert self.character.center == before
             self.buffered_clicks += 1
-        if self.character.center != before:
-            self.record_link()
-            link = self.links[-1]
+        link = self.record_link()
+        if link is not None:
             assert (link.start, link.end) == (before, self.character.center)
 
     def record_link(self):
@@ -63,91 +66,133 @@ class ChargeSmoke(CharacterScene):
             self.teleports += 1
             assert self.character.jump_phase == 'rise' and self.character.velocity_y > 0
             assert self.character.buffered_action is None and link.end == self.character.center
+            assert link.arrival is not None
             self.links.append(link)
             self.capture_first = f'charge-first-{self.teleports}'
+            return link
+
+    def tap(self, symbol):
+        push_key(symbol)
+        push_key(symbol, pico.SDL_KEYUP)
 
     def exercise(self):
         actor = self.character
         self.capture('charge-ready')
-        self.click((self.charges[2].position[0] + 50, self.charges[2].position[1]))
+        push_key(pico.SDLK_d)
+        yield .05
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        assert actor.x > 0 and actor.facing == 1
+        self.tap(pico.SDLK_j)
         yield .04
-        assert actor.state == 'attack' and actor.grounded
-        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
-        yield .06
-        assert actor.state == 'jump' and actor.x == 140
-        assert actor.center[1] > self.charges[2].position[1] and actor.velocity_y > 0
-        self.capture('charge-attack-cancel')
-        self.capture('charge-lift-rise')
-        yield .19
-        assert actor.jump_phase == 'fall' and actor.center[1] > self.charges[2].position[1]
-        self.capture('charge-lift-fall')
-        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
-        yield .06
-        assert actor.x == self.charges[3].position[0]
-        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
-        yield .2
-        assert actor.x == self.charges[2].position[0]
-        self.capture('charge-right-chain')
-        yield .8
-        assert actor.grounded and self.level.mode.last_charge is None
-        count = self.teleports
-        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
-        yield .06
-        assert self.teleports == count + 1 and actor.x == self.charges[2].position[0]
-        assert actor.jump_phase == 'rise'
-        self.capture('charge-right-after-landing')
-        yield .12
-        for index in (4, 1, 0):
-            self.click((self.charges[index].position[0] - 44, self.charges[index].position[1]))
-            yield .08
-            assert actor.x == self.charges[index].position[0]
-            self.capture(f'charge-chain-{index}')
-        yield .8
-        assert actor.grounded
-        assert not any(isinstance(o, TeleportLink) for o in self.level.objects)
-        actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
-        push_key(pico.SDLK_SPACE)
+        assert actor.player.clip is actor.clips['attack'] and actor.grounded
+        self.capture('combat-ground-swing')
+        yield .36
+        self.tap(pico.SDLK_SPACE)
+        yield .20
+        assert actor.jump_phase == 'rise' and not actor.grounded
+        self.capture('combat-jump')
+
+        self.tap(pico.SDLK_r)
         yield .04
-        assert actor.jump_phase == 'start'
-        self.click(self.charges[2].position)
-        yield .06
-        assert actor.jump_phase == 'rise'
-        self.capture('charge-jump-cancel')
-        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
-        actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
-        push_key(pico.SDLK_LSHIFT)
-        yield .14
-        assert actor.state == 'dash'
-        self.click(self.charges[2].position)
-        yield .06
-        assert actor.jump_phase == 'rise' and actor.dash_phase is None
-        self.capture('charge-dash-cancel')
-        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
-        yield .12
-        target = self.charges[2]
-        original = target.position
-        for start, end, name in (((0, 0), (200, 0), 'horizontal'),
-                                 ((200, -40), (200, 160), 'vertical')):
-            actor.teleport(start)
-            target.position = end
-            self.click(end)
-            yield .06
-            assert self.links[-1].start == start and self.links[-1].end == end
-            self.capture('charge-' + name)
-            yield .12
-        target.position = original
+        actor, enemy = self.character, self.level.enemy
+        entry, escape = self.level.charges[2:4]
+        self.click(entry.position)
+        yield .02
+        assert entry.spent and not entry.render_items()
+        self.tap(pico.SDLK_j)
+        for _ in range(24):
+            if enemy.hp < enemy.MAX_HP:
+                break
+            yield .001
+        assert actor.player.clip is actor.clips['air_attack'] and not actor.grounded
+        assert enemy.hp == enemy.MAX_HP - 1
+        assert any(isinstance(obj, SpriteEffect) for obj in self.level.objects)
+        self.capture('combat-air-hit')
+        self.click(escape.position)
+        yield .02
+        assert actor.state == 'jump' and actor.x == escape.position[0] and escape.spent
+        assert actor.active_attack is None and enemy.hp == enemy.MAX_HP - 1
+        self.capture('combat-air-escape')
+
+        self.tap(pico.SDLK_r)
+        yield .04
+        prior = entry, escape
+        entry, escape = self.level.charges[2:4]
+        assert all(old.level is None and old.position != fresh.position
+                   for old, fresh in zip(prior, (entry, escape), strict=True))
+        assert not entry.spent and not escape.spent
+        self.click(entry.position)
+        self.click((-400, 200), pico.SDL_BUTTON_RIGHT)
+        yield .15
+        assert self.character.x == escape.position[0] and entry.spent and escape.spent
+        self.capture('charge-buffered-chain')
+
+        self.tap(pico.SDLK_r)
+        yield .04
+        actor, enemy = self.character, self.level.enemy
+        entry = self.level.charges[2]
+        for _ in range(200):
+            if enemy.state == 'charge':
+                break
+            yield .001
+        assert enemy.state == 'charge'
+        self.click(entry.position, pico.SDL_BUTTON_RIGHT)
+        yield .025
+        assert actor.x == entry.position[0] and actor.x > enemy.x
+        assert entry.spent and actor.hp == actor.MAX_HP
+        self.capture('combat-dodge')
+
         for key, name in ((pico.SDLK_F6, 'resized'), (pico.SDLK_F11, 'fullscreen')):
-            push_key(key)
-            yield .12
-            actor.teleport((0, GROUND_Y + BODY_HEIGHT / 2))
+            self.tap(key)
+            self.tap(pico.SDLK_r)
+            yield .08
+            entry = self.level.charges[2]
             count = self.teleports
-            self.click((self.charges[2].position[0] + 44, self.charges[2].position[1]))
-            yield .06
-            assert self.teleports == count + 1 and actor.x == 140
+            self.click((entry.position[0] + 44, entry.position[1]))
+            yield .035
+            assert self.teleports == count + 1 and self.character.x == entry.position[0]
             self.capture('charge-' + name)
-        push_key(pico.SDLK_F11)
-        yield .6
+        self.tap(pico.SDLK_F11)
+        yield .2
+        assert not any(isinstance(o, TeleportLink) for o in self.level.objects)
         self.capture('charge-settled')
+
+        self.tap(pico.SDLK_r)
+        yield .04
+        target = (-90, -30)
+        for _ in range(20):
+            point = self.cursor_to_world()
+            if point is not None and all(abs(a - b) < 1 for a, b in zip(point, target, strict=True)):
+                break
+            pico.SDL_WarpMouseInWindow(pico.window, *window_point(self, target))
+            yield .025
+        else:
+            raise AssertionError('SDL 커서가 생성 위치에 도달하지 않았습니다.')
+        self.tap(pico.SDLK_e)
+        yield .025
+        skill = self.level.skill_charge
+        assert skill is not None and skill.active, (
+            self.cursor_to_world(), pico.SDL_GetWindowFlags(pico.window), self.character.center,
+            self.level.mode.cast_held, self.engine.window_size)
+        assert all(abs(a - b) < 1 for a, b in zip(skill.position, target, strict=True))
+        self.capture('charge-skill-created')
+        self.click(skill.position)
+        yield .025
+        assert skill.spent and skill.level is None and self.level.skill_charge is None
+        environmental = self.level.charges[1]
+        self.click(environmental.position)
+        yield .16
+        assert environmental.spent and not environmental.render_items()
+        self.capture('charge-environment-spent')
+        for _ in range(30):
+            if self.level.charges[1] is not environmental:
+                break
+            yield .1
+        replacement = self.level.charges[1]
+        assert environmental.level is None and replacement.position != environmental.position
+        assert not replacement.spent
+        self.capture('charge-environment-regenerated')
+
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield .1
@@ -155,6 +200,7 @@ class ChargeSmoke(CharacterScene):
     def update(self, dt):
         assert monotonic() - self.started < 20, '전하 SDL 검사 시간 초과'
         super().update(dt)
+        self.observed_charges.update(self.level.charges)
         self.record_link()
 
     def draw(self):
@@ -179,11 +225,11 @@ if __name__ == '__main__':
         parser.error('프로젝트 밖 기존 폴더를 지정해야 합니다.')
     scene = ChargeSmoke(output)
     Engine(*DEFAULT_SIZE).run(scene)
-    assert scene.passed and scene.teleports >= 10 and scene.buffered_clicks >= 1
-    assert all(c.art is None and c.level is None for c in scene.charges)
-    assert all(link._frames is None and link.level is None for link in scene.links)
+    assert scene.passed and scene.teleports == 9 and scene.buffered_clicks >= 1
+    assert all(c.art is None and c.level is None for c in scene.observed_charges)
+    assert all(link._frames is None and link.arrival is None and link.level is None for link in scene.links)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print(f'PASS: charge click/cancel/chain/resize/fullscreen/cleanup; '
+    print(f'PASS: run/jump/swing/air-hit/dodge/cast/spend/regenerate/chain/resize/fullscreen/cleanup; '
           f'teleports={scene.teleports}, buffered={scene.buffered_clicks}, '
           f'max draw={scene.max_draw_seconds * 1000:.1f}ms, '
           f'median draw={sorted(scene.draw_times)[len(scene.draw_times)//2] * 1000:.1f}ms', flush=True)

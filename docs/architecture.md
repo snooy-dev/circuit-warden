@@ -6,7 +6,7 @@
 
 ## 범위와 환경
 
-현재 구현은 창·게임 루프·입력 전달·장면 전환, P1~P5 게임프레임워크, 스프라이트 실행과 캐릭터 표시·좌우 이동 검사 범위다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI와 P5 공동 수명·갱신·렌더·통합 화면도 구현·검증했다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다. 구체 게임 규칙·충돌·물리·카메라 추적/줌·장면 간 공유 리소스 관리자는 포함하지 않는다. 화면 밖 제외를 위한 최소 보기 영역과 좌표 이동은 아래 검토안에 포함한다.
+현재 구현은 창·게임 루프·입력 전달·장면 전환, P1~P5 게임프레임워크, 스프라이트 실행, 캐릭터 이동·전투와 2D 콜리전을 포함한다. Python 3.14 + Pico2D 1.5.1, 게임 환경은 .venv/, 의존성은 requirements.txt다. 게임프레임워크 구현은 2026-11-10 요청으로 승인됐다. P1 객체·레벨·규칙과 P2 출력 기반의 검증 커밋을 통합했으며 P3 월드 렌더링을 구현·검증했다. P4 독립 UI와 P5 공동 수명·갱신·렌더·통합 화면도 구현·검증했다. 상세 기술 선택은 사용자 게임 정책 확정과 구분한다.
 
 ## 코드 폴더 구조
 
@@ -23,6 +23,7 @@
 | `engine/rendering/drawing.py` | 출력 픽셀/texture SDL 그리기와 공유 상태 복원 |
 | `game_framework/__init__.py` | 공개 게임 API 재노출 |
 | `game_framework/world.py` | GameObject·GameMode·Level 수명과 전달 |
+| `game_framework/collision.py` | 로컬 AABB·레이어 응답·연속 접촉 계산 |
 | `game_framework/transforms.py` | WorldTransform·UITransform 게임 좌표 변환 |
 | `game_framework/ui.py` | UIElement·Canvas 트리 소유와 업데이트 |
 | `game_framework/rendering.py` | RenderItem·Renderer의 소유 모델 수집·가드·월드/UI 두 패스 |
@@ -32,6 +33,7 @@
 | `game_framework/core.py`, `scene.py` | 직전 패키지 import 경로의 재노출 호환 |
 | `tests/fixtures/framework_scenes.py` | 회귀 검사 전용 월드·UI·통합 장면 |
 | `main.py`, `game/` | 게임 진입·캐릭터 상태·레벨/장면 구현 |
+| `game/training_map.py` | 훈련장 지형 충돌과 월드 표시 |
 | `tests/unit/`, `tests/integration/`, `tests/smoke/` | 모의 단위 검사·조합/실제 SDL 소프트웨어 검사·별도 실제 창 검사 |
 
 게임 Renderer는 지연 render_items 순회·UI 트리 수집·수명 잠금·실패 시 목록 해제를 소유한다. engine의 execute는 게임 타입 없이 준비된 목록과 그리기 콜백을 받으며 참조를 저장하지 않는다. drawing API는 검증된 출력 사각형/texture만 SDL backend로 전달한다. 내부 모듈은 담당 모듈을 직접 import하고 패키지 루트를 거치지 않는다. world에는 SDL 의존이 없지만 공개 루트 import는 기존처럼 Pico2D를 로드한다.
@@ -49,6 +51,14 @@
 - 진입한 장면(진입 시도 중 실패 포함)은 퇴장을 한 번 시도한다. 퇴장 실패를 재시도하지 않는다. 장면 정리 실패와 무관하게 창 정리를 시도하며 예외를 숨기지 않는다. 중첩 예외는 Python 예외 연결로 원인을 보존한다.
 - 창 생성 후 실제 window/renderer 포인터를 확인한다. Pico2D의 불완전한 실패 처리를 보완하기 위해 구현 모듈을 직접 참조한다. 생성 시작 전에 두 핸들을 None으로 초기화해 부분 실패도 close_canvas로 정리할 수 있게 한다.
 - 같은 엔진의 실행 중 재실행은 거부한다. 엔진 인스턴스 간 동시 실행도 모듈 상태로 거부한다. 종료 후 재실행은 가능하다.
+
+## 2D 콜리전
+
+- `GameObject.colliders`에 로컬 AABB `Collider`를 둔다. 기본값은 빈 튜플이다. `collision_position`은 월드 기준점이며 기본값은 원점이다. 움직이는 객체는 자신의 좌표를 반환한다. 사각형 순서는 `(left, bottom, right, top)`이다. 바닥처럼 정적인 영역에는 무한 경계를 쓸 수 있다.
+- 각 콜라이더는 레이어와 `blocks`·`overlaps` 대상 레이어를 정의한다. 어느 쪽이든 상대를 무시하면 Ignore, 양쪽이 Block이면 Block, 그 외 허용 관계는 Overlap이다.
+- `Level.blocking_contact(owner, collider, movement)`는 등록된 다른 객체 중 첫 블로킹 접촉 비율을 반환한다. 호출자가 이동량에 이 비율을 곱해 위치를 적용한다. 접선 이동과 이탈은 허용되며, 캐릭터는 수평·수직 축을 각각 검사한다. 블로킹 스윕은 겹치지 않는 위치에서 시작하며, 배치·순간이동은 `Level.collision_overlaps(..., response=CollisionResponse.BLOCK)`으로 도착점을 검사할 수 있다.
+- `Level.collision_overlaps`는 현재 또는 지정 위치의 양의 면적 겹침을 조회한다. `Collider.overlap_contact`는 이동 시작점·상대 이동량·시간 구간을 받아 처음 겹치는 시점을 반환한다. 활성 검은 공격 스냅샷으로만 조회한다. 워든과 적의 몸통은 게임 계층에서 상대 이동을 스윕해 밀림을 해결한다. 적의 몸통과 지형은 워든의 순간이동 도착점 검사에 포함한다.
+- 현재 후보 탐색은 레벨의 등록 객체를 순회한다. 충돌 응답은 키네마틱 이동 및 명시적 조회를 기준으로 한다. 검과 돌진의 이동 근사에는 기존 전투 판정 방식이 적용된다. [검증](../specs/016-collision/verification.md).
 
 ## 기술 검증 기본값
 
@@ -272,9 +282,9 @@ N=월드 객체 수, U=UI 노드 수, R=검사할 월드 렌더 항목 수, V=�
 
 ## 캐릭터 이동 검사
 
-game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 연결한다. main.py는 게임 진입점이며 초기 도형 데모 공개 실행 경로는 제거했다. 게임용 시트는 assets/warden에 있고 __file__ 기준으로 로딩한다. 범용 물리·카메라 추적·범용 입력 관리자는 포함하지 않는다. 기본 적 전투의 개별 피해 판정은 아래 후속 범위를 따른다.
+`game/character.py`와 `game/scene.py`가 LevelScene·GameObject·SpritePlayer를 연결한다. `main.py`는 게임 진입점이다. 게임용 시트는 `assets/warden/`에 있고 `__file__` 기준으로 로딩한다. 훈련장 배치와 카메라는 게임 계층이 소유한다.
 
-게임 기본 창은 사용자 요청에 따라 1280×720(16:9)이며, 기술 기본값은 view_height 600, 시트 1배, 속도 180 월드 단위/초, 바닥선 y=-180이다. 수평 A/D 조작은 사용자 결정이고 속도·배율·바닥선은 최종 수치가 아니다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 실제 이동이 없으면 마지막 방향 idle, 이동하면 해당 방향 Run을 사용한다. 화면 경계는 idle/Run 전체 셀을 보존하고 너무 좁으면 중앙에 둔다. 공격은 같은 이동 경계를 쓰므로 화면 끝에서 검·여백 일부가 잘릴 수 있다. F6/F11과 Escape는 기존 엔진에 위임한다. 구현 상태·검증은 [010 검증](../specs/010-character-movement/verification.md)을 따른다.
+게임 기본 창은 1280×720(16:9)이며 시험값은 `view_height=600`, 시트 1배, 기본 지상·공중·공격 이동 속도 240 월드 단위/초, 바닥선 `y=-180`이다. 키 set은 양 방향을 상쇄하며 포커스 상실·최소화에 비운다. 기본 이동은 실제 변위와 방향으로 idle·Run을 선택한다. 훈련장 이동·대시·반동은 지형과 월드 경계를 사용한다. `view_bounds`는 출력 유효성과 전하 도착 시야를 검증하며 독립 캐릭터 검사에서는 이동 경계의 기본값이다. F6/F11과 Escape는 기존 엔진에 위임한다.
 
 ## 기본 게임플레이 연결
 
@@ -282,41 +292,45 @@ game/character.py·scene.py가 기존 LevelScene·GameObject·SpritePlayer를 �
 
 GameplayLevel은 GameplayMode를 지정하고 생성한 Character를 player로 보관한다. GameplayMode.on_event만 player.control을 호출하며 Character.handle_event는 기본 무동작이다. 모드·객체 방송으로 입력을 중복 처리하지 않는다. CharacterScene의 이름·진입점은 유지한다. Character가 transitions.Machine의 idle/run/attack 명시 전이(auto_transitions=False)를 소유한다. SpritePlayer의 loop=False·finished를 재사용하며 로더는 정확한 bool loop와 클립별 반복 정책을 검사한다.
 
-공격 요청은 update에서 시작하며 진입 갱신은 0초 프레임을 출력한다. `_consume_action`이 허용한 마지막 예약 행동을 지역값으로 `_update`에 직접 전달하며 별도 요청 플래그나 중복 허용 판정을 두지 않는다. 예약 만료 경계에서 공격이 시작돼도 그 외부 갱신의 잔여 시간은 공격에 적용하지 않아 새 베기와 함께0초를 유지한다. 공격 중 위치·방향을 고정하고 유지 키만 갱신한다. 완료 갱신은 다음 idle/Run을 선택하고 다음 갱신부터 이동해 dt를 중복 사용하지 않는다. 포커스/최소화 때 키·미시작 요청을 비우며 시작한 공격은 계속 끝낸다. 사용자 규칙은 [기본 게임플레이](systems/basic-gameplay.md), 기반 검증은 [011](../specs/011-basic-gameplay/verification.md), 예약 경계 보완은 [013](../specs/013-audit-fixes/verification.md)을 따른다.
+`_consume_action`에서 허용한 예약 행동을 `_update`에 전달한다. 공격 시작 갱신은 재생 시각 0초를 표시한다. `attack_facing`은 한 스윙의 표시·판정을 고정한다. 지상 공격은 방향키로 인한 수평 이동을 멈추고, 방향 입력이 있을 때 240ms 경계에서 일반 이동으로 복귀한다. 남은 갱신 시간만 일반 이동에 전달해 긴 갱신에서도 타격 구간과 수평 이동을 구분한다. 공중 공격은 수평 조향과 중력·점프 키 해제를 함께 적용하며 착지 시 그 이후의 검 판정을 제외한다. 시작점과 충돌 해결 후 끝점을 잇는 `AttackSweep`를 구간별로 남긴다. `GameplayLevel`은 검의 이동 구간과 활성 시간, 적의 구간별 이동을 교차시켜 상대 AABB 접촉 시각을 구한다. 검의 프레임 내 경로는 선형 근사다.
 
 게임 시작은 game/scene.py의 DEFAULT_SIZE=(1280,720)를 Engine에 전달한다. 엔진 공통 기본값 800×600과 월드 논리 높이 600은 유지한다. F6는 1024×720과 기본 크기를 전환한다.
 
-SpriteEffect(GameObject)은 공격 시작 위치·방향·배율을 보관하고 SpritePlayer로 700ms 단발 재생 후 destroy한다. 생성 프레임은 Level 스냅샷에서 제외되어 캐릭터 공격과 함께 0초부터 표시된다. 공격 350ms 이후의 잔상과 다음 공격은 독립 수명이다. 렌더 순서는 바닥(-2)→베기(-1)→캐릭터(0). 장면의 ImageStore가 효과 이미지도 소유·해제한다.
+첫 레벨에서는 `CharacterScene`이 세로 360픽셀의 SDL 렌더 타깃에 월드를 합성하고 전체 출력에 최근접 복사한다. 타깃 너비는 실제 출력 화면비로 정하며 같은 크기에서는 재사용한다. 창 입력과 월드 변환은 실제 출력 크기를 사용한다. 타깃은 매 프레임 다시 그리므로 타깃 리셋 뒤 내용이 복구되고, 장면 종료에서 해제된다.
+
+지상·공중 공격 PNG는 워든 몸체와 효과를 합성한다. SpritePlayer 하나가 모션과 효과를 동일한 시계로 재생한다. 지상은 발, 공중은 몸 중심에 시트 기준점을 맞춘다. 출처와 합성 규격은 [아트 기준](art-direction.md#게임에서-사용하는-캐릭터-자산)을 따른다.
+
+`CharacterScene`은 레벨 갱신과 전하 예약 처리 후 워든의 실제 x를 `0.22초` 시간 상수로 지수 보간한다. 가로 목표와 현재 카메라는 뷰포트 폭에 맞춰 훈련장 안으로 제한한다. 목표 방향 지형에 접촉한 상태에서 수평 변위가 없으면 보간을 멈춘다. 세로 중심은 고정한다. 그리기·마우스 클릭·커서 좌표는 같은 월드 변환을 사용하며 `R`은 카메라를 초기화한다.
 
 ## Warden 점프
 
-Character.y/velocity_y는 지상 GROUND_Y=-180과 수직 운동을 표현한다. grounded는 y가 바닥이고 수직 속도가 0인 경우다. Machine의 jump 상태와 jump_phase(start/rise/fall/land)로 전용 모션을 선택한다. grounded는 물리적 접지를 나타내며 시작/착지 잠금 중에도 true이므로 행동 허용은 state/phase까지 확인한다.
+`Character.y`와 `velocity_y`는 수직 운동을 표현한다. `grounded`는 수직 속도가 0이고 하향 스윕에서 현재 접촉면을 찾은 경우다. 상태와 `jump_phase`(start/rise/fall/land)로 시작·착지 잠금과 표시 자세를 선택한다.
 
-점프 높이는 BODY_HEIGHT×2이다. 현재 측면 idle 망토 바람 v2의 알파 높이는 프레임별 81~83px, 전체 y 범위는 [10,93)이고 귀를 포함한 최대 83px를 기준 키로 쓴다. BODY_HEIGHT=83×DISPLAY_SCALE, 현재 JUMP_HEIGHT=166 월드 단위. 자산의 몸체 규격을 교체하면 이 기준도 재측정한다. 원본 104px 셀 높이의 투명 여백은 점프 높이에 포함하지 않는다.
+최대 점프 높이는 `BODY_HEIGHT×2=166` 월드 단위다. 현재 idle 가시 높이는 81~83px이며 귀를 포함한 최대 83px를 기준 키로 쓴다. 직접 시작한 점프에서 Space를 떼면 그때의 상승 속도에 0.65를 한 번 곱한다. 이륙 전에 놓으면 같은 비율을 초기 속도에 적용한다. 충돌 없는 평지의 가장 짧은 상승 높이는 약 70 월드 단위다.
 
-상승 시간 T=0.4초를 기술 기본값으로 두며 중력 g=2H/T², 초기 수직 속도 v=gT다. 매 update에서 y+=v·dt−g·dt²/2, v-=g·dt로 적분하고 하강 중 바닥 이하(반올림 오차 1e-9 포함)를 바닥/속도0으로 고정한다. 총 체공은 약 0.8초다. 엔진의 물리 단계·범용 충돌은 추가하지 않는다.
+키를 유지한 상승 시간 T=0.4초를 기준으로 중력 g=2H/T², 초기 수직 속도 v=gT를 계산한다. y+=v·dt−g·dt²/2, v-=g·dt로 적분하며 상승과 하강을 나눠 블로킹 스윕을 적용한다. 하강 중 지형에 닿으면 속도를 0으로 고정한다. 같은 높이로 착지할 때 최대 체공은 약 0.8초다.
 
-Space/Shift는 기존 pressed set으로 중복 KEYDOWN을 억제한다. 새 점프·공격·대시는 마지막 행동1개를100ms 저장하고 실행 가능 조건을 만족하는 갱신에서 한 번 소비한다. 만료 경계를 나눠 오래된 입력이 실행되지 않게 하며 소비 시점은 갱신 경계라 최대 한 프레임 지연될 수 있다. focus-loss/minimize는 미시작 점프·유지 키를 지우고 진행 중 수직 운동은 계속한다. 무효 출력에서 신규 점프를 받지 않는다. 정책은 [기본 게임플레이](systems/basic-gameplay.md), 검증은 [011](../specs/011-basic-gameplay/verification.md)을 따른다.
+Space/Shift는 기존 pressed set으로 중복 KEYDOWN을 억제한다. 마지막 행동 1개를 저장하고 실행 가능할 때 한 번 소비한다. 공중에서 누른 점프는 120ms, 나머지는 100ms를 쓰며 만료 경계에서 갱신 시간을 나눈다. focus-loss/minimize는 미시작 점프·유지 키를 지우고 진행 중 수직 운동은 계속한다. 무효 출력에서 신규 점프를 받지 않는다. 정책은 [기본 게임플레이](systems/basic-gameplay.md), 검증은 [020](../specs/020-combat-reimplementation/verification.md#착지-시점의-재점프)을 따른다.
 
 ## 월드 크기와 대시
 
 WorldTransform.scale=출력 viewport 높이/view_height이며 플레이 장면의 view_height=600이다. 기본1280×720에서 시야는1066.67×600 월드 단위, 1월드 단위=1.2출력px다. 원본 이미지 픽셀·출력 픽셀·월드 좌표는 서로 다른 단위다. 현재 draw 크기를 셀 크기×DISPLAY_SCALE로 지정하므로 1배에서 숫자만 원본과 일치한다.
 
-현재 idle 알파 범위는 폭61~62·키81~83 월드 단위, Run은 폭61~62·키82~83이다. 최대 키83·폭62(귀·망토 포함)는 보이는 형상의 범위이며 충돌 박스가 아니다. 여백 포함 셀은128×104 월드 단위이고 기존 화면 경계는 이 셀을 사용한다.
+현재 idle 가시 범위는 폭61~62·키81~83 월드 단위, Run은 폭61~62·키82~83이다. 여백 포함 셀은128×104, 워든 몸통 충돌은 폭48×높이83이다. 훈련장의 월드 가로 범위는 -1920~1920이고 플랫폼의 배치와 충돌은 `TrainingMap`이 공유한다. 워든과 적 모두 벽을 스윕하며, 적은 벽에 닿은 돌진을 접촉 전 이동과 접촉 후 정지 구간으로 나눠 기록한다.
 
 DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_SECONDS=.2, 수평 속도830 월드 단위/초다. 기본 창에서는199.2출력px로 보이나 거리 계산에는 출력 픽셀을 사용하지 않는다. Character의 dash 상태 내부에 준비/이동/복귀 단계를 두고 남은 시간을 분할해 처리한다. 수평 적분은 이동 단계에만 적용하고 대시 이동200ms에는 수직 적분을 멈추고 준비/복귀에서 재개한다. 전용 좌우 클립과 효과에는 추가 반전을 적용하지 않는다. 엔진/프레임워크에는 대시 규칙을 추가하지 않는다. [조작 규칙](systems/basic-gameplay.md#대시)·[검증](../specs/011-basic-gameplay/verification.md)을 따른다.
 
 ### 전용 대시 모션·효과
 
-준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다. SpriteEffect는 기존 베기 효과 구현을 이름 변경해 함께 재사용한다.
+준비100ms·이동200ms·복귀167ms는 원본 durationsMs 합을 사용한다. dash_phase는 prepare_idle/prepare_run, dash, recover_idle/recover_run이고 dash_remaining은 현재 단계의 남은 시간이다. 긴 갱신은 각 단계로 분할하며 이동 시작 경계의 x/y에서 SpriteEffect를 생성한다. 새 효과는 Level의 현재 update 스냅샷에 없으므로 그 갱신의 생성 이후 시간만 수동 진행한다. 다음 갱신부터 Level이 독립 갱신·소멸한다.
 
 로더는 선택적 frameIndices를 검증하며 대시 시트의 중복셀6을 건너뛴11프레임과 셀5의34ms를 보존한다. 프레임 색/알파·시트 바이트는 변경하지 않는다. 원본의 연결 기준은 idle0/Run0 진입, idle0/Run14 복귀라 해당 복귀 후1/15번부터 재생한다. 임의 진입 위상과 독립 idle/Run의 눈 색 차이는 남아 있는 아트 연결 한계다.
 
 ### 전용 점프 모션 연결
 
-시작120ms 후 이륙하고 착지180ms 동안 잠근다. _update_jump는 시작/정점/바닥/착지완료 경계로 dt를 나누고 공중에 해당하는 시간만 수평 이동에 반영한다. 원본 상승300ms는 물리 상승400ms로 시간 매핑하고 낙하600ms는 반복한다. 재생 시각은 수직 속도에서 산출해 방향전환/대시 체공·복귀에도 유지한다. 대시중 착지는 land로 표시해 두고 대시 종료 후 착지 모션을 진행하며 갱신의 남은 시간도 소비한다. 좌우 전용 클립을 사용해 추가 수평 반전하지 않는다. 엔진·자산 원본·독립 idle/Run은 그대로다.
+시작 12프레임을 30ms에 재생한 뒤 이륙하고 착지180ms 동안 잠근다. _update_jump는 시작/정점/바닥/착지완료 경계로 dt를 나누고 공중에 해당하는 시간만 수평 이동에 반영한다. 원본 상승300ms는 최대 점프의 물리 상승400ms로 시간 매핑하고 낙하600ms는 반복한다. 재생 시각은 수직 속도에서 산출해 방향전환/대시 체공·복귀에도 유지한다. 대시중 착지는 land로 표시해 두고 대시 종료 후 착지 모션을 진행하며 갱신의 남은 시간도 소비한다. 좌우 전용 클립을 사용해 추가 수평 반전하지 않는다.
 
-착지 연속 점프는 `_link_landing_jump`에서 land60~90ms의 유효 점프 예약을 소비하고 같은 jump 상태의 start40ms로 바꾼다. `_update_jump`가 착지60ms 경계를 분할하므로 긴 갱신도 연결 지점을 지나치지 않고 남은 시간을 이어 계산한다. 좌표·방향·클립 이미지는 변경하지 않는다.
+`_update_jump`는 충돌로 land가 되면 해당 갱신에서 점프 선입력을 검사한다. 지면에 닿아 있고 jump 상태에서 실행 가능하면 입력을 소비하고 `_take_off`로 바로 상승시킨다. 이륙 처리는 시작 클립을 마친 일반 점프와 공유한다. 착지 후 남은 갱신 시간은 상승에 반영하며, 공중 공격은 지면 접촉에서 종료한 뒤 같은 착지 분기로 이어진다.
 
 ## 기본 적 전투
 
@@ -324,15 +338,17 @@ DASH_DISTANCE=BODY_HEIGHT×2=166 월드 단위(최대 폭의 약2.68배), DASH_S
 
 `feature/training-combat`의 `e343742`·`ebcad98`에서 검의 활성 구간·전방 상자·공격당 한 번 피해와 적 체력을 가져온다. 현재 선입력 업데이트에서는 활성 구간을 지난 당시의 스윙 ID와 상자를 보존하여 다음 공격과 명중 기록이 섞이지 않게 한다. 피해 수치와 돌진 규칙은 [기본 적 전투](systems/basic-enemy.md)가 소유하며 실제 결과는 [013 검증](../specs/013-basic-enemy/verification.md)에 기록한다.
 
-전투 입력은 GameplayMode가 살아 있는 워든에만 전달하며 R의 반복 KEYDOWN을 억제한다. GameplayLevel.reset_combat는 기존 클립·이미지를 재사용하고 두 캐릭터와 일회성 효과를 정리한 뒤 새 캐릭터를 배치한다. 같은 장면 안의 재시작에서는 텍스처를 닫지 않고 장면 종료 시 ImageStore가 해제한다. 워든 체력 0에서는 레벨 갱신을 멈추지만 R·창 크기·전체화면·종료 입력은 유지한다. AABB의 접촉 시간 계산은 `game/combat.py`가 담당한다. 워든과 적은 스프라이트만 그리며 사용자 요청으로 체력바 출력은 제거했다.
+전투 입력은 GameplayMode가 살아 있는 워든에만 전달하며 R의 반복 KEYDOWN을 억제한다. GameplayLevel.reset_combat는 기존 클립·이미지를 재사용하고 두 캐릭터와 일회성 효과를 정리한 뒤 새 캐릭터를 배치한다. 같은 장면 안의 재시작에서는 텍스처를 닫지 않고 장면 종료 시 ImageStore가 해제한다. 워든 체력 0에서는 레벨 갱신을 멈추지만 R·창 크기·전체화면·종료 입력은 유지한다. AABB의 접촉 시간 계산은 `game_framework/collision.py`가 담당한다. 워든과 적은 스프라이트만 그리며 사용자 요청으로 체력바 출력은 제거했다.
 
-검 판정은 활성 스윙 ID·상자·시간 구간을 적의 단계별 이동 기록과 교차한다. 돌진은 양측의 같은 시각 상대 위치에서 첫 접촉을 구해 그 시각의 보호 상태를 확인한다. 워든의 프레임 안 경로는 시작/끝 위치 사이 선형 근사이며 행동별 세부 경로 계산은 하지 않는다. 엔진 시간 처리와 기존 행동·입력 버퍼는 유지한다.
+검 판정은 활성 스윙 ID·상자·시간 구간을 적의 단계별 이동 기록과 교차한다. 몸통의 상대 스윕은 접촉 높이와 수평 겹침으로 낙하 상단을 구분한다. 상단은 화면·지형으로 제한한 양쪽 이탈점을 비교하고 열린 쪽을 향한 수평 반동과 상승을 함께 시작한다. 옆면 반동은 지형 스윕을 적용하고 분리 공간이 부족하면 적의 수평 위치를 접촉면까지 되돌린다. 실제 피해는 계산된 접촉 위치에서 스파크와 전용 반동을 시작하며, Character의 hurt 상태는 접촉 후 남은 시간만으로 반동을 먼저 적분한다. 무피해 옆면 밀림은 같은 시간에 진행 중인 피해 반동을 덮어쓰지 못한다. 워든의 프레임 안 경로는 시작/끝 위치 사이 선형 근사다. [반동 설계](systems/basic-enemy.md) · [검증](../specs/019-combat-feedback/verification.md).
+
+공중에서 피해를 받으면 초기 감속 성분과 잔여 수평 속도를 함께 적용한다. 수직 적분에서 실제 체공에 소비한 시간만큼 잔여 속도를 수평 스윕에 전달하고, 착지 또는 조작 복귀가 속도를 정리한다.
 
 ## 전하 순간이동
 
 CharacterScene은 기존 event_to_world를 GameplayMode에 전달한다. 모드는 클릭 시 현재 거리·도착 경계·클릭 중심 거리를 검사하고 활성 전하를 공격보다 우선한다. Character.teleport는 지상 도착은idle, 공중 도착은상승(상단 여유0이면 낙하)으로 전환하고 이전 선입력·점프/대시 단계를 정리한다. 공중 도착 수직 속도는 min(GRAVITY×TELEPORT_RISE_SECONDS, sqrt(2×GRAVITY×상단 여유))로 교체하며 기존 중력·정점 분할·상승/낙하 모션을 재사용한다. 속도는 누적하지 않고 공중 대시 소모 이력을 유지한다. 시간·높이 시험값은 전하 시스템 문서를 따른다. 좌표·행동 규칙의 소유자는 [전하 시스템](systems/charge-teleport.md)이다.
 
-GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.activation_origin은 진행 중 연결의 도착점, 평소에는 캐릭터 중심이다. 시작 이벤트에서 즉시 전하 논리 상태를 갱신하고 이후 Charge.update도 같은 기준을 사용한다. ChargeArt는 오프라인으로 구운33단계×72위상 PNG를 장면 ImageStore에서 공유한다. Charge는 개별 텍스처를 만들지 않고 연속 상태값에 가장 가까운 SpriteFrame을 선택해 그린다. 24fps·3초 위상과 중간 반전 값·속도는 유지하며 bob은 위상 중간 시각으로 구웠다. 안정 상태의 원본 RGBA를 보존하고 중간 표시의 단계화·최대1px bob 차이는 사용자가 허용한 미세 차이에 해당한다. 투명 여백을 자른 전하 이미지 RGBA 크기는43.14MiB다. 게임에서는 NumPy·픽셀 합성·전하 업로드를 사용하지 않는다. 생성 도구는 scripts/bake-effects/charge.py다.
+GameplayLevel은 환경 구역마다 Charge 하나를 등록하고 기술 전하는 생성 시 목록 끝에 추가한다. GameplayMode.activation_origin은 진행 중 연결의 도착점, 평소에는 캐릭터 중심이다. 시작 이벤트에서 즉시 전하 논리 상태를 갱신하고 이후 Charge.update도 같은 기준을 사용한다. ChargeArt는 오프라인으로 구운33단계×72위상 PNG를 장면 ImageStore에서 공유한다. Charge는 개별 텍스처를 만들지 않고 연속 상태값에 가장 가까운 SpriteFrame을 선택해 그린다. 24fps·3초 위상과 중간 반전 값·속도는 유지하며 bob은 위상 중간 시각으로 구웠다. 안정 상태의 원본 RGBA를 보존하고 중간 표시의 단계화·최대1px bob 차이는 사용자가 허용한 미세 차이에 해당한다. 투명 여백을 자른 전하 이미지 RGBA 크기는43.14MiB다. 게임에서는 NumPy·픽셀 합성·전하 업로드를 사용하지 않는다. 생성 도구는 scripts/bake-effects/charge.py다.
 
 기본 동작 검증은 [012 verification](../specs/012-charge-teleport/verification.md)에 기록한다. TeleportLink는 고정 출발/도착 좌표에서 승인 v4의30fps·12프레임 형상을100ms에 시간 매핑해 소멸한다. 이벤트에서 생성된 효과의 첫 갱신은 생성 전 프레임 시간을 건너뛰어 첫 섬광을 보존한다. 최초 draw가 먼저 일어나면 그 뒤 갱신부터 시간을 소비한다. GameplayMode는 진행 중 효과와 마지막 예약 전하를 보관하고 CharacterScene의 Level 갱신 직후 after_update에서 완료·재검사·예약 실행을 처리한다. 이 단계에서 생성된 효과는 같은 프레임에 처음 출력한다. LinkArt는 승인 pixelfx 원본을 오프라인으로 구운72길이×12프레임을 장면 시작에 공유 로딩한다. 길이는1~32px 정수,36~64px의4px 간격,72~320px의8px 간격이다. 가까운 길이를 선택하고 중앙 기준 회전·가로 배율로 연결하며 세로 배율은 유지한다. 8px 미만은 광륜 왜곡을 피하려고 가로 배율도 유지하고 이론상 끝점 오차를0.25px 이내로 제한한다. 길이 선택에 따른 경로·가지 및 회전의 픽셀 차이는 사용자 허용 범위이며 원본과 화면 픽셀 일치를 주장하지 않는다. 현재 활성 거리보다 긴320px 초과의 품질은 미검증이다.
 
@@ -340,6 +356,14 @@ GameplayLevel은 Character 다음에 전하5개를 등록한다. GameplayMode.ac
 
 전하 우클릭은 GameplayMode.on_event에서 커서 대신 activation_origin과의 거리로 후보를 정렬하고 클릭 반경 제한을 생략한다. view_bounds가 무효이면 선택하지 않는다. 후보 유효성·배치 순 동률·_teleport 및 pending_charge/after_update는 왼쪽 선택과 공유한다.
 
-GameplayMode.last_charge는 마지막 성공 도착 전하를 보관한다. 우클릭 후보만 해당 객체를 제외하고 좌클릭은 유지한다. 예약 입력은 값을 바꾸지 않으며 _teleport 성공 때 공중 도착만 기록하고 지상 도착은 비운다. after_update에서 grounded이면 착지 모션 종료를 기다리지 않고 비우며 on_end에서도 해제한다.
+GameplayMode는 실제 이동 성공을 GameplayLevel.spend_charge에 전달한다. 소모 전하는 거리 활성화와 렌더에서 빠진다. 같은 좌표나 막힌 도착, 취소·실패한 예약은 소비 상태를 바꾸지 않는다. GameplayLevel은 돌진 접촉 시각을 피격 보호와 전하 이동 보호 중 늦은 만료 시점에 비교한다.
 
-전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R 이후에도 전하 활성 상태는 후처리에서 현재 위치에 맞춘다. R은 TeleportLink 객체·예약·마지막 전하를 제거하고 전하 배치·아트는 재사용한다.
+E는 SDL 커서 위치를 현재 창·출력·월드 좌표로 변환해 GameplayLevel.cast_charge에 전달한다. 기술 전하는 공유 ChargeArt를 사용하며 성공한 순간이동이나 R에서 레벨 객체를 해제한다.
+
+환경 전하가 소모된 뒤에는 Charge가 경과 시간을 기록하고 GameplayLevel이 대기 시간을 충족한 구역의 유효 후보를 찾는다. 성공하면 다른 위치에 새 Charge를 등록하고 소비 객체를 해제한다. 예전 객체를 가리키는 순간이동 예약은 새 전하로 이전되지 않는다. 장면 종료는 공유 ChargeArt 참조를 해제한다.
+
+전투·순간이동 통합에서는 최신 action 반환 방식과 공격 시간 offset을 함께 유지한다. Character.teleport 성공 시 active_attack을 제거하며, CharacterScene은 전투 판정 완료 후 after_update를 호출한다. 사망 시 pending_charge를 비우고 진행 중 TeleportLink를 제거하며 입력을 차단한다. R은 TeleportLink 객체와 예약 및 이전 전하를 제거하고 환경 구역에 새 전하를 생성한다. 공유 텍스처는 재사용한다.
+
+전하 소모 스프라이트는 TeleportLink의 도착점 좌표와 경과 시간을 공유한다. 검 적중 스파크는 적중을 검출한 시각의 검과 적 몸통 접점에서 SpriteEffect로 재생한다. 두 시트는 ImageStore에서 한 번 로드하고 최근접 필터로 그린다. 재시작과 사망은 남은 단발 효과를 정리하며 장면 종료 시 텍스처를 해제한다.
+
+Character.visual_center는 연결의 경과 시간을 읽어 첫 프레임을 도착점에 맞춘다. GameplayMode는 다음 이동 시 표시 중심으로 전류를 시작하고 선택·판정에는 기존 물리 중심을 사용한다. 점프 상승 재생은 일반 점프 혹은 순간이동에서 실제로 부여한 상승 속도를 기준으로 한다.

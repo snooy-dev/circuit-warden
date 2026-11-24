@@ -1,0 +1,31 @@
+{
+  "art_source": "host_image",
+  "tool": "ImageGen",
+  "prompt": "hurt-impact.prompt.txt",
+  "reference": "../idle.png",
+  "referenceCell": [
+    0,
+    0,
+    128,
+    104
+  ],
+  "source": "hurt-impact-source.png",
+  "sourceSize": [
+    1391,
+    1131
+  ],
+  "sourceSha256": "e27435dd8d65369b893cff302397fe51027a8559ddbb1ff572a2f59d0a57d346",
+  "runtime": "../hurt-impact.png",
+  "runtimeSha256": "1fb55fbaeb062a77deaf49c3acfe6c09b57d3842c533a9dec5b0068072142664",
+  "runtimeBox": [
+    18,
+    12,
+    115,
+    92
+  ],
+  "pivot": [
+    64,
+    92
+  ],
+  "processing": "Alpha crop threshold 16, 80px height Lanczos, binary alpha threshold 128, idle 16-color palette. Foot support midpoint from last five occupied rows."
+}

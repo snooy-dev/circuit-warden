@@ -43,20 +43,29 @@ class Charge(GameObject):
         self.art, self.position = art, tuple(position)
         self.elapsed = self.value = self.velocity = 0.0
         self.active = False
+        self.spent = False
+        self.spent_elapsed = 0.0
 
     def on_spawn(self):
         self.active = self.in_range(self.level.mode.activation_origin)
+
+    def spend(self):
+        self.spent = True
+        self.active = False
 
     def on_destroy(self):
         self.art = None
 
     def in_range(self, origin):
         x, y = origin
-        return hypot(self.position[0] - x, self.position[1] - y) <= ACTIVATION_DISTANCE
+        return not self.spent and hypot(self.position[0] - x, self.position[1] - y) <= ACTIVATION_DISTANCE
 
     def update(self, dt):
         if not isfinite(dt) or dt < 0:
             raise ValueError('dt는 유한한 비음수 초여야 합니다.')
+        if self.spent:
+            self.spent_elapsed += dt
+            return
         self.active = self.in_range(self.level.mode.activation_origin)
         if dt == 0:
             return
@@ -76,4 +85,4 @@ class Charge(GameObject):
         draw_sprite(frame, transform, self.position, frame.rect[2:], opacity)
 
     def render_items(self):
-        return (RenderItem(self._draw, draw_order=-1),)
+        return () if self.spent else (RenderItem(self._draw, draw_order=-1),)

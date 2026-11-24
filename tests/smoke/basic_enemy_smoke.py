@@ -7,6 +7,8 @@ from time import monotonic
 import pico2d.pico2d as pico
 
 from engine import Engine
+from game.character import BODY_HEIGHT, GROUND_Y
+from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from tests.smoke.character_smoke import CharacterSmoke, push_click, push_key
 
@@ -54,6 +56,20 @@ class BasicEnemySmoke(CharacterScene):
         yield .18
         self.capture('enemy-recover-middle')
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+
+        # 점프 회피와 지상 피격을 분리하고 전진 키를 유지한 채 반동 거리를 확인한다.
+        assert actor.teleport((enemy.x - 70, GROUND_Y + BODY_HEIGHT / 2))
+        ground_start = actor.x
+        enemy.state, enemy.state_remaining, enemy.facing = 'charge', .28, -1
+        push_key(pico.SDLK_d)
+        yield from self.wait_until(lambda: actor.hp < actor.MAX_HP)
+        assert actor.state == 'hurt' and actor.y > GROUND_Y
+        self.capture('player-ground-recoil')
+        yield .07
+        ground_distance = ground_start - actor.x
+        assert ground_distance > BODY_HEIGHT and actor.y - GROUND_Y > BODY_HEIGHT / 5
+        self.capture('player-ground-recoil-displacement')
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: actor.hp == 0)
         self.capture('enemy-player-defeated')
         stopped = actor.x, actor.y, enemy.x, enemy.state, enemy.state_remaining
@@ -75,7 +91,67 @@ class BasicEnemySmoke(CharacterScene):
         self.capture('enemy-restarted')
 
         actor, enemy = self.character, self.level.enemy
-        actor.x, actor.facing = enemy.x - 60, 1
+        enemy.state, enemy.state_remaining = 'recover', 10.0
+        actor.x, actor.y = enemy.x, enemy.hurt_box[3] + 5
+        actor.velocity_y, actor.jump_phase = -190, 'fall'
+        actor._machine.jump()
+        yield from self.wait_until(lambda: actor.velocity_y > 0)
+        assert actor.x != enemy.x and actor.hp == actor.MAX_HP and actor.state == 'jump'
+        self.capture('player-top-rebound')
+        for _ in range(30):
+            if actor.grounded:
+                break
+            yield .025
+        assert actor.grounded
+        assert actor.hurt_box[2] <= enemy.hurt_box[0] or actor.hurt_box[0] >= enemy.hurt_box[2]
+        self.capture('player-top-clear')
+
+        actor.x, actor.y = enemy.x - 70, enemy.hurt_box[3] - 9
+        air_start = actor.x
+        actor.velocity_y, actor.jump_phase = -130, 'fall'
+        if actor.state == 'idle':
+            actor._machine.jump()
+        enemy.state, enemy.state_remaining, enemy.facing = 'charge', .28, -1
+        yield from self.wait_until(lambda: actor.hp < actor.MAX_HP)
+        assert actor.state == 'hurt' and not actor.grounded and actor.velocity_y > 0
+        self.capture('player-air-recoil')
+        yield .07
+        air_distance = air_start - actor.x
+        assert air_distance > BODY_HEIGHT
+        self.capture('player-air-recoil-displacement')
+        print(f'Knockback: ground={ground_distance:.1f}, air={air_distance:.1f} world units', flush=True)
+        yield from self.wait_until(lambda: actor.state == 'jump')
+        yield from self.wait_until(lambda: actor.velocity_y < 0)
+        descent_x, descent_y = actor.x, actor.y
+        self.capture('player-air-recoil-apex')
+        yield .12
+        assert not actor.grounded and actor.y < descent_y
+        descent_distance = descent_x - actor.x
+        assert descent_distance > 15
+        self.capture('player-air-recoil-descent')
+        print(f'Air recoil descent: {descent_distance:.1f} world units sideways', flush=True)
+        push_key(pico.SDLK_j)
+        yield .025
+        push_key(pico.SDLK_j, pico.SDL_KEYUP)
+        assert actor.state == 'attack' and not actor.grounded
+        assert actor.invulnerability_remaining > 0
+        self.capture('player-air-counter')
+
+        push_key(pico.SDLK_r)
+        yield .05
+        push_key(pico.SDLK_r, pico.SDL_KEYUP)
+        actor, enemy = self.character, self.level.enemy
+        enemy.state, enemy.state_remaining = 'recover', 10.0
+        actor.x, actor.facing = enemy.x - 70, 1
+        push_key(pico.SDLK_LSHIFT)
+        yield .27
+        assert actor.hurt_box[2] < enemy.hurt_box[0]
+        assert actor.x < enemy.x - 70 and actor.state != 'dash' and actor.hp == 5
+        assert not any(isinstance(obj, SpriteEffect) for obj in self.level.objects)
+        self.capture('enemy-contact-rebound')
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+
+        actor.x = enemy.x - 70
         for hp in (2, 1, 0):
             actor.facing = 1 if enemy.x >= actor.x else -1
             push_click()
@@ -89,7 +165,7 @@ class BasicEnemySmoke(CharacterScene):
         actor, enemy = self.character, self.level.enemy
         assert enemy.hp == 3 and actor.hp == 5
         enemy.state, enemy.state_remaining = 'recover', 10.0
-        actor.x, actor.facing = enemy.x + 60, -1
+        actor.x, actor.facing = enemy.x + 70, -1
         push_click()
         yield .4
         assert enemy.hp == 2
@@ -127,4 +203,4 @@ if __name__ == '__main__':
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: enemy/render/windup/charge/recover/jump-evade/player-hit/death/reset/left-right-hit/resize/cleanup', flush=True)
+    print('PASS: enemy/windup/charge/jump-evade/body-top-bounce/ground-and-air-hurt/death/reset/left-right-hit/resize/cleanup', flush=True)

@@ -12,7 +12,6 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.scene import CharacterScene, DEFAULT_SIZE
-from game.effects import SpriteEffect
 from game.character import GROUND_Y, DASH_DISTANCE
 
 
@@ -45,9 +44,11 @@ class CharacterSmoke(CharacterScene):
         self.dash_captures = set()
         self.previous_dash_clip = None
         self.jump_captures = set()
+        self.attack_captures = set()
 
     def enter(self, engine):
         super().enter(engine)
+        self.level.enemy.destroy()
         self.refs = tuple(clip.frames[0].image for clip in self.character.clips.values())
         self.started = self.changed = monotonic()
         self.steps = self.exercise()
@@ -94,24 +95,18 @@ class CharacterSmoke(CharacterScene):
         push_click()
         yield
 
-        assert actor.state == 'attack' and actor.x == stopped_x and actor.facing == -1
-        trail = next(obj for obj in self.level.objects if isinstance(obj, SpriteEffect))
-        assert trail.position[0] == stopped_x and trail.facing == -1
-        self.capture('attack-left')
+        assert actor.state == 'attack' and actor.x == stopped_x and actor.attack_facing == -1
         push_key(pico.SDLK_d)
         yield
 
         assert actor.state == 'run' and actor.x > stopped_x and actor.facing == 1
-        assert trail.level is self.level and trail.position[0] == stopped_x and trail.facing == -1
         self.capture('attack-resume-right')
         attack_x = actor.x
         push_click()
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
         yield
 
-        assert actor.state == 'attack' and actor.x == attack_x and actor.facing == 1
-        assert trail.level is None
-        self.capture('attack-right')
-        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        assert actor.state == 'attack' and actor.x == attack_x and actor.attack_facing == 1
         yield
 
         assert actor.state == 'idle' and actor.x == attack_x and actor.facing == 1
@@ -135,8 +130,7 @@ class CharacterSmoke(CharacterScene):
         push_click()
         yield
 
-        assert not actor.grounded and actor.state == 'jump'
-        self.capture('jump-idle-rising')
+        assert not actor.grounded and actor.player.clip is actor.clips['air_attack']
         yield
         yield
         yield
@@ -154,7 +148,7 @@ class CharacterSmoke(CharacterScene):
         push_key(pico.SDLK_a)
         yield
 
-        assert not actor.grounded and actor.player.clip is actor.clips['jump_rise_left']
+        assert not actor.grounded and actor.player.clip is actor.clips['jump_fall_left']
         self.capture('jump-run-left')
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
@@ -205,6 +199,20 @@ class CharacterSmoke(CharacterScene):
                 'dash-air-right-dash', 'dash-air-right-recover_idle'} <= self.dash_captures
         push_key(pico.SDLK_RSHIFT, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE)
+        yield
+
+        assert not actor.grounded and actor.facing == 1
+        push_click()
+        yield
+
+        assert not actor.grounded and actor.player.clip is actor.clips['air_attack']
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield
+        yield
+        yield
+
+        assert actor.grounded and actor.x == stopped_x
         push_key(pico.SDLK_F6)
         yield
 
@@ -219,7 +227,8 @@ class CharacterSmoke(CharacterScene):
         yield
 
         assert not self.engine.fullscreen and self.engine.window_size == (1024, 720)
-        assert {'start', 'rise', 'fall', 'land'} <= self.jump_captures
+        assert {'rise', 'fall', 'land'} <= self.jump_captures
+        assert len(self.attack_captures) == 8
         self.passed = True
         push_key(pico.SDLK_ESCAPE)
         yield
@@ -232,7 +241,7 @@ class CharacterSmoke(CharacterScene):
         super().draw()
         if self.character.state == 'jump':
             phase = self.character.jump_phase
-            if phase not in self.jump_captures and self.character.player.elapsed >= .04:
+            if phase not in self.jump_captures and (phase == 'start' or self.character.player.elapsed >= .04):
                 self.capture('jump-' + phase)
                 self.jump_captures.add(phase)
         if self.previous_dash_clip is not None and self.character.state != 'dash':
@@ -248,8 +257,17 @@ class CharacterSmoke(CharacterScene):
             if name not in self.dash_captures and self.character.player.elapsed >= .04:
                 self.capture(name)
                 self.dash_captures.add(name)
-        if self.character.state == 'attack' and self.character.player.elapsed == 0:
-            self.capture('attack-first-' + ('right' if self.character.facing > 0 else 'left'))
+        actor = self.character
+        if actor.state == 'attack':
+            elapsed = actor.player.elapsed
+            phase = 'first' if elapsed == 0 else 'active' if .1 <= elapsed < .2 else None
+            if phase is not None:
+                kind = 'air-attack' if actor.airborne_swing else 'attack'
+                side = 'right' if actor.attack_facing > 0 else 'left'
+                name = f'{kind}-{phase}-{side}'
+                if name not in self.attack_captures:
+                    self.capture(name)
+                    self.attack_captures.add(name)
         now = monotonic()
         if not self.passed and now - self.changed >= .25:
             next(self.steps)
@@ -266,5 +284,5 @@ if __name__ == '__main__':
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed and all(ref.closed for ref in scene.refs)
     assert scene.engine is None and scene.level.objects == () and pico.renderer is None
-    print('PASS: idle/run/attack/resume/focus-loss/jump/land/dash-ground/air-once/resize/fullscreen/escape/cleanup',
+    print('PASS: idle/run/ground-attack/air-attack/resume/focus-loss/jump/land/dash-ground/air-once/resize/fullscreen/escape/cleanup',
           flush=True)

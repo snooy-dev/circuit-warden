@@ -1,19 +1,30 @@
 """Warden의 이동·점프·대시·단발 공격과 스프라이트 상태."""
 
 import json
+from dataclasses import dataclass
 from math import isfinite, sqrt
 from pathlib import Path
 
 import pico2d.pico2d as pico
 from transitions import Machine
 
-from game_framework import GameObject, RenderItem, SpriteClip, SpriteFrame, SpritePlayer, draw_sprite
+from game_framework import (Collider, CollisionResponse, GameObject, RenderItem, SpriteClip,
+                            SpriteFrame, SpritePlayer, draw_sprite)
+from game_framework.collision import CONTACT_EPSILON
 
 from .effects import SpriteEffect
 
 
 GROUND_Y = -180
-SPEED = 180
+SPEED = 240
+PUSHBACK_SPEED = 440
+PUSHBACK_SECONDS = .12
+HURT_SECONDS = PUSHBACK_SECONDS
+HURT_PUSH_SPEED = 1000
+GROUND_HURT_SPEED = 320
+AIR_HURT_SPEED = 420
+AIR_HURT_DRIFT_SPEED = 200
+BODY_BOUNCE_SPEED = 245
 DISPLAY_SCALE = 1
 # idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
 BODY_HEIGHT = 83 * DISPLAY_SCALE
@@ -21,21 +32,31 @@ JUMP_HEIGHT = BODY_HEIGHT * 2
 JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
+JUMP_RELEASE_FACTOR = .65
 TELEPORT_RISE_SECONDS = .24
+ARRIVAL_BLEND_SECONDS = .045
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
 ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
+GROUND_ATTACK_MOVE_UNLOCK = .24
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
-# 10ms 프레임 기준: 착지 6~8번의 압축 자세 → 시작 4번 자세.
-LAND_CROUCH_START = .06
-LAND_CROUCH_END = .09
-JUMP_CROUCH_START = .04
+AIR_JUMP_BUFFER_SECONDS = .12
 DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
 MOVE_KEYS = LEFT_KEYS | RIGHT_KEYS
+
+
+@dataclass(frozen=True)
+class AttackSweep:
+    attack_id: int
+    sword: Collider
+    origin: tuple[float, float]
+    velocity: tuple[float, float]
+    times: tuple[float, float]
+    active_window: tuple[float, float]
 
 
 def _load_clip(images, animation, root=None):
@@ -71,7 +92,7 @@ def load_clips(images):
     except ValueError as error:
         raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
     clips = {}
-    names = ('idle', 'run_left', 'run_right', 'attack', 'sword_trail') + tuple(
+    names = ('idle', 'run_left', 'run_right', 'attack', 'air_attack', 'hurt') + tuple(
         f'{phase}_{direction}' for phase in (
             'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx',
             'jump_start', 'jump_rise', 'jump_fall', 'jump_land')
@@ -98,6 +119,12 @@ def _margins(clip):
 
 class Character(GameObject):
     MAX_HP = 5
+    body = Collider((-24, 0, 24, BODY_HEIGHT), 'player', blocks={'terrain'}, overlaps={'enemy'})
+    colliders = (body,)
+    swords = {
+        -1: Collider((-ATTACK_REACH, 8, 0, 70), 'sword', overlaps={'enemy'}),
+        1: Collider((0, 8, ATTACK_REACH, 70), 'sword', overlaps={'enemy'}),
+    }
 
     def __init__(self, clips):
         super().__init__()
@@ -108,27 +135,41 @@ class Character(GameObject):
         self.velocity_y = 0.0
         self.facing = 1
         self.hp = self.MAX_HP
+        self.spawn_opacity = 1.0
         self.invulnerability_remaining = 0.0
+        self.hurt_remaining = 0.0
+        self.teleport_guard_remaining = 0.0
+        self.arrival_link = None
+        self.pushback_direction = 0
+        self.pushback_remaining = 0.0
+        self.pushback_speed = PUSHBACK_SPEED
+        self.air_recoil_velocity = 0.0
         self.pressed = set()
         self.buffered_action = None
         self.buffer_remaining = 0.0
         self.attack_id = 0
         self.attack_facing = 1
-        self.active_attack = None
+        self.airborne_swing = False
+        self.attack_sweeps = []
         self.jump_phase = None
         self.jump_elapsed = 0.0
+        self.jump_held = None  # 직접 시작한 점프만 Space 해제에 반응한다.
+        self.rise_start_speed = JUMP_SPEED
         self.dash_remaining = 0.0
         self.dash_phase = None
+        self.dash_effect = None
         self.air_dash_used = False
         self._machine = Machine(
-            states=('idle', 'run', 'attack', 'dash', 'jump'), initial='idle', auto_transitions=False,
+            states=('idle', 'run', 'attack', 'dash', 'jump', 'hurt'), initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
-                         ['attack', ['idle', 'run'], 'attack'], ['finish', 'attack', 'idle'],
+                         ['attack', ['idle', 'run', 'jump'], 'attack'], ['finish', 'attack', 'idle'],
                          ['dash', ['idle', 'run', 'jump'], 'dash'], ['end_dash', 'dash', 'idle'],
                          ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle'],
+                         ['hurt', '*', 'hurt'], ['recover_hurt', 'hurt', 'idle'],
                          ['teleport', '*', 'idle']],
         )
         self.view_bounds = None
+        self.world_bounds = None
         self._idle_margins = _margins(clips['idle'])
         # shortcut: 공격 끝부분은 화면에서 잘릴 수 있음, 검 전체 보존이 필요하면 경계 정책을 바꾼다.
         margins = (*(_margins(clips[name]) for name in ('run_left', 'run_right')),
@@ -141,39 +182,207 @@ class Character(GameObject):
         return self._machine.state
 
     @property
+    def move_direction(self):
+        return bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
+
+    @property
     def grounded(self):
-        return self.y == GROUND_Y and self.velocity_y == 0
+        if self.velocity_y != 0:
+            return False
+        hit = self._blocking_contact((0, -1))
+        return hit is not None and hit <= CONTACT_EPSILON
+
+    @property
+    def collision_position(self):
+        return self.x, self.y
 
     @property
     def hurt_box(self):
-        return self.x - 24, self.y, self.x + 24, self.y + BODY_HEIGHT
+        return self.body.bounds_at(self.collision_position)
 
-    def take_hit(self):
-        if self.hp > 0 and self.invulnerability_remaining == 0:
-            self.hp -= 1
-            self.invulnerability_remaining = .75
+    @property
+    def active_attack(self):
+        return self.attack_sweeps[0] if self.attack_sweeps else None
+
+    def _blocking_contact(self, movement):
+        if self.level is not None:
+            return self.level.blocking_contact(self, self.body, movement)
+        # 단독 캐릭터 시뮬레이션에는 레벨의 바닥 객체가 없다.
+        dy = movement[1]
+        if dy < 0 and self.y + dy <= GROUND_Y + 1e-9:
+            return min(1, max(0, (GROUND_Y - self.y) / dy))
+        return None
+
+    def _horizontal_target(self, destination):
+        distance = destination - self.x
+        hit = self._blocking_contact((distance, 0)) if distance else None
+        return destination if hit is None else self.x + distance * hit
+
+    def _move_horizontal(self, destination):
+        self.x = self._horizontal_target(destination)
+
+    def _horizontal_limits(self):
+        if self.world_bounds is not None:
+            left, _, right, _ = self.world_bounds
+            return left - self.body.bounds[0], right - self.body.bounds[2]
+        left, _, right, _ = self.view_bounds
+        return left + self._left_margin, right - self._right_margin
+
+    def clamped_horizontal_target(self, destination):
+        if self.world_bounds is not None or self.view_bounds is not None:
+            low, high = self._horizontal_limits()
+            if low > high:
+                return self.x
+            destination = min(max(destination, low), high)
+        return self._horizontal_target(destination)
+
+    def move_enemy_push(self, destination):
+        self.x = self.clamped_horizontal_target(destination)
+
+    def begin_enemy_push(self, direction, elapsed):
+        if self.hp == 0 or self.state == 'hurt':
+            return
+        if self.state == 'dash':
+            self._cancel_dash()
+            self._machine.end_dash()
+            if self.jump_phase is None:
+                self.player.play(self.clips['idle'])
+            else:
+                self._machine.jump()
+                self._show_jump()
+        if self.pushback_remaining == 0 or self.pushback_direction != direction:
+            self.air_recoil_velocity = 0.0
+            self.pushback_direction = direction
+            self.pushback_remaining = PUSHBACK_SECONDS
+            self.pushback_speed = PUSHBACK_SPEED
+            self._advance_pushback(elapsed)
+
+    def _cancel_dash(self):
+        if self.dash_effect is not None:
+            self.dash_effect.destroy()
+            self.dash_effect = None
+        self.dash_phase, self.dash_remaining = None, 0.0
+
+    def _advance_pushback(self, dt):
+        step = min(dt, self.pushback_remaining)
+        if step:
+            speed = self.pushback_speed * (2 * self.pushback_remaining - step) / PUSHBACK_SECONDS
+            self.move_enemy_push(self.x + self.pushback_direction * speed * step)
+            self.pushback_remaining -= step
+        return step
+
+    def _start_rebound(self, speed):
+        self.jump_held = None
+        self.jump_phase, self.jump_elapsed = 'rise', 0.0
+        self.velocity_y = self.rise_start_speed = speed
+
+    def bounce_from_enemy(self, direction, speed, elapsed):
+        if self.state == 'dash':
+            self._cancel_dash()
+            self._machine.end_dash()
+        if self.state in ('idle', 'run'):
+            self._machine.jump()
+        self.pushback_direction, self.pushback_speed = direction, speed
+        self.pushback_remaining = PUSHBACK_SECONDS
+        self.air_recoil_velocity = 0.0
+        self._start_rebound(BODY_BOUNCE_SPEED)
+        self._advance_pushback(elapsed)
+        self._advance_vertical(elapsed)
+        if self.state == 'jump':
+            self._show_jump()
+
+    def take_hit(self, direction=None, elapsed=0, push_speed=HURT_PUSH_SPEED):
+        if self.hp == 0 or self.invulnerability_remaining > 0:
+            return False
+        self.hp -= 1
+        self.invulnerability_remaining = max(0.0, .75 - elapsed)
+        self.hurt_remaining = HURT_SECONDS
+        self.attack_sweeps.clear()
+        self.arrival_link = None
+        self.buffered_action, self.buffer_remaining = None, 0.0
+        self._cancel_dash()
+        airborne = not self.grounded
+        self.pushback_direction = -self.facing if direction is None else direction
+        self.pushback_remaining = PUSHBACK_SECONDS if self.pushback_direction else 0.0
+        drift_speed = AIR_HURT_DRIFT_SPEED if airborne else 0.0
+        self.air_recoil_velocity = self.pushback_direction * drift_speed
+        # 잔여 속도가 더해져도 초기 반동 거리는 유지한다.
+        self.pushback_speed = max(HURT_PUSH_SPEED, push_speed) - drift_speed
+        if self.pushback_direction:
+            self.facing = -self.pushback_direction
+        self._start_rebound(AIR_HURT_SPEED if airborne else GROUND_HURT_SPEED)
+        self._machine.hurt()
+        self.player.play(self.clips['hurt'], restart=True)
+        if self.hp:
+            self._update_hurt(elapsed)
+        return True
+
+    def _update_hurt(self, dt):
+        step = min(dt, self.hurt_remaining)
+        self._advance_pushback(step)
+        self._advance_vertical(step)
+        self.player.update(step)
+        self.hurt_remaining -= step
+        if self.hurt_remaining <= CONTACT_EPSILON:
+            self.hurt_remaining = 0.0
+            self._machine.recover_hurt()
+            if not self.grounded:
+                self._machine.jump()
+                self._show_jump()
+            else:
+                self.jump_phase, self.jump_elapsed = None, 0.0
+                self.player.play(self.clips['idle'])
+        return step
 
     @property
     def center(self):
         return self.x, self.y + BODY_HEIGHT / 2
 
+    @property
+    def visual_center(self):
+        x, y = self.center
+        link = self.arrival_link
+        if link is None or link.level is None or link.elapsed >= ARRIVAL_BLEND_SECONDS:
+            return x, y
+        dx, dy = link.end
+        blend = link.elapsed / ARRIVAL_BLEND_SECONDS
+        return dx + (x - dx) * blend, dy + (y - dy) * blend
+
     def can_teleport(self, position):
-        if self.view_bounds is None or not all(isfinite(v) for v in position):
+        if self.view_bounds is None:
             return False
         x, y = position
         left, _, right, top = self.view_bounds
         return (left + self._left_margin <= x <= right - self._right_margin
-                and GROUND_Y + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2)
+                and y <= top - BODY_HEIGHT / 2 and self.can_place_center(position))
+
+    def can_place_center(self, position):
+        x, y = position
+        if not isfinite(x) or not isfinite(y) or y < GROUND_Y + BODY_HEIGHT / 2:
+            return False
+        if self.world_bounds is not None:
+            low, high = self._horizontal_limits()
+            if not (low <= x <= high and y <= self.world_bounds[3] - BODY_HEIGHT / 2):
+                return False
+        destination = x, y - BODY_HEIGHT / 2
+        return self.level is None or not (self.level.collision_overlaps(
+            self, self.body, destination, response=CollisionResponse.BLOCK)
+            or self.level.collision_overlaps(self, self.body, destination))
 
     def teleport(self, position):
         if not self.can_teleport(position):
             return False
-        self.active_attack = None
+        self.arrival_link = None
+        self.hurt_remaining = 0.0
+        self.attack_sweeps.clear()
+        self.jump_held = None
         self._machine.teleport()
         self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
         self.velocity_y = 0.0
         self.buffered_action, self.buffer_remaining = None, 0.0
-        self.dash_phase, self.dash_remaining = None, 0.0
+        self._cancel_dash()
+        self.pushback_remaining = 0.0
+        self.air_recoil_velocity = 0.0
         self.jump_phase, self.jump_elapsed = None, 0.0
         if self.grounded:
             self.air_dash_used = False
@@ -183,6 +392,7 @@ class Character(GameObject):
             headroom = max(0, self.view_bounds[3] - self.y - BODY_HEIGHT)
             self.velocity_y = min(GRAVITY * TELEPORT_RISE_SECONDS, sqrt(2 * GRAVITY * headroom))
             self.jump_phase = 'rise' if self.velocity_y > 0 else 'fall'
+            self.rise_start_speed = self.velocity_y
             self._show_jump()
         return True
 
@@ -191,39 +401,40 @@ class Character(GameObject):
                 pico.SDL_WINDOWEVENT_FOCUS_LOST, pico.SDL_WINDOWEVENT_MINIMIZED):
             self.pressed.clear()
             self.buffered_action = None
-        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE}:
+            self._release_jump()
+        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE, pico.SDLK_j}:
             if event.key == pico.SDLK_SPACE and event.key not in self.pressed:
                 self._queue_action('jump')
+            if event.key == pico.SDLK_j and event.key not in self.pressed:
+                self._queue_action('attack')
             if event.key in DASH_KEYS and not self.pressed & DASH_KEYS:
                 self._queue_action('dash')
             self.pressed.add(event.key)
         elif event.type == pico.SDL_KEYUP:
             self.pressed.discard(event.key)
+            if event.key == pico.SDLK_SPACE:
+                self._release_jump()
         elif event.type == pico.SDL_MOUSEBUTTONDOWN and event.button == pico.SDL_BUTTON_LEFT:
             self._queue_action('attack')
 
     def _queue_action(self, action):
         self.buffered_action = action
-        self.buffer_remaining = INPUT_BUFFER_SECONDS
+        self.buffer_remaining = (AIR_JUMP_BUFFER_SECONDS if action == 'jump' and not self.grounded
+                                 else INPUT_BUFFER_SECONDS)
 
-    def _link_landing_jump(self):
-        if (self.buffered_action == 'jump' and self.state == 'jump'
-                and self.jump_phase == 'land' and self.grounded and self.view_bounds is not None
-                and LAND_CROUCH_START - 1e-9 <= self.jump_elapsed < LAND_CROUCH_END - 1e-9):
-            self.buffered_action = None
-            self.jump_phase, self.jump_elapsed = 'start', JUMP_CROUCH_START
-            return True
-        return False
+    def _release_jump(self):
+        if self.jump_held:
+            self.jump_held = False
 
     def _consume_action(self):
-        if self._link_landing_jump():
-            return 'jump'
         action = self.buffered_action
         free = self.state in ('idle', 'run')
         allowed = free and self.grounded
+        if action == 'attack' and self.state == 'jump':
+            allowed = self.jump_phase in ('rise', 'fall')
         if action == 'dash':
             allowed = (free or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
-                self.grounded or not self.air_dash_used)
+                self.grounded or not self.air_dash_used) and self.pushback_remaining == 0
         if action is None or not allowed or self.view_bounds is None:
             return None
         self.buffered_action = None
@@ -231,9 +442,12 @@ class Character(GameObject):
 
     def update(self, dt):
         self.invulnerability_remaining = max(0.0, self.invulnerability_remaining - dt)
-        self.active_attack = None
+        self.teleport_guard_remaining = max(0.0, self.teleport_guard_remaining - dt)
+        self.attack_sweeps.clear()
+        self._begin_fall()
         if self.view_bounds is None:
             self.buffered_action = None
+            self.pressed.clear()
         action = self._consume_action()
         # 만료 시점을 넘는 갱신도 오래된 입력을 실행하지 않도록 나눈다.
         step = min(dt, self.buffer_remaining) if self.buffered_action else dt
@@ -242,43 +456,49 @@ class Character(GameObject):
             self.buffer_remaining -= step
             action = self._consume_action()
             if action is not None:
-                self._update(0, action, offset=step)
-                # 새 베기는 이번 Level 갱신에 포함되지 않으므로 공격도 첫 프레임을 유지한다.
-                if action == 'attack':
-                    return
+                self._update(dt - step, action, offset=step)
+                return
             elif self.buffer_remaining <= 1e-9:
                 self.buffered_action = None
         if dt > step:
             self._update(dt - step, offset=step)
 
     def _update(self, dt, action=None, offset=0):
+        if self.state == 'hurt':
+            step = self._update_hurt(dt)
+            if self.state == 'hurt':
+                return
+            dt, offset = dt - step, offset + step
+        start_x = self.x
+        push_time = self._advance_pushback(dt)
+        direction = self.move_direction
+        if direction or action in ('attack', 'dash'):
+            self.air_recoil_velocity = 0.0
         if action == 'dash':
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
             self._machine.dash()
+            self.dash_effect = None
             self._play_dash_phase(entry)
             self.air_dash_used = not self.grounded
         elif action == 'jump' and self.state != 'jump':
             self._machine.jump()
             self.jump_phase, self.jump_elapsed = 'start', 0.0
+            self.jump_held = pico.SDLK_SPACE in self.pressed
         started = action == 'attack'
         if started:
+            if direction:
+                self.facing = direction
             self._machine.attack()
-            self.player.play(self.clips['attack'], restart=True)
+            self.airborne_swing = not self.grounded
+            self.player.play(self.clips['air_attack' if self.airborne_swing else 'attack'], restart=True)
             self.attack_id += 1
             self.attack_facing = self.facing
-        attacking = self.state == 'attack'
-        if attacking and not started:
-            previous = self.player.elapsed
-            self.player.update(dt)
-            if (self.active_attack is None and previous < ATTACK_ACTIVE_END
-                    and self.player.elapsed >= ATTACK_ACTIVE_START):
-                end = self.x + self.attack_facing * ATTACK_REACH
-                box = min(self.x, end), self.y + 8, max(self.x, end), self.y + 70
-                start = offset + min(dt, max(0, ATTACK_ACTIVE_START - previous))
-                stop = offset + ATTACK_ACTIVE_END - previous
-                self.active_attack = self.attack_id, box, (start, stop)
-            if self.player.finished:
-                self._machine.finish()
+        if self.state == 'attack':
+            remaining = self._update_attack(dt, offset, direction, push_time, started, start_x)
+            if self.state == 'attack':
+                return
+            push_time = max(0.0, push_time - (dt - remaining))
+            dt = remaining
 
         finished_dash = self.state == 'dash'
         move_dt = dt
@@ -299,16 +519,18 @@ class Character(GameObject):
             self.pressed.clear()
         else:
             left, _, right, _ = self.view_bounds
-            low, high = left + self._left_margin, right - self._right_margin
+            low, high = self._horizontal_limits()
             if low <= high:
                 start = min(max(self.x, low), high)
-                direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
-                if (self.state == 'attack' or self.jump_phase in ('start', 'land')
-                        and (move_dt == 0 or finished_dash)):
+                if self.jump_phase in ('start', 'land') and (move_dt == 0 or finished_dash):
                     direction = 0
-                destination = min(max(start + direction * SPEED * move_dt, low), high)
-                # 공격/대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
-                self.x = start if attacking or finished_dash else destination
+                walk_time = min(move_dt, dt - push_time)
+                destination = min(max(start + direction * SPEED * walk_time, low), high)
+                # 대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
+                self.x = start
+                if not finished_dash:
+                    self._move_horizontal(destination)
+                    destination = self.x
                 if destination != start:
                     self.facing = direction
                     clip = self.clips['run_right' if direction > 0 else 'run_left']
@@ -321,11 +543,7 @@ class Character(GameObject):
                 if right - left >= idle_left + idle_right:
                     self.x = min(max(self.x, left + idle_left), right - idle_right)
 
-        if self.state == 'attack':
-            if started and self.level is not None:
-                self.level.spawn(SpriteEffect(self.clips['sword_trail'], (self.x, GROUND_Y),
-                                           self.facing, DISPLAY_SCALE))
-            return
+        self._begin_fall()
         if self.state == 'jump':
             self._show_jump()
             return
@@ -348,64 +566,143 @@ class Character(GameObject):
                       and clip is not self.clips['idle']):
                     self.player.update(sum(clip.durations[:15]))
 
+    def _begin_fall(self):
+        if self.state in ('idle', 'run') and not self.grounded:
+            self._machine.jump()
+            self.jump_phase, self.jump_elapsed = 'fall', 0.0
+
+    def _update_attack(self, dt, offset, direction, push_time, started, start_x):
+        previous = self.player.elapsed
+        duration = sum(self.player.clip.durations)
+        start_y = self.y
+        grounded = self.grounded
+        if grounded and not self.airborne_swing and direction and self.view_bounds is not None:
+            duration = min(duration, GROUND_ATTACK_MOVE_UNLOCK)
+        step = dt if started else min(dt, max(0, duration - previous))
+        if not grounded and self.jump_phase is None:
+            self.jump_phase, self.jump_elapsed = 'fall', 0.0
+        flight = self._advance_vertical(step)
+        if not grounded:
+            self._walk_during_attack(direction, flight - push_time)
+        landed = self.airborne_swing and self.grounded
+        attack_time = flight if landed else step
+        if not started:
+            self.player.update(attack_time)
+            first = max(0.0, ATTACK_ACTIVE_START - previous)
+            last = ATTACK_ACTIVE_END - previous
+            if landed:
+                last = min(last, attack_time)
+            if 0 < attack_time and 0 < last and first <= min(attack_time, last) + CONTACT_EPSILON:
+                vx = (self.x - start_x) / attack_time
+                vy = (self.y - start_y) / flight if flight else 0.0
+                self.attack_sweeps.append(AttackSweep(
+                    self.attack_id, self.swords[self.attack_facing], (start_x, start_y), (vx, vy),
+                    (offset, offset + attack_time), (offset + min(first, attack_time), offset + last)))
+
+        if landed or (not started and duration - self.player.elapsed <= CONTACT_EPSILON):
+            self._machine.finish()
+            if self.jump_phase is not None:
+                self._machine.jump()
+            return dt - attack_time
+        return 0.0
+
+    def _walk_during_attack(self, direction, dt):
+        if self.view_bounds is not None and direction and dt > 0:
+            self.x = self.clamped_horizontal_target(self.x + direction * SPEED * dt)
+            self.facing = direction
+
     def _update_jump(self, dt):
         remaining, airborne_time = dt, 0.0
         while self.state == 'jump':
             if self.jump_phase in ('start', 'land'):
+                if (self.jump_phase == 'land' and self.buffered_action == 'jump'
+                        and self.grounded and self.view_bounds is not None):
+                    self.buffered_action = None
+                    self.jump_held = pico.SDLK_SPACE in self.pressed
+                    self._take_off()
+                    continue
                 direction = 'right' if self.facing > 0 else 'left'
                 duration = sum(self.clips[f'jump_{self.jump_phase}_{direction}'].durations)
-                if (self.jump_phase == 'land' and self.buffered_action == 'jump'
-                        and self.view_bounds is not None and self.jump_elapsed < LAND_CROUCH_START):
-                    duration = LAND_CROUCH_START
                 step = min(remaining, max(0, duration - self.jump_elapsed))
                 self.jump_elapsed += step
                 remaining = max(0.0, remaining - step)
                 if duration - self.jump_elapsed > 1e-9:
                     break
                 if self.jump_phase == 'land':
-                    if self._link_landing_jump():
-                        continue
                     self.jump_phase = None
                     self._machine.end_jump()
                     break
-                self.jump_phase, self.jump_elapsed = 'rise', 0.0
-                self.velocity_y = JUMP_SPEED
+                self._take_off()
             else:
-                if self.velocity_y > 1e-9:
-                    boundary = self.velocity_y / GRAVITY
-                else:
-                    boundary = (self.velocity_y + sqrt(self.velocity_y ** 2 +
-                                2 * GRAVITY * max(0, self.y - GROUND_Y))) / GRAVITY
-                step = min(remaining, max(0.0, boundary))
-                self._advance_vertical(step)
+                step = self._advance_vertical(remaining)
                 airborne_time += step
                 remaining = max(0.0, remaining - step)
+                if self.jump_phase == 'land':
+                    continue
             if remaining <= 1e-9:
                 break
         return airborne_time
+
+    def _take_off(self):
+        self.jump_phase, self.jump_elapsed = 'rise', 0.0
+        self.velocity_y = JUMP_SPEED
+        self._apply_jump_release()
+        self.rise_start_speed = self.velocity_y
 
     def _show_jump(self):
         direction = 'right' if self.facing > 0 else 'left'
         clip = self.clips[f'jump_{self.jump_phase}_{direction}']
         elapsed = self.jump_elapsed
         if self.jump_phase == 'rise':
-            elapsed = (JUMP_SPEED - self.velocity_y) / GRAVITY / JUMP_APEX_SECONDS * sum(clip.durations)
+            elapsed = (1 - self.velocity_y / self.rise_start_speed) * sum(clip.durations)
         elif self.jump_phase == 'fall':
             elapsed = max(0.0, -self.velocity_y / GRAVITY)
         self.player.play(clip, restart=True)
         self.player.update(elapsed)
 
+    def _apply_jump_release(self):
+        if self.jump_held is False and self.jump_phase == 'rise':
+            self.velocity_y *= JUMP_RELEASE_FACTOR
+            self.jump_held = None
+
     def _advance_vertical(self, dt):
-        if not self.grounded:
-            self.y += self.velocity_y * dt - .5 * GRAVITY * dt ** 2
-            self.velocity_y -= GRAVITY * dt
-            if self.velocity_y < 0 and self.y <= GROUND_Y + 1e-9:
-                self.y, self.velocity_y = float(GROUND_Y), 0.0
+        self._apply_jump_release()
+        remaining = dt
+        while remaining > 0 and not self.grounded:
+            velocity = self.velocity_y
+            rising = velocity > 0
+            apex = velocity / GRAVITY
+            step = min(remaining, apex) if rising else remaining
+            distance = velocity * step - .5 * GRAVITY * step ** 2
+            hit = self._blocking_contact((0, distance))
+            if hit is None:
+                self.y += distance
+                self.velocity_y = 0.0 if rising and step == apex else velocity - GRAVITY * step
+                remaining -= step
+                continue
+            distance *= hit
+            self.y += distance
+            speed = sqrt(max(0, velocity ** 2 - 2 * GRAVITY * distance))
+            # 이차식의 작은 양의 근을 유리화해 접촉 직전의 정밀도를 유지한다.
+            remaining -= abs(2 * distance) / (abs(velocity) + speed) if distance else 0
+            self.velocity_y = 0.0
+            if not rising:
+                if self.level is None:
+                    self.y = float(GROUND_Y)
                 self.air_dash_used = False
-                if self.jump_phase in ('rise', 'fall'):
-                    self.jump_phase, self.jump_elapsed = 'land', 0.0
-            elif self.jump_phase in ('rise', 'fall'):
+                self.jump_held = None
+                break
+        if self.jump_phase in ('rise', 'fall'):
+            if self.grounded:
+                self.jump_phase, self.jump_elapsed = 'land', 0.0
+            else:
                 self.jump_phase = 'rise' if self.velocity_y > 1e-9 else 'fall'
+        airborne_time = dt - max(0.0, remaining)
+        if self.air_recoil_velocity:
+            self.move_enemy_push(self.x + self.air_recoil_velocity * airborne_time)
+            if self.jump_phase == 'land':
+                self.air_recoil_velocity = 0.0
+        return airborne_time
 
     def _play_dash_phase(self, phase):
         self.dash_phase = phase
@@ -424,12 +721,15 @@ class Character(GameObject):
             can_continue = False
             if self.view_bounds is not None:
                 left, _, right, _ = self.view_bounds
-                low, high = left + self._left_margin, right - self._right_margin
+                low, high = self._horizontal_limits()
                 if low <= high:
                     start = min(max(self.x, low), high)
                     distance = DASH_DISTANCE / DASH_SECONDS * step if self.dash_phase == 'dash' else 0
-                    self.x = min(max(start + self.facing * distance, low), high)
-                    can_continue = self.x < high if self.facing > 0 else self.x > low
+                    self.x = start
+                    self._move_horizontal(min(max(start + self.facing * distance, low), high))
+                    hit = self._blocking_contact((self.facing, 0))
+                    can_continue = ((self.x < high if self.facing > 0 else self.x > low)
+                                    and (hit is None or hit > CONTACT_EPSILON))
                 else:
                     self.x = (left + right) / 2
             self.player.update(step)
@@ -446,9 +746,9 @@ class Character(GameObject):
                     # shortcut: 고정 직선 잔상, 공중 궤적/벽 추종이 필요하면 효과 제작 방식을 바꾼다.
                     effect = self.level.spawn(SpriteEffect(self.clips[f'dash_fx_{direction}'],
                                                           (self.x, self.y), 1, DISPLAY_SCALE))
+                    self.dash_effect = effect
             elif self.dash_phase == 'dash':
-                direction = bool(self.pressed & RIGHT_KEYS) - bool(self.pressed & LEFT_KEYS)
-                self._play_dash_phase('recover_run' if direction == self.facing and can_continue
+                self._play_dash_phase('recover_run' if self.move_direction == self.facing and can_continue
                                       else 'recover_idle')
             else:
                 self.dash_remaining = 0.0
@@ -464,13 +764,34 @@ class Character(GameObject):
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
-        width, height = frame.rect[2:]
         flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
-        if self.hp == 0 or (self.invulnerability_remaining > 0
+        if self.state == 'attack':
+            flip_x = self.attack_facing < 0
+        link = self.arrival_link
+        if (self.state == 'idle' and link is not None and link.level is not None
+                and link.elapsed < ARRIVAL_BLEND_SECONDS):
+            direction = 'right' if self.facing > 0 else 'left'
+            frames = self.clips[f'jump_land_{direction}'].frames
+            frame, flip_x = frames[len(frames) // 3], False
+        elif self.state == 'jump' and self.jump_phase == 'rise' and link is not None and link.elapsed == 0:
+            direction = 'right' if self.facing > 0 else 'left'
+            frame = self.clips[f'jump_rise_{direction}'].frames[0]
+        elif (self.state in ('idle', 'run', 'jump') and self.pushback_remaining > 0
+              or self.state == 'hurt' and self.hp > 0 and self.hurt_remaining <= .04):
+            direction = 'right' if self.facing > 0 else 'left'
+            grounded = self.grounded
+            phase = 'land' if grounded else 'rise'
+            frames = self.clips[f'jump_{phase}_{direction}'].frames
+            frame, flip_x = frames[len(frames) // 3 if grounded else 0], False
+        width, height = frame.rect[2:]
+        if self.hp == 0 or (self.state != 'hurt' and self.invulnerability_remaining > 0
                             and int(self.invulnerability_remaining / .0625) % 2 == 0):
             opacity *= .35
-        draw_sprite(frame, transform, (self.x, self.y),
+        # 공중 공격 시트는 몸 중심, 지상·점프 시트는 발 위치를 기준으로 그린다.
+        x, y = self.visual_center
+        position = (x, y) if self.state == 'attack' and self.airborne_swing else (x, y - BODY_HEIGHT / 2)
+        draw_sprite(frame, transform, position,
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 
     def render_items(self):
-        return (RenderItem(self._draw),)
+        return (RenderItem(self._draw, opacity=self.spawn_opacity),)

@@ -1,0 +1,35 @@
+{
+  "file": "power-entry.png",
+  "frameSize": [
+    256,
+    312
+  ],
+  "columns": 4,
+  "count": 17,
+  "pivot": [
+    90,
+    39
+  ],
+  "scale": 2,
+  "impactMs": 80,
+  "durationsMs": [
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "loop": false
+}
