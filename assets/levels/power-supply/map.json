@@ -11,7 +11,7 @@
     "bounds": [0, 0, 3840, 720]
   },
   "layers": [
-    {"name": "far", "kind": "image", "image": "far-overview.png", "sha256": "b86d6de7816abea653374720588aaa11f4356979e00face6e572d7aebd40b55a", "art_source": "host_image", "runtime_image": "far.png", "runtime_height": 1080, "parallax_x": 0.35, "runtime_sha256": "43a8e49864f8b05321ed6725182c64156d0eb04539b249b47c5f0123ea3b7860", "rotor": {"prop": "fan-rotor", "center_px": [126, 161], "diameter_px": 190, "degrees_per_second": 72}},
+    {"name": "far", "kind": "image", "image": "far-overview.png", "sha256": "6953e54bf50bd8626bb06fa6f9d1a8694321ee74948382fdbfbf796ae7d140e7", "art_source": "host_image", "runtime_image": "far.png", "runtime_height": 1080, "parallax_x": 0.35, "runtime_sha256": "b0b990cd374c937dc1421cde46a123b67dd3be7f7d6890ad8400d427c9e59d46", "rotor": {"prop": "fan-rotor", "center_px": [126, 161], "diameter_px": 190, "degrees_per_second": 72}},
     {"name": "rear", "kind": "objects"},
     {"name": "structure", "kind": "objects"},
     {"name": "front", "kind": "objects"}
