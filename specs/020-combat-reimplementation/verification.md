@@ -119,3 +119,18 @@ $groundSmoke = Join-Path $env:TEMP 'circuit-warden-ground-contact-smoke'
 .\.venv\Scripts\python.exe -B -m tests.smoke.character_smoke --output-dir $groundSmoke
 git diff --check
 ```
+
+## 지상 기본 공격 분기 방전 초승달
+
+- **FR-011** — 2026-11-24 사용자 적용 지시에 따라 선택한 6프레임을 기존 몸체 위에 베이크했다. 기존 시트에서 변경된 셀은 0부터 세어 5~10뿐이다. 기존 몸체 원본에 선택한 효과를 같은 발 피벗으로 합성했고, 새 효과의 높이는 프레임 순서대로 28·69·82·74·59·11px다. PNG를 다시 열어 픽셀 일치와 셀 경계 내 표시를 확인했다.
+- **SC-007** — 기본 실행과 동일한 전원 구역을 실제 SDL 창 1280×720으로 열고 J를 주입했다. 좌우 각 80·100·140·200·220ms 캡처를 열어 비교했다. 80ms에는 효과가 없고 100ms에 첫 방전, 140ms에 최대 초승달, 200ms에 마지막 잔광이 보였으며 220ms에는 사라졌다. 좌측은 우측 자산을 반전해 표시한다. [SDL 캡처](../../.local-tools/verification/ground-attack-discharge/timing-contact.png).
+- **표적 자동 검사** — 아래 지상 공격 입력·좌우 표시·적중 검사 3개가 통과했다. 전체 회귀와 사용자 직접 플레이는 수행하지 않았다.
+- **수렴** — 이번 변경의 명세·계획·작업을 게임 시트, 기본 레벨 런타임 및 검사 근거와 대조했다. 아트 기준·기본 게임플레이·진행 상태·자산 출처를 맞췄다. 런타임 코드와 공중 공격 자산을 수정할 필요는 없었다.
+
+```powershell
+.\.local-tools\python\Scripts\python.exe .local-tools/verification/ground-attack-discharge/bake.py
+.\.venv\Scripts\python.exe .local-tools/verification/ground-attack-discharge/smoke.py
+.\.venv\Scripts\python.exe -m unittest tests.integration.test_character_scene.CharacterSceneTests.test_buffered_ground_attack_preserves_first_composite_frame_after_slow_frame tests.integration.test_character_scene.CharacterSceneTests.test_ground_attack_plants_then_runs_in_latest_direction
+.\.venv\Scripts\python.exe -m unittest tests.integration.test_basic_enemy.BasicEnemySceneTests.test_real_attack_sheet_hits_three_times_in_both_directions
+git diff --check
+```

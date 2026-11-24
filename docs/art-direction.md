@@ -245,7 +245,7 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 2026-11-11 사용자 요청에 따라 idle v7·Run v4의 PNG 시트 3장을 `assets/warden/idle.png`, `run_left.png`, `run_right.png`로 복사했다. 이름의 버전을 제거했으며 원본 PNG 바이트와 프레임별 시간·기준점을 보존했다. [게임 자산 출처](../assets/warden/README.md)에 원본 경로·SHA-256을, animations.json에 런타임 규격을 기록한다. .gitattributes는 PNG를 일반 Git 바이너리로 관리한다. 걷기는 포함하지 않는다.
 
-훈련장의 `assets/warden/attack.png`는 재편집한 HK v6·팔 보정 v3 준비와 타격, 로컬 ComfyUI LTX로 생성한 회복 세 자세, 대기 연결을 사용한다. 베기 효과는 검끝을 따라 그린 흰 가장자리와 청록 잔광을 몸체 뒤·앞에 합성한다. 100ms에 보이기 시작하고 220ms에 끝난다. 17프레임·256×224 셀·발 기준점 (128,136)이며 게임 적용 후 사용자 확인을 기다린다. `assets/warden/air_attack.png`는 v9·눈색/전류 v4 몸체 뒤에 공중 pixelfx v2를 합성한다. 18프레임·192×192 셀·몸 중심 기준점 (96,112)이며 117ms에 효과가 시작된다. 좌측은 수평 반전한다. [자산 규격과 출처](../assets/warden/README.md) · [기본 게임플레이](systems/basic-gameplay.md).
+지상 기본 공격의 `assets/warden/attack.png`는 HK v6·팔 보정 v3의 준비와 타격, 로컬 ComfyUI LTX 회복 세 자세, 대기 연결을 사용한다. 2026-11-24 사용자가 선택한 Pixelfx 분기 방전 초승달을 몸체 위에 합성했다. 타격 정점의 굵은 방전은 짙은 청색 테두리와 흰 중심선을 쓰고 회복에 들어서기 전에 사라진다. `assets/warden/air_attack.png`는 v9·눈색/전류 v4 몸체 뒤에 공중 pixelfx v2를 합성한다. 좌측은 수평 반전한다. [자산 규격과 출처](../assets/warden/README.md) · [기본 게임플레이](systems/basic-gameplay.md).
 
 이전 지상 v6 아웃라인 있음과 별도 전기 베기 v4의 규격·검증은 [011 당시 검증](../specs/011-basic-gameplay/verification.md)에 보존했다.
 

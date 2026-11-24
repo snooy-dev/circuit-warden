@@ -7,7 +7,7 @@
 | idle.png | art/warden/provisional-approved/idle-side-wind-v2/idle_right/sheet.png | 6cd0b5133576e6f73cb492a0f36e114c160371c33115bda0272d877f7735d506 |
 | run_left.png | art/warden/provisional-approved/run-v4/run_left/sheet.png | 618ef3377b2682ee6d15ab4052a208f041562adcaed406a0361977ca7460940e |
 | run_right.png | art/warden/provisional-approved/run-v4/run_right/sheet.png | c29d16562b7df8a8ec927b031ef1589bdf6252467afb648f1537af60977fc3aa |
-| attack.png | `art/warden/ground-step-slash-v1`의 준비·타격 재편집, 로컬 LTX 회복 포즈, pixelfx 앞·뒤 베기 효과를 합성 | 3b65e8216153a432c954a5d8853295e21327875cd4a33df1b11c8e187dbfe130 |
+| attack.png | `art/warden/ground-step-slash-v1` 몸체 위에 `art/warden/ground-crescent-discharge-refined/slash.png`의 Pixelfx 분기 방전 초승달을 합성 | 9800402506f74ea51859119e3c6138e9f800197235f13c551397c120c338b942 |
 | air_attack.png | `art/warden/provisional-approved/air-rebound-v9-current-v4/frames` 몸체와 `art/warden/air-rebound-fx-v2/frames` 효과를 합성 | f69202c0f74a4663ad356a426df9d7e92250ea6761aea0b269d8588124599a19 |
 | prepare_idle_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_left/sheet.png | efb9df7c2c976ace57b8a0d2448dac120bf4616e414edaa58bac91e12ae1ce1e |
 | prepare_idle_right.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_right/sheet.png | 3ba433a4573f4cf45a085579ab10bf5a355c72e528446974023bc0fff342c3d0 |
@@ -32,7 +32,7 @@
 
 프레임은 좌상단부터 행 우선이다. animations.json의 기준점은 셀 좌상단 픽셀, 시간은 밀리초다. 제작용 이벤트·previewSpeed는 게임 규칙으로 가져오지 않았다.
 
-지상 공격은 256×224·6열·17프레임·340ms, 피벗 (128,136)이다. 승인 HK v6·팔 보정 v3의 포즈를 사용하고 타격 자세를 100ms부터 보여준다. 220·240·260ms에 LTX 회복 영상의 4·9·11번 포즈를 고정 배율과 기존 16색으로 변환해 사용한다. 280ms부터 기존 idle 자세로 이어진다. 베기 효과는 원본 해상도에서 그린 45px 높이의 앞·뒤 레이어로, 100ms부터 표시하고 220ms에 걷는다. 제작 원본과 미리보기는 [작업 폴더](../../art/warden/ground-step-slash-v1/contact.png)에 보존한다.
+지상 공격은 256×224·6열·17프레임·340ms, 피벗 (128,136)이다. 승인 HK v6·팔 보정 v3의 포즈를 사용하고 타격 자세를 100ms부터 보여준다. 220·240·260ms에 LTX 회복 영상의 4·9·11번 포즈를 사용하며 280ms부터 기존 idle 자세로 이어진다. 효과는 224×208·6프레임·피벗 (112,128)의 투명 시트를 몸체 위에 발 기준으로 합성한다. 효과 원본 SHA-256은 `34928a9373af654515c40c767597f81caa9212077b503a24793d45832ebbcc84`다. [효과 원본](../../art/warden/ground-crescent-discharge-refined/slash.png) · [합성 미리보기](../../art/warden/ground-crescent-discharge-refined/preview-dark-quarter.gif) · [재생 시점](../../docs/systems/basic-gameplay.md).
 
 공중 공격은 192×192·6열·18프레임·300ms, 피벗 (96,112)이다. 원본 몸체를 유지하고 분리 효과를 칼끝 (156,155)을 기준으로 최근접 보간해 최대 높이 83px로 축소하여 몸체 뒤에 합성했다. 효과는 117ms부터 표시되고 250ms에 사라진다.
 
