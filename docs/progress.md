@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **첫 레벨 바닥 접점 등장:** 2026-11-24 사용자 정정에 따라 흡기구 쪽 바닥 회로판에 내부 전력 접점을 매립했다. 전류가 워든의 발밑에서 수직으로 올라오며 R 재시작과 조기 이동 입력을 확인했다. [실제 화면](../art/levels/power-supply/deck-contact/deck-entry.gif) · [검증](../specs/021-power-supply-level/verification.md#바닥-전력-접점-검증).
+- **첫 레벨 벽면 전원 인렛 등장:** 2026-11-24 사용자 정정에 따라 왼쪽 벽에 외부 AC 전원을 받는 인렛의 안쪽을 배치했다. 구리 단자에서 가까운 스폰까지의 전류와 R 재시작·조기 이동 입력을 확인했다. [실제 화면](../art/levels/power-supply/chassis-inlet/chassis-entry.gif) · [검증](../specs/021-power-supply-level/verification.md#벽면-전원-인렛-검증).
 
 - **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
 

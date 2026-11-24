@@ -74,3 +74,11 @@ FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워�
 - ImageGen으로 회로판 내장 접점을 제작하고 기존 환경 팔레트와 2픽셀 격자에 맞춰 68×14 PNG를 만들었다. 접점 중앙의 첫 불투명 행을 바닥선에 맞췄다. [생성 기록](../../art/levels/power-supply/deck-contact/source/job.json) · [가공 스크립트](../../art/levels/power-supply/deck-contact/prepare.py)
 - `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/deck-contact/sdl`에서 워든의 발 위치와 접점 일치, 전류의 양 끝, R과 조기 이동을 확인했다. 기존 경로와 F6도 통과했다. [실제 SDL GIF](../../art/levels/power-supply/deck-contact/deck-entry.gif)
 - `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict`의 경고·실패는 0개이고 브라우저 경로 4개가 통과했다. `export_tiled.py export` 재렌더 차이는 0픽셀이었다. 전체 회귀와 사용자 직접 플레이는 미실행이다.
+
+## 벽면 전원 인렛 검증
+
+2026-11-24 사용자가 외부 AC 전력을 받는 부품에서 등장하기를 원한다고 명확히 했다. IEC C14 인렛의 나사 고정판과 안쪽 금속 단자를 참고해 왼쪽 벽에 배치했다. 전류 시작점은 (147, 468), 워든의 발은 (224, 540)이다. 기존 등장 시간, 충돌과 전하 배치를 유지했다. [부품 자료](https://www.schurter.com/en/datasheet/6100-3) · [실제 SDL GIF](../../art/levels/power-supply/chassis-inlet/chassis-entry.gif)
+
+- ImageGen 원화를 기존 환경 팔레트로 가공한 128×112 에셋을 썼다. 고정판이 왼쪽 벽과 겹치는 모습과 전류가 구리 단자에 닿는 모습을 실제 캡처로 확인했다. [생성 기록](../../art/levels/power-supply/chassis-inlet/source/job.json) · [가공 스크립트](../../art/levels/power-supply/chassis-inlet/prepare.py)
+- `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/chassis-inlet/sdl`에서 새 스폰, 전류의 양 끝, R·조기 이동과 기존 경로를 확인했다.
+- `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict` 통과. 브라우저 경로 4개에서 실패 및 경고는 0개이고 `export_tiled.py export` 재렌더 차이는 0픽셀이었다. 전체 회귀와 사용자 직접 플레이는 미실행이다.

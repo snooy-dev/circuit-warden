@@ -50,7 +50,7 @@ class PowerSupplySmoke(CombatSmoke):
         actor = self.character
         layout = self.level.layout
         assert actor.collision_position == layout.player_start and actor.grounded
-        assert layout.power_entry == layout.player_start
+        assert layout.power_entry[0] < actor.x and layout.power_entry[1] > actor.y
         assert self.level.enemy.collision_position == layout.enemy_start
         assert all(actor.can_place_center(point) for site in layout.charge_sites for point in site)
         assert actor.spawn_opacity == 0.0
@@ -81,6 +81,7 @@ class PowerSupplySmoke(CombatSmoke):
         push_key(pico.SDLK_F6, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: self.engine.window_size == DEFAULT_SIZE)
 
+        yield from self.move_to(800)
         yield from self.move_to(970)
         assert self.level.enemy.x < layout.enemy_start[0]
         yield from self.step_to(1120, 444)
