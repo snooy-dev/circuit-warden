@@ -54,7 +54,7 @@ class PowerSupplySmoke(CombatSmoke):
         initial_angle = layout.rotor_angle
         self.screenshot = 'power-supply-intake'
         yield .24
-        assert self._pixel_size == (427, 240)
+        assert self._pixel_size == (640, 360)
         angle_delta = (layout.rotor_angle - initial_angle) % 360
         assert 0 < angle_delta < layout.rotor_speed
         self.screenshot = 'power-supply-fan-rotated'
@@ -64,7 +64,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.wait_until(lambda: self.engine.window_size == ALTERNATE_SIZE)
         assert layout.bounds[0] <= self.transform.bounds[0] + 1e-6
         yield 0
-        assert self._pixel_size == (341, 240)
+        assert self._pixel_size == (512, 360)
         push_key(pico.SDLK_F6)
         push_key(pico.SDLK_F6, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: self.engine.window_size == DEFAULT_SIZE)

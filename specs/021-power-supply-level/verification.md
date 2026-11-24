@@ -48,3 +48,9 @@
 - `.venv\Scripts\python.exe -m unittest tests.integration.test_character_scene tests.integration.test_resize_input`는 SDL 더미 드라이버에서 14개를 통과했다. `map_bundle.py validate` 오류와 경고는 0개였고 `export_tiled.py export`의 픽셀 차이도 0개였다. 맵 탐색의 충돌 입력은 이전 검사와 같고 독립적인 탐색 재검사는 생략했다.
 
 전체 회귀와 사용자 직접 미술 평가는 미실행이다. 창 크기에 따라 물리 출력 픽셀 배율은 달라진다.
+
+## 2픽셀과 3픽셀 비교
+
+기본 1280×720 SDL 창에서 427×240(약 3픽셀)과 640×360(2픽셀)을 같은 카메라 및 같은 팬 각도 두 곳에서 캡처했다. 두 해상도 모두 캡처 배열에서 최근접 확대 경계를 확인했다. 2픽셀 시안에서 워든의 얼굴·팔 윤곽과 발판 모서리가 더 잘 구분되고, 3픽셀 시안은 팬과 바닥의 픽셀 덩어리가 더 굵게 보인다. [나란히 비교](../../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png)
+
+현재 기본은 2픽셀 시안이다. `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/pixel-grid-comparison/sdl`로 기본 640×360과 F6 512×360 타깃, 발판 착지·순간이동·도착·재시작을 확인했다. 전체화면 왕복과 전체 회귀는 이번 비교에서 재실행하지 않았다.
