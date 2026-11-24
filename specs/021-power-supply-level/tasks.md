@@ -31,3 +31,4 @@
 - [x] T015 바닥 접점 에셋과 등장 시작점 교체, SDL·맵 검사 및 설계 동기화 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
 - [x] T016 케이스 벽면 전원 인렛과 내부 단자 스폰 연결, SDL·맵 검사 및 설계 동기화 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
 - [x] T017 실제 C14의 삽입구와 얕은 돌출 비율을 반영하고 벽면 스폰 연결 검사 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
+- [x] T018 상단 케이블 낙뢰로 등장 연출 교체, 인렛 제거, SDL 등장·입력 및 맵 검사 (`assets/levels/power-supply/`, `verification.md`, `docs/`)

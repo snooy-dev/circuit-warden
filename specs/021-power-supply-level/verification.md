@@ -88,3 +88,11 @@ FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워�
 사용자 피드백에 따라 제품 사진과 치수도에서 검은 삽입구의 깎인 모서리, 삼각형으로 배치된 세 핀, 양쪽 나사 자리를 반영했다. 원화를 86×40으로 가공해 벽 오른쪽으로 보이는 배치 폭을 120px에서 64px로 줄였다. 전류는 오른쪽 짧은 구리 접점 (93, 486)에서 시작하고 워든은 (172, 540)에 선다. [제조사 사진과 도면](https://www.schurter.com/en/part/6100.3100) · [생성 기록](../../art/levels/power-supply/recognizable-inlet/source/job.json) · [실제 SDL GIF](../../art/levels/power-supply/recognizable-inlet/chassis-entry.gif)
 
 `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/recognizable-inlet/sdl`에서 전류의 양 끝, 새 스폰, R·조기 이동과 기존 경로를 확인했다. 맵 번들·탐색·브라우저 경로 4개와 Tiled 재렌더를 통과했고, 경고 0개와 재렌더 차이 0픽셀을 확인했다. 전체 회귀와 사용자 직접 플레이는 미실행이다.
+
+## 상단 케이블 낙뢰 등장 검증
+
+2026-11-24 사용자 후속 지시에 따라 벽면 인렛을 제거하고 기존 상단 케이블의 구리 부분 (142, 82)에서 전류가 떨어지도록 변경했다. 워든의 발 위치 (172, 540), 340ms 등장 시간, 2×2 화면 픽셀, 충돌·지형·전하 배치를 유지했다. [실제 SDL 캡처](../../art/levels/power-supply/ceiling-entry/ceiling-entry.gif)
+
+- `.venv\Scripts\python.exe art/levels/power-supply/ceiling-entry/entry_review.py current`에서 초기 착지, 전류의 양 끝, 등장 완료, R 재시작과 조기 이동을 통과했다. `tmp/power-entry/capture.py`로 실제 화면 27장을 캡처했고 케이블에서 워든까지 이어지는 방전을 확인했다.
+- `map_bundle.py validate`는 오류·경고 0개, `map_nav.py check`는 목표 4개 중 도달 불가 0개, `export_tiled.py export`는 재렌더 차이 0픽셀이다.
+- `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/ceiling-entry/sdl`은 등장 확인 뒤 주행 단계에서 시간 초과했다. 변경 전 `ec617f4` 맵에서도 같은 주행 단계의 시간 초과를 재현해 전체 레벨 SDL 완주는 확인하지 못했다. 사용자 직접 플레이는 미실행이다.
