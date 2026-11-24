@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **파워서플라이 먼지·흡기 팬:** 2026-11-24 요청과 사용자 피드백으로 바닥·발판의 긴 줄기형 시안을 낮은 보풀과 먼지 띠로 교체했다. 원경 부품에 먼지층을 더했고, 팬 날개와 허브에 붙은 먼지가 회전자와 함께 돈다. [실제 게임의 팬](../art/levels/power-supply/dust-revision/rotor-dust/fan-in-game.gif) · [레벨 검증](../specs/021-power-supply-level/verification.md#먼지와-흡기-팬-후속-검증).
+- **파워서플라이 먼지·흡기 팬:** 2026-11-24 요청과 사용자 피드백으로 바닥·발판에 낮은 보풀과 먼지 띠를 배치했다. 원경 부품에도 먼지층을 더했다. 팬 날개와 허브에 붙은 먼지는 회전자와 함께 돌고, 팬 금속과 먼지는 원경 팔레트의 12색을 사용한다. [실제 게임의 팬](../art/levels/power-supply/dust-revision/rotor-grade/fan-in-game.gif) · [레벨 검증](../specs/021-power-supply-level/verification.md#먼지와-흡기-팬-후속-검증).
 
 - **첫 레벨 전원 구역:** 2026-11-24 사용자 요청으로 컴퓨터 파워서플라이 내부를 기본 실행에 연결하고 환경 원화에 hi-bit 가공을 적용했다. 흡기구, 방열판, 코일·콘덴서, 출력 단자를 배치했다. [명세](../specs/021-power-supply-level/spec.md) · [계획](../specs/021-power-supply-level/plan.md) · [검증](../specs/021-power-supply-level/verification.md).
 
