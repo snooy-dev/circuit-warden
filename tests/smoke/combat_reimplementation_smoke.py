@@ -16,8 +16,8 @@ from tests.smoke.character_smoke import CharacterSmoke, push_key
 class CombatSmoke(CharacterScene):
     capture = CharacterSmoke.capture
 
-    def __init__(self, output_dir):
-        super().__init__()
+    def __init__(self, output_dir, *, power_supply=False):
+        super().__init__(power_supply=power_supply)
         self.output_dir = output_dir
         self.elapsed = self.next_step = 0.0
         self.screenshot = None

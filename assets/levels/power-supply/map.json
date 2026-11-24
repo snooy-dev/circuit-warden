@@ -1,0 +1,200 @@
+{
+  "schema": "generate2dmap.map_bundle.v2",
+  "id": "power-supply",
+  "name": "Power Supply",
+  "world": {
+    "width": 3840,
+    "height": 720,
+    "unit": "px"
+  },
+  "camera": {
+    "bounds": [0, 0, 3840, 720]
+  },
+  "layers": [
+    {"name": "far", "kind": "image", "image": "far-overview.png", "sha256": "6d1d84b08f314c62673f01a98c5775dc52ddd8b18b896edbcd4da144fd0fd262", "art_source": "host_image", "runtime_image": "far.png", "runtime_height": 1080, "parallax_x": 0.35},
+    {"name": "rear", "kind": "objects"},
+    {"name": "structure", "kind": "objects"},
+    {"name": "front", "kind": "objects"}
+  ],
+  "props": {
+    "capacitors": {
+      "image": "capacitors.png",
+      "art_source": "host_image",
+      "sha256": "0aee5b30a4a9d183103d5c11ecf2db0d035c68599ffd99e96ed0617af7d6ef70"
+    },
+    "coil": {
+      "image": "coil.png",
+      "art_source": "host_image",
+      "sha256": "db2df29e313f0ed9ae2c216235dade54ca1c3c6e62cdbb0558cc956a96ee6ff4"
+    },
+    "output": {
+      "image": "output.png",
+      "art_source": "host_image",
+      "sha256": "d427a76a88a27400a0683d0ba19ad32ccec82399affc2df98515348116e65e5d"
+    },
+    "floor": {
+      "image": "floor.png",
+      "art_source": "host_image",
+      "sha256": "05a3acd83e132a304b11d5fc922c1519be7db259ee7fba6f9ffb52d3f3561882"
+    },
+    "wall": {
+      "image": "wall.png",
+      "art_source": "host_image",
+      "sha256": "ce82180a0b8f30d4be996b9a5219102bbe8518d57038dbc05f6ef77743e0e58d"
+    },
+    "ledge": {
+      "image": "ledge.png",
+      "art_source": "host_image",
+      "sha256": "00381ca88c632df33e4fbdb1b744b100534313434e15cc9adb4f1752bd796952"
+    },
+    "barrier": {
+      "image": "barrier.png",
+      "art_source": "host_image",
+      "sha256": "1f9e49ffe210fd7bc48f51d45a1f436850320b5a2917a6041907f013be894d33"
+    },
+    "cable": {
+      "image": "cable.png",
+      "art_source": "host_image",
+      "sha256": "5397668c971a45d78e75d6cf58ec4e1e26c3e58892c42bc6029197c9fe92e6a0"
+    },
+    "output-lit": {
+      "image": "output-lit.png",
+      "art_source": "host_image",
+      "sha256": "6ea810d696913e53ee44a995df6fe004cc5637e68301c942db022bf5f5ea894d"
+    }
+  },
+  "objects": [
+    {"id": "input-capacitors", "prop": "capacitors", "x": 830, "y": 540, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0},
+    {"id": "main-inductor", "prop": "coil", "x": 1834, "y": 540, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0},
+    {"id": "bulk-capacitors", "prop": "capacitors", "x": 2205, "y": 540, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "flip_x": true},
+    {"id": "output-inductor", "prop": "coil", "x": 3011, "y": 540, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0, "flip_x": true},
+    {"id": "output-socket", "prop": "output", "x": 3490, "y": 540, "anchor_px": [124, 103], "solid": false, "layer": "rear", "sortY": 0},
+    {"id": "pcb-deck-01", "prop": "floor", "x": 0, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-02", "prop": "floor", "x": 640, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-03", "prop": "floor", "x": 640, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-04", "prop": "floor", "x": 1280, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-05", "prop": "floor", "x": 1600, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-06", "prop": "floor", "x": 1600, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-07", "prop": "floor", "x": 1920, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-08", "prop": "floor", "x": 2560, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-09", "prop": "floor", "x": 2560, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-10", "prop": "floor", "x": 3200, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "pcb-deck-11", "prop": "floor", "x": 3200, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "pcb-deck-12", "prop": "floor", "x": 3840, "y": 540, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "flip_x": true},
+    {"id": "wall-0", "prop": "wall", "x": 0, "y": 0, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "wall-3808", "prop": "wall", "x": 3808, "y": 0, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-584", "prop": "ledge", "x": 584, "y": 432, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1046", "prop": "ledge", "x": 1046, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "barrier-1200", "prop": "barrier", "x": 1200, "y": 348, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1354", "prop": "ledge", "x": 1354, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1788", "prop": "ledge", "x": 1788, "y": 420, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-1964", "prop": "ledge", "x": 1964, "y": 324, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2140", "prop": "ledge", "x": 2140, "y": 324, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2316", "prop": "ledge", "x": 2316, "y": 420, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2534", "prop": "ledge", "x": 2534, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "barrier-2688", "prop": "barrier", "x": 2688, "y": 348, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-2842", "prop": "ledge", "x": 2842, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "ledge-3144", "prop": "ledge", "x": 3144, "y": 432, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
+    {"id": "near-cable-1", "prop": "cable", "x": 72, "y": 96, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
+    {"id": "near-cable-2", "prop": "cable", "x": 1396, "y": 114, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "flip_x": true},
+    {"id": "near-cable-3", "prop": "cable", "x": 2492, "y": 92, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
+    {"id": "near-cable-4", "prop": "cable", "x": 3785, "y": 80, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "flip_x": true}
+  ],
+  "collision": {
+    "actorRadius": 24,
+    "ySquash": 1.7,
+    "rects": [
+      [0, 540, 3840, 180],
+      [0, 0, 32, 540],
+      [3808, 0, 32, 540],
+      [584, 432, 144, 24],
+      [1046, 444, 144, 24],
+      [1200, 348, 144, 192],
+      [1354, 444, 144, 24],
+      [1788, 420, 144, 24],
+      [1964, 324, 144, 24],
+      [2140, 324, 144, 24],
+      [2316, 420, 144, 24],
+      [2534, 444, 144, 24],
+      [2688, 348, 144, 192],
+      [2842, 444, 144, 24],
+      [3144, 432, 144, 24]
+    ]
+  },
+  "spawns": [
+    {"id": "start", "x": 288, "y": 498.5, "feet_y": 540},
+    {"id": "metal-dust", "x": 2112, "y": 498.5, "feet_y": 540}
+  ],
+  "interactions": [
+    {"id": "input-heatsink", "x": 1272, "y": 306.5},
+    {"id": "conversion-gallery", "x": 2036, "y": 282.5},
+    {"id": "output-heatsink", "x": 2760, "y": 306.5},
+    {"id": "output", "x": 3490, "y": 498.5, "reach": 58}
+  ],
+  "anchors": {
+    "charge-01": {
+      "point": [455, 468],
+      "variants": [[447, 471], [455, 468], [463, 465]]
+    },
+    "charge-02": {
+      "point": [660, 367],
+      "variants": [[652, 370], [660, 367], [668, 364]]
+    },
+    "charge-03": {
+      "point": [937, 465],
+      "variants": [[929, 468], [937, 465], [945, 462]]
+    },
+    "charge-04": {
+      "point": [1120, 379],
+      "variants": [[1112, 382], [1120, 379], [1128, 376]]
+    },
+    "charge-05": {
+      "point": [1268, 279],
+      "variants": [[1260, 282], [1268, 279], [1276, 276]]
+    },
+    "charge-06": {
+      "point": [1460, 376],
+      "variants": [[1452, 379], [1460, 376], [1468, 373]]
+    },
+    "charge-07": {
+      "point": [1680, 467],
+      "variants": [[1672, 470], [1680, 467], [1688, 464]]
+    },
+    "charge-08": {
+      "point": [1870, 354],
+      "variants": [[1862, 357], [1870, 354], [1878, 351]]
+    },
+    "charge-09": {
+      "point": [2028, 251],
+      "variants": [[2020, 254], [2028, 251], [2036, 248]]
+    },
+    "charge-10": {
+      "point": [2225, 257],
+      "variants": [[2217, 260], [2225, 257], [2233, 254]]
+    },
+    "charge-11": {
+      "point": [2410, 353],
+      "variants": [[2402, 356], [2410, 353], [2418, 350]]
+    },
+    "charge-12": {
+      "point": [2603, 377],
+      "variants": [[2595, 380], [2603, 377], [2611, 374]]
+    },
+    "charge-13": {
+      "point": [2760, 278],
+      "variants": [[2752, 281], [2760, 278], [2768, 275]]
+    },
+    "charge-14": {
+      "point": [2920, 372],
+      "variants": [[2912, 375], [2920, 372], [2928, 369]]
+    },
+    "charge-15": {
+      "point": [3210, 369],
+      "variants": [[3202, 372], [3210, 369], [3218, 366]]
+    },
+    "charge-16": {
+      "point": [3405, 466],
+      "variants": [[3397, 469], [3405, 466], [3413, 463]]
+    }
+  }
+}

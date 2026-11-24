@@ -1,0 +1,21 @@
+# Implementation Plan: 첫 레벨 전원 구역
+
+## Summary
+
+구조물 충돌을 먼저 배치하고, ImageGen 원화를 hi-bit 원경과 조립식 구조·부품으로 가공한다. 이동 순서를 먼저 정하고 구역 실루엣을 나눈 뒤 원경과 전경을 쌓는 데 Team Cherry의 제작 기록을 참고했다. [Team Cherry 제작 기록](https://www.teamcherry.com.au/blog/hollow-knight-then-and-now) · [개발진 인터뷰](https://www.pcgamer.com/how-to-design-a-great-metroidvania-map/)
+
+## Technical Context
+
+1280×720 기준, 월드 3840×720, 픽셀 1:1 기준, 수평 추적 카메라와 y 고정. 배치의 좌상단 기준 좌표를 Pico2D의 중앙 원점·위쪽 y로 변환한다. 바닥 y=540, 워든 높이 83·달리기 240/s·완전 점프 166. 도약 구간의 상승량과 수평 공백을 해당 범위 안으로 배치한다. 방열판 앞뒤의 중간 발판은 돌아올 때도 사용한다.
+
+## Constitution Check
+
+기존 레벨·충돌·카메라·스프라이트를 사용하고 첫 레벨 진입점을 바꾼다. 기존 훈련장은 명령행에서 유지한다. 진행 문서에는 사용자 요청과 작업 기본값을 구분한다.
+
+## Project Structure
+
+배치와 가공된 텍스처는 `assets/levels/power-supply/`, 로컬 원화와 프롬프트·검토 자료는 `art/levels/power-supply/`, 런타임은 `game/power_supply_map.py` 및 기존 장면에 둔다. 원경 → 뒷장식 → 구조물 → 워든·적·전하 → 전경으로 그린다. 원경은 720×360 논리 픽셀을 3배로 펼치고 카메라 x 이동의 35%를 적용한다. 소품은 공통 24색을 기준으로 축소하고 배치에 맞춰 음영을 설정한다. 보행면에 구조의 상단 픽셀을 정렬한다.
+
+## Validation
+
+번들·웹 경로·Tiled 내보내기와 SDL 런타임 검사를 수행한다. 브라우저 미리보기는 그리기 순서를 유지해 도형 레이어를 한 층으로 합친 사본을 사용한다. 브라우저의 평면 보행과 Pico2D의 점프 검증을 구분한다.

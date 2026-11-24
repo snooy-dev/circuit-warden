@@ -1,8 +1,10 @@
 # 진행 상태
 
-갱신일: 2026-11-23
+갱신일: 2026-11-24
 
 ## 현재 단계
+
+- **첫 레벨 전원 구역:** 2026-11-24 사용자 요청으로 컴퓨터 파워서플라이 내부를 기본 실행에 연결하고 환경 원화에 hi-bit 가공을 적용했다. 흡기구, 방열판, 코일·콘덴서, 출력 단자를 배치했다. [명세](../specs/021-power-supply-level/spec.md) · [계획](../specs/021-power-supply-level/plan.md) · [검증](../specs/021-power-supply-level/verification.md).
 
 - **지상 공격 접지·베기 효과 조정:** 사용자 피드백에 따라 지상 타격 중 이동을 멈추고 240ms부터 유지 중인 방향으로 달리기를 이어간다. 기존 타격 포즈 편집과 로컬 생성 회복 자세, 짧은 검끝 궤적을 훈련장에 적용했다. 관련 자동 검사 116개와 SDL 창 검사 두 개를 통과했다. 사용자 직접 조작감과 미술 평가는 남아 있다. [미리보기](../art/warden/ground-step-slash-v1/light.gif) · [검증](../specs/020-combat-reimplementation/verification.md#지상-공격-접지와-베기).
 

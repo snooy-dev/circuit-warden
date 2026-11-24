@@ -1,5 +1,6 @@
 """플레이 레벨 배치와 장면·창 조작."""
 
+import argparse
 import json
 from ctypes import byref, c_int
 from math import expm1, hypot
@@ -18,6 +19,7 @@ from .effects import SpriteEffect
 from .enemy import CHARGE_SPEED, Enemy, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
+from .power_supply_map import PowerSupplyMap
 from .teleport_link import DURATION, LinkArt, TeleportLink
 from .training_map import WORLD_BOUNDS, TrainingMap
 
@@ -58,7 +60,7 @@ def load_combat_clips(images):
 
 
 class GameplayLevel(Level):
-    def __init__(self, images):
+    def __init__(self, images, *, power_supply=False):
         super().__init__(GameplayMode())
         self.images = images
         self.player = None
@@ -71,12 +73,18 @@ class GameplayLevel(Level):
         self._cast_cooldown = 0.0
         self.link_art = None
         self.combat_clips = {}
+        self.power_supply = power_supply
+        self.world_bounds = WORLD_BOUNDS
+        self.environment_sites = ENVIRONMENT_SITES
 
     def on_open(self):
-        self.spawn(TrainingMap())
-        self.player = self.spawn(Character(load_clips(self.images)))
-        self.player.world_bounds = WORLD_BOUNDS
-        self.enemy = self.spawn(Enemy(load_enemy_clips(self.images)))
+        if self.power_supply:
+            self.layout = self.spawn(PowerSupplyMap(self.images))
+            self.world_bounds = self.layout.bounds
+            self.environment_sites = self.layout.charge_sites
+        else:
+            self.spawn(TrainingMap())
+        self._spawn_combatants(load_clips(self.images), load_enemy_clips(self.images))
         self._last_hit_attack = 0
         self._last_contact_charge = None
 
@@ -85,18 +93,26 @@ class GameplayLevel(Level):
         self.combat_clips = load_combat_clips(self.images)
         self._reset_environment()
 
+    def _spawn_combatants(self, clips, enemy_clips):
+        self.player = self.spawn(Character(clips))
+        self.player.world_bounds = self.world_bounds
+        self.enemy = self.spawn(Enemy(enemy_clips))
+        if self.power_supply:
+            self.player.x, self.player.y = self.layout.player_start
+            self.enemy.x, self.enemy.y = self.layout.enemy_start
+
     def _reset_environment(self):
         previous = tuple(charge.position for charge in self.charges)
         for charge in self.charges:
             charge.destroy()
         self.charges = [
             self.spawn(Charge(self.charge_art, choice([point for point in site if point != last])))
-            for site, last in zip(ENVIRONMENT_SITES, previous or (None,) * len(ENVIRONMENT_SITES),
+            for site, last in zip(self.environment_sites, previous or (None,) * len(self.environment_sites),
                                   strict=True)
         ]
 
     def _update_environment(self):
-        for index, site in enumerate(ENVIRONMENT_SITES):
+        for index, site in enumerate(self.environment_sites):
             charge = self.charges[index]
             if charge.spent_elapsed + TIME_EPSILON < ENVIRONMENT_RECHARGE:
                 continue
@@ -144,10 +160,10 @@ class GameplayLevel(Level):
         self._cast_cooldown = 0.0
         self.player.destroy()
         self.enemy.destroy()
-        self.player = self.spawn(Character(clips))
-        self.player.world_bounds = WORLD_BOUNDS
+        self._spawn_combatants(clips, enemy_clips)
         self.player.view_bounds = view_bounds
-        self.enemy = self.spawn(Enemy(enemy_clips))
+        if self.power_supply:
+            self.layout.reached_output = False
         self._reset_environment()
         self._last_hit_attack = 0
         self._last_contact_charge = None
@@ -309,9 +325,10 @@ class GameplayLevel(Level):
 
 
 class CharacterScene(LevelScene):
-    def __init__(self):
+    def __init__(self, *, power_supply=False):
         images = ImageStore(ASSETS)
-        super().__init__(GameplayLevel(images), view_height=HEIGHT, images=images)
+        super().__init__(GameplayLevel(images, power_supply=power_supply),
+                         view_height=DEFAULT_SIZE[1] if power_supply else HEIGHT, images=images)
         self.level.mode.event_to_world = self.event_to_world
         self.level.mode.cursor_to_world = self.cursor_to_world
 
@@ -329,8 +346,19 @@ class CharacterScene(LevelScene):
 
     def enter(self, engine):
         super().enter(engine)
+        if self.level.power_supply:
+            self.camera_center = (self.character.x, 0)
+            self._follow_camera(0, self.character.x)
         self.character.view_bounds = self.transform.bounds
-        pico.SDL_SetWindowTitle(pico.window, b'Circuit Warden | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
+        self._set_title()
+
+    def _set_title(self):
+        name = b'Circuit Warden'
+        if self.level.power_supply:
+            name += b' | Power Supply'
+            if self.level.layout.reached_output:
+                name += b' | Output reached'
+        pico.SDL_SetWindowTitle(pico.window, name + b' | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):
         previous_player = self.character
@@ -343,7 +371,8 @@ class CharacterScene(LevelScene):
                 self.engine.set_display(fullscreen=not self.engine.fullscreen)
         super().handle_event(event)
         if self.character is not previous_player:
-            self.camera_center = (0, 0)
+            self.camera_center = (self.character.x, 0)
+            self._set_title()
         self._follow_camera(0, self.character.x)
         self.character.view_bounds = self.transform.bounds
 
@@ -352,6 +381,8 @@ class CharacterScene(LevelScene):
         previous_x = self.character.x
         super().update(dt)
         self.level.mode.after_update()
+        if self.level.power_supply and self.level.layout.check_output(self.character):
+            self._set_title()
         self._follow_camera(dt, previous_x)
         self.character.view_bounds = self.transform.bounds
 
@@ -359,7 +390,7 @@ class CharacterScene(LevelScene):
         bounds = self.transform.bounds
         if bounds is None:
             return
-        left, _, right, _ = WORLD_BOUNDS
+        left, _, right, _ = self.level.world_bounds
         half_width = min((bounds[2] - bounds[0]) / 2, (right - left) / 2)
         low, high = left + half_width, right - half_width
         camera_x = min(max(self.camera_center[0], low), high)
@@ -375,5 +406,8 @@ class CharacterScene(LevelScene):
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Circuit Warden')
+    parser.add_argument('--training', action='store_true', help='플랫폼 훈련장으로 시작')
+    args = parser.parse_args()
     print('게임플레이: A/D 이동 / Space 점프 / J 공격 / E 커서 위치에 전하 생성 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
-    Engine(*DEFAULT_SIZE).run(CharacterScene())
+    Engine(*DEFAULT_SIZE).run(CharacterScene(power_supply=not args.training))
