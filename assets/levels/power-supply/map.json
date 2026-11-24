@@ -30,6 +30,7 @@
     "ledge": {"image": "ledge.png", "art_source": "host_image", "sha256": "b86c80f35b3f1d3443f58a0fc3dcfdee2ffa9ca2b05181b13adec150a8796631"},
     "barrier": {"image": "barrier.png", "art_source": "host_image", "sha256": "873063116497094eb55aa98e043d0506fb78f92a2d6a272ae3573cd7f120d648"},
     "cable": {"image": "cable.png", "art_source": "host_image", "sha256": "39096972d2bc94abf232acad99dfb8252dcf98b02af56cf4bb7b599a131eeb9c"},
+    "exposed-cable": {"image": "exposed-cable.png", "art_source": "host_image", "sha256": "c5a6acb7634971c60ed878a3b2e65623e783e2731440378dea3b7ff4b651a09e"},
     "output-lit": {"image": "output-lit.png", "art_source": "host_image", "sha256": "7de9b0008723974017ba5286799ee96cd3e02e5d8e848a87c93370f9ad6034d6"},
     "lint-sparse-s": {"image": "lint-sparse-s.png", "art_source": "host_image", "sha256": "90fd9d02dd28d21fbe840ed6641d19ae63349b111ebe12af0e3b971fce3c17ba"},
     "lint-sparse-l": {"image": "lint-sparse-l.png", "art_source": "host_image", "sha256": "1e3458df80c56d4e7152fa1f0c72877bf7c1d91021f1b7e8601fcdafb512fc5b"},
@@ -121,7 +122,7 @@
     {"id": "barrier-2688", "prop": "barrier", "x": 2688, "y": 348, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
     {"id": "ledge-2842", "prop": "ledge", "x": 2842, "y": 444, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
     {"id": "ledge-3144", "prop": "ledge", "x": 3144, "y": 432, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100},
-    {"id": "near-cable-1", "prop": "cable", "x": 72, "y": 96, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
+    {"id": "near-cable-1", "prop": "exposed-cable", "x": 72, "y": 96, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
     {"id": "near-cable-2", "prop": "cable", "x": 1396, "y": 114, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "flip_x": true},
     {"id": "near-cable-3", "prop": "cable", "x": 2492, "y": 92, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720},
     {"id": "near-cable-4", "prop": "cable", "x": 3785, "y": 80, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "flip_x": true}
@@ -148,7 +149,7 @@
     ]
   },
   "spawns": [
-    {"id": "start", "x": 172, "y": 498.5, "feet_y": 540, "entry_origin": [142, 82]},
+    {"id": "start", "x": 172, "y": 498.5, "feet_y": 540, "entry_origin": [142, 92]},
     {"id": "metal-dust", "x": 2112, "y": 498.5, "feet_y": 540}
   ],
   "interactions": [

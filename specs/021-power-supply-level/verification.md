@@ -104,3 +104,10 @@ FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워�
 - `node scripts/bake-effects/power-entry.mjs`에서 맵의 케이블·착지 좌표, 타격 프레임의 두 접점, 이미지 여백 및 마지막 프레임의 투명성을 확인했다.
 - `.venv\Scripts\python.exe art/levels/power-supply/lightning-strike/smoke.py art/levels/power-supply/lightning-strike/final-frames`로 첫 타격·등장 완료, 효과 정리, R 재시작과 조기 이동을 실제 SDL에서 확인했다.
 - `.venv\Scripts\python.exe -m unittest tests.unit.test_teleport_link` 4개 통과. 전체 레벨 주행과 사용자 직접 플레이는 미실행이다.
+
+## 노출 구리 심선 검증
+
+ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성하고 환경 팔레트와 2×2 픽셀에 맞췄다. 맵의 첫 케이블만 교체하고 낙뢰의 시작점을 심선 끝 (142, 92)에 맞췄다. [실제 게임의 접점 확대](../../art/levels/power-supply/exposed-cable/contact.png) · [등장 GIF](../../art/levels/power-supply/exposed-cable/exposed-cable.gif)
+
+- `map_bundle.py validate --bundle assets/levels/power-supply/map.json` 오류·경고 0개. 이전 맵과 대조해 첫 케이블과 전류 시작점만 바뀌었고 시작점은 구리색 불투명 픽셀에 닿는다.
+- `node scripts/bake-effects/power-entry.mjs`에서 케이블과 착지 접점, 여백, 종료 프레임을 확인했다. `.venv\Scripts\python.exe art/levels/power-supply/lightning-strike/smoke.py art/levels/power-supply/exposed-cable/frames`로 실제 SDL에서 심선 방전, 워든 등장, R 재시작과 조기 이동을 확인했다. 전체 레벨 주행은 미실행이다.

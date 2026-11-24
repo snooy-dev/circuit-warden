@@ -33,3 +33,4 @@
 - [x] T017 실제 C14의 삽입구와 얕은 돌출 비율을 반영하고 벽면 스폰 연결 검사 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
 - [x] T018 상단 케이블 낙뢰로 등장 연출 교체, 인렛 제거, SDL 등장·입력 및 맵 검사 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
 - [x] T019 갈라진 번개와 바닥 충격의 등장 전용 시트 제작·통합·SDL 확인 (`scripts/bake-effects/`, `assets/levels/power-supply/`, `game/scene.py`, `verification.md`, `docs/`)
+- [x] T020 시작 케이블의 피복 손상과 구리 심선 제작, 낙뢰 접점 정합 및 SDL 확인 (`assets/levels/power-supply/`, `verification.md`, `docs/`)
