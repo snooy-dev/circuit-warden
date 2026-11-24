@@ -155,3 +155,21 @@ $checks = .\.venv\Scripts\python.exe "$localCheck/test_names.py"
 .\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $out
 git diff --check
 ```
+
+## 검 적중 연출
+
+- **FR-013** — 적중 피해와 스파크가 확정된 프레임에서 정지와 방향성 흔들림을 시작한다. 정지는 45ms, 흔들림은 90ms다. 적의 첫 피격 자세는 최대 불투명도로 유지하고 시뮬레이션이 재개되면 피격 깜박임을 진행한다. 참고 영상과 적용 지점은 [계획](plan.md#follow-up-검-적중-연출)에 기록했다.
+- **SC-009** — 표적 자동 검사 13개에서 지상·공중 적중, 헛스윙, 45ms 경계를 넘긴 갱신의 잔여 시간, 정지 중 입력, 재시작, 치명타 우선순위와 순간이동 취소를 확인했다.
+- **SDL** — 전원 구역과 훈련장의 1280×720 실제 창에서 J를 주입해 좌우 지상 적중·공중 적중·헛스윙을 비교했다. 적중 자세가 멈춘 뒤 재개하고 그리기 중 카메라만 좌우로 이동했다가 돌아오는 것을 확인했다. 전하 SDL 검사도 통과했다. [전원 구역 적중 화면](../../.local-tools/verification/sword-impact/power/character-right-impact.png).
+- **수렴** — 기본 적 전투·기술 구조·진행 상태와 구현을 대조하고 FR-013·SC-009의 남은 구현 항목이 없는지 확인했다. 전체 회귀 및 사용자 조작감 평가는 수행하지 않았다.
+
+```powershell
+$localCheck = '.local-tools/verification/sword-impact'
+$checks = Get-Content "$localCheck/test-names.txt"
+.\.venv\Scripts\python.exe -B -m unittest -q @checks
+.\.venv\Scripts\python.exe -B "$localCheck/smoke.py"
+$out = Join-Path $env:TEMP 'circuit-warden-sword-impact'
+New-Item -ItemType Directory -Force $out | Out-Null
+.\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $out
+git diff --check
+```

@@ -19,6 +19,7 @@ WINDUP_SECONDS = .45
 CHARGE_SPEED = 350
 CHARGE_SECONDS = .28
 RECOVER_SECONDS = .60
+HIT_REACTION_SECONDS = .18
 
 NEXT_PHASE = {
     'idle': ('approach', 0),
@@ -83,7 +84,7 @@ class Enemy(GameObject):
     def take_hit(self):
         if self.hp > 0:
             self.hp -= 1
-            self.hit_remaining = .18
+            self.hit_remaining = HIT_REACTION_SECONDS
             if self.hp == 0:
                 self.destroy()
 
@@ -134,7 +135,7 @@ class Enemy(GameObject):
             self.motion.append(((travel_end, end), self.x, 0.0, charge_id))
 
     def _draw(self, transform, opacity):
-        if self.hit_remaining > 0 and int(self.hit_remaining / .045) % 2 == 0:
+        if 0 < self.hit_remaining < HIT_REACTION_SECONDS and int(self.hit_remaining / .045) % 2 == 0:
             opacity *= .3
         draw_sprite(self.frame, transform, (self.x, self.y),
                     self.frame.rect[2:], opacity, flip_x=self.facing < 0)

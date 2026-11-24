@@ -39,6 +39,10 @@ CAST_COOLDOWN = .8
 ENVIRONMENT_RECHARGE = 2.5
 TOP_EXIT_MARGIN = 24
 CAMERA_FOLLOW_SECONDS = .22
+SWORD_HIT_STOP = .045
+SWORD_SHAKE_STEP = .03
+SWORD_SHAKE = (4, -2, 2)
+SWORD_FEEDBACK_SECONDS = SWORD_SHAKE_STEP * len(SWORD_SHAKE)
 ENVIRONMENT_SITES = (
     ((-328, -84), (-320, -64), (-312, -92)),
     ((-172, 64), (-160, 70), (-148, 82)),
@@ -74,6 +78,8 @@ class GameplayLevel(Level):
         self.enemy = None
         self._last_hit_attack = 0
         self._last_contact_charge = None
+        self._sword_feedback_remaining = 0.0
+        self._sword_hit_facing = 1
         self.charges = []
         self.charge_art = None
         self.skill_charge = None
@@ -205,8 +211,22 @@ class GameplayLevel(Level):
         self._reset_environment()
         self._last_hit_attack = 0
         self._last_contact_charge = None
+        self._sword_feedback_remaining = 0.0
+
+    @property
+    def sword_camera_kick(self):
+        if self._sword_feedback_remaining <= 0:
+            return 0
+        elapsed = SWORD_FEEDBACK_SECONDS - self._sword_feedback_remaining
+        index = min(len(SWORD_SHAKE) - 1, int(elapsed / SWORD_SHAKE_STEP))
+        return self._sword_hit_facing * SWORD_SHAKE[index]
 
     def update(self, dt):
+        stop = max(0.0, self._sword_feedback_remaining - (SWORD_FEEDBACK_SECONDS - SWORD_HIT_STOP))
+        self._sword_feedback_remaining = max(0.0, self._sword_feedback_remaining - dt)
+        if stop and dt <= stop:
+            return
+        dt -= stop
         if self.player is None or self.player.level is not self or self.player.hp == 0:
             return
         self._cast_cooldown = max(0.0, self._cast_cooldown - dt)
@@ -260,6 +280,8 @@ class GameplayLevel(Level):
                 self.enemy.take_hit()
                 self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, facing, 1,
                                         draw_order=1))
+                self._sword_feedback_remaining = SWORD_FEEDBACK_SECONDS
+                self._sword_hit_facing = facing
                 return
 
     def _resolve_enemy_contact(self, dt, player_position, protected_until):
@@ -378,7 +400,7 @@ class CharacterScene(LevelScene):
 
     def draw(self):
         if not self.level.power_supply or not self.engine.output_valid:
-            return super().draw()
+            return self._draw_with_sword_kick()
 
         width, height = self.engine.output_size
         grid_height = POWER_SUPPLY_PIXEL_HEIGHT
@@ -415,7 +437,7 @@ class CharacterScene(LevelScene):
                     pixel = self.view_height / grid_height
                     cx, cy = self.camera_center
                     self.camera_center = cx + dx * pixel, cy + dy * pixel
-            super().draw()
+            self._draw_with_sword_kick()
             if self.opening is not None:
                 self.opening.draw(self.transform)
         finally:
@@ -425,6 +447,14 @@ class CharacterScene(LevelScene):
         if self.opening is not None:
             canvas = self.opening.canvas
             self.renderer.draw_ui(canvas, canvas.transform(self.engine.viewport))
+
+    def _draw_with_sword_kick(self):
+        center = self.camera_center
+        try:
+            self.camera_center = (center[0] + self.level.sword_camera_kick, center[1])
+            super().draw()
+        finally:
+            self.camera_center = center
 
     def exit(self):
         try:

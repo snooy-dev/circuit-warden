@@ -80,7 +80,7 @@ class BasicEnemySceneTests(unittest.TestCase):
                     self.assertEqual(enemy.hp, hp)
                     scene.update(.02)
                     self.assertEqual(enemy.hp, hp)
-                    scene.update(.32)
+                    scene.update(.37)
                 self.assertIsNone(enemy.level)
                 self.assertNotIn(enemy, scene.level.objects)
             finally:
@@ -286,5 +286,5 @@ class BasicEnemySceneTests(unittest.TestCase):
         self.assertTrue(entry.spent and escape.spent)
         scene.update(.1)
         self.assertEqual(enemy.hp, 2)
-        scene.update(.10)
+        scene.update(.15)
         self.assertIsNone(hit_spark.level)

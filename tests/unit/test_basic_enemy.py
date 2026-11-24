@@ -129,11 +129,55 @@ class BasicEnemyTests(CombatFixture):
             self.assertEqual(self.enemy.hp, hp + 1)
             self.level.update(.001)
             self.assertEqual(self.enemy.hp, hp)
-            for _ in range(36):
+            for _ in range(41):
                 self.level.update(.01)
             self.assertEqual(self.enemy.hp, hp)
         self.assertIsNone(self.enemy.level)
         self.assertNotIn(self.enemy, self.level.objects)
+
+    def test_sword_hit_pauses_simulation_and_keeps_accepting_input(self):
+        self.click()
+        self.level.update(.15)
+        self.assertEqual(self.enemy.hp, 2)
+        spark, = (obj for obj in self.level.objects if isinstance(obj, SpriteEffect))
+        elapsed, recovery = self.actor.player.elapsed, self.enemy.state_remaining
+        self.assertEqual(self.level.sword_camera_kick, 4)
+
+        self.level.update(.02)
+        self.assertEqual((self.actor.player.elapsed, self.enemy.state_remaining, spark.player.elapsed),
+                         (elapsed, recovery, 0))
+        with patch('game.enemy.draw_sprite') as draw:
+            self.enemy.render_items()[0].drawable(None, 1)
+        self.assertEqual(draw.call_args.args[4], 1)
+        self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_j))
+        self.assertEqual(self.actor.buffered_action, 'attack')
+
+        self.level.update(.03)
+        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .005 * .7)
+        self.assertAlmostEqual(self.enemy.state_remaining, recovery - .005)
+        self.assertAlmostEqual(spark.player.elapsed, .005)
+        self.assertAlmostEqual(self.actor.buffer_remaining, .095)
+        self.assertEqual(self.level.sword_camera_kick, -2)
+        self.level.update(.05)
+        self.assertEqual(self.level.sword_camera_kick, 0)
+        self.assertEqual(self.enemy.hp, 2)
+
+    def test_miss_does_not_pause_and_restart_clears_left_hit_feedback(self):
+        self.actor.facing = -1
+        self.click()
+        self.level.update(.15)
+        self.assertEqual((self.enemy.hp, self.level.sword_camera_kick), (3, 0))
+        elapsed = self.actor.player.elapsed
+        self.level.update(.02)
+        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .02 * .7)
+
+        self.enemy.x = -70
+        self.level.update(.02)
+        self.assertEqual((self.enemy.hp, self.level.sword_camera_kick), (2, -4))
+        self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r))
+        self.assertEqual(self.level.sword_camera_kick, 0)
+        self.level.update(.02)
+        self.assertAlmostEqual(self.level.player.player.elapsed, .02)
 
     def test_moving_ground_attack_stops_at_wall_without_reaching_beyond_it(self):
         wall = GameObject()
