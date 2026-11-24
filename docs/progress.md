@@ -4,7 +4,7 @@
 
 ## 현재 단계
 
-- **첫 레벨 전원선 등장:** 2026-11-24 사용자 요청으로 흡기구 옆 전원선과 워든의 등장 연출을 연결했다. 단자에서 전류가 흐른 뒤 기존 스폰 바닥에서 워든이 나타나며, R이나 빠른 이동 입력으로 재생과 즉시 조작을 확인했다. [실제 화면](../art/levels/power-supply/power-entry/power-entry.gif) · [검증](../specs/021-power-supply-level/verification.md#전원선-등장-검증).
+- **첫 레벨 바닥 접점 등장:** 2026-11-24 사용자 정정에 따라 흡기구 쪽 바닥 회로판에 내부 전력 접점을 매립했다. 전류가 워든의 발밑에서 수직으로 올라오며 R 재시작과 조기 이동 입력을 확인했다. [실제 화면](../art/levels/power-supply/deck-contact/deck-entry.gif) · [검증](../specs/021-power-supply-level/verification.md#바닥-전력-접점-검증).
 
 - **파워서플라이 2픽셀 확정:** 2026-11-24 사용자가 3픽셀과 2픽셀을 비교해 2픽셀을 채택했다. 기본 1280×720 창에서 640×360을 최근접 확대한다. [실제 게임 비교](../art/levels/power-supply/pixel-grid-comparison/3px-vs-2px.png) · [검증](../specs/021-power-supply-level/verification.md#2픽셀과-3픽셀-비교).
 

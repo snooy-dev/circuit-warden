@@ -66,3 +66,11 @@ FR-007을 첫 로드와 R에 적용했다. 기존 발 위치 (288, 540)에 워�
 - SDL 더미 드라이버로 `.venv\Scripts\python.exe -m unittest tests.integration.test_character_scene tests.integration.test_charge_scene` 34개 통과. `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict`의 경고·실패는 0개이며 브라우저 경로 4개가 통과했다. `export_tiled.py export` 재렌더 차이는 0픽셀이었다. 브라우저는 정적 배치를 확인하고 등장 연출은 SDL에서 확인했다.
 
 전체 회귀와 사용자 직접 플레이는 미실행이다.
+
+## 바닥 전력 접점 검증
+
+2026-11-24 사용자 정정에 따라 FR-007의 연출 시작점을 바닥 회로판에 매립된 내부 전력 접점으로 바꿨다. 접점 표면과 워든 발 위치는 맵 좌표 (288, 540)으로 같다. 전류가 그곳에서 워든 중심까지 수직으로 연결된다. 기존 등장 시간과 충돌, 전하·적 배치는 유지했다.
+
+- ImageGen으로 회로판 내장 접점을 제작하고 기존 환경 팔레트와 2픽셀 격자에 맞춰 68×14 PNG를 만들었다. 접점 중앙의 첫 불투명 행을 바닥선에 맞췄다. [생성 기록](../../art/levels/power-supply/deck-contact/source/job.json) · [가공 스크립트](../../art/levels/power-supply/deck-contact/prepare.py)
+- `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/deck-contact/sdl`에서 워든의 발 위치와 접점 일치, 전류의 양 끝, R과 조기 이동을 확인했다. 기존 경로와 F6도 통과했다. [실제 SDL GIF](../../art/levels/power-supply/deck-contact/deck-entry.gif)
+- `map_bundle.py validate`, `map_nav.py check`, `build_scene_preview.py --verify --strict`의 경고·실패는 0개이고 브라우저 경로 4개가 통과했다. `export_tiled.py export` 재렌더 차이는 0픽셀이었다. 전체 회귀와 사용자 직접 플레이는 미실행이다.

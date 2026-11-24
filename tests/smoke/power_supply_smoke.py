@@ -50,6 +50,7 @@ class PowerSupplySmoke(CombatSmoke):
         actor = self.character
         layout = self.level.layout
         assert actor.collision_position == layout.player_start and actor.grounded
+        assert layout.power_entry == layout.player_start
         assert self.level.enemy.collision_position == layout.enemy_start
         assert all(actor.can_place_center(point) for site in layout.charge_sites for point in site)
         assert actor.spawn_opacity == 0.0
