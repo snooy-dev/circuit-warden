@@ -51,13 +51,10 @@ class PowerSupplyMap(GameObject):
 
         background = data['layers'][0]
         self.fan_cavity = load('fan-cavity')
-        self.chamber_light = load('chamber-light')
-        self.bridge_art = load('return-bridge')
+        self.bridge_art = load('hall-bridge')
+        self.busbar_art = (load('hall-busbar-live'), load('hall-busbar-safe'))
         self.shutter_art = (load('shutter-closed'), load('shutter-open'))
         self.relay_art = (load('relay-off'), load('relay-on'))
-        self.chambers = tuple((self._rect(*room['rect']), room['color']) for room in background['chambers'])
-        self.girders = tuple(self._rect(*rect) for rect in background['girders'])
-        self.lights = tuple(self._rect(*rect) for rect in background['lights'])
         rotor = background['rotor']
         self.rotor = load(rotor['prop'])
         self.fan_bounds = self._rect(*rotor['rect'])
@@ -93,8 +90,8 @@ class PowerSupplyMap(GameObject):
             if obj['id'] == 'output-socket':
                 lit = load('output-lit')
                 draw = partial(self._draw_socket, image, lit, bounds)
-            elif obj['id'] == 'relay-feed':
-                lit = load('feed-wire-on')
+            elif 'powered_prop' in obj:
+                lit = load(obj['powered_prop'])
                 draw = partial(self._draw_powered, (image, lit), bounds)
             else:
                 draw = partial(self._draw, image, bounds, flip)
@@ -161,19 +158,6 @@ class PowerSupplyMap(GameObject):
 
     def _draw_background(self, transform, opacity):
         draw_rect(transform, transform.bounds, (9, 15, 22), opacity)
-        for bounds, color in self.chambers:
-            if overlaps(bounds, transform.bounds):
-                left, bottom, right, top = bounds
-                draw_rect(transform, bounds, tuple(max(0, value - 8) for value in color), opacity)
-                draw_rect(transform, (left + 12, bottom, right - 12, top - 20), color, opacity)
-        for bounds in self.girders:
-            if overlaps(bounds, transform.bounds):
-                left, bottom, right, top = bounds
-                draw_rect(transform, bounds, (18, 29, 38), opacity)
-                draw_rect(transform, (left + 5, bottom, left + 9, top), (36, 54, 63), opacity)
-        for bounds in self.lights:
-            if overlaps(bounds, transform.bounds):
-                draw_image(self.chamber_light, transform, bounds, opacity)
         if overlaps(self.fan_bounds, transform.bounds):
             left, bottom, right, top = self.fan_bounds
             x, y = (left + right) / 2, (bottom + top) / 2
@@ -194,11 +178,7 @@ class PowerSupplyMap(GameObject):
             draw_rect(transform, (left + 4, bottom, left + 7, top), (49, 66, 76), opacity)
 
     def _draw_busbar(self, transform, opacity):
-        left, _, right, top = self.busbar
-        body, edge = (((44, 70, 76), (99, 154, 156)) if self.power_restored
-                      else ((102, 58, 25), (248, 177, 64)))
-        draw_rect(transform, self.busbar, body, opacity)
-        draw_rect(transform, (left, top - 4, right, top), edge, opacity)
+        draw_image(self.busbar_art[self.power_restored], transform, self.busbar, opacity)
 
     def _draw_device(self, kind, bounds, transform, opacity):
         left, _, right, top = bounds

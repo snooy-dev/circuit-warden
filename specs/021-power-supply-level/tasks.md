@@ -68,5 +68,5 @@
 ## 변압실의 두 경로
 
 - [x] T036 [US1] 상부 우회와 하부 전투 블록아웃에 버스바와 단일 복구 상태를 연결한다 (`map.json`, `game/`, FR-023~FR-024)
-- [ ] T037 [US1] 방별 원경과 지형·위험의 hi-bit 에셋을 가공하고 실제 배율에서 배치한다 (`assets/levels/power-supply/`, FR-025)
-- [ ] T038 [US1] SDL에서 두 경로의 서로 다른 결과, 피해와 차단, 귀환·출력을 확인하고 현재 문서를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-023~FR-025)
+- [x] T037 [US1] 방별 원경과 지형·위험의 hi-bit 에셋을 가공하고 실제 배율에서 배치한다 (`assets/levels/power-supply/`, FR-025)
+- [x] T038 [US1] SDL에서 두 경로의 서로 다른 결과, 피해와 차단, 귀환·출력을 확인하고 현재 문서를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-023~FR-025)

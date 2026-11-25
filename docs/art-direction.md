@@ -14,9 +14,9 @@
 
 ## 첫 레벨 정비 구역
 
-흡기 팬, 변환 코일, 콘덴서, 출력 단자로 컴퓨터 전원 구역 안에서 위치를 구분한다. 배전실 후경에는 기판 트레이스·납땜 패드·알루미늄 방열판을 배치한다. 후경 대비를 낮춰 워든, 전하, 착지면이 앞에 보이도록 한다.
+흡기실의 은청색 팬과 메쉬, 변압실의 구리 권선과 방열핀, 배전실의 녹색 퓨즈와 커넥터를 구역 크기의 표지로 쓴다. 착지면에는 각각 판금 통풍구, 방열핀, 기판 단면을 사용한다. 변압실 하부의 차가운 반사광이 적의 갈색 실루엣과 분리되도록 명암을 잡는다.
 
-릴레이·셔터·정비교·급전선과 기판은 ImageGen 원화를 hi-bit로 가공한다. 논리 픽셀 하나가 월드 두 단위인 이미지에 다수결 축소, 제한 팔레트 및 이진 알파를 적용한다. 주황 표시등은 미복구 상태다. 복구 후 릴레이와 급전선은 청록색으로 바뀌고, 정비교의 청록색 상단은 충돌 상단과 맞는다. [실제 배전실 화면](../art/levels/power-supply/return-loop/sdl/character-return-relay-on.png) · [제작 정보](../assets/levels/power-supply/return-loop/provenance.json) · [검증](../specs/021-power-supply-level/verification.md#전원-복구와-귀환-지름길).
+ImageGen 원화는 논리 픽셀 하나가 월드 두 단위가 되도록 다수결 축소와 제한 팔레트를 적용한다. 이동면의 상단을 충돌에 맞추고 원경 연결부와 고정 팬 메쉬에만 반투명을 쓴다. 버스바의 주황 전기 아크는 접촉 위험을 표시한다. 복구 후 아크가 사라지고 배전실 급전선과 기판의 구리 트레이스, 귀환교의 상단이 청록색으로 바뀐다. [실제 변압실 화면](../art/levels/power-supply/transformer-hall/lower/character-lower-route-live-floor-dash.png) · [제작 정보](../assets/levels/power-supply/transformer-hall/provenance.json) · [검증](../specs/021-power-supply-level/verification.md#변압실의-두-경로).
 
 ## 기본 적: 금속 먼지 덩어리
 

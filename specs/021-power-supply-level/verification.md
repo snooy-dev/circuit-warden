@@ -173,3 +173,9 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 ## 변압실의 두 경로
 
 - **블록아웃 실제 SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke`의 기본 경로와 `--charge-route`를 실행했다. 하부에서 버스바 접촉 피해, 적의 반대편으로 순간이동, 검 적중과 두 번째 전하 이탈을 확인했다. 상부에서는 전하 두 개가 이어지고 적과 접촉하지 않고 선반을 통과했다. 두 경로에서 릴레이 복구, 귀환교, 출력과 R을 확인했다.
+- **최종 실제 SDL** 같은 명령으로 `art/levels/power-supply/transformer-hall/lower`와 `upper`에 두 경로를 각각 다시 실행했다. 상부는 전하 연쇄 뒤 워든과 적의 체력이 유지됐다. 하부는 버스바 피격 뒤 대시로 건너고, 적 돌진 예고 중 등 뒤로 이동해 검격한 뒤 다른 전하로 이탈했다. 복구 후 같은 버스바를 걸어서 지나갈 수 있었다. R 뒤 버스바 접촉 피해가 돌아왔다. 셔터, 귀환교, 출력과 F6도 확인했다. 별도 실행으로 `main`의 New Game, 낙뢰와 조작 인계를 확인했다. [상부](../../art/levels/power-supply/transformer-hall/upper/) · [하부](../../art/levels/power-supply/transformer-hall/lower/).
+- **에셋** 내장 ImageGen으로 흡기실, 변압실, 배전실의 원경과 소재별 지형 시트를 만들었다. 도구 Python에서 `scripts/bake-power-supply-art/build_transformer_hall.py`를 실행해 2월드 단위당 논리 1픽셀로 가공했다. 생성 배치와 충돌 상단을 대조했다. 화면 검토 뒤 버스바에 상태별 아크를 추가하고, 차가운 반사광으로 적의 실루엣을 분리했으며 복구 상태의 급전선과 기판을 점등했다. [이전·현재 실제 화면](../../art/levels/power-supply/transformer-hall/comparison.png) · [원화와 프롬프트](../../art/levels/power-supply/transformer-hall/source/) · [제작 정보](../../assets/levels/power-supply/transformer-hall/provenance.json).
+- **맵** `map_bundle.py validate`를 실행해 오류·경고 없이 통과했다. `map_nav.py check`의 정적 배치에서 목표가 모두 연결됐다. `build_scene_preview.py --strict`로 생성한 복구 상태를 헤드리스 Chromium에서 열어 키 이동, 이미지 로드, 경로를 확인했다. 실제 발판, 점프, 전하와 상태 전환은 SDL에서 판정했다. [정적 미리보기](../../art/levels/power-supply/transformer-hall/preview/preview.html) · [브라우저 기록](../../art/levels/power-supply/transformer-hall/preview/scene-snapshot.json).
+- **관련 회귀** `.\.venv\Scripts\python.exe -m unittest tests.unit.test_collision tests.unit.test_basic_enemy tests.integration.test_basic_enemy tests.integration.test_charge_scene`로 68개를 확인했다. 원화·런타임 해시, 지형 이진 알파, 이미지 배치와 충돌 치수, 최종 화면 및 새 문서 링크도 대조했다.
+
+게임 설계, 아트 기준, 진행 상태, 기술 구조와 조작 문서를 실제 레벨에 맞췄다. 전체 회귀는 실행하지 않았다. 사람의 초회 플레이에서 분기 발견과 난도는 미확인이다.
