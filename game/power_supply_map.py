@@ -29,9 +29,13 @@ class PowerSupplyMap(GameObject):
         self.devices = tuple((item['kind'], self._rect(*item['rect']))
                              for item in data['collision']['power_devices'])
         self.busbar = self._rect(*data['collision']['busbar'])
+        self.teleport_barriers = tuple(self._rect(*rect) for rect in data['collision'].get('teleport_barriers', ()))
         relay = next(item for item in data['interactions'] if item['id'] == 'relay')
         self.relay = self._point(relay['x'], relay['y'])
         self.relay_reach = relay['reach']
+        hatch = next(item for item in data['interactions'] if item['id'] == 'hatch-release')
+        self.hatch_release = self._point(hatch['x'], hatch['y'])
+        self.hatch_reach = hatch['reach']
         spawns = {entry['id']: self._point(entry['x'], entry['feet_y']) for entry in data['spawns']}
         self.player_start, self.enemy_start = spawns['start'], spawns['metal-dust']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
@@ -78,6 +82,10 @@ class PowerSupplyMap(GameObject):
         feet = y - 41.5
         bounds = (x - self.relay_art[0].w, feet, x + self.relay_art[0].w, feet + self.relay_art[0].h * 2)
         self.items.append(RenderItem(partial(self._draw_powered, self.relay_art, bounds), -2, bounds))
+        x, y = self.hatch_release
+        feet = y - 41.5
+        bounds = (x - 26, feet, x + 26, feet + 61)
+        self.items.append(RenderItem(partial(self._draw_hatch_release, bounds), -2, bounds))
         for obj in data['objects']:
             image = load(obj['prop'])
             scale = obj.get('scale', 1)
@@ -110,28 +118,41 @@ class PowerSupplyMap(GameObject):
     def reset(self):
         self.reached_output = False
         self.power_restored = False
+        self.hatch_released = False
         self._place_devices()
 
     def _place_devices(self):
         self.closed_shutters = tuple(bounds for kind, bounds in self.devices
-                                     if kind == 'shutter' and not self.power_restored)
+                                     if (kind == 'shutter' and not self.power_restored)
+                                     or (kind == 'hatch' and not self.hatch_released))
         active_bridges = tuple(bounds for kind, bounds in self.devices
                                if kind == 'bridge' and self.power_restored)
         self.colliders = self.terrain + tuple(
             Collider(bounds, 'terrain', blocks={'player', 'enemy'})
             for bounds in self.closed_shutters + active_bridges)
 
-    def near_relay(self, player):
-        if not player.hp or not player.grounded or self.power_restored:
-            return False
-        x, y = self.relay
+    def _interaction(self, player):
+        if not player.hp or not player.grounded:
+            return None
         px, py = player.center
-        return hypot(x - px, y - py) <= self.relay_reach
+        if not self.power_restored and hypot(self.relay[0] - px, self.relay[1] - py) <= self.relay_reach:
+            return 'relay'
+        if not self.hatch_released and hypot(self.hatch_release[0] - px, self.hatch_release[1] - py) <= self.hatch_reach:
+            return 'hatch'
+        return None
 
-    def restore_power(self, player):
-        if self.near_relay(player):
+    def interaction_hint(self, player):
+        return {'relay': 'W  RESTORE POWER', 'hatch': 'W  RELEASE HATCH'}.get(self._interaction(player))
+
+    def interact(self, player):
+        action = self._interaction(player)
+        if action == 'relay':
             self.power_restored = True
-            self._place_devices()
+        elif action == 'hatch':
+            self.hatch_released = True
+        else:
+            return
+        self._place_devices()
 
     def damage_on_busbar(self, player):
         if (not self.power_restored and not player.teleport_guard_remaining
@@ -140,14 +161,12 @@ class PowerSupplyMap(GameObject):
             player.take_hit(-1 if player.x < (left + right) / 2 else 1)
 
     def blocks_teleport(self, player, x, y):
-        if self.power_restored:
-            return False
         left, bottom, right, top = self.output_lock
-        if left <= x <= right and bottom <= y <= top:
+        if not self.power_restored and left <= x <= right and bottom <= y <= top:
             return True
         cx, cy = player.center
         return any(blocking_contact(player.hurt_box, bounds, (x - cx, y - cy)) is not None
-                   for bounds in self.closed_shutters)
+                   for bounds in self.closed_shutters + self.teleport_barriers)
 
     def check_output(self, player):
         if self.reached_output or not self.power_restored or not player.hp or not player.grounded:
@@ -181,7 +200,7 @@ class PowerSupplyMap(GameObject):
         draw_image(self.busbar_art[self.power_restored], transform, self.busbar, opacity)
 
     def _draw_device(self, kind, bounds, transform, opacity):
-        left, _, right, top = bounds
+        left, bottom, right, top = bounds
         if kind == 'bridge':
             if self.power_restored:
                 draw_image(self.bridge_art, transform, bounds, opacity)
@@ -189,8 +208,19 @@ class PowerSupplyMap(GameObject):
                 for x in (left, right - 12):
                     draw_rect(transform, (x, top - 10, x + 12, top), (136, 92, 57), opacity)
             return
+        if kind == 'hatch':
+            if not self.hatch_released:
+                self._draw_structure(bounds, transform, opacity, (163, 118, 65))
+            for edge in (left, right - 12):
+                draw_rect(transform, (edge, bottom, edge + 12, top),
+                          (81, 157, 144) if self.hatch_released else (172, 120, 62), opacity)
+            return
         image = self.shutter_art[self.power_restored]
-        draw_image(image, transform, (left, top - image.h * 2, right, top), opacity)
+        lower = top - image.h * 2 if self.power_restored else bottom
+        draw_image(image, transform, (left, lower, right, top), opacity)
+
+    def _draw_hatch_release(self, bounds, transform, opacity):
+        draw_image(self.relay_art[self.hatch_released], transform, bounds, opacity)
 
     def _draw_powered(self, images, bounds, transform, opacity):
         draw_image(images[self.power_restored], transform, bounds, opacity)

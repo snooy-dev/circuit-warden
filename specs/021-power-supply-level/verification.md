@@ -179,3 +179,8 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **관련 회귀** `.\.venv\Scripts\python.exe -m unittest tests.unit.test_collision tests.unit.test_basic_enemy tests.integration.test_basic_enemy tests.integration.test_charge_scene`로 68개를 확인했다. 원화·런타임 해시, 지형 이진 알파, 이미지 배치와 충돌 치수, 최종 화면 및 새 문서 링크도 대조했다.
 
 게임 설계, 아트 기준, 진행 상태, 기술 구조와 조작 문서를 실제 레벨에 맞췄다. 전체 회귀는 실행하지 않았다. 사람의 초회 플레이에서 분기 발견과 난도는 미확인이다.
+
+## 상하 회로와 중앙 접속부
+
+- **블록아웃** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke` 기본 및 `--hatch` 실행에서 첫 출력 접근, 보이는 착지면, 서쪽 우회, 하층 검격과 버스바, 복구와 접속부 상층 귀환을 실제 키·마우스로 확인했다. 두 번째 실행은 복구 전에 아래에서 덮개를 열고 이전 갤러리로 돌아갔다. [첫 접속부](../../art/levels/power-supply/service-circuit/graybox/character-junction-output-and-shaft.png) · [열린 덮개](../../art/levels/power-supply/service-circuit/graybox/character-hatch-gallery-reconnection.png).
+- **충돌·캐릭터** 실제 캐릭터의 헤드리스 블록아웃에서 기존 점프만 사용하는 상승, 격벽·닫힌 장치를 가로지르는 순간이동 거절, 복구 전후 전하 변형 51곳의 배치 여유를 확인했다. `.\.venv\Scripts\python.exe -m unittest tests.unit.test_character tests.integration.test_charge_scene tests.integration.test_character_scene` 60개를 통과했다.

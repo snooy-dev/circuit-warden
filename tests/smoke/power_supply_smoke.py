@@ -1,4 +1,4 @@
-"""실제 SDL 입력으로 상층 우회와 하층 전투, 전원 복구와 귀환을 검증한다."""
+"""실제 SDL 입력으로 전원 구역의 하강, 점검 덮개, 복구와 귀환을 검증한다."""
 
 import argparse
 from math import isclose
@@ -13,9 +13,9 @@ from tests.smoke.combat_reimplementation_smoke import CombatSmoke
 
 
 class PowerSupplySmoke(CombatSmoke):
-    def __init__(self, output_dir, *, charge_route=False):
+    def __init__(self, output_dir, *, hatch=False):
         super().__init__(output_dir, power_supply=True)
-        self.charge_route = charge_route
+        self.hatch = hatch
 
     def enter(self, engine):
         CharacterScene.enter(self, engine)
@@ -55,7 +55,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.move_to(x, jump=True)
         assert isclose(self.feet_y(), y), (x, y, self.feet_y())
 
-    def click_charge(self, map_x, map_y):
+    def click_charge(self, map_x, map_y, *, blocked=False):
         actor = self.character
         layout = self.level.layout
         center = layout._point(map_x, map_y)
@@ -68,6 +68,11 @@ class PowerSupplySmoke(CombatSmoke):
         event.button.button = pico.SDL_BUTTON_LEFT
         event.button.x, event.button.y = map(round, point)
         assert pico.SDL_PushEvent(event) == 1
+        if blocked:
+            start = self.map_x()
+            yield .2
+            assert not candidate.spent and abs(self.map_x() - start) < 1
+            return
         try:
             yield from self.wait_until(lambda: candidate.spent)
         except AssertionError as error:
@@ -76,7 +81,10 @@ class PowerSupplySmoke(CombatSmoke):
 
     def land_at(self, feet_y):
         actor = self.character
-        yield from self.wait_until(lambda: actor.grounded)
+        try:
+            yield from self.wait_until(lambda: actor.grounded)
+        except AssertionError as error:
+            raise AssertionError((self.map_x(), feet_y, self.feet_y(), actor.state)) from error
         assert isclose(self.feet_y(), feet_y), (self.map_x(), feet_y, self.feet_y())
 
     def check_intake(self):
@@ -113,160 +121,158 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.wait_until(lambda: self.engine.window_size == DEFAULT_SIZE)
 
     def check_locked_output(self):
-        yield from self.move_to(464)
-        yield from self.step_to(590, 1030)
-        yield from self.move_to(627)
-        yield from self.step_to(722, 918)
-        yield from self.move_to(765)
-        yield from self.step_to(868, 806)
-        yield from self.click_charge(970, 626)
-        yield from self.land_at(694)
-        yield from self.move_to(804)
+        for x in (700, 1120, 1308):
+            yield from self.move_to(x)
+        push_key(pico.SDLK_SPACE)
+        yield from self.wait_until(lambda: self.feet_y() < 1000)
+        yield from self.move_to(1232)
+        yield from self.land_at(1000)
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
         push_key(pico.SDLK_a)
         yield .24
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
-        assert isclose(self.map_x(), 790), self.map_x()
+        assert isclose(self.map_x(), 1204), self.map_x()
         self.key_tap(pico.SDLK_w)
-        yield .12
         layout = self.level.layout
+        yield from self.click_charge(1040, 934, blocked=True)
         assert not layout.power_restored and not layout.reached_output
         self.screenshot = 'locked-output'
         yield .10
-        yield from self.move_to(1145)
-        yield from self.land_at(1140)
 
-    def cross_upper_balcony(self):
-        actor, enemy = self.character, self.level.enemy
-        yield from self.step_to(1268, 1030)
-        yield from self.move_to(1323)
-        yield from self.step_to(1417, 930)
-        self.screenshot = 'upper-route-decision'
+    def descend_shaft(self):
+        yield from self.move_to(1360)
+        yield from self.land_at(1100)
+        junction_camera = self.camera_center[1]
+        self.screenshot = 'junction-output-and-shaft'
         yield .10
-        yield from self.click_charge(1610, 848)
-        assert not actor.grounded
-        self.screenshot = 'upper-route-first-charge'
-        yield 0
-        yield from self.click_charge(1815, 855)
-        yield from self.land_at(930)
-        self.screenshot = 'upper-route-balcony'
-        yield .10
-        yield from self.move_to(2260)
+        yield from self.move_to(1421)
         yield from self.land_at(1140)
-        assert actor.hp == actor.MAX_HP and enemy.hp == enemy.MAX_HP
+        for x, y, shot in ((1570, 1250, 'shaft-first-landing'),
+                           (1460, 1370, 'shaft-second-landing'),
+                           (1368, 1490, 'gallery-arrival')):
+            yield from self.move_to(x)
+            yield from self.land_at(y)
+            self.screenshot = shot
+            yield .10
+        yield from self.wait_until(lambda: self.camera_center[1] < junction_camera - 250)
 
-    def touch_live_floor(self):
-        actor = self.character
-        yield from self.move_to(1510)
-        push_key(pico.SDLK_d)
-        yield from self.wait_until(lambda: actor.hp == actor.MAX_HP - 1)
-        push_key(pico.SDLK_d, pico.SDL_KEYUP)
-        assert self.map_x() < 1722
+    def reach_transformer(self):
+        layout = self.level.layout
+        yield from self.move_to(1065)
+        yield from self.land_at(1490)
+        self.key_tap(pico.SDLK_w)
+        yield .05
+        assert not layout.hatch_released and not layout.power_restored
+        self.screenshot = 'gallery-over-closed-hatch'
+        yield .10
+        for x in (650, 370):
+            yield from self.move_to(x)
+        yield from self.land_at(1750)
+        self.screenshot = 'western-drop-turnaround'
+        yield .10
+        yield from self.move_to(950)
+        yield from self.step_to(1065, 1620)
+        assert self.power_hint.visible and self.power_hint.text == 'W  RELEASE HATCH'
+        self.screenshot = 'hatch-from-below'
+        yield from self.click_charge(1065, 1408, blocked=True)
+        if self.hatch:
+            self.key_tap(pico.SDLK_w)
+            yield from self.wait_until(lambda: layout.hatch_released)
+            assert not layout.power_restored
+            yield from self.step_to(975, 1490)
+            self.screenshot = 'hatch-gallery-reconnection'
+            yield .12
+            yield from self.move_to(1065)
+            yield from self.land_at(1620)
 
-    def cross_lower_bay(self):
+    def cross_transformer(self):
         actor, enemy = self.character, self.level.enemy
-        yield from self.touch_live_floor()
-        assert enemy.hp == enemy.MAX_HP
-        self.screenshot = 'lower-route-live-floor-hit'
-        yield .65
-
-        yield from self.move_to(1510)
-        push_key(pico.SDLK_d)
-        push_key(pico.SDLK_SPACE)
-        yield from self.wait_until(lambda: self.map_x() >= 1590)
-        push_key(pico.SDLK_d, pico.SDL_KEYUP)
-        # 선반 아래와 턱 위 사이로 대시하려면 하강할 때 눌러야 한다.
-        yield from self.wait_until(lambda: actor.velocity_y < 0 and self.feet_y() >= 1000)
-        push_key(pico.SDLK_LSHIFT)
-        yield from self.wait_until(lambda: self.map_x() >= 1630)
-        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
-        self.screenshot = 'lower-route-live-floor-dash'
-        yield from self.wait_until(lambda: self.map_x() >= 1745)
-        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
-        assert actor.hp == actor.MAX_HP - 1
-
-        assert actor.x < enemy.x and enemy.state == 'windup', enemy.state
-        yield from self.click_charge(1940, 1064)
-        assert enemy.x < actor.x and not actor.grounded
-        self.screenshot = 'lower-route-flank'
-        yield from self.wait_until(lambda: self.feet_y() >= 1090)
+        yield from self.move_to(1240)
+        yield from self.land_at(1750)
         push_key(pico.SDLK_a)
-        yield from self.wait_until(lambda: actor.x - enemy.x <= 110)
-        push_key(pico.SDLK_j)
+        yield from self.wait_until(lambda: actor.facing == -1 and 0 < actor.x - enemy.x <= 105)
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
+        self.key_tap(pico.SDLK_j)
         yield from self.wait_until(lambda: enemy.hp == enemy.MAX_HP - 1)
-        push_key(pico.SDLK_j, pico.SDL_KEYUP)
-        self.screenshot = 'lower-route-sword-hit'
-        yield 0
-        yield from self.click_charge(2050, 1060)
-        self.screenshot = 'lower-route-retreat'
-        yield .10
-        assert actor.hp == actor.MAX_HP - 1
-        yield from self.move_to(2260)
-        yield from self.land_at(1140)
+        self.screenshot = 'transformer-sword-hit'
+        yield from self.move_to(1410)
+        yield from self.step_to(1530, 1750)
+        yield from self.move_to(1648)
+        health = actor.hp
+        push_key(pico.SDLK_d)
+        yield from self.wait_until(lambda: actor.hp == health - 1)
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        assert 1686 <= self.map_x() < 1848
+        self.screenshot = 'live-busbar-hit'
+        yield .42
+        yield from self.move_to(1648)
+        yield from self.click_charge(1890, 1666)
+        self.screenshot = 'transformer-busbar-crossing'
+        yield from self.land_at(1750)
+        assert actor.hp == health - 1
+
+    def ascend_return(self):
+        lower_camera = self.camera_center[1]
+        yield from self.move_to(2720)
+        yield from self.step_to(2605, 1628)
+        for x, y, feet in ((2580, 1325, 1388), (2580, 1074, 1142), (2730, 956, 1000)):
+            yield from self.click_charge(x, y)
+            self.screenshot = f'return-charge-{feet}'
+            yield from self.land_at(feet)
+        yield from self.move_to(2664)
+        yield from self.step_to(2464, 1060)
+        yield from self.move_to(2130)
+        yield from self.step_to(2028, 1000)
+        yield from self.move_to(1480)
+        yield from self.land_at(1000)
+        assert self.camera_center[1] > lower_camera + 250
+        self.screenshot = 'powered-bridge-over-shaft'
+        yield .12
 
     def exercise(self):
         actor, layout = self.character, self.level.layout
         yield from self.check_intake()
         yield from self.check_locked_output()
-        if self.charge_route:
-            yield from self.cross_upper_balcony()
-        else:
-            yield from self.cross_lower_bay()
-        yield from self.move_to(2470)
-        assert self.power_hint.visible and not layout.power_restored
+        yield from self.descend_shaft()
+        yield from self.reach_transformer()
+        yield from self.cross_transformer()
+        for x in (2260, 2680):
+            yield from self.move_to(x)
+        assert self.power_hint.visible and self.power_hint.text == 'W  RESTORE POWER'
+        assert not layout.power_restored and layout.hatch_released == self.hatch
         self.screenshot = 'relay-before-restoration'
         yield .12
         self.key_tap(pico.SDLK_w)
         yield from self.wait_until(lambda: layout.power_restored)
         yield 0
-        assert not self.power_hint.visible
+        assert not self.power_hint.visible and layout.hatch_released == self.hatch
         self.screenshot = 'relay-after-restoration'
         yield .10
 
-        for x, y in ((2590, 1030), (2495, 918), (2574, 806), (2490, 694)):
-            yield from self.step_to(x, y)
-        yield from self.move_to(2060)
-        yield from self.move_to(1550)
-        assert actor.grounded and isclose(self.feet_y(), 694), self.feet_y()
-        self.screenshot = 'powered-bridge'
-        yield .10
-        yield from self.move_to(1225)
-        yield from self.step_to(1052, 694)
-        yield from self.move_to(456)
+        yield from self.ascend_return()
+        yield from self.move_to(900)
         yield from self.wait_until(lambda: layout.reached_output)
         self.screenshot = 'output-reached'
         yield .12
 
-        if not self.charge_route:
-            yield from self.move_to(850)
-            yield from self.move_to(1145)
-            yield from self.land_at(1140)
-            health = actor.hp
-            yield from self.move_to(1630)
-            self.screenshot = 'lower-route-floor-after-restoration'
-            yield .80
-            assert actor.hp == health
-
         self.key_tap(pico.SDLK_r)
         yield from self.wait_until(lambda: self.character is not actor)
-        assert not layout.reached_output and not layout.power_restored and self.camera_center[1] == 0
+        assert not layout.reached_output and not layout.power_restored and not layout.hatch_released
+        assert self.camera_center[1] == 0
         assert self.character.hp == actor.MAX_HP and self.character.collision_position == layout.player_start
-        if not self.charge_route:
-            yield from self.move_to(750)
-            yield from self.move_to(1300)
-            yield from self.touch_live_floor()
-            self.screenshot = 'lower-route-floor-after-reset'
-            yield 0
-        route = 'upper charge chain without combat' if self.charge_route else 'lower hazard, dash, flank and sword'
-        print(f'PSU SDL PASS: {route}, shutter, single relay, bridge, output, reset, F6', flush=True)
+        yield from self.wait_until(lambda: self.character.spawn_opacity == 1)
+        self.screenshot = 'intake-after-reset'
+        yield 0
+        route = 'hatch opened and climbed' if self.hatch else 'hatch left closed'
+        print(f'PSU SDL PASS: {route}, shaft, sword, busbar, charged climb, bridge, output, reset, F6', flush=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output-dir', type=Path, required=True)
-    parser.add_argument('--charge-route', action='store_true')
+    parser.add_argument('--hatch', action='store_true')
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    scene = PowerSupplySmoke(args.output_dir, charge_route=args.charge_route)
+    scene = PowerSupplySmoke(args.output_dir, hatch=args.hatch)
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed

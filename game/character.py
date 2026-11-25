@@ -360,7 +360,8 @@ class Character(GameObject):
 
     def can_place_center(self, position):
         x, y = position
-        if not isfinite(x) or not isfinite(y) or y < GROUND_Y + BODY_HEIGHT / 2:
+        ground = self.world_bounds[1] if self.world_bounds is not None else GROUND_Y
+        if not isfinite(x) or not isfinite(y) or y < ground + BODY_HEIGHT / 2:
             return False
         if self.world_bounds is not None:
             low, high = self._horizontal_limits()

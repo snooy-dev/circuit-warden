@@ -76,7 +76,7 @@ class GameplayMode(GameMode):
 
     def on_event(self, event):
         if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_w and self.level.power_supply:
-            self.level.layout.restore_power(self.level.player)
+            self.level.layout.interact(self.level.player)
             return
         if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_r:
             if not self.reset_held:

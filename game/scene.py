@@ -382,7 +382,7 @@ class CharacterScene(LevelScene):
                          view_height=DEFAULT_SIZE[1] if power_supply else HEIGHT, images=images)
         self.power_canvas = Canvas(DEFAULT_SIZE) if power_supply else None
         if self.power_canvas is not None:
-            self.power_hint = self.power_canvas.add(Label('W  RESTORE POWER', anchor=(.5, 1), x=-102, y=-53,
+            self.power_hint = self.power_canvas.add(Label('', anchor=(.5, 1), x=-102, y=-53,
                                                           size=26, font_path=MENU_FONT, visible=False))
         self.level.mode.event_to_world = self.event_to_world
         self.level.mode.cursor_to_world = self.cursor_to_world
@@ -395,7 +395,10 @@ class CharacterScene(LevelScene):
         if not self.level.power_supply or not self.engine.output_valid:
             return super().draw()
 
-        self.power_hint.visible = self.opening is None and self.level.layout.near_relay(self.character)
+        hint = self.level.layout.interaction_hint(self.character) if self.opening is None else None
+        self.power_hint.visible = hint is not None
+        if hint is not None:
+            self.power_hint.text = hint
         width, height = self.engine.output_size
         grid_height = POWER_SUPPLY_PIXEL_HEIGHT
         grid_width = max(1, round(width * grid_height / height))
@@ -546,7 +549,7 @@ class CharacterScene(LevelScene):
         bounds = self.transform.bounds
         if bounds is None:
             return
-        left, _, right, top = self.level.world_bounds
+        left, bottom, right, top = self.level.world_bounds
         half_width = min((bounds[2] - bounds[0]) / 2, (right - left) / 2)
         low, high = left + half_width, right - half_width
         camera_x = min(max(self.camera_center[0], low), high)
@@ -561,7 +564,10 @@ class CharacterScene(LevelScene):
         camera_x += (target - camera_x) * follow
         camera_y = self.camera_center[1]
         if self.level.power_supply:
-            target_y = min(max(player.y, 0), max(0, top - self.view_height / 2))
+            half_height = self.view_height / 2
+            intake_y = self.level.layout.player_start[1]
+            target_y = max(0, player.y) + min(0, player.y - intake_y)
+            target_y = min(max(target_y, bottom + half_height), top - half_height)
             camera_y += (target_y - camera_y) * follow
         self.camera_center = (camera_x, camera_y)
 
