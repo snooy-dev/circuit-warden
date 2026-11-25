@@ -592,8 +592,10 @@ class CharacterScene(LevelScene):
             half_height = min(self.view_height / 2, (top - bottom) / 2)
             low, high = bottom + half_height, top - half_height
             camera_y = min(max(camera_y, low), high)
-            intake_y = layout.player_start[1]
-            target_y = max(layout.start_camera_y, player.y) + min(0, player.y - intake_y)
+            target_y = player.center[1]
+            if room == layout.start_room:
+                intake_y = layout.player_start[1]
+                target_y = max(layout.start_camera_y, player.y) + min(0, player.y - intake_y)
             target_y = min(max(target_y, low), high)
             camera_y = target_y if cut else camera_y + (target_y - camera_y) * follow
         self.camera_center = (camera_x, camera_y)

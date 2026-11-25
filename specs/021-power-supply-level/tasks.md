@@ -89,3 +89,9 @@
 - [x] T046 [US1] 산화·먼지 자산을 생성하여 hi-bit로 가공하고 확정된 이동면과 표지에 적용한다 (`assets/levels/power-supply/`, FR-037)
 - [x] T047 [US1] 실제 SDL에서 상층 우선과 하층 우선의 완주, 복구 전 상하 전환, 닫힌 출력과 복구 상태·초기화를 검사한다. 후속 변경에서는 사용자 요청에 따라 추가 플레이 실행을 생략하고 수직 연결의 배치와 충돌을 확인한다 (`tests/smoke/power_supply_smoke.py`, `verification.md`, FR-034~FR-036)
 - [x] T048 [US1] 판금·기판의 이어지는 면과 샤프트 지지를 구성하고, 최하층 부하 시험실과 양쪽 접근로를 배치한다. 설계·기술·아트 기준과 진행 상태를 동기화한다 (`map.json`, `docs/`, `verification.md`, FR-038~FR-039)
+
+## 수직으로 엮은 설비와 다음 맵의 관문
+
+- [x] T049 [US1] 상태별 방 접속도를 만들고 수직 냉각 경로, 전하 경로, 조용한 중앙과 상부 관문을 블록아웃한다 (`map.json`, FR-040~FR-043)
+- [x] T050 [US1] 새 개구부와 이동면에 원경·받침·전경 및 마모 재질을 합성한다 (`assets/levels/power-supply/`, FR-044)
+- [x] T051 [US1] 오프스크린 입력으로 양쪽 경로·복구·보스 구역 통과·출력을 확인하고 최종 화면과 문서를 맞춘다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-045)

@@ -39,7 +39,8 @@ class PowerSupplyMap(GameObject):
         self.hatch_reach = hatch['reach']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
         self.player_start = self._point(player_spawn['x'], player_spawn['feet_y'])
-        _, intake_bottom, _, intake_top = self.rooms[self.room_at(self.player_start)]
+        self.start_room = self.room_at(self.player_start)
+        _, intake_bottom, _, intake_top = self.rooms[self.start_room]
         self.start_camera_y = (intake_bottom + intake_top) / 2
         self.power_entry = self._point(*player_spawn['entry_origin'])
         self.charge_sites = tuple(tuple(self._point(*point) for point in anchor['variants'])
@@ -131,7 +132,7 @@ class PowerSupplyMap(GameObject):
 
     def _place_devices(self):
         self.closed_shutters = tuple(bounds for kind, bounds in self.devices
-                                     if (kind == 'shutter' and not self.power_restored)
+                                     if (kind in ('shutter', 'powered-hatch') and not self.power_restored)
                                      or (kind == 'hatch' and not self.hatch_released))
         active_bridges = tuple(bounds for kind, bounds in self.devices
                                if kind == 'bridge' and self.power_restored)
@@ -218,12 +219,13 @@ class PowerSupplyMap(GameObject):
                 for x in (left, right - 12):
                     draw_rect(transform, (x, top - 10, x + 12, top), (136, 92, 57), opacity)
             return
-        if kind == 'hatch':
-            if not self.hatch_released:
+        if kind in ('hatch', 'powered-hatch'):
+            opened = self.hatch_released if kind == 'hatch' else self.power_restored
+            if not opened:
                 draw_image(self.hatch_art, transform, bounds, opacity)
             for edge in (left, right - 12):
                 draw_rect(transform, (edge, bottom, edge + 12, top),
-                          (81, 157, 144) if self.hatch_released else (172, 120, 62), opacity)
+                          (81, 157, 144) if opened else (172, 120, 62), opacity)
             return
         image = self.shutter_art[self.power_restored]
         lower = top - image.h * 2 if self.power_restored else bottom

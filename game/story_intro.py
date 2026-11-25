@@ -56,7 +56,7 @@ class PowerOpening:
     def camera(self, gameplay_center, gameplay_view, aspect):
         layout = self.level.layout
         cable_x, cable_y = layout.power_entry
-        left = layout.bounds[0]
+        left = layout.rooms[layout.start_room][0]
         close_x = max(cable_x + 60, left + CLOSE_VIEW * aspect / 2)
         progress = _ease(self.elapsed, .24, 2.68)
         if progress == 1:
