@@ -28,6 +28,7 @@ class PowerSupplyMap(GameObject):
             for rect in data['collision']['rects'])
         self.devices = tuple((item['kind'], self._rect(*item['rect']))
                              for item in data['collision']['power_devices'])
+        self.busbar = self._rect(*data['collision']['busbar'])
         relay = next(item for item in data['interactions'] if item['id'] == 'relay')
         self.relay = self._point(relay['x'], relay['y'])
         self.relay_reach = relay['reach']
@@ -64,6 +65,7 @@ class PowerSupplyMap(GameObject):
         self.rotor_speed = rotor['degrees_per_second']
         self.rotor_angle = 0.0
         self.items = [RenderItem(self._draw_background, draw_order=-5)]
+        self.items.append(RenderItem(self._draw_busbar, -2, self.busbar))
         ceilings = {tuple(point) for point in background['ceilings']}
         for rect, collider in zip(data['collision']['rects'], self.terrain, strict=True):
             bounds = collider.bounds_at((0, 0))
@@ -134,6 +136,12 @@ class PowerSupplyMap(GameObject):
             self.power_restored = True
             self._place_devices()
 
+    def damage_on_busbar(self, player):
+        if (not self.power_restored and not player.teleport_guard_remaining
+                and overlaps(player.hurt_box, self.busbar)):
+            left, _, right, _ = self.busbar
+            player.take_hit(-1 if player.x < (left + right) / 2 else 1)
+
     def blocks_teleport(self, player, x, y):
         if self.power_restored:
             return False
@@ -184,6 +192,13 @@ class PowerSupplyMap(GameObject):
                 draw_rect(transform, (left + 4, top - 14, right - 4, top - 10), (39, 53, 63), opacity)
         else:
             draw_rect(transform, (left + 4, bottom, left + 7, top), (49, 66, 76), opacity)
+
+    def _draw_busbar(self, transform, opacity):
+        left, _, right, top = self.busbar
+        body, edge = (((44, 70, 76), (99, 154, 156)) if self.power_restored
+                      else ((102, 58, 25), (248, 177, 64)))
+        draw_rect(transform, self.busbar, body, opacity)
+        draw_rect(transform, (left, top - 4, right, top), edge, opacity)
 
     def _draw_device(self, kind, bounds, transform, opacity):
         left, _, right, top = bounds

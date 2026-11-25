@@ -2,10 +2,10 @@
   "schema": "generate2dmap.map_bundle.v2",
   "id": "power-supply",
   "name": "Power Supply",
-  "world": {"width": 3330, "height": 1920, "unit": "px"},
-  "camera": {"bounds": [0, 0, 3330, 1920]},
+  "world": {"width": 2860, "height": 1920, "unit": "px"},
+  "camera": {"bounds": [0, 0, 2860, 1920]},
   "layers": [
-    {"name": "far", "kind": "image", "image": "return-loop/overview.png", "art_source": "existing", "rotor": {"prop": "fan-rotor", "rect": [168, 754, 376, 376], "diameter_px": 304, "degrees_per_second": 72}, "chambers": [{"rect": [32, 738, 822, 402], "color": [28, 42, 51]}, {"rect": [886, 758, 514, 382], "color": [31, 48, 58]}, {"rect": [1150, 528, 240, 488], "color": [29, 45, 54]}, {"rect": [1432, 736, 554, 404], "color": [44, 44, 47]}, {"rect": [2018, 700, 360, 440], "color": [27, 42, 49]}, {"rect": [2378, 894, 920, 246], "color": [39, 42, 45]}, {"rect": [250, 446, 890, 248], "color": [22, 34, 43]}, {"rect": [1288, 474, 730, 220], "color": [33, 47, 55]}, {"rect": [2268, 464, 572, 230], "color": [30, 48, 55]}, {"rect": [2840, 540, 218, 600], "color": [23, 36, 43]}, {"rect": [2640, 506, 658, 634], "color": [24, 39, 44]}], "ceilings": [[250, 420], [1680, 480], [2390, 852]], "girders": [[220, 756, 34, 380], [518, 756, 30, 380], [1114, 563, 25, 567], [1330, 551, 22, 575], [1580, 744, 50, 354], [1840, 746, 46, 353], [2434, 894, 45, 220], [2720, 895, 44, 221], [3042, 728, 36, 366]], "lights": [[110, 770, 460, 368], [1005, 680, 440, 426], [1450, 792, 572, 334], [2802, 918, 560, 218], [2350, 470, 444, 246], [224, 474, 430, 236]], "sha256": "b6c27c70ced0b4f006917cc851c5246870467c5163d6c7ae15d0905e861c2a97"},
+    {"name": "far", "kind": "image", "image": "return-loop/overview.png", "art_source": "existing", "rotor": {"prop": "fan-rotor", "rect": [168, 754, 376, 376], "diameter_px": 304, "degrees_per_second": 72}, "chambers": [{"rect": [36, 738, 1054, 402], "color": [28, 42, 51]}, {"rect": [1090, 488, 1110, 652], "color": [45, 40, 38]}, {"rect": [2200, 560, 628, 580], "color": [29, 45, 54]}, {"rect": [250, 446, 810, 248], "color": [22, 34, 43]}], "ceilings": [[0, 0], [250, 420]], "girders": [[220, 756, 34, 380], [518, 756, 30, 380], [1090, 550, 28, 590], [1320, 566, 24, 556], [1728, 508, 38, 626], [2120, 508, 48, 626], [2368, 598, 26, 532], [2748, 598, 34, 532]], "lights": [[110, 770, 460, 368], [1180, 640, 480, 338], [1580, 678, 572, 404], [2220, 830, 560, 292], [224, 474, 430, 236]], "sha256": "b6c27c70ced0b4f006917cc851c5246870467c5163d6c7ae15d0905e861c2a97"},
     {"name": "rear", "kind": "objects"},
     {"name": "structure", "kind": "objects"},
     {"name": "front", "kind": "objects"}
@@ -31,10 +31,10 @@
     "chamber-light": {"image": "distribution/chamber-light.png", "sha256": "9bfefc50481a5d87f16ba8b06dcf2dee4bc707fea18686a772c17d9910b2f5e9"}
   },
   "objects": [
-    {"id": "solder-side-pcb", "prop": "pcb", "x": 2650, "y": 1140, "anchor_px": [0, 304], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.8, "scale": 2},
-    {"id": "relay-feed", "prop": "feed-wire", "x": 3055, "y": 1074, "anchor_px": [9, 96], "solid": false, "layer": "rear", "sortY": 1, "opacity": 0.76, "scale": 2},
-    {"id": "transformer-coil", "prop": "coil", "x": 1720, "y": 1140, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.43, "scale": 1},
-    {"id": "rectifier-bank", "prop": "capacitors", "x": 2460, "y": 1140, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.26, "scale": 0.78},
+    {"id": "solder-side-pcb", "prop": "pcb", "x": 2278, "y": 1140, "anchor_px": [0, 304], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.8, "scale": 2},
+    {"id": "relay-feed", "prop": "feed-wire", "x": 2500, "y": 1074, "anchor_px": [9, 96], "solid": false, "layer": "rear", "sortY": 1, "opacity": 0.76, "scale": 2},
+    {"id": "transformer-coil", "prop": "coil", "x": 1648, "y": 1140, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.7, "scale": 2.1},
+    {"id": "rectifier-bank", "prop": "capacitors", "x": 2180, "y": 1140, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.26, "scale": 0.78},
     {"id": "output-socket", "prop": "output-port", "x": 500, "y": 694, "anchor_px": [212, 94], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.8, "scale": 1},
     {"id": "output-cable", "prop": "output-cable", "x": 540, "y": 636, "anchor_px": [0, 0], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.4, "scale": 1},
     {"id": "near-cable-1", "prop": "exposed-cable", "x": 72, "y": 696, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "opacity": 1, "scale": 1},
@@ -42,68 +42,63 @@
     {"id": "lint-772", "prop": "lint", "x": 772, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
     {"id": "lint-1056", "prop": "lint", "x": 1056, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
     {"id": "lint-1767", "prop": "lint", "x": 1767, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
-    {"id": "lint-2394", "prop": "lint", "x": 2394, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
-    {"id": "lint-3052", "prop": "lint", "x": 3052, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72}
+    {"id": "lint-2394", "prop": "lint", "x": 2394, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72}
   ],
   "collision": {
     "actorRadius": 24,
     "ySquash": 1.7,
     "rects": [
-      [0, 1140, 3330, 780],
-      [0, 202, 36, 938],
-      [3298, 144, 32, 996],
-      [250, 694, 890, 42],
-      [218, 420, 32, 316],
-      [250, 420, 890, 26],
-      [1288, 694, 730, 40],
-      [1680, 480, 512, 30],
-      [854, 736, 32, 242],
-      [1400, 734, 32, 250],
-      [1986, 734, 32, 244],
-      [430, 1016, 182, 26],
-      [1010, 1026, 150, 24],
-      [1216, 914, 78, 24],
-      [1090, 802, 150, 24],
-      [1500, 1082, 56, 58],
-      [1900, 1084, 50, 56],
-      [2200, 1026, 150, 24],
-      [2020, 914, 184, 24],
-      [2192, 802, 150, 24],
-      [2048, 754, 78, 24],
-      [2280, 694, 560, 36],
-      [2390, 852, 380, 38],
-      [3100, 1030, 112, 24],
-      [2960, 918, 112, 24],
-      [2850, 806, 86, 24]
+      [0, 1140, 2860, 780],
+      [0, 0, 2860, 32],
+      [0, 0, 36, 1140],
+      [2828, 0, 32, 1140],
+      [250, 694, 810, 24],
+      [218, 420, 32, 298],
+      [250, 420, 810, 26],
+      [510, 1030, 130, 24],
+      [675, 918, 101, 24],
+      [818, 806, 104, 24],
+      [1220, 694, 110, 24],
+      [1210, 1030, 120, 24],
+      [1360, 930, 100, 24],
+      [1740, 930, 400, 24],
+      [1722, 1092, 34, 48],
+      [2110, 1090, 36, 50],
+      [1730, 694, 790, 24],
+      [2548, 1030, 86, 24],
+      [2464, 918, 56, 24],
+      [2544, 806, 88, 24]
     ],
     "power_devices": [
-      {"kind": "bridge", "rect": [2018, 694, 262, 28]},
+      {"kind": "bridge", "rect": [1330, 694, 400, 24]},
       {"kind": "shutter", "rect": [734, 446, 32, 248]}
     ],
-    "output_lock": [250, 446, 484, 248]
+    "output_lock": [250, 446, 484, 248],
+    "busbar": [1560, 1108, 138, 32]
   },
   "spawns": [
     {"id": "start", "x": 172, "y": 1098.5, "feet_y": 1140, "entry_origin": [142, 692]},
-    {"id": "metal-dust", "x": 1750, "y": 1098.5, "feet_y": 1140}
+    {"id": "metal-dust", "x": 1868, "y": 1098.5, "feet_y": 1140}
   ],
   "interactions": [
-    {"id": "relay", "x": 3025, "y": 1098.5, "reach": 66},
+    {"id": "relay", "x": 2470, "y": 1098.5, "reach": 66},
     {"id": "output", "x": 446, "y": 652.5, "reach": 58},
-    {"id": "return-deck", "x": 2770, "y": 652.5, "reach": 35}
+    {"id": "return-deck", "x": 2490, "y": 652.5, "reach": 35}
   ],
   "anchors": {
     "charge-01": {"point": [358, 1066], "variants": [[354, 1069], [358, 1066], [362, 1063]]},
-    "charge-02": {"point": [512, 944], "variants": [[508, 947], [512, 944], [516, 941]]},
-    "charge-03": {"point": [1060, 961], "variants": [[1056, 964], [1060, 961], [1064, 958]]},
-    "charge-04": {"point": [1270, 857], "variants": [[1266, 860], [1270, 857], [1274, 854]]},
-    "charge-05": {"point": [1060, 629], "variants": [[1056, 632], [1060, 629], [1064, 626]]},
-    "charge-06": {"point": [1480, 626], "variants": [[1476, 629], [1480, 626], [1484, 623]]},
-    "charge-07": {"point": [1830, 625], "variants": [[1826, 628], [1830, 625], [1834, 622]]},
-    "charge-08": {"point": [2270, 960], "variants": [[2266, 963], [2270, 960], [2274, 957]]},
-    "charge-09": {"point": [2120, 847], "variants": [[2116, 850], [2120, 847], [2124, 844]]},
-    "charge-10": {"point": [2248, 737], "variants": [[2244, 740], [2248, 737], [2252, 734]]},
-    "charge-11": {"point": [2346, 634], "variants": [[2342, 637], [2346, 634], [2350, 631]]},
-    "charge-12": {"point": [2770, 628], "variants": [[2766, 631], [2770, 628], [2774, 625]]},
-    "charge-13": {"point": [3025, 858], "variants": [[3021, 861], [3025, 858], [3029, 855]]}
+    "charge-02": {"point": [568, 960], "variants": [[564, 963], [568, 960], [572, 957]]},
+    "charge-03": {"point": [738, 844], "variants": [[734, 847], [738, 844], [742, 841]]},
+    "charge-04": {"point": [970, 626], "variants": [[966, 629], [970, 626], [974, 623]]},
+    "charge-05": {"point": [1270, 952], "variants": [[1266, 955], [1270, 952], [1274, 949]]},
+    "charge-06": {"point": [1610, 848], "variants": [[1606, 851], [1610, 848], [1614, 845]]},
+    "charge-07": {"point": [1815, 855], "variants": [[1811, 858], [1815, 855], [1819, 852]]},
+    "charge-08": {"point": [1940, 1064], "variants": [[1936, 1067], [1940, 1064], [1944, 1061]]},
+    "charge-09": {"point": [2050, 1060], "variants": [[2046, 1063], [2050, 1060], [2054, 1057]]},
+    "charge-10": {"point": [2587, 957], "variants": [[2583, 960], [2587, 957], [2591, 954]]},
+    "charge-11": {"point": [2496, 847], "variants": [[2492, 850], [2496, 847], [2500, 844]]},
+    "charge-12": {"point": [2460, 622], "variants": [[2456, 625], [2460, 622], [2464, 619]]},
+    "charge-13": {"point": [1525, 626], "variants": [[1521, 629], [1525, 626], [1529, 623]]},
+    "charge-14": {"point": [1060, 629], "variants": [[1056, 632], [1060, 629], [1064, 626]]}
   }
 }

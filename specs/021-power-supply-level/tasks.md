@@ -64,3 +64,9 @@
 
 - [x] T034 [US1] 하층과 서쪽 귀환 동선을 블록아웃하고 단일 전원 상태를 실제 SDL 입력으로 검증한다 (`map.json`, `game/`, `tests/smoke/power_supply_smoke.py`, FR-020~FR-021)
 - [x] T035 [US1] 장치 원화를 가공·배치하고 점프·전하 귀환, 출력, 재시작과 실제 화면을 확인한다 (`assets/levels/power-supply/`, `docs/`, `verification.md`, FR-020~FR-022)
+
+## 변압실의 두 경로
+
+- [x] T036 [US1] 상부 우회와 하부 전투 블록아웃에 버스바와 단일 복구 상태를 연결한다 (`map.json`, `game/`, FR-023~FR-024)
+- [ ] T037 [US1] 방별 원경과 지형·위험의 hi-bit 에셋을 가공하고 실제 배율에서 배치한다 (`assets/levels/power-supply/`, FR-025)
+- [ ] T038 [US1] SDL에서 두 경로의 서로 다른 결과, 피해와 차단, 귀환·출력을 확인하고 현재 문서를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-023~FR-025)

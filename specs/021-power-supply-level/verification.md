@@ -169,3 +169,7 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **정적 미리보기** 복구 상태의 배치를 `build_scene_preview.py --strict`로 생성했다. 설치된 헤드리스 Chromium에서 키 이동, 이미지 로드 12개, `window.__scene.traverseAll()`의 목표 3곳을 확인했다. 정적 미리보기는 배치 확인용이며 실제 점프와 복구 전환은 SDL 검사에 포함한다. [미리보기](../../art/levels/power-supply/return-loop/preview-final/preview.html) · [브라우저 스냅샷](../../art/levels/power-supply/return-loop/preview-final/scene-snapshot.json).
 
 기존 카메라 초기화와 스킬 전하 생성의 관련 자동 검사 2개를 통과했다. 게임 설계, 진행 상태, 아트, 기술 구조와 조작 문서를 대조했다. 전체 회귀와 초회 플레이어의 동선 인지는 확인 범위에 포함하지 않았다.
+
+## 변압실의 두 경로
+
+- **블록아웃 실제 SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke`의 기본 경로와 `--charge-route`를 실행했다. 하부에서 버스바 접촉 피해, 적의 반대편으로 순간이동, 검 적중과 두 번째 전하 이탈을 확인했다. 상부에서는 전하 두 개가 이어지고 적과 접촉하지 않고 선반을 통과했다. 두 경로에서 릴레이 복구, 귀환교, 출력과 R을 확인했다.

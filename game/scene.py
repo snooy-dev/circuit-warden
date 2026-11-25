@@ -229,6 +229,8 @@ class GameplayLevel(Level):
             self._resolve_sword()
         if self.enemy.level is self:
             self._resolve_enemy_contact(dt, player_position, protected_until)
+        if self.power_supply:
+            self.layout.damage_on_busbar(self.player)
         if self.player.hp == 0:
             for obj in self.objects:
                 if isinstance(obj, SpriteEffect):
