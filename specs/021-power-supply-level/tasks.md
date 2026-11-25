@@ -59,3 +59,8 @@
 - [x] T031 [US1] 인게임 레퍼런스의 구도·위험 배치를 대조하고 3층 구역과 두 순환 경로를 제작한다 (`assets/levels/power-supply/map.json`, FR-017~FR-019)
 - [x] T032 [US1] 릴레이, 교량, 차단기, 셔터와 장치 상태를 연결하고 구조 면과 소품을 정돈한다 (`game/power_supply_map.py`, `game/scene.py`, `game/character.py`, FR-017~FR-019)
 - [x] T033 [US1] 전원 복구와 귀환을 실제 기본 창에서 확인하고 기준 문서와 실행 증거를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-017~FR-019)
+
+## 전원 복구와 귀환 지름길
+
+- [x] T034 [US1] 하층과 서쪽 귀환 동선을 블록아웃하고 단일 전원 상태를 실제 SDL 입력으로 검증한다 (`map.json`, `game/`, `tests/smoke/power_supply_smoke.py`, FR-020~FR-021)
+- [ ] T035 [US1] 장치 원화를 가공·배치하고 점프·전하 귀환, 출력, 재시작과 실제 화면을 확인한다 (`assets/levels/power-supply/`, `docs/`, `verification.md`, FR-020~FR-022)

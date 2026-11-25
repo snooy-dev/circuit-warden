@@ -158,3 +158,9 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **맵·회귀 검사** `map_bundle.py validate`, `map_nav.py check` 통과. 목표 4곳과 충돌 데이터에 경고 0개다. `build_scene_preview.py --verify --strict`는 정적 배치를 평탄화한 사본에서 경로 4개를 통과했다. 전원 상태 변화는 SDL 판정이다. `test_camera_lags_motion_freezes_at_walls_and_resets_with_player`, `test_skill_cast_preserves_air_action_and_is_spent_once`도 통과했다. [배치 미리보기](../../art/levels/power-supply/distribution/map-preview/preview.html).
 
 게임 설계·아트 기준·기술 구조·기본 조작·전하 규칙·진행 상태를 갱신했다. 원작은 실제 플레이 화면으로 관찰했다. 사용자 직접 플레이에서 장치 발견과 시각 품질은 미확인이다. 전체 회귀는 실행하지 않았다.
+
+## 전원 복구와 귀환 지름길
+
+- **블록아웃** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke`를 `--output-dir .local-tools/return-graybox`로 실행했다. 실제 SDL의 키·마우스 입력으로 복구 전 셔터, 출력실 순간이동 차단, 범위 밖 W, 단일 릴레이, 점프 상승, 정비교 중앙 착지, 출력, R 및 창 크기 전환을 확인했다.
+- **전하 상승** 같은 명령에 `--charge-return --output-dir .local-tools/return-graybox-charge`를 지정했다. 배전실 바로 위 전하를 클릭해 아래 발판을 건너뛰고, 같은 귀환로로 출력에 도달했다.
+- **배치 검사** 도구 Python의 `map_bundle.py validate`와 `map_nav.py check`를 `assets/levels/power-supply/map.json`에 실행했다. 배치 경고와 도달 불가 목표가 없었다. 점프와 전원 상태는 SDL에서 판정했다. [정비교 블록아웃](../../art/levels/power-supply/return-loop/graybox/character-return-powered-bridge.png).

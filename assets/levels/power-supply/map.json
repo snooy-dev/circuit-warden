@@ -2,18 +2,15 @@
   "schema": "generate2dmap.map_bundle.v2",
   "id": "power-supply",
   "name": "Power Supply",
-  "world": {"width": 4320, "height": 1920, "unit": "px"},
-  "camera": {"bounds": [0, 0, 4320, 1920]},
+  "world": {"width": 3330, "height": 1920, "unit": "px"},
+  "camera": {"bounds": [0, 0, 3330, 1920]},
   "layers": [
-    {"name": "far", "kind": "image", "image": "far-overview.png", "art_source": "host_image", "runtime_image": "far.png", "runtime_sha256": "e32404ca20000185ec6b727c89099fd155e3c3c5eb4386ddaeff0f58bf96ce14", "rotor": {"prop": "fan-rotor", "rect": [168, 754, 376, 376], "diameter_px": 304, "degrees_per_second": 72}, "chambers": [{"rect": [32, 738, 822, 402], "color": [28, 42, 51]}, {"rect": [886, 758, 514, 382], "color": [31, 48, 58]}, {"rect": [1150, 528, 240, 488], "color": [29, 45, 54]}, {"rect": [1432, 736, 554, 404], "color": [44, 44, 47]}, {"rect": [2018, 700, 360, 440], "color": [27, 42, 49]}, {"rect": [2378, 894, 1022, 246], "color": [39, 42, 45]}, {"rect": [250, 446, 890, 248], "color": [22, 34, 43]}, {"rect": [1288, 474, 730, 220], "color": [33, 47, 55]}, {"rect": [2268, 464, 572, 230], "color": [30, 48, 55]}, {"rect": [2840, 540, 420, 600], "color": [23, 36, 43]}, {"rect": [3260, 422, 1028, 272], "color": [36, 47, 52]}, {"rect": [1436, 206, 810, 218], "color": [27, 45, 55]}, {"rect": [2310, 196, 780, 190], "color": [30, 47, 54]}, {"rect": [3150, 196, 570, 214], "color": [27, 44, 53]}], "ceilings": [[250, 420], [1680, 480], [2390, 852], [1436, 168], [2310, 154], [3150, 154]], "girders": [[220, 756, 34, 380], [518, 756, 30, 380], [1114, 563, 25, 567], [1330, 551, 22, 575], [1580, 744, 50, 354], [1840, 746, 46, 353], [2434, 894, 45, 220], [2720, 895, 44, 221], [3042, 728, 36, 366], [3475, 480, 42, 205], [3808, 424, 34, 240], [2930, 202, 30, 173]], "lights": [[110, 770, 460, 368], [1005, 680, 440, 426], [1450, 792, 572, 334], [2802, 918, 560, 218], [2350, 470, 444, 246], [3390, 466, 575, 258], [224, 474, 430, 236], [2330, 191, 740, 196]], "sha256": "734ae92ac074f696d7d10506b908dbf179e6895f4da8f725c2c8d50e6f3d0b3f"},
+    {"name": "far", "kind": "image", "image": "return-loop/overview.png", "art_source": "existing", "rotor": {"prop": "fan-rotor", "rect": [168, 754, 376, 376], "diameter_px": 304, "degrees_per_second": 72}, "chambers": [{"rect": [32, 738, 822, 402], "color": [28, 42, 51]}, {"rect": [886, 758, 514, 382], "color": [31, 48, 58]}, {"rect": [1150, 528, 240, 488], "color": [29, 45, 54]}, {"rect": [1432, 736, 554, 404], "color": [44, 44, 47]}, {"rect": [2018, 700, 360, 440], "color": [27, 42, 49]}, {"rect": [2378, 894, 920, 246], "color": [39, 42, 45]}, {"rect": [250, 446, 890, 248], "color": [22, 34, 43]}, {"rect": [1288, 474, 730, 220], "color": [33, 47, 55]}, {"rect": [2268, 464, 572, 230], "color": [30, 48, 55]}, {"rect": [2840, 540, 218, 600], "color": [23, 36, 43]}, {"rect": [2640, 506, 658, 634], "color": [24, 39, 44]}], "ceilings": [[250, 420], [1680, 480], [2390, 852]], "girders": [[220, 756, 34, 380], [518, 756, 30, 380], [1114, 563, 25, 567], [1330, 551, 22, 575], [1580, 744, 50, 354], [1840, 746, 46, 353], [2434, 894, 45, 220], [2720, 895, 44, 221], [3042, 728, 36, 366]], "lights": [[110, 770, 460, 368], [1005, 680, 440, 426], [1450, 792, 572, 334], [2802, 918, 560, 218], [2350, 470, 444, 246], [224, 474, 430, 236]], "sha256": "b6c27c70ced0b4f006917cc851c5246870467c5163d6c7ae15d0905e861c2a97"},
     {"name": "rear", "kind": "objects"},
     {"name": "structure", "kind": "objects"},
     {"name": "front", "kind": "objects"}
   ],
   "props": {
-    "arc-idle": {"image": "maintenance/arc-idle.png", "art_source": "host_image", "sha256": "5c6d9856b7d18f47fe81621f5b2fd1373e2d0dc7398113630ce73350d65edc1f"},
-    "arc-live": {"image": "maintenance/arc-live.png", "art_source": "host_image", "sha256": "7f5e8bfe535c585edfc33a2f031095f5882f03607883cadd6b1d22249b722900"},
-    "arc-warning": {"image": "maintenance/arc-warning.png", "art_source": "host_image", "sha256": "fbdc7228111580ed06b673b11ac57e0c64675d3e788a572b27f47c061ac5c772"},
     "capacitors": {"image": "capacitors.png", "art_source": "host_image", "sha256": "e1b946b82eba6b4d84681c184d4025a2f96323ead58f6477ff81e2d3e8abd4d0"},
     "coil": {"image": "coil.png", "art_source": "host_image", "sha256": "f6af3435daae092aaec9f5079419d14aca04856d5e7f2b8d350f4af64f5aff76"},
     "exposed-cable": {"image": "exposed-cable.png", "art_source": "host_image", "sha256": "c5a6acb7634971c60ed878a3b2e65623e783e2731440378dea3b7ff4b651a09e"},
@@ -28,11 +25,9 @@
   "objects": [
     {"id": "transformer-coil", "prop": "coil", "x": 1720, "y": 1140, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.43, "scale": 1},
     {"id": "rectifier-bank", "prop": "capacitors", "x": 2648, "y": 1140, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.26, "scale": 0.78},
-    {"id": "breaker-bank", "prop": "capacitors", "x": 3916, "y": 694, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.34, "scale": 0.87},
     {"id": "output-socket", "prop": "output-port", "x": 500, "y": 694, "anchor_px": [212, 94], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.8, "scale": 1},
     {"id": "output-cable", "prop": "output-cable", "x": 540, "y": 636, "anchor_px": [0, 0], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.4, "scale": 1},
     {"id": "near-cable-1", "prop": "exposed-cable", "x": 72, "y": 696, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "opacity": 1, "scale": 1},
-    {"id": "arc-emitter", "prop": "arc-idle", "x": 2510, "y": 658, "anchor_px": [0, 0], "solid": false, "layer": "structure", "sortY": 100, "opacity": 1, "scale": 1, "active_props": ["arc-warning", "arc-live"], "hit_rect": [2552, 662, 68, 32]},
     {"id": "lint-330", "prop": "lint", "x": 330, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
     {"id": "lint-772", "prop": "lint", "x": 772, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
     {"id": "lint-1056", "prop": "lint", "x": 1056, "y": 1140, "anchor_px": [32, 15], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.33, "scale": 0.72},
@@ -44,9 +39,9 @@
     "actorRadius": 24,
     "ySquash": 1.7,
     "rects": [
-      [0, 1140, 4320, 780],
+      [0, 1140, 3330, 780],
       [0, 202, 36, 938],
-      [4288, 200, 32, 940],
+      [3298, 144, 32, 996],
       [250, 694, 890, 42],
       [218, 420, 32, 316],
       [250, 420, 890, 26],
@@ -66,35 +61,25 @@
       [2192, 802, 150, 24],
       [2048, 754, 78, 24],
       [2280, 694, 560, 36],
-      [3260, 694, 920, 38],
       [2390, 852, 380, 38],
-      [2874, 912, 80, 36],
-      [3166, 1010, 124, 28],
-      [3400, 930, 888, 210],
-      [3840, 576, 160, 26],
-      [3680, 480, 100, 24],
-      [3150, 410, 570, 32],
-      [2310, 386, 780, 34],
-      [1436, 426, 810, 40],
-      [1436, 168, 810, 44],
-      [2310, 154, 780, 44],
-      [3150, 154, 570, 44]
+      [3100, 1030, 112, 24],
+      [2960, 918, 112, 24],
+      [2850, 806, 86, 24]
     ],
     "power_devices": [
-      {"kind": "bridge", "stage": 1, "rect": [2840, 694, 420, 28]},
-      {"kind": "shutter", "stage": 2, "rect": [734, 446, 32, 248]},
-      {"kind": "shutter", "stage": 2, "rect": [3516, 198, 32, 212]}
-    ]
+      {"kind": "bridge", "rect": [2018, 694, 262, 28]},
+      {"kind": "shutter", "rect": [734, 446, 32, 248]}
+    ],
+    "output_lock": [250, 446, 484, 248]
   },
   "spawns": [
     {"id": "start", "x": 172, "y": 1098.5, "feet_y": 1140, "entry_origin": [142, 692]},
     {"id": "metal-dust", "x": 1750, "y": 1098.5, "feet_y": 1140}
   ],
   "interactions": [
-    {"id": "relay-1", "x": 3090, "y": 1098.5},
-    {"id": "relay-2", "x": 3615, "y": 652.5},
+    {"id": "relay", "x": 3025, "y": 1098.5, "reach": 66},
     {"id": "output", "x": 446, "y": 652.5, "reach": 58},
-    {"id": "return", "x": 1490, "y": 384.5}
+    {"id": "return-deck", "x": 2770, "y": 652.5, "reach": 35}
   ],
   "anchors": {
     "charge-01": {"point": [358, 1066], "variants": [[354, 1069], [358, 1066], [362, 1063]]},
@@ -109,12 +94,6 @@
     "charge-10": {"point": [2248, 737], "variants": [[2244, 740], [2248, 737], [2252, 734]]},
     "charge-11": {"point": [2346, 634], "variants": [[2342, 637], [2346, 634], [2350, 631]]},
     "charge-12": {"point": [2770, 628], "variants": [[2766, 631], [2770, 628], [2774, 625]]},
-    "charge-13": {"point": [2980, 996], "variants": [[2976, 999], [2980, 996], [2984, 993]]},
-    "charge-14": {"point": [3348, 633], "variants": [[3344, 636], [3348, 633], [3352, 630]]},
-    "charge-15": {"point": [3902, 508], "variants": [[3898, 511], [3902, 508], [3906, 505]]},
-    "charge-16": {"point": [3650, 350], "variants": [[3646, 353], [3650, 350], [3654, 347]]},
-    "charge-17": {"point": [2790, 318], "variants": [[2786, 321], [2790, 318], [2794, 315]]},
-    "charge-18": {"point": [2110, 360], "variants": [[2106, 363], [2110, 360], [2114, 357]]},
-    "charge-19": {"point": [1480, 359], "variants": [[1476, 362], [1480, 359], [1484, 356]]}
+    "charge-13": {"point": [3025, 858], "variants": [[3021, 861], [3025, 858], [3029, 855]]}
   }
 }

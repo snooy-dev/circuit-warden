@@ -14,9 +14,6 @@ from game_framework.collision import blocking_contact, overlaps
 
 MAP_FILE = Path(__file__).resolve().parents[1] / 'assets/levels/power-supply/map.json'
 DRAW_ORDER = {'rear': -4, 'structure': -2, 'front': 4}
-ARC_PERIOD = 3.2
-ARC_WARNING_START = 2.1
-ARC_LIVE_START = 2.7
 RELAY_REACH = 66
 
 
@@ -30,10 +27,10 @@ class PowerSupplyMap(GameObject):
         self.terrain = tuple(
             Collider(self._rect(*rect), 'terrain', blocks={'player', 'enemy'})
             for rect in data['collision']['rects'])
-        self.devices = tuple((item['kind'], item['stage'], self._rect(*item['rect']))
+        self.devices = tuple((item['kind'], self._rect(*item['rect']))
                              for item in data['collision']['power_devices'])
-        self.relays = tuple(self._point(item['x'], item['y']) for item in data['interactions']
-                            if item['id'].startswith('relay-'))
+        relay = next(item for item in data['interactions'] if item['id'] == 'relay')
+        self.relay = self._point(relay['x'], relay['y'])
         spawns = {entry['id']: self._point(entry['x'], entry['feet_y']) for entry in data['spawns']}
         self.player_start, self.enemy_start = spawns['start'], spawns['metal-dust']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
@@ -43,6 +40,7 @@ class PowerSupplyMap(GameObject):
         output = next(item for item in data['interactions'] if item['id'] == 'output')
         self.output = self._point(output['x'], output['y'])
         self.output_reach = output['reach']
+        self.output_lock = self._rect(*data['collision']['output_lock'])
         self.reset()
 
         def load(file):
@@ -68,11 +66,11 @@ class PowerSupplyMap(GameObject):
             bounds = collider.bounds_at((0, 0))
             edge = (42, 57, 68) if tuple(rect[:2]) in ceilings else (91, 110, 117)
             self.items.append(RenderItem(partial(self._draw_structure, bounds, edge=edge), -2, bounds))
-        for kind, stage, bounds in self.devices:
-            self.items.append(RenderItem(partial(self._draw_device, kind, stage, bounds), -2, bounds))
-        for index, (x, y) in enumerate(self.relays):
-            bounds = (x - 42, y - 40, x + 42, y + 62)
-            self.items.append(RenderItem(partial(self._draw_relay, index, bounds), -2, bounds))
+        for kind, bounds in self.devices:
+            self.items.append(RenderItem(partial(self._draw_device, kind, bounds), -2, bounds))
+        x, y = self.relay
+        bounds = (x - 42, y - 41.5, x + 42, y + 62.5)
+        self.items.append(RenderItem(partial(self._draw_relay, bounds), -2, bounds))
         for obj in data['objects']:
             image = load(data['props'][obj['prop']]['image'])
             scale = obj.get('scale', 1)
@@ -85,10 +83,6 @@ class PowerSupplyMap(GameObject):
             if obj['id'] == 'output-socket':
                 lit = load(data['props']['output-lit']['image'])
                 draw = partial(self._draw_socket, image, lit, bounds)
-            elif obj['id'] == 'arc-emitter':
-                self.arc_images = (image, *(load(data['props'][prop]['image']) for prop in obj['active_props']))
-                self.arc_hit_box = self._rect(*obj['hit_rect'])
-                draw = partial(self._draw_arc, bounds)
             else:
                 draw = partial(self._draw, image, bounds, flip)
             self.items.append(RenderItem(draw, DRAW_ORDER[obj['layer']], bounds, opacity=obj.get('opacity', 1)))
@@ -102,53 +96,45 @@ class PowerSupplyMap(GameObject):
 
     def update(self, dt):
         self.rotor_angle = (self.rotor_angle + self.rotor_speed * dt) % 360
-        self.arc_elapsed = (self.arc_elapsed + dt) % ARC_PERIOD
 
     def reset(self):
         self.reached_output = False
-        self.arc_elapsed = 0.0
-        self.power_stage = 0
+        self.power_restored = False
         self._place_devices()
 
     def _place_devices(self):
-        self.closed_shutters = tuple(bounds for kind, stage, bounds in self.devices
-                                     if kind == 'shutter' and self.power_stage < stage)
-        active_bridges = tuple(bounds for kind, stage, bounds in self.devices
-                               if kind == 'bridge' and self.power_stage >= stage)
+        self.closed_shutters = tuple(bounds for kind, bounds in self.devices
+                                     if kind == 'shutter' and not self.power_restored)
+        active_bridges = tuple(bounds for kind, bounds in self.devices
+                               if kind == 'bridge' and self.power_restored)
         self.colliders = self.terrain + tuple(
             Collider(bounds, 'terrain', blocks={'player', 'enemy'})
             for bounds in self.closed_shutters + active_bridges)
 
     def near_relay(self, player):
-        if not player.hp or not player.grounded or self.power_stage >= len(self.relays):
+        if not player.hp or not player.grounded or self.power_restored:
             return False
-        x, y = self.relays[self.power_stage]
+        x, y = self.relay
         px, py = player.center
         return hypot(x - px, y - py) <= RELAY_REACH
 
     def restore_power(self, player):
         if self.near_relay(player):
-            self.power_stage += 1
+            self.power_restored = True
             self._place_devices()
 
     def blocks_teleport(self, player, x, y):
+        if self.power_restored:
+            return False
+        left, bottom, right, top = self.output_lock
+        if left <= x <= right and bottom <= y <= top:
+            return True
         cx, cy = player.center
         return any(blocking_contact(player.hurt_box, bounds, (x - cx, y - cy)) is not None
                    for bounds in self.closed_shutters)
 
-    @property
-    def arc_phase(self):
-        if self.arc_elapsed >= ARC_LIVE_START:
-            return 2
-        return int(self.arc_elapsed >= ARC_WARNING_START)
-
-    def check_arc(self, player):
-        if self.arc_phase == 2 and overlaps(player.hurt_box, self.arc_hit_box):
-            left, _, right, _ = self.arc_hit_box
-            player.take_hit(direction=-1 if player.x < (left + right) / 2 else 1)
-
     def check_output(self, player):
-        if self.reached_output or self.power_stage < len(self.relays) or not player.hp or not player.grounded:
+        if self.reached_output or not self.power_restored or not player.hp or not player.grounded:
             return False
         x, y = player.center
         self.reached_output = hypot(x - self.output[0], y - self.output[1]) <= self.output_reach
@@ -188,9 +174,9 @@ class PowerSupplyMap(GameObject):
         else:
             draw_rect(transform, (left + 4, bottom, left + 7, top), (49, 66, 76), opacity)
 
-    def _draw_device(self, kind, stage, bounds, transform, opacity):
+    def _draw_device(self, kind, bounds, transform, opacity):
         left, bottom, right, top = bounds
-        powered = self.power_stage >= stage
+        powered = self.power_restored
         if kind == 'bridge':
             if powered:
                 self._draw_structure(bounds, transform, opacity, (108, 181, 176))
@@ -202,25 +188,18 @@ class PowerSupplyMap(GameObject):
         draw_rect(transform, (left, top - height, right, top), (44, 60, 70), opacity)
         draw_rect(transform, (left + 4, top - height, left + 9, top), (72, 93, 103), opacity)
         if not powered:
-            for index in range(stage):
-                y = bottom + 54 + index * 15
-                color = (99, 202, 187) if self.power_stage > index else (213, 143, 72)
-                draw_rect(transform, (left + 12, y, right - 7, y + 6), color, opacity)
+            draw_rect(transform, (left + 12, bottom + 54, right - 7, bottom + 60), (213, 143, 72), opacity)
 
-    def _draw_relay(self, index, bounds, transform, opacity):
+    def _draw_relay(self, bounds, transform, opacity):
         left, bottom, right, top = bounds
         draw_rect(transform, bounds, (30, 46, 56), opacity)
         draw_rect(transform, (left + 5, top - 6, right - 5, top), (83, 102, 109), opacity)
-        color = ((98, 206, 187) if self.power_stage > index else
-                 (232, 170, 87) if self.power_stage == index else (69, 78, 83))
+        color = (98, 206, 187) if self.power_restored else (232, 170, 87)
         draw_rect(transform, (left + 26, bottom + 47, right - 26, bottom + 71), color, opacity)
         draw_rect(transform, (left + 15, bottom + 18, right - 15, bottom + 23), (63, 83, 94), opacity)
 
     def _draw_socket(self, image, lit, bounds, transform, opacity):
         draw_image(lit if self.reached_output else image, transform, bounds, opacity)
-
-    def _draw_arc(self, bounds, transform, opacity):
-        draw_image(self.arc_images[self.arc_phase], transform, bounds, opacity)
 
     @staticmethod
     def _draw(image, bounds, flip, transform, opacity):
