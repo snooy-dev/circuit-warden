@@ -23,6 +23,7 @@ class PowerSupplyMap(GameObject):
         world = data['world']
         self.half_width, self.half_height = world['width'] / 2, world['height'] / 2
         self.bounds = self._rect(0, 0, world['width'], world['height'])
+        self.rooms = {room['id']: self._rect(*room['rect']) for room in data['rooms']}
         self.terrain = tuple(
             Collider(self._rect(*rect), 'terrain', blocks={'player', 'enemy'})
             for rect in data['collision']['rects'])
@@ -36,9 +37,8 @@ class PowerSupplyMap(GameObject):
         hatch = next(item for item in data['interactions'] if item['id'] == 'hatch-release')
         self.hatch_release = self._point(hatch['x'], hatch['y'])
         self.hatch_reach = hatch['reach']
-        spawns = {entry['id']: self._point(entry['x'], entry['feet_y']) for entry in data['spawns']}
-        self.player_start, self.enemy_start = spawns['start'], spawns['metal-dust']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
+        self.player_start = self._point(player_spawn['x'], player_spawn['feet_y'])
         self.power_entry = self._point(*player_spawn['entry_origin'])
         self.charge_sites = tuple(tuple(self._point(*point) for point in anchor['variants'])
                                   for anchor in data['anchors'].values())
@@ -113,6 +113,11 @@ class PowerSupplyMap(GameObject):
         left, top = self._point(x, y)
         return left, top - h, left + w, top
 
+    def room_at(self, position):
+        x, y = position
+        return next((room for room, (left, bottom, right, top) in self.rooms.items()
+                     if left <= x < right and bottom < y <= top), None)
+
     def update(self, dt):
         self.rotor_angle = (self.rotor_angle + self.rotor_speed * dt) % 360
 
@@ -162,10 +167,12 @@ class PowerSupplyMap(GameObject):
             player.take_hit(-1 if player.x < (left + right) / 2 else 1)
 
     def blocks_teleport(self, player, x, y):
+        cx, cy = player.center
+        if self.room_at((x, y)) != self.room_at((cx, cy)):
+            return True
         left, bottom, right, top = self.output_lock
         if not self.power_restored and left <= x <= right and bottom <= y <= top:
             return True
-        cx, cy = player.center
         return any(blocking_contact(player.hurt_box, bounds, (x - cx, y - cy)) is not None
                    for bounds in self.closed_shutters + self.teleport_barriers)
 

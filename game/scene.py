@@ -11,7 +11,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
 from engine.rendering.drawing import _sdl
-from game_framework import Canvas, ImageStore, Label, Level, LevelScene
+from game_framework import Canvas, ImageStore, Label, Level, LevelScene, draw_rect
 from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_contact, overlaps
 
 from .character import DASH_KEYS, MOVE_KEYS, PUSHBACK_SECONDS, Character, _load_clip, load_clips
@@ -94,7 +94,9 @@ class GameplayLevel(Level):
             self.environment_sites = self.layout.charge_sites
         else:
             self.spawn(TrainingMap())
-        self._spawn_combatants(load_clips(self.images), load_enemy_clips(self.images))
+        clips = load_clips(self.images)
+        enemy_clips = None if self.power_supply else load_enemy_clips(self.images)
+        self._spawn_combatants(clips, enemy_clips)
         self._last_hit_attack = 0
         self._last_contact_charge = None
 
@@ -135,10 +137,10 @@ class GameplayLevel(Level):
     def _spawn_combatants(self, clips, enemy_clips):
         self.player = self.spawn(Character(clips))
         self.player.world_bounds = self.world_bounds
-        self.enemy = self.spawn(Enemy(enemy_clips))
         if self.power_supply:
             self.player.x, self.player.y = self.layout.player_start
-            self.enemy.x, self.enemy.y = self.layout.enemy_start
+        if enemy_clips is not None:
+            self.enemy = self.spawn(Enemy(enemy_clips))
 
     def _reset_environment(self):
         previous = tuple(charge.position for charge in self.charges)
@@ -189,7 +191,8 @@ class GameplayLevel(Level):
             charge.destroy()
 
     def reset_combat(self):
-        clips, enemy_clips = self.player.clips, self.enemy.clips
+        clips = self.player.clips
+        enemy_clips = None if self.enemy is None else self.enemy.clips
         view_bounds = self.player.view_bounds
         for obj in self.objects:
             if isinstance(obj, (SpriteEffect, TeleportLink)):
@@ -198,7 +201,8 @@ class GameplayLevel(Level):
         self._remove_skill_charge()
         self._cast_cooldown = 0.0
         self.player.destroy()
-        self.enemy.destroy()
+        if self.enemy is not None:
+            self.enemy.destroy()
         self._spawn_combatants(clips, enemy_clips)
         self.player.view_bounds = view_bounds
         if self.power_supply:
@@ -225,10 +229,10 @@ class GameplayLevel(Level):
         if self.power_entry_effect is not None:
             self._update_power_entry()
         self._update_environment()
-        if self.enemy.level is self:
+        if self.enemy is not None and self.enemy.level is self:
             self._resolve_sword()
-        if self.enemy.level is self:
-            self._resolve_enemy_contact(dt, player_position, protected_until)
+            if self.enemy.level is self:
+                self._resolve_enemy_contact(dt, player_position, protected_until)
         if self.power_supply:
             self.layout.damage_on_busbar(self.player)
         if self.player.hp == 0:
@@ -386,6 +390,7 @@ class CharacterScene(LevelScene):
                                                           size=26, font_path=MENU_FONT, visible=False))
         self.level.mode.event_to_world = self.event_to_world
         self.level.mode.cursor_to_world = self.cursor_to_world
+        self.active_room = None
         self._pixel_target = None
         self._pixel_size = None
         self._story_intro = story_intro
@@ -437,6 +442,7 @@ class CharacterScene(LevelScene):
             super().draw()
             if self.opening is not None:
                 self.opening.draw(self.transform)
+            self._draw_room_mask()
         finally:
             self.camera_center, self.view_height = camera_center, view_height
             _sdl(pico.SDL_SetRenderTarget(pico.renderer, None))
@@ -447,6 +453,15 @@ class CharacterScene(LevelScene):
         elif self.power_hint.visible:
             canvas = self.power_canvas
             self.renderer.draw_ui(canvas, canvas.transform(self.engine.viewport))
+
+    def _draw_room_mask(self):
+        transform = self.transform
+        left, bottom, right, top = transform.bounds
+        room_left, room_bottom, room_right, room_top = self.level.layout.rooms[self.active_room]
+        for x1, y1, x2, y2 in ((left, bottom, room_left, top), (room_right, bottom, right, top),
+                               (left, bottom, right, room_bottom), (left, room_top, right, top)):
+            if x1 < x2 and y1 < y2:
+                draw_rect(transform, (x1, y1, x2, y2), (0, 0, 0))
 
     def exit(self):
         try:
@@ -517,6 +532,7 @@ class CharacterScene(LevelScene):
             self.level.finish_power_entry()
         super().handle_event(event)
         if self.character is not previous_player:
+            self.active_room = None
             self.camera_center = (self.character.x, 0)
             self._set_title()
         self._follow_camera(0, self.character.x)
@@ -546,29 +562,39 @@ class CharacterScene(LevelScene):
         self.character.view_bounds = self.transform.bounds
 
     def _follow_camera(self, dt, previous_x):
-        bounds = self.transform.bounds
-        if bounds is None:
+        transform = self.transform
+        if not transform.valid:
             return
+        player = self.character
         left, bottom, right, top = self.level.world_bounds
-        half_width = min((bounds[2] - bounds[0]) / 2, (right - left) / 2)
+        cut = False
+        if self.level.power_supply:
+            layout = self.level.layout
+            room = layout.room_at(player.center) or self.active_room
+            left, bottom, right, top = layout.rooms[room]
+            cut = room != self.active_room
+            self.active_room = room
+        width, height = transform.viewport[2:]
+        half_width = min(self.view_height * width / height / 2, (right - left) / 2)
         low, high = left + half_width, right - half_width
         camera_x = min(max(self.camera_center[0], low), high)
-        player = self.character
-        target = min(max(player.x, low), high)
-        if target != camera_x and abs(player.x - previous_x) <= CONTACT_EPSILON:
-            direction = player.move_direction or (1 if target > camera_x else -1)
+        target_x = min(max(player.x, low), high)
+        if not cut and target_x != camera_x and abs(player.x - previous_x) <= CONTACT_EPSILON:
+            direction = player.move_direction or (1 if target_x > camera_x else -1)
             contact = self.level.blocking_contact(player, player.body, (direction, 0))
             if contact is not None and contact <= CONTACT_EPSILON:
-                target = camera_x
+                target_x = camera_x
         follow = -expm1(-dt / CAMERA_FOLLOW_SECONDS)
-        camera_x += (target - camera_x) * follow
+        camera_x = target_x if cut else camera_x + (target_x - camera_x) * follow
         camera_y = self.camera_center[1]
         if self.level.power_supply:
-            half_height = self.view_height / 2
+            half_height = min(self.view_height / 2, (top - bottom) / 2)
+            low, high = bottom + half_height, top - half_height
+            camera_y = min(max(camera_y, low), high)
             intake_y = self.level.layout.player_start[1]
             target_y = max(0, player.y) + min(0, player.y - intake_y)
-            target_y = min(max(target_y, bottom + half_height), top - half_height)
-            camera_y += (target_y - camera_y) * follow
+            target_y = min(max(target_y, low), high)
+            camera_y = target_y if cut else camera_y + (target_y - camera_y) * follow
         self.camera_center = (camera_x, camera_y)
 
 

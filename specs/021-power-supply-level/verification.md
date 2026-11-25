@@ -189,3 +189,8 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **정적 검사** 최종 `map_bundle.py validate`는 오류와 경고가 없었다. 복구 상태의 평면 미리보기에서 Chromium이 키 이동, 이미지 로드와 세 목표의 경로를 확인했다. `map_nav.py check`의 `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 이 도구는 평면 격자에 있는 분리 영역을 보고한다. 실제 발판 착지, 상태 전환과 덮개로의 복귀는 SDL에서 확인했다. [평면 검사 원본](../../art/levels/power-supply/service-circuit/nav-final/nav-report.json) · [Chromium 기록](../../art/levels/power-supply/service-circuit/preview-final/scene-snapshot.json).
 
 현재 게임 설계, 아트, 조작, 기술 구조와 진행 상태를 갱신했다. 전체 회귀는 실행하지 않았다. 처음 보는 사람이 힌트 없이 어떤 길을 택하는지는 사용자 플레이에서 확인할 항목이다.
+
+## 서로 연결된 여덟 공간
+
+- **블록아웃** 실제 `Level`과 `Character`를 사용한 고정 간격 헤드리스 실행에서 하층 열교환실·콘덴서실·필터실, 배전탑, 상층 세 방과 출력을 연결했다. 배전탑의 점프·전하 상승, 낙하 지점 세 곳의 복귀, 복구 전 상층 셔터 차단을 확인했다.
+- **런타임** SDL 오프스크린에서 방 경계 좌표, 건너는 프레임의 X/Y 카메라 위치, 짧은 방의 검은 가림, 방 사이 순간이동 차단과 R 복귀를 확인했다. 파워 맵에서 적 리소스를 요청하지 않는다. `BasicEnemySceneTests`의 적 렌더링·재시작·검격 세 검사가 통과했다.

@@ -76,3 +76,9 @@
 - [x] T039 [US1] 접속부·하강 갤러리·하층과 배선탑의 블록아웃 및 덮개·복구 상태를 구현한다 (`map.json`, `game/`, FR-026~FR-028)
 - [x] T040 [US1] 방별 hi-bit 원경과 표면을 새 층계와 방 연결에 배치한다 (`assets/levels/power-supply/`, FR-029)
 - [x] T041 [US1] 실제 SDL에서 초회 동선과 선택 지름길, 복구·출력·초기화의 결과를 확인하고 검증·기준을 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-026~FR-029)
+
+## 서로 연결된 여덟 공간
+
+- [x] T042 [US1] 하층·배전탑·상층의 충돌과 출입구를 배치하고 방 경계 카메라와 적 없는 파워 맵을 구현한다 (`map.json`, `game/`, FR-030~FR-032)
+- [ ] T043 [US1] 새 방의 환경·지형을 가공하고 2×2 게임 픽셀 격자에 배치한다 (`assets/levels/power-supply/`, FR-033)
+- [ ] T044 [US1] 실제 게임 입력과 화면에서 양방향 방 전환, 모든 방의 연결, 복구·출력·초기화를 확인하고 문서를 갱신한다 (`tests/`, `docs/`, `verification.md`, FR-030~FR-033)
