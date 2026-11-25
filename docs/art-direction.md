@@ -14,9 +14,9 @@
 
 ## 첫 레벨 정비 구역
 
-흡기실의 은청색 팬과 메쉬, 변압실의 구리 권선과 방열핀, 배전실의 녹색 퓨즈와 커넥터를 구역 크기의 표지로 쓴다. 착지면에는 각각 판금 통풍구, 방열핀, 기판 단면을 사용한다. 변압실 하부의 차가운 반사광이 적의 갈색 실루엣과 분리되도록 명암을 잡는다.
+흡기실의 은청색 팬과 메쉬, 변압실의 구리 권선과 방열핀, 배전실의 녹색 퓨즈와 커넥터를 구역 크기의 표지로 쓴다. 중앙 접속부의 굵은 구리색 케이블이 아래쪽 착지면으로 휘며, 귀환교에서 같은 위치를 알아볼 단서가 된다. 팬 아래에 흡기 슬롯을 잇고 변압실과 배전실 사이에 콘덴서 뱅크를 놓아 장치의 위치가 층과 함께 이어지게 한다.
 
-ImageGen 원화는 논리 픽셀 하나가 월드 두 단위가 되도록 다수결 축소와 제한 팔레트를 적용한다. 이동면의 상단을 충돌에 맞추고 원경 연결부와 고정 팬 메쉬에만 반투명을 쓴다. 버스바의 주황 전기 아크는 접촉 위험을 표시한다. 복구 후 아크가 사라지고 배전실 급전선과 기판의 구리 트레이스, 귀환교의 상단이 청록색으로 바뀐다. [실제 변압실 화면](../art/levels/power-supply/transformer-hall/lower/character-lower-route-live-floor-dash.png) · [제작 정보](../assets/levels/power-supply/transformer-hall/provenance.json) · [검증](../specs/021-power-supply-level/verification.md#변압실의-두-경로).
+ImageGen 원화는 논리 픽셀 하나가 월드 두 단위가 되도록 다수결 축소와 제한 팔레트를 적용한다. 이동면의 상단을 충돌에 맞추고 원경 연결부와 고정 팬 메쉬에 반투명을 쓴다. 버스바의 주황 전기 아크는 접촉 위험을 표시한다. 복구 후 아크가 사라지고 배전실 급전선과 기판의 구리 트레이스, 귀환교의 상단이 청록색으로 바뀐다. [첫 방문과 귀환](../art/levels/power-supply/service-circuit/junction-return.png) · [제작 정보](../assets/levels/power-supply/service-circuit/provenance.json) · [검증](../specs/021-power-supply-level/verification.md#상하-회로와-중앙-접속부).
 
 ## 기본 적: 금속 먼지 덩어리
 

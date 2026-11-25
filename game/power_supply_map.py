@@ -55,7 +55,8 @@ class PowerSupplyMap(GameObject):
 
         background = data['layers'][0]
         self.fan_cavity = load('fan-cavity')
-        self.bridge_art = load('hall-bridge')
+        self.bridge_art = load('circuit-bridge')
+        self.hatch_art = load('circuit-hatch')
         self.busbar_art = (load('hall-busbar-live'), load('hall-busbar-safe'))
         self.shutter_art = (load('shutter-closed'), load('shutter-open'))
         self.relay_art = (load('relay-off'), load('relay-on'))
@@ -210,7 +211,7 @@ class PowerSupplyMap(GameObject):
             return
         if kind == 'hatch':
             if not self.hatch_released:
-                self._draw_structure(bounds, transform, opacity, (163, 118, 65))
+                draw_image(self.hatch_art, transform, bounds, opacity)
             for edge in (left, right - 12):
                 draw_rect(transform, (edge, bottom, edge + 12, top),
                           (81, 157, 144) if self.hatch_released else (172, 120, 62), opacity)

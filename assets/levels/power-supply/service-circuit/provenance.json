@@ -1,0 +1,385 @@
+{
+  "art_source": "host_image",
+  "model": "Codex ImageGen",
+  "estimateUsd": null,
+  "world_units_per_pixel": 2,
+  "sources": {
+    "art/levels/power-supply/service-circuit/source/junction.png": "bda417fea35c0a0c6603138fee27bfc911c2dc67d83f7738bde4f0480138ffbe",
+    "art/levels/power-supply/service-circuit/source/junction-prompt.txt": "fe6f0480d023e1fd6b3d003f63f6a06d720d703856f28bf0d6e048ffaff5fa34",
+    "art/levels/power-supply/transformer-hall/source/intake.png": "35a06d995407e2623dd9d0af2b4b42c2d8af0102c62cbe3895089fca7d468560",
+    "art/levels/power-supply/transformer-hall/source/terrain.png": "844fb32e888bc5f6b991b7eb28e1e68e81157bfc66a78d493e6b84f927c190f5",
+    "art/levels/power-supply/transformer-hall/source/transformer.png": "5d491f46845436339156501490157e65cb3bacb17bc6951434e34c7166c81126"
+  },
+  "assets": {
+    "circuit-plenum": {
+      "image": "service-circuit/circuit-plenum.png",
+      "art_source": "host_image",
+      "sha256": "72644e2aee784df2266e4bcd8a105a475c0e9374b49e9e111ef995174aab812d",
+      "source": "intake.png",
+      "logical_size": [
+        377,
+        344
+      ]
+    },
+    "circuit-junction": {
+      "image": "service-circuit/circuit-junction.png",
+      "art_source": "host_image",
+      "sha256": "588b925d1f0453673d86584eb5831d7cd880072f24e3c65db23a62b3092f482e",
+      "source": "junction.png",
+      "logical_size": [
+        373,
+        483
+      ]
+    },
+    "circuit-rectifier": {
+      "image": "service-circuit/circuit-rectifier.png",
+      "art_source": "host_image",
+      "sha256": "7f0b37664f1624bf908c7b0a48cc606edd0cd72336bffdafea6dd3446847b473",
+      "source": "transformer.png",
+      "logical_size": [
+        388,
+        472
+      ]
+    },
+    "circuit-deck-0-32": {
+      "image": "service-circuit/circuit-deck-0-32.png",
+      "art_source": "host_image",
+      "sha256": "e8aa3aebbbb83afe5e4d7a97ce5d29e1f7f31b1acf3a54315d472c993dad601f",
+      "source": "terrain.png",
+      "logical_size": [
+        18,
+        570
+      ]
+    },
+    "circuit-deck-3408-32": {
+      "image": "service-circuit/circuit-deck-3408-32.png",
+      "art_source": "host_image",
+      "sha256": "bf651d0f25410f5e9db259b045d7f9ad1ea888b5b6a55d2f18be79692819e8bb",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        859
+      ]
+    },
+    "circuit-deck-36-1140": {
+      "image": "service-circuit/circuit-deck-36-1140.png",
+      "art_source": "host_image",
+      "sha256": "91f3a92ba17027ad4af91dbcf67a5aebf435fd5bd5affa4d91f181c7ef495de3",
+      "source": "terrain.png",
+      "logical_size": [
+        442,
+        16
+      ]
+    },
+    "circuit-deck-920-1140": {
+      "image": "service-circuit/circuit-deck-920-1140.png",
+      "art_source": "host_image",
+      "sha256": "c61f514141e6f255f4cda39064fb711d7f36ac7ba4c92a1d0959a8dbd2149f96",
+      "source": "terrain.png",
+      "logical_size": [
+        245,
+        16
+      ]
+    },
+    "circuit-deck-1336-1100": {
+      "image": "service-circuit/circuit-deck-1336-1100.png",
+      "art_source": "host_image",
+      "sha256": "edc2d6b9840463e67d126203b2ca92251d87e3582b0bc0aee54ea856732a82e6",
+      "source": "terrain.png",
+      "logical_size": [
+        27,
+        20
+      ]
+    },
+    "circuit-deck-538-772": {
+      "image": "service-circuit/circuit-deck-538-772.png",
+      "art_source": "host_image",
+      "sha256": "1c0bc5248dd1985d95ce7d4697fa60410b52ff425a7ecf602b397ce85d80a1eb",
+      "source": "terrain.png",
+      "logical_size": [
+        191,
+        14
+      ]
+    },
+    "circuit-deck-920-772": {
+      "image": "service-circuit/circuit-deck-920-772.png",
+      "art_source": "host_image",
+      "sha256": "a99764d9fcb33bc8b8ace4b8f2af2295f45458622b7f546e9d788debe6ab527e",
+      "source": "terrain.png",
+      "logical_size": [
+        130,
+        14
+      ]
+    },
+    "circuit-deck-538-800": {
+      "image": "service-circuit/circuit-deck-538-800.png",
+      "art_source": "host_image",
+      "sha256": "7c8095a37990fb137880bf22d4534685503d5748d8ab4dbb4839441f212a2406",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        112
+      ]
+    },
+    "circuit-deck-570-1000": {
+      "image": "service-circuit/circuit-deck-570-1000.png",
+      "art_source": "host_image",
+      "sha256": "9bf7ff396b131b50cd4719b53ee08171c4becac2c0e2382c06e96865be53ef9a",
+      "source": "terrain.png",
+      "logical_size": [
+        175,
+        12
+      ]
+    },
+    "circuit-deck-920-1000": {
+      "image": "service-circuit/circuit-deck-920-1000.png",
+      "art_source": "host_image",
+      "sha256": "95a17741d7a49b6585f33af8625804518805d63fde10a543c124b61e7fe1f8db",
+      "source": "terrain.png",
+      "logical_size": [
+        180,
+        12
+      ]
+    },
+    "circuit-deck-1650-32": {
+      "image": "service-circuit/circuit-deck-1650-32.png",
+      "art_source": "host_image",
+      "sha256": "3482124ead2d574eb1d21ab63e7aee49d5718d0612feb32d30df78e336a259f7",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        379
+      ]
+    },
+    "circuit-deck-1650-1000": {
+      "image": "service-circuit/circuit-deck-1650-1000.png",
+      "art_source": "host_image",
+      "sha256": "65da01790744a490d935ee0f0ea4e0874286810228e42128921ceacfd95bd760",
+      "source": "terrain.png",
+      "logical_size": [
+        140,
+        261
+      ]
+    },
+    "circuit-deck-1530-1250": {
+      "image": "service-circuit/circuit-deck-1530-1250.png",
+      "art_source": "host_image",
+      "sha256": "52eddad53740f2eb055093011d7d5b52c9a8e01925bc661a5ff023cd3e8e5d5c",
+      "source": "terrain.png",
+      "logical_size": [
+        60,
+        12
+      ]
+    },
+    "circuit-deck-1416-1370": {
+      "image": "service-circuit/circuit-deck-1416-1370.png",
+      "art_source": "host_image",
+      "sha256": "bfb6a48c18cb1c90035cde11e6f978443e471a7f48392e37fe99d0628d3f21c3",
+      "source": "terrain.png",
+      "logical_size": [
+        47,
+        12
+      ]
+    },
+    "circuit-deck-440-1490": {
+      "image": "service-circuit/circuit-deck-440-1490.png",
+      "art_source": "host_image",
+      "sha256": "7e4a4f713b0bc4036df3721b7bd3d355632c19c1e43e30e4c96d1c97ffe4b374",
+      "source": "terrain.png",
+      "logical_size": [
+        240,
+        12
+      ]
+    },
+    "circuit-deck-920-1490": {
+      "image": "service-circuit/circuit-deck-920-1490.png",
+      "art_source": "host_image",
+      "sha256": "c3afabe40c2f8368584a25deac46ece054629c940a3aba125f5bf7f1e37b739a",
+      "source": "terrain.png",
+      "logical_size": [
+        40,
+        12
+      ]
+    },
+    "circuit-deck-1140-1490": {
+      "image": "service-circuit/circuit-deck-1140-1490.png",
+      "art_source": "host_image",
+      "sha256": "6a001bce209d1dd724e5c9e61bb27307fbe961b993fbce1ca376bb175b825627",
+      "source": "terrain.png",
+      "logical_size": [
+        255,
+        12
+      ]
+    },
+    "circuit-deck-0-1172": {
+      "image": "service-circuit/circuit-deck-0-1172.png",
+      "art_source": "host_image",
+      "sha256": "1fbe115ce05fb67939266ef23bbeb3040bb2f5853b6fce0f1afa5c357b8b684d",
+      "source": "terrain.png",
+      "logical_size": [
+        143,
+        289
+      ]
+    },
+    "circuit-deck-1010-1620": {
+      "image": "service-circuit/circuit-deck-1010-1620.png",
+      "art_source": "host_image",
+      "sha256": "9f0baf237b2d33063ed04d75e0c6f87036260211431a1afe68ae5691f757498d",
+      "source": "terrain.png",
+      "logical_size": [
+        60,
+        12
+      ]
+    },
+    "circuit-deck-0-1750": {
+      "image": "service-circuit/circuit-deck-0-1750.png",
+      "art_source": "host_image",
+      "sha256": "6df6d05d1b34e72b5bea0a01739c2a63bf1497a137d9aa349c6a158b770f2991",
+      "source": "terrain.png",
+      "logical_size": [
+        460,
+        71
+      ]
+    },
+    "circuit-deck-920-1750": {
+      "image": "service-circuit/circuit-deck-920-1750.png",
+      "art_source": "host_image",
+      "sha256": "cbdcbd4508c6dafe2bec15012fc9f6a6d7f1f873e9f6f7193b1dadac79e4870f",
+      "source": "terrain.png",
+      "logical_size": [
+        365,
+        71
+      ]
+    },
+    "circuit-deck-1650-1750": {
+      "image": "service-circuit/circuit-deck-1650-1750.png",
+      "art_source": "host_image",
+      "sha256": "ecb8624ba351585e43a193b02ee7766126b7374d53c4bd43019ef4d8a3e5f186",
+      "source": "terrain.png",
+      "logical_size": [
+        350,
+        71
+      ]
+    },
+    "circuit-deck-2350-1750": {
+      "image": "service-circuit/circuit-deck-2350-1750.png",
+      "art_source": "host_image",
+      "sha256": "29bef6e5304077fb13606b4a9c31b10d0445ac371c8321f538eeac63ab367e13",
+      "source": "terrain.png",
+      "logical_size": [
+        230,
+        71
+      ]
+    },
+    "circuit-deck-2810-1750": {
+      "image": "service-circuit/circuit-deck-2810-1750.png",
+      "art_source": "host_image",
+      "sha256": "6f274e0856269df52e2999fcf4c7d35d5da50c092627baa1e2b162f9d2a17a30",
+      "source": "terrain.png",
+      "logical_size": [
+        315,
+        71
+      ]
+    },
+    "circuit-deck-2512-1628": {
+      "image": "service-circuit/circuit-deck-2512-1628.png",
+      "art_source": "host_image",
+      "sha256": "e9d655671d8f1920c88d3b9ce6eb4cf01abe8acafdec3472771a12ffc2d7a606",
+      "source": "terrain.png",
+      "logical_size": [
+        72,
+        12
+      ]
+    },
+    "circuit-deck-2690-1508": {
+      "image": "service-circuit/circuit-deck-2690-1508.png",
+      "art_source": "host_image",
+      "sha256": "55211d3436a9edfe87c4dc88c39caa436fe2a220f1d71100c687f919050886ea",
+      "source": "terrain.png",
+      "logical_size": [
+        72,
+        12
+      ]
+    },
+    "circuit-deck-2504-1388": {
+      "image": "service-circuit/circuit-deck-2504-1388.png",
+      "art_source": "host_image",
+      "sha256": "687661627b710f40d0b7989ead078c23896a61f4b73349cc7ba36b1b7fe6127f",
+      "source": "terrain.png",
+      "logical_size": [
+        76,
+        12
+      ]
+    },
+    "circuit-deck-2690-1264": {
+      "image": "service-circuit/circuit-deck-2690-1264.png",
+      "art_source": "host_image",
+      "sha256": "dc2eb8ed5fac2742d4b14e77a003628bc4ac2fb857b0be44f43f476c2697240a",
+      "source": "terrain.png",
+      "logical_size": [
+        77,
+        12
+      ]
+    },
+    "circuit-deck-2504-1142": {
+      "image": "service-circuit/circuit-deck-2504-1142.png",
+      "art_source": "host_image",
+      "sha256": "687661627b710f40d0b7989ead078c23896a61f4b73349cc7ba36b1b7fe6127f",
+      "source": "terrain.png",
+      "logical_size": [
+        76,
+        12
+      ]
+    },
+    "circuit-deck-2680-1000": {
+      "image": "service-circuit/circuit-deck-2680-1000.png",
+      "art_source": "host_image",
+      "sha256": "87c3bc5474d08cd49815ca9ef2a762fea31dd6267a378158d929cd473a80dd95",
+      "source": "terrain.png",
+      "logical_size": [
+        140,
+        12
+      ]
+    },
+    "circuit-deck-2110-1060": {
+      "image": "service-circuit/circuit-deck-2110-1060.png",
+      "art_source": "host_image",
+      "sha256": "bbd4b6cfcdc26d61aa73425d39b346dc6cd07e894c1a49d7102048b6749a2f20",
+      "source": "terrain.png",
+      "logical_size": [
+        180,
+        12
+      ]
+    },
+    "circuit-deck-1930-1000": {
+      "image": "service-circuit/circuit-deck-1930-1000.png",
+      "art_source": "host_image",
+      "sha256": "d25e3b33d6d9992b555d3997242e89535b513b5607b727d1f3e3d51947267e44",
+      "source": "terrain.png",
+      "logical_size": [
+        75,
+        12
+      ]
+    },
+    "circuit-bridge": {
+      "image": "service-circuit/circuit-bridge.png",
+      "art_source": "host_image",
+      "sha256": "e690d8f8a5a75e4cb83dbe5dbb30aba0632cb00edc8af9ca7098ef97dbf43965",
+      "source": "terrain.png",
+      "logical_size": [
+        185,
+        8
+      ]
+    },
+    "circuit-hatch": {
+      "image": "service-circuit/circuit-hatch.png",
+      "art_source": "host_image",
+      "sha256": "bb73181f4239e939e3718db8de906ff0a5f02bc1b9d8c2e2e1ea2d2030979bfa",
+      "source": "terrain.png",
+      "logical_size": [
+        70,
+        12
+      ]
+    }
+  }
+}

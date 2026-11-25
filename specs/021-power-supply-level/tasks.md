@@ -74,5 +74,5 @@
 ## 상하 회로와 중앙 접속부
 
 - [x] T039 [US1] 접속부·하강 갤러리·하층과 배선탑의 블록아웃 및 덮개·복구 상태를 구현한다 (`map.json`, `game/`, FR-026~FR-028)
-- [ ] T040 [US1] 방별 hi-bit 원경과 표면을 새 층계와 방 연결에 배치한다 (`assets/levels/power-supply/`, FR-029)
-- [ ] T041 [US1] 실제 SDL에서 초회 동선과 선택 지름길, 복구·출력·초기화의 결과를 확인하고 검증·기준을 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-026~FR-029)
+- [x] T040 [US1] 방별 hi-bit 원경과 표면을 새 층계와 방 연결에 배치한다 (`assets/levels/power-supply/`, FR-029)
+- [x] T041 [US1] 실제 SDL에서 초회 동선과 선택 지름길, 복구·출력·초기화의 결과를 확인하고 검증·기준을 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-026~FR-029)

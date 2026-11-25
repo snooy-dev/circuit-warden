@@ -31,8 +31,8 @@ def quantize(source, size, colors, *, smooth=False):
     return hibit.render(bake(pixels, size, palette, smooth=smooth), palette)
 
 
-def plate_png(name, size, gain, focus):
-    source = Image.open(SOURCE / f'{name}.png').convert('RGBA')
+def plate_png(name, size, gain, focus, *, source_dir=SOURCE):
+    source = Image.open(source_dir / f'{name}.png').convert('RGBA')
     crop = hibit.plate_crop(source.width, source.height, *size, y_frac=focus[1], x_frac=focus[0])
     pixels = np.array(source.crop(crop))
     pixels[..., :3] = np.rint(pixels[..., :3] * gain + [3, 5, 7]).astype(np.uint8)
@@ -72,6 +72,29 @@ def surface(source, kind, size, offset=0):
                             'sink': (174, 159, 144), 'bridge': (125, 208, 185)}[kind]
         pixels[0, :, 3] = 255
     return pixels
+
+
+def write_bundle(path, level):
+    lines = ['{']
+    for key, value in level.items():
+        if key in {'layers', 'objects', 'spawns', 'interactions'}:
+            lines += [f'  "{key}": [', ',\n'.join('    ' + json.dumps(row) for row in value), '  ],']
+        elif key in {'props', 'anchors'}:
+            lines += [f'  "{key}": {{', ',\n'.join(f'    "{name}": {json.dumps(row)}' for name, row in value.items()),
+                      '  },']
+        elif key == 'collision':
+            rows = []
+            for name, part in value.items():
+                if name in {'rects', 'power_devices', 'teleport_barriers'}:
+                    rows.append(f'    "{name}": [\n' + ',\n'.join('      ' + json.dumps(row) for row in part)
+                                + '\n    ]')
+                else:
+                    rows.append(f'    "{name}": {json.dumps(part)}')
+            lines += ['  "collision": {', ',\n'.join(rows), '  },']
+        else:
+            lines.append(f'  "{key}": {json.dumps(value)},')
+    lines[-1] = lines[-1].removesuffix(',')
+    path.write_text('\n'.join(lines + ['}']) + '\n', encoding='utf-8')
 
 
 def main():
@@ -183,26 +206,7 @@ def main():
     overview.convert('RGB').save(panorama, optimize=True)
     foreground.update(image=panorama.relative_to(LEVEL).as_posix(), art_source='host_image',
                       sha256=hashlib.sha256(panorama.read_bytes()).hexdigest())
-    lines = ['{']
-    for key, value in level.items():
-        if key in {'layers', 'objects', 'spawns', 'interactions'}:
-            lines += [f'  "{key}": [', ',\n'.join('    ' + json.dumps(row) for row in value), '  ],']
-        elif key in {'props', 'anchors'}:
-            lines += [f'  "{key}": {{', ',\n'.join(f'    "{name}": {json.dumps(row)}' for name, row in value.items()),
-                      '  },']
-        elif key == 'collision':
-            rows = []
-            for name, part in value.items():
-                if name in {'rects', 'power_devices'}:
-                    rows.append(f'    "{name}": [\n' + ',\n'.join('      ' + json.dumps(row) for row in part)
-                                + '\n    ]')
-                else:
-                    rows.append(f'    "{name}": {json.dumps(part)}')
-            lines += ['  "collision": {', ',\n'.join(rows), '  },']
-        else:
-            lines.append(f'  "{key}": {json.dumps(value)},')
-    lines[-1] = lines[-1].removesuffix(',')
-    path.write_text('\n'.join(lines + ['}']) + '\n', encoding='utf-8')
+    write_bundle(path, level)
     meta = {
         'art_source': 'host_image', 'model': 'Codex ImageGen', 'estimateUsd': None, 'world_units_per_pixel': 2,
         'source_directory': SOURCE.relative_to(ROOT).as_posix(),
