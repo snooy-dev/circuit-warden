@@ -1,4 +1,4 @@
-"""실제 SDL 입력으로 전원 구역 8개 방의 통과, 복구와 귀환을 검증한다."""
+"""실제 SDL 입력으로 전원 구역의 상·하층 탐색, 복구와 귀환을 검증한다."""
 
 import argparse
 from ctypes import c_ubyte
@@ -16,8 +16,9 @@ from tests.smoke.combat_reimplementation_smoke import CombatSmoke
 
 
 class PowerSupplySmoke(CombatSmoke):
-    def __init__(self, output_dir, *, hatch=False):
+    def __init__(self, output_dir, *, upper=False, hatch=False):
         super().__init__(output_dir, power_supply=True)
+        self.upper = upper
         self.hatch = hatch
 
     def enter(self, engine):
@@ -198,7 +199,6 @@ class PowerSupplySmoke(CombatSmoke):
         yield .24
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
         assert isclose(self.map_x(), 1204), self.map_x()
-        self.key_tap(pico.SDLK_w)
         layout = self.level.layout
         yield from self.click_charge(1040, 934, blocked=True)
         assert not layout.power_restored and not layout.reached_output
@@ -270,7 +270,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.land_at(1750)
         assert actor.hp == health - 1
 
-    def reach_relay(self):
+    def reach_lower_capacitors(self):
         yield from self.cross_room(3440, 'service-core', 'heat-exchangers', 1750, east=True,
                                    block_charge=(3460, 1690))
         yield from self.cross_room(3440, 'heat-exchangers', 'service-core', 1750, east=False)
@@ -289,6 +289,8 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.step_to(5465, 1750)
         yield from self.move_to(5625)
         yield from self.step_to(5720, 1670)
+
+    def cross_lower_filter(self):
         yield from self.move_to(6070)
         yield from self.land_at(1750)
 
@@ -302,11 +304,111 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.move_to(7189)
         yield from self.step_to(7280, 1570)
         yield from self.move_to(7480)
-        yield from self.land_at(1660)
+        yield from self.land_at(1694)
         yield from self.move_to(7610)
         yield from self.land_at(1750)
+
+    def climb_capacitor_shaft(self):
+        lower_camera = self.camera_center[1]
+        self.check_room_view('capacitor-reservoir')
+        for x, y in ((5810, 1550), (5940, 1430), (5810, 1310), (5940, 1190), (5810, 1070)):
+            yield from self.step_to(x, y)
+        self.check_room_view('return-capacitors')
+        assert self.camera_center[1] > lower_camera + 250 and not self.level.layout.power_restored
+        self.screenshot = 'unpowered-capacitor-shaft-ascent'
+        yield 0
+
+    def descend_capacitor_shaft(self):
+        upper_camera = self.camera_center[1]
+        for x, y in ((5940, 1190), (5810, 1310), (5940, 1430), (5810, 1550), (5720, 1670)):
+            yield from self.move_to(x)
+            yield from self.land_at(y)
+        self.check_room_view('capacitor-reservoir')
+        assert self.camera_center[1] < upper_camera - 250 and not self.level.layout.power_restored
+        self.screenshot = 'unpowered-capacitor-shaft-descent'
+        yield 0
+
+    def reach_relay(self):
         yield from self.cross_room(7760, 'filter-gallery', 'relay-tower', 1750, east=True)
         yield from self.move_to(8450)
+
+    def reach_upper_capacitors(self):
+        layout = self.level.layout
+        yield from self.click_charge(1480, 938)
+        yield from self.click_charge(1730, 930)
+        yield from self.land_at(1000)
+        assert not layout.power_restored
+        self.screenshot = 'unpowered-upper-bridge-crossing'
+        yield 0
+        yield from self.move_to(2240)
+        yield from self.land_at(1060)
+        yield from self.move_to(2455)
+        yield from self.click_charge(2730, 956)
+        yield from self.land_at(1000)
+        yield from self.cross_room(3440, 'service-core', 'return-exchangers', 1000, east=True)
+        yield from self.move_to(3645)
+        yield from self.step_to(3750, 970)
+        yield from self.move_to(3940)
+        yield from self.step_to(4130, 1030)
+        yield from self.move_to(4375)
+        yield from self.step_to(4460, 910)
+        yield from self.move_to(4740)
+        yield from self.land_at(1000)
+        yield from self.cross_room(4880, 'return-exchangers', 'return-capacitors', 1000, east=True)
+
+    def explore_service_loft(self):
+        yield from self.move_to(5210)
+        yield from self.step_to(5340, 920)
+        yield from self.click_charge(5552, 730)
+        yield from self.land_at(795)
+        yield from self.step_to(5390, 670)
+        yield from self.step_to(5225, 660)
+        self.screenshot = 'unpowered-service-loft'
+        yield from self.cross_room(4880, 'diagnostic-loft', 'return-exchangers', 660, east=False)
+        yield from self.move_to(4700)
+        yield from self.land_at(1000)
+        assert not self.level.layout.power_restored
+        yield from self.cross_room(4880, 'return-exchangers', 'return-capacitors', 1000, east=True)
+
+    def reach_upper_filters(self):
+        yield from self.move_to(5210)
+        yield from self.step_to(5340, 920)
+        yield from self.move_to(5545)
+        yield from self.land_at(1020)
+        yield from self.move_to(5835)
+        yield from self.land_at(1070)
+        yield from self.click_charge(6045, 935)
+        yield from self.land_at(1000)
+        yield from self.cross_room(6320, 'return-capacitors', 'return-filters', 1000, east=True)
+        yield from self.move_to(6545)
+        yield from self.step_to(6640, 915)
+        yield from self.move_to(7005)
+        yield from self.land_at(970)
+        yield from self.step_to(7130, 910)
+
+    def descend_filter_chute(self):
+        layout = self.level.layout
+        yield from self.move_to(7690)
+        yield from self.land_at(1000)
+        push_key(pico.SDLK_d)
+        yield .35
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        assert isclose(self.map_x(), 7696), self.map_x()
+        self.key_tap(pico.SDLK_w)
+        yield .05
+        assert not layout.power_restored
+        self.screenshot = 'unpowered-tower-shutter'
+        yield 0
+        self.check_room_view('return-filters')
+        upper_camera = self.camera_center[1]
+        self.screenshot = 'unpowered-filter-chute-entry'
+        yield from self.move_to(7460)
+        yield from self.land_at(1694)
+        self.check_room_view('filter-gallery')
+        assert self.camera_center[1] < upper_camera - 250 and not layout.power_restored
+        self.screenshot = 'unpowered-filter-chute-landing'
+        yield from self.move_to(7610)
+        yield from self.land_at(1750)
 
     def ascend_return(self):
         lower_camera = self.camera_center[1]
@@ -329,8 +431,8 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.land_at(1000)
 
         yield from self.cross_room(6320, 'return-filters', 'return-capacitors', 1000, east=False)
-        yield from self.move_to(5940)
-        yield from self.land_at(1120)
+        yield from self.move_to(6004)
+        yield from self.step_to(5820, 1070)
         yield from self.move_to(5775)
         yield from self.step_to(5650, 1020)
         yield from self.move_to(5535)
@@ -362,9 +464,19 @@ class PowerSupplySmoke(CombatSmoke):
         actor, layout = self.character, self.level.layout
         yield from self.check_intake()
         yield from self.check_locked_output()
-        yield from self.descend_shaft()
-        yield from self.reach_transformer()
-        yield from self.cross_transformer()
+        if self.upper:
+            yield from self.reach_upper_capacitors()
+            yield from self.explore_service_loft()
+            yield from self.reach_upper_filters()
+            yield from self.descend_filter_chute()
+        else:
+            yield from self.descend_shaft()
+            yield from self.reach_transformer()
+            yield from self.cross_transformer()
+            yield from self.reach_lower_capacitors()
+            yield from self.climb_capacitor_shaft()
+            yield from self.descend_capacitor_shaft()
+            yield from self.cross_lower_filter()
         yield from self.reach_relay()
         assert self.power_hint.visible and self.power_hint.text == 'W  RESTORE POWER'
         assert not layout.power_restored and layout.hatch_released == self.hatch
@@ -387,24 +499,28 @@ class PowerSupplySmoke(CombatSmoke):
         self.key_tap(pico.SDLK_r)
         yield from self.wait_until(lambda: self.character is not actor)
         assert not layout.reached_output and not layout.power_restored and not layout.hatch_released
-        assert self.camera_center[1] == 0
+        assert layout.half_height - self.camera_center[1] == 960
         self.check_room_view('service-core', wall='left')
         assert all(not isinstance(obj, Enemy) for obj in self.level.objects)
         assert self.character.hp == actor.MAX_HP and self.character.collision_position == layout.player_start
         yield from self.wait_until(lambda: self.character.spawn_opacity == 1)
         self.screenshot = 'intake-after-reset'
         yield 0
-        route = 'hatch opened and climbed' if self.hatch else 'hatch left closed'
-        print(f'PSU SDL PASS: {route}, 8 rooms and doorway cameras, busbar, relay, '
-              'charged climb, bridge, output, enemy-free reset, F6', flush=True)
+        route = ('upper bridge crossing, service loft and filter chute' if self.upper
+                 else 'lower busbar and bidirectional capacitor shaft')
+        hatch = 'hatch opened and climbed' if self.hatch else 'hatch left closed'
+        print(f'PSU SDL PASS: {route}, {hatch}, doorway cameras and masks, relay, '
+              'charged tower climb, powered bridge, output, enemy-free reset, F6', flush=True)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output-dir', type=Path, required=True)
-    parser.add_argument('--hatch', action='store_true')
+    route = parser.add_mutually_exclusive_group()
+    route.add_argument('--upper', action='store_true')
+    route.add_argument('--hatch', action='store_true')
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    scene = PowerSupplySmoke(args.output_dir, hatch=args.hatch)
+    scene = PowerSupplySmoke(args.output_dir, upper=args.upper, hatch=args.hatch)
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed

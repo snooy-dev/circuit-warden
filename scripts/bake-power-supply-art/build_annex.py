@@ -73,9 +73,21 @@ def main():
 
     retained = [obj for obj in data['objects'] if not obj['id'].startswith('annex-')]
     data.update(props=props, objects=retained + extended)
+    save_overview(data, OUT / 'overview.png')
+    write_bundle(route, data)
+    files = [*sorted(SOURCES.iterdir()), SOURCE / 'terrain.png']
+    source_hashes = {file.relative_to(ROOT).as_posix(): hashlib.sha256(file.read_bytes()).hexdigest()
+                     for file in files}
+    (OUT / 'provenance.json').write_text(json.dumps({
+        'art_source': 'host_image', 'model': 'Codex ImageGen', 'estimateUsd': None, 'world_units_per_pixel': 2,
+        'sources': source_hashes, 'assets': details,
+    }, indent=2) + '\n', encoding='utf-8')
+
+
+def save_overview(data, path):
     overview = Image.new('RGBA', (data['world']['width'], data['world']['height']), (9, 15, 22))
     for obj in sorted(data['objects'], key=lambda item: ('rear', 'structure', 'front').index(item['layer'])):
-        im = Image.open(LEVEL / props[obj['prop']]['image']).convert('RGBA')
+        im = Image.open(LEVEL / data['props'][obj['prop']]['image']).convert('RGBA')
         anchor_x, anchor_y = obj['anchor_px']
         if obj.get('flip_x'):
             im = im.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
@@ -86,18 +98,9 @@ def main():
             im.putalpha(im.getchannel('A').point(lambda channel: round(channel * opacity)))
         im = im.resize((round(im.width * scale), round(im.height * scale)), Image.Resampling.NEAREST)
         overview.alpha_composite(im, (round(obj['x'] - anchor_x * scale), round(obj['y'] - anchor_y * scale)))
-    path = OUT / 'overview.png'
     overview.convert('RGB').save(path, optimize=True)
     data['layers'][0].update(image=path.relative_to(LEVEL).as_posix(), art_source='host_image',
                               sha256=hashlib.sha256(path.read_bytes()).hexdigest())
-    write_bundle(route, data)
-    files = [*sorted(SOURCES.iterdir()), SOURCE / 'terrain.png']
-    source_hashes = {file.relative_to(ROOT).as_posix(): hashlib.sha256(file.read_bytes()).hexdigest()
-                     for file in files}
-    (OUT / 'provenance.json').write_text(json.dumps({
-        'art_source': 'host_image', 'model': 'Codex ImageGen', 'estimateUsd': None, 'world_units_per_pixel': 2,
-        'sources': source_hashes, 'assets': details,
-    }, indent=2) + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':

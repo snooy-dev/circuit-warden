@@ -39,6 +39,8 @@ class PowerSupplyMap(GameObject):
         self.hatch_reach = hatch['reach']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
         self.player_start = self._point(player_spawn['x'], player_spawn['feet_y'])
+        _, intake_bottom, _, intake_top = self.rooms[self.room_at(self.player_start)]
+        self.start_camera_y = (intake_bottom + intake_top) / 2
         self.power_entry = self._point(*player_spawn['entry_origin'])
         self.charge_sites = tuple(tuple(self._point(*point) for point in anchor['variants'])
                                   for anchor in data['anchors'].values())

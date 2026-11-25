@@ -200,3 +200,13 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **맵** 최종 `map_bundle.py validate`의 오류와 경고는 없었다. 복구 상태를 펼친 정적 Chromium 미리보기는 키 이동과 배치 목표 3곳을 통과했다. 평면 `map_nav.py check`의 `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 실제 방 연결과 이동은 SDL에서 판정했다. [평면 검사](../../art/levels/power-supply/annex/nav/nav-report.json) · [Chromium 기록](../../art/levels/power-supply/annex/preview/scene-snapshot.json).
 
 현재 설계·아트·기술 구조·전하 규칙·진행 상태를 갱신했다. 전체 회귀와 사용자 초회 플레이는 미실행이다.
+
+## 복구 전 상하 탐색
+
+- **레퍼런스 화면** Team Cherry의 잊혀진 교차로 초입 플레이 캡처에서 우물 사슬과 넓은 첫 착지 지점을, 하부 장면에서 높이가 다른 발판과 그 사이의 열린 시야를 확인했다. 출시판 가짜 기사 화면에서는 연속된 바닥과 어두운 원경이 강한 공격 동작과 분리된다. 콘덴서 샤프트의 지지대·착지면과 부하 시험실의 전투 여백에 반영했다. [교차로 플레이 화면](https://www.teamcherry.com.au/blog/the-forgotten-crossroads-a-hollow-knight-tour) · [가짜 기사 출시판 캡처](https://hollowknight.wiki/w/File:Screenshot_HK_False_Knight_03.png).
+- **초기 실제 입력** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --upper --output-dir .local-tools/psu-network-upper`와 같은 명령의 `--hatch --output-dir .local-tools/psu-network-lower` 실행이 통과했다. 상층은 전하 두 번·점검실 순환·필터 하강, 하층은 덮개·버스바·콘덴서 양방향을 확인했다. 두 실행에서 복구·귀환교·출력·R·F6도 확인했다. 이후 점검실 시야 경계와 동쪽 닫힌 셔터를 조정하고 최하층 방을 추가했다. 사용자 요청에 따라 마지막 버전의 추가 입력 플레이를 중단했다.
+- **최종 배치** `map_bundle.py validate --bundle assets/levels/power-supply/map.json --require-sha256`는 오류·경고 0개다. 10개 방의 영역은 겹치지 않는다. 부하 시험실의 중앙 x7550~8920과 y1920~2470은 비어 있다. 양쪽 입구와 복귀 발판의 충돌 여유를 워든 몸통 및 현재 점프 궤적과 대조했다. 두 입구는 릴레이 상태와 독립적이고 필수 릴레이 경로의 상단 주행면은 연결되어 있다. 점프 높이와 대시 거리를 조정할 필요가 없어 기존 수치를 사용했다. `py_compile`과 `git diff --check`가 통과했다.
+- **최종 화면** `.\.venv\Scripts\python.exe .local-tools/render-power-network.py`로 실제 Pico2D 장면을 오프스크린에서 구성했다. 점검실 바닥·동쪽 셔터가 방 경계에서 잘리지 않고, 콘덴서·필터 지지대와 최하층 전투면이 각 방 시야에서 보인다. 시작 방 중앙이 맵 y960에 유지됨을 검사했다. 원화 세 장은 내장 ImageGen으로 제작하고 `build_network.py`로 2×2 hi-bit 변환했다. [보스 공간](../../art/levels/power-supply/network/surge-view.png) · [콘덴서 접합부](../../art/levels/power-supply/network/capacitor-view.png) · [아트 출처](../../assets/levels/power-supply/network/provenance.json).
+- **배치 미리보기** 복구 상태 복제본의 `build_scene_preview.py --strict`는 오류·경고 0개다. 헤드리스 Chromium은 이미지 5개 로드, 이동 입력, 목표 3곳을 확인했다. 같은 사본의 `map_nav.py check`는 목표 3곳 도달, 좁은 틈 0개다. `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 이전 여덟 방 버전과 동일한 평면 격자 경고다. [정적 미리보기](../../art/levels/power-supply/network/review/preview.html) · [Chromium 기록](../../art/levels/power-supply/network/review/scene-snapshot.json) · [평면 검사](../../art/levels/power-supply/network/nav-final/nav-report.json).
+
+설계·아트·기술 구조와 진행 상태를 갱신했다. 마지막 버전에서 실제 키·마우스로 보스 공간을 오가는 조작감과 초회 길 찾기는 확인 전이다. 보스의 행동과 전투 진행 규칙은 기획 범위에 남는다.
