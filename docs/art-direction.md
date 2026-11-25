@@ -14,7 +14,7 @@
 
 ## 첫 레벨 정비 구역
 
-낮은 대비의 케이스 원경, 먼지 낀 금속과 구리, 밝은 착지면, 청록 전하를 사용한다. 기존 판금 에셋을 잘라 위층 바닥·천장·격벽을 만들었다. 큰 흡기 팬은 입구, 구리 코일은 변환실, 콘덴서 묶음은 배기 샤프트의 위치를 드러낸다. 배선실의 노출 접점은 주황색으로 예고하고 위험한 동안 청록색 전류가 흐른다. 구리 케이블은 출력실까지 이어지고 표시등은 도착한 워든 옆에 보인다. [중앙 샤프트 화면](../art/levels/power-supply/shaft-loop/sdl/character-power-supply-central-shaft.png) · [아트 검증](../specs/021-power-supply-level/verification.md#정비-샤프트와-순환-동선).
+전원 구역은 큰 어두운 면으로 방의 윤곽을 만들고, 착지면의 밝은 가장자리와 얇은 구조선으로 이동 공간을 드러낸다. 색이 강한 요소는 워든·전하와 상태를 보이는 장치에 모은다. 기존 흡기 팬·구리 코일·콘덴서와 출력 단자는 위치를 알려주는 소품으로 배치한다. 조명을 받는 부분만 밝아지도록 방마다 명암을 지정했다. 셔터의 주황색 점은 미복구 상태, 전력교의 청록색 면은 통과 가능한 상태다. [전력교 화면](../art/levels/power-supply/distribution/sdl/character-distribution-powered-bridge.png) · [아트 검증](../specs/021-power-supply-level/verification.md#배전망-복구와-상층-귀환).
 
 ## 기본 적: 금속 먼지 덩어리
 

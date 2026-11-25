@@ -75,6 +75,9 @@ class GameplayMode(GameMode):
         self.pending_charge = self.teleport_link = None
 
     def on_event(self, event):
+        if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_w and self.level.power_supply:
+            self.level.layout.restore_power(self.level.player)
+            return
         if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_r:
             if not self.reset_held:
                 self.level.reset_combat()

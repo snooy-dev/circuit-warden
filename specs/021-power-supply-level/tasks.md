@@ -53,3 +53,9 @@
 - [x] T028 [US1] 출시판 지도 및 방 연결 데이터를 대조하고 2층 순환 동선을 배치한다 (`assets/levels/power-supply/map.json`, FR-014~FR-015)
 - [x] T029 [US1] 첫 레벨의 수직 카메라와 기존 소재를 사용한 방별 구조물을 적용한다 (`game/scene.py`, `game/power_supply_map.py`, `assets/levels/power-supply/`, FR-016)
 - [x] T030 [US1] 중앙 출력 경로·배기 순환·전하·방전·오프닝을 확인하고 기준 문서와 실행 증거를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-014~FR-016)
+
+## 배전망 복구와 상층 귀환
+
+- [x] T031 [US1] 인게임 레퍼런스의 구도·위험 배치를 대조하고 3층 구역과 두 순환 경로를 제작한다 (`assets/levels/power-supply/map.json`, FR-017~FR-019)
+- [x] T032 [US1] 릴레이, 교량, 차단기, 셔터와 장치 상태를 연결하고 구조 면과 소품을 정돈한다 (`game/power_supply_map.py`, `game/scene.py`, `game/character.py`, FR-017~FR-019)
+- [x] T033 [US1] 전원 복구와 귀환을 실제 기본 창에서 확인하고 기준 문서와 실행 증거를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-017~FR-019)

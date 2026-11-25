@@ -11,7 +11,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
 from engine.rendering.drawing import _sdl
-from game_framework import ImageStore, Level, LevelScene
+from game_framework import Canvas, ImageStore, Label, Level, LevelScene
 from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_contact, overlaps
 
 from .character import DASH_KEYS, MOVE_KEYS, PUSHBACK_SECONDS, Character, _load_clip, load_clips
@@ -22,7 +22,7 @@ from .mode import GameplayMode
 from .power_supply_map import PowerSupplyMap
 from .story_intro import PowerOpening
 from .teleport_link import DURATION, LinkArt, TeleportLink
-from .title import TitleScene
+from .title import MENU_FONT, TitleScene
 from .training_map import WORLD_BOUNDS, TrainingMap
 
 
@@ -380,6 +380,10 @@ class CharacterScene(LevelScene):
         images = ImageStore(ASSETS)
         super().__init__(GameplayLevel(images, power_supply=power_supply),
                          view_height=DEFAULT_SIZE[1] if power_supply else HEIGHT, images=images)
+        self.power_canvas = Canvas(DEFAULT_SIZE) if power_supply else None
+        if self.power_canvas is not None:
+            self.power_hint = self.power_canvas.add(Label('W  ACTIVATE', anchor=(.5, 1), x=-60, y=-53,
+                                                          size=26, font_path=MENU_FONT, visible=False))
         self.level.mode.event_to_world = self.event_to_world
         self.level.mode.cursor_to_world = self.cursor_to_world
         self._pixel_target = None
@@ -391,6 +395,7 @@ class CharacterScene(LevelScene):
         if not self.level.power_supply or not self.engine.output_valid:
             return super().draw()
 
+        self.power_hint.visible = self.opening is None and self.level.layout.near_relay(self.character)
         width, height = self.engine.output_size
         grid_height = POWER_SUPPLY_PIXEL_HEIGHT
         grid_width = max(1, round(width * grid_height / height))
@@ -436,6 +441,9 @@ class CharacterScene(LevelScene):
         if self.opening is not None:
             canvas = self.opening.canvas
             self.renderer.draw_ui(canvas, canvas.transform(self.engine.viewport))
+        elif self.power_hint.visible:
+            canvas = self.power_canvas
+            self.renderer.draw_ui(canvas, canvas.transform(self.engine.viewport))
 
     def exit(self):
         try:
@@ -445,6 +453,9 @@ class CharacterScene(LevelScene):
             if self.opening is not None:
                 opening, self.opening = self.opening, None
                 opening.close()
+            if self.power_canvas is not None:
+                self.power_canvas.close()
+                self.power_canvas = None
         finally:
             super().exit()
 
@@ -476,6 +487,8 @@ class CharacterScene(LevelScene):
             name += b' | Power Supply'
             if self.level.layout.reached_output:
                 name += b' | Output reached'
+        if self.level.power_supply:
+            name += b' | W: power'
         pico.SDL_SetWindowTitle(pico.window, name + b' | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):

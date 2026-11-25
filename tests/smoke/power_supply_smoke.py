@@ -82,17 +82,16 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.wait_until(lambda: self.engine.window_size == DEFAULT_SIZE)
 
         yield from self.move_to(374)
-        yield from self.step_to(488, 776)
+        yield from self.step_to(488, 1016)
         yield from self.move_to(738)
         yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -180))
         yield from self.move_to(962)
-        self.screenshot = 'power-supply-service'
-        yield from self.step_to(1080, 786)
+        yield from self.step_to(1080, 1026)
         yield from self.move_to(1136)
-        yield from self.step_to(1250, 674)
+        yield from self.step_to(1250, 914)
         yield from self.move_to(1270)
-        yield from self.step_to(1186, 562)
-        self.screenshot = 'power-supply-central-shaft'
+        yield from self.step_to(1186, 802)
+        self.screenshot = 'distribution-service-shaft'
 
         candidate = self.level.charges[4]
         assert candidate.active
@@ -103,30 +102,26 @@ class PowerSupplySmoke(CombatSmoke):
         event.button.x, event.button.y = map(round, point)
         assert pico.SDL_PushEvent(event) == 1
         yield from self.wait_until(lambda: candidate.spent and self.level.mode.teleport_link is not None)
-        self.screenshot = 'power-supply-shaft-charge'
         yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, 266))
-        assert self.camera_center[1] > 130
-        _, bottom, _, top = self.transform.bounds
-        assert layout.bounds[1] <= bottom < top <= layout.bounds[3]
-        yield from self.move_to(698)
-        yield from self.move_to(456)
-        yield from self.wait_until(lambda: layout.reached_output)
-        self.screenshot = 'power-supply-output'
-        yield .18
+        yield from self.move_to(804)
+        push_key(pico.SDLK_a)
+        yield .17
+        push_key(pico.SDLK_a, pico.SDL_KEYUP)
+        assert isclose(actor.x, layout._point(790, 0)[0])
+        across = layout._point(680, 652.5)
+        assert actor.can_place_center(across) and not actor.can_teleport(across)
+        self.screenshot = 'distribution-locked-output'
+        yield .12
 
         push_key(pico.SDLK_r)
         yield from self.wait_until(lambda: self.character is not actor)
-        assert not layout.reached_output and layout.arc_phase == 0 and self.camera_center[1] == 0
-        assert self.character.collision_position == layout.player_start
-        assert self.level.enemy.collision_position == layout.enemy_start
         push_key(pico.SDLK_r, pico.SDL_KEYUP)
-        assert self.character.spawn_opacity == 0.0
-        push_key(pico.SDLK_d)
-        yield from self.wait_until(lambda: self.character.x > layout.player_start[0])
-        assert self.character.spawn_opacity == 1.0
-        assert self.level.power_entry_effect is None
-        push_key(pico.SDLK_d, pico.SDL_KEYUP)
         actor = self.character
+        assert layout.power_stage == 0 and not layout.reached_output
+        push_key(pico.SDLK_w)
+        push_key(pico.SDLK_w, pico.SDL_KEYUP)
+        yield .08
+        assert layout.power_stage == 0
         for x in (700, 1140, 1458):
             yield from self.move_to(x)
         push_key(pico.SDLK_d)
@@ -136,53 +131,79 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.wait_until(lambda: actor.state == 'dash')
         push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
-        self.screenshot = 'power-supply-conversion'
+        self.screenshot = 'distribution-conversion'
         yield from self.wait_until(lambda: actor.x >= layout._point(1854, 0)[0])
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         yield from self.wait_until(lambda: actor.grounded and actor.state in ('idle', 'run'))
-        yield from self.step_to(1926, 844)
-        yield from self.move_to(2145)
-        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -180))
-        yield from self.step_to(2270, 786)
-        yield from self.move_to(2234)
-        yield from self.step_to(2154, 674)
-        yield from self.step_to(2238, 562)
-        yield from self.move_to(2208)
-        yield from self.step_to(2090, 514)
-        self.screenshot = 'power-supply-exhaust'
-        yield from self.step_to(1990, 454)
+        yield from self.step_to(1926, 1084)
+        for x in (2360, 2760, 3090):
+            yield from self.move_to(x)
+        assert layout.near_relay(actor) and len(layout.closed_shutters) == 2
+        self.screenshot = 'distribution-relay'
+        yield .12
+        push_key(pico.SDLK_w)
+        push_key(pico.SDLK_w, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: layout.power_stage == 1)
+        assert len(layout.colliders) == len(layout.terrain) + 3 and len(layout.closed_shutters) == 2
 
-        yield from self.move_to(1672)
+        for x in (2660, 2145):
+            yield from self.move_to(x)
+        yield from self.step_to(2270, 1026)
+        yield from self.move_to(2234)
+        yield from self.step_to(2154, 914)
+        yield from self.step_to(2238, 802)
+        yield from self.step_to(2320, 694)
+
+        yield from self.move_to(2508)
         yield from self.wait_until(lambda: layout.arc_phase == 0)
         yield from self.wait_until(lambda: layout.arc_phase == 1)
         hp = actor.hp
-        yield from self.move_to(1660)
+        yield from self.move_to(2534)
         assert layout.arc_phase == 1 and actor.hp == hp
-        self.screenshot = 'power-supply-warning'
+        self.screenshot = 'distribution-arc-warning'
         yield from self.wait_until(lambda: actor.hp < hp)
         assert layout.arc_phase == 2 and actor.hp == hp - 1
-        self.screenshot = 'power-supply-live-arc'
         yield from self.wait_until(lambda: layout.arc_phase == 0 and actor.grounded)
-        assert isclose(actor.y, 266)
+        yield from self.move_to(2780)
+        yield from self.move_to(3060)
+        assert actor.grounded and isclose(actor.y, 266)
+        self.screenshot = 'distribution-powered-bridge'
+        yield .12
+        yield from self.move_to(3615)
+        assert layout.near_relay(actor)
+        push_key(pico.SDLK_w)
+        push_key(pico.SDLK_w, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: layout.power_stage == 2)
+        assert not layout.closed_shutters and len(layout.colliders) == len(layout.terrain) + 1
+        self.screenshot = 'distribution-breaker'
+        yield from self.move_to(3810)
+        yield from self.step_to(3902, 576)
+        yield from self.move_to(3875)
+        yield from self.step_to(3762, 480)
+        yield from self.step_to(3650, 410)
+        assert self.camera_center[1] > 360
+        yield from self.move_to(3170)
+        yield from self.step_to(3060, 386)
+        self.screenshot = 'distribution-return-duct'
+        yield from self.move_to(2580)
+        yield from self.move_to(2338)
+        yield from self.step_to(2206, 426)
+        yield from self.move_to(1800)
+        yield from self.move_to(1396)
+        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, 266))
         yield from self.move_to(1316)
-        yield from self.step_to(1130, 454)
-        self.screenshot = 'power-supply-gallery'
-        yield .08
+        yield from self.step_to(1130, 694)
         yield from self.move_to(698)
         yield from self.move_to(456)
         yield from self.wait_until(lambda: layout.reached_output)
-        yield from self.move_to(970)
-        yield from self.move_to(1210)
-        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, 158))
-        yield from self.move_to(1332)
-        yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, -180))
-        yield from self.move_to(1180)
-        yield from self.wait_until(lambda: self.camera_center[1] < 10)
-        self.screenshot = 'power-supply-loop-return'
-        assert layout.reached_output and self.level.enemy.hp > 0
-        assert all(not charge.spent for charge in self.level.charges)
-        yield .08
-        print('PSU SDL PASS: center shaft, upper output, exhaust climb, hazard, return loop, R, F6', flush=True)
+        self.screenshot = 'distribution-output'
+        yield .12
+        push_key(pico.SDLK_r)
+        yield from self.wait_until(lambda: self.character is not actor)
+        push_key(pico.SDLK_r, pico.SDL_KEYUP)
+        assert not layout.reached_output and layout.power_stage == 0 and self.camera_center[1] == 0
+        assert len(layout.closed_shutters) == 2 and len(layout.colliders) == len(layout.terrain) + 2
+        print('PSU SDL PASS: locked output, relay, arc, bridge, breaker, return duct, output, reset, F6', flush=True)
 
 
 if __name__ == '__main__':

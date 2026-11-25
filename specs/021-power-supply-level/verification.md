@@ -148,3 +148,13 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **자동 검사** 게임 Python으로 `CharacterSceneTests.test_camera_lags_motion_freezes_at_walls_and_resets_with_player`, `CharacterSceneTests.test_camera_freezes_at_low_wall_inside_world_bounds`를 실행해 두 개 모두 통과했다. `map_bundle.py validate` 오류·경고 0개, `map_nav.py check` 목표 4곳 도달·좁은 틈 0개다. 웹 미리보기용으로 렌더 밴드를 평탄화한 사본의 `build_scene_preview.py --verify --strict`에서 Chromium 경로 4개를 확인했다. [브라우저 배치 미리보기](../../art/levels/power-supply/shaft-loop/preview/preview.html) · [브라우저 판정](../../art/levels/power-supply/shaft-loop/preview/scene-snapshot.json).
 
 게임 설계·아트 기준·아키텍처·진행 상태를 갱신했다. 전체 회귀는 실행 범위 밖이며, 사용자 직접 플레이와 초심자의 길 읽기는 미확인이다.
+
+## 배전망 복구와 상층 귀환
+
+2026-11-25 사용자 피드백에 따라 Team Cherry의 왕의 길·교차로 입구·Goam 방 실제 프레임과 출시판 교차로 캡처, Videocult의 수직 이동·수평 이동 화면을 열어 육안으로 확인했다. 천장과 바닥을 큰 어둠으로 묶고 이동면과 핵심 물체에 국소 대비를 주는 방식을 각 방의 판금 실루엣과 조명에 적용했다. 환경은 2560×1440에서 4320×1920으로 넓혔다. 회전 팬·전선·코일·콘덴서·출력 단자는 기존 자산을 선택 배치했고, 팬 하우징 트림과 조명은 기존 픽셀과 색상 마스크로 제작했다. [인게임 레퍼런스 관찰](plan.md#배전망-복구와-상층-귀환) · [출시판 캡처](https://hollowknight.wiki/w/File:Screenshot_HK_Forgotten_Crossroads_06.png).
+
+- **SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/distribution/sdl` 통과. 초기 출력 셔터의 이동·순간이동 차단, 릴레이 밖 W 무효, 두 장치의 순차 작동, 전력교 중앙 착지, 예고 및 피격, 상층 덕트와 중앙 귀환, 출력 점등, R의 전원·충돌 초기화, F6 및 전하 후보 57곳의 배치를 확인했다. [초기 셔터](../../art/levels/power-supply/distribution/sdl/character-distribution-locked-output.png) · [전력교](../../art/levels/power-supply/distribution/sdl/character-distribution-powered-bridge.png) · [상층 귀환](../../art/levels/power-supply/distribution/sdl/character-distribution-return-duct.png) · [출력](../../art/levels/power-supply/distribution/sdl/character-distribution-output.png).
+- **기본 진입** 게임 Python으로 `.local-tools/verify-distribution-entry.py`를 실행해 타이틀, New Game, 낙뢰, 조작 인계와 이동을 확인했다. [오프닝](../../art/levels/power-supply/distribution/sdl/character-maintenance-opening.png).
+- **맵·회귀 검사** `map_bundle.py validate`, `map_nav.py check` 통과. 목표 4곳과 충돌 데이터에 경고 0개다. `build_scene_preview.py --verify --strict`는 정적 배치를 평탄화한 사본에서 경로 4개를 통과했다. 전원 상태 변화는 SDL 판정이다. `test_camera_lags_motion_freezes_at_walls_and_resets_with_player`, `test_skill_cast_preserves_air_action_and_is_spent_once`도 통과했다. [배치 미리보기](../../art/levels/power-supply/distribution/map-preview/preview.html).
+
+게임 설계·아트 기준·기술 구조·기본 조작·전하 규칙·진행 상태를 갱신했다. 원작은 실제 플레이 화면으로 관찰했다. 사용자 직접 플레이에서 장치 발견과 시각 품질은 미확인이다. 전체 회귀는 실행하지 않았다.

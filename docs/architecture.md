@@ -43,7 +43,7 @@
 
 게임 Renderer는 지연 render_items 순회·UI 트리 수집·수명 잠금·실패 시 목록 해제를 소유한다. engine의 execute는 게임 타입 없이 준비된 목록과 그리기 콜백을 받으며 참조를 저장하지 않는다. drawing API는 검증된 출력 사각형/texture만 SDL backend로 전달한다. 내부 모듈은 담당 모듈을 직접 import하고 패키지 루트를 거치지 않는다. world에는 SDL 의존이 없지만 공개 루트 import는 기존처럼 Pico2D를 로드한다.
 
-전원 구역의 두 층은 `map.json`의 연속 월드와 같은 충돌 검사로 연결된다. `CharacterScene`은 전원 구역에서만 상향 추적을 적용하고, 월드 경계와 렌더 시야로 카메라 범위를 제한한다. 원경은 두 축의 패럴랙스를 쓰되 항상 시야를 덮는다.
+전원 구역의 세 높이는 `map.json`의 연속 월드와 같은 충돌 검사로 연결된다. `CharacterScene`은 전원 구역에서만 상향 추적을 적용한다. `PowerSupplyMap`이 배전 단계에 따라 전력교와 셔터의 충돌 및 상태 표시를 함께 바꾼다. 방의 명암, 배치, 충돌은 같은 맵 좌표를 사용한다.
 
 월드/UI/통합 예제는 작은 검사용 Block·패널을 공유하므로 tests/fixtures/framework_scenes.py에 묶어 중복을 피한다. 새로운 게임 동작·의존성·관리자 계층은 추가하지 않았다.
 
