@@ -173,6 +173,10 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.step_to(2805, 694)
         self.screenshot = 'return-top-landing'
         yield .10
+        if self.charge_return:
+            yield from self.move_to(2884)
+            yield from self.wait_until(lambda: actor.grounded and isclose(actor.y, 154))
+            yield from self.step_to(2805, 694)
         yield from self.move_to(2318)
         yield from self.move_to(2150)
         assert actor.grounded and isclose(actor.y, 266)

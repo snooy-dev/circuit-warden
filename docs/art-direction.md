@@ -14,7 +14,9 @@
 
 ## 첫 레벨 정비 구역
 
-전원 구역은 큰 어두운 면으로 방의 윤곽을 만들고, 착지면의 밝은 가장자리와 얇은 구조선으로 이동 공간을 드러낸다. 색이 강한 요소는 워든·전하와 상태를 보이는 장치에 모은다. 기존 흡기 팬·구리 코일·콘덴서와 출력 단자는 위치를 알려주는 소품으로 배치한다. 조명을 받는 부분만 밝아지도록 방마다 명암을 지정했다. 셔터의 주황색 점은 미복구 상태, 전력교의 청록색 면은 통과 가능한 상태다. [전력교 화면](../art/levels/power-supply/distribution/sdl/character-distribution-powered-bridge.png) · [아트 검증](../specs/021-power-supply-level/verification.md#배전망-복구와-상층-귀환).
+흡기 팬, 변환 코일, 콘덴서, 출력 단자로 컴퓨터 전원 구역 안에서 위치를 구분한다. 배전실 후경에는 기판 트레이스·납땜 패드·알루미늄 방열판을 배치한다. 후경 대비를 낮춰 워든, 전하, 착지면이 앞에 보이도록 한다.
+
+릴레이·셔터·정비교·급전선과 기판은 ImageGen 원화를 hi-bit로 가공한다. 논리 픽셀 하나가 월드 두 단위인 이미지에 다수결 축소, 제한 팔레트 및 이진 알파를 적용한다. 주황 표시등은 미복구 상태다. 복구 후 릴레이와 급전선은 청록색으로 바뀌고, 정비교의 청록색 상단은 충돌 상단과 맞는다. [실제 배전실 화면](../art/levels/power-supply/return-loop/sdl/character-return-relay-on.png) · [제작 정보](../assets/levels/power-supply/return-loop/provenance.json) · [검증](../specs/021-power-supply-level/verification.md#전원-복구와-귀환-지름길).
 
 ## 기본 적: 금속 먼지 덩어리
 

@@ -14,7 +14,6 @@ from game_framework.collision import blocking_contact, overlaps
 
 MAP_FILE = Path(__file__).resolve().parents[1] / 'assets/levels/power-supply/map.json'
 DRAW_ORDER = {'rear': -4, 'structure': -2, 'front': 4}
-RELAY_REACH = 66
 
 
 class PowerSupplyMap(GameObject):
@@ -31,6 +30,7 @@ class PowerSupplyMap(GameObject):
                              for item in data['collision']['power_devices'])
         relay = next(item for item in data['interactions'] if item['id'] == 'relay')
         self.relay = self._point(relay['x'], relay['y'])
+        self.relay_reach = relay['reach']
         spawns = {entry['id']: self._point(entry['x'], entry['feet_y']) for entry in data['spawns']}
         self.player_start, self.enemy_start = spawns['start'], spawns['metal-dust']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
@@ -43,19 +43,22 @@ class PowerSupplyMap(GameObject):
         self.output_lock = self._rect(*data['collision']['output_lock'])
         self.reset()
 
-        def load(file):
-            image = images.load(MAP_FILE.parent / file)._borrow()
+        def load(prop):
+            image = images.load(MAP_FILE.parent / data['props'][prop]['image'])._borrow()
             _sdl(pico.SDL_SetTextureScaleMode(image.texture, pico.SDL_ScaleModeNearest))
             return image
 
         background = data['layers'][0]
-        self.fan_cavity = load(data['props']['fan-cavity']['image'])
-        self.chamber_light = load(data['props']['chamber-light']['image'])
+        self.fan_cavity = load('fan-cavity')
+        self.chamber_light = load('chamber-light')
+        self.bridge_art = load('return-bridge')
+        self.shutter_art = (load('shutter-closed'), load('shutter-open'))
+        self.relay_art = (load('relay-off'), load('relay-on'))
         self.chambers = tuple((self._rect(*room['rect']), room['color']) for room in background['chambers'])
         self.girders = tuple(self._rect(*rect) for rect in background['girders'])
         self.lights = tuple(self._rect(*rect) for rect in background['lights'])
         rotor = background['rotor']
-        self.rotor = load(data['props'][rotor['prop']]['image'])
+        self.rotor = load(rotor['prop'])
         self.fan_bounds = self._rect(*rotor['rect'])
         self.rotor_diameter = rotor['diameter_px']
         self.rotor_speed = rotor['degrees_per_second']
@@ -67,12 +70,17 @@ class PowerSupplyMap(GameObject):
             edge = (42, 57, 68) if tuple(rect[:2]) in ceilings else (91, 110, 117)
             self.items.append(RenderItem(partial(self._draw_structure, bounds, edge=edge), -2, bounds))
         for kind, bounds in self.devices:
-            self.items.append(RenderItem(partial(self._draw_device, kind, bounds), -2, bounds))
+            left, bottom, right, top = bounds
+            if kind == 'shutter':
+                right = left + self.shutter_art[0].w * 2
+            artwork = (left, bottom, right, top)
+            self.items.append(RenderItem(partial(self._draw_device, kind, artwork), -2, artwork))
         x, y = self.relay
-        bounds = (x - 42, y - 41.5, x + 42, y + 62.5)
-        self.items.append(RenderItem(partial(self._draw_relay, bounds), -2, bounds))
+        feet = y - 41.5
+        bounds = (x - self.relay_art[0].w, feet, x + self.relay_art[0].w, feet + self.relay_art[0].h * 2)
+        self.items.append(RenderItem(partial(self._draw_powered, self.relay_art, bounds), -2, bounds))
         for obj in data['objects']:
-            image = load(data['props'][obj['prop']]['image'])
+            image = load(obj['prop'])
             scale = obj.get('scale', 1)
             flip = obj.get('flip_x', False)
             anchor_x, anchor_y = obj['anchor_px']
@@ -81,8 +89,11 @@ class PowerSupplyMap(GameObject):
             bounds = self._rect(obj['x'] - anchor_x * scale, obj['y'] - anchor_y * scale,
                                 image.w * scale, image.h * scale)
             if obj['id'] == 'output-socket':
-                lit = load(data['props']['output-lit']['image'])
+                lit = load('output-lit')
                 draw = partial(self._draw_socket, image, lit, bounds)
+            elif obj['id'] == 'relay-feed':
+                lit = load('feed-wire-on')
+                draw = partial(self._draw_powered, (image, lit), bounds)
             else:
                 draw = partial(self._draw, image, bounds, flip)
             self.items.append(RenderItem(draw, DRAW_ORDER[obj['layer']], bounds, opacity=obj.get('opacity', 1)))
@@ -116,7 +127,7 @@ class PowerSupplyMap(GameObject):
             return False
         x, y = self.relay
         px, py = player.center
-        return hypot(x - px, y - py) <= RELAY_REACH
+        return hypot(x - px, y - py) <= self.relay_reach
 
     def restore_power(self, player):
         if self.near_relay(player):
@@ -175,28 +186,19 @@ class PowerSupplyMap(GameObject):
             draw_rect(transform, (left + 4, bottom, left + 7, top), (49, 66, 76), opacity)
 
     def _draw_device(self, kind, bounds, transform, opacity):
-        left, bottom, right, top = bounds
-        powered = self.power_restored
+        left, _, right, top = bounds
         if kind == 'bridge':
-            if powered:
-                self._draw_structure(bounds, transform, opacity, (108, 181, 176))
-            for x in (left, right - 12):
-                draw_rect(transform, (x, top - 10, x + 12, top + 2),
-                          (108, 181, 176) if powered else (109, 81, 53), opacity)
+            if self.power_restored:
+                draw_image(self.bridge_art, transform, bounds, opacity)
+            else:
+                for x in (left, right - 12):
+                    draw_rect(transform, (x, top - 10, x + 12, top), (136, 92, 57), opacity)
             return
-        height = 22 if powered else top - bottom
-        draw_rect(transform, (left, top - height, right, top), (44, 60, 70), opacity)
-        draw_rect(transform, (left + 4, top - height, left + 9, top), (72, 93, 103), opacity)
-        if not powered:
-            draw_rect(transform, (left + 12, bottom + 54, right - 7, bottom + 60), (213, 143, 72), opacity)
+        image = self.shutter_art[self.power_restored]
+        draw_image(image, transform, (left, top - image.h * 2, right, top), opacity)
 
-    def _draw_relay(self, bounds, transform, opacity):
-        left, bottom, right, top = bounds
-        draw_rect(transform, bounds, (30, 46, 56), opacity)
-        draw_rect(transform, (left + 5, top - 6, right - 5, top), (83, 102, 109), opacity)
-        color = (98, 206, 187) if self.power_restored else (232, 170, 87)
-        draw_rect(transform, (left + 26, bottom + 47, right - 26, bottom + 71), color, opacity)
-        draw_rect(transform, (left + 15, bottom + 18, right - 15, bottom + 23), (63, 83, 94), opacity)
+    def _draw_powered(self, images, bounds, transform, opacity):
+        draw_image(images[self.power_restored], transform, bounds, opacity)
 
     def _draw_socket(self, image, lit, bounds, transform, opacity):
         draw_image(lit if self.reached_output else image, transform, bounds, opacity)

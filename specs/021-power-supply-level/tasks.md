@@ -63,4 +63,4 @@
 ## 전원 복구와 귀환 지름길
 
 - [x] T034 [US1] 하층과 서쪽 귀환 동선을 블록아웃하고 단일 전원 상태를 실제 SDL 입력으로 검증한다 (`map.json`, `game/`, `tests/smoke/power_supply_smoke.py`, FR-020~FR-021)
-- [ ] T035 [US1] 장치 원화를 가공·배치하고 점프·전하 귀환, 출력, 재시작과 실제 화면을 확인한다 (`assets/levels/power-supply/`, `docs/`, `verification.md`, FR-020~FR-022)
+- [x] T035 [US1] 장치 원화를 가공·배치하고 점프·전하 귀환, 출력, 재시작과 실제 화면을 확인한다 (`assets/levels/power-supply/`, `docs/`, `verification.md`, FR-020~FR-022)

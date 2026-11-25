@@ -380,7 +380,7 @@ class CharacterScene(LevelScene):
                          view_height=DEFAULT_SIZE[1] if power_supply else HEIGHT, images=images)
         self.power_canvas = Canvas(DEFAULT_SIZE) if power_supply else None
         if self.power_canvas is not None:
-            self.power_hint = self.power_canvas.add(Label('W  ACTIVATE', anchor=(.5, 1), x=-60, y=-53,
+            self.power_hint = self.power_canvas.add(Label('W  RESTORE POWER', anchor=(.5, 1), x=-102, y=-53,
                                                           size=26, font_path=MENU_FONT, visible=False))
         self.level.mode.event_to_world = self.event_to_world
         self.level.mode.cursor_to_world = self.cursor_to_world

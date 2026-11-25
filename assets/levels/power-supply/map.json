@@ -11,6 +11,14 @@
     {"name": "front", "kind": "objects"}
   ],
   "props": {
+    "feed-wire-on": {"image": "return-loop/feed-wire-on.png", "art_source": "host_image", "sha256": "aaae87e20862a6002ab165e1e7f14a7880a9d412798252611ae654eb47adbb64"},
+    "relay-off": {"image": "return-loop/relay-off.png", "art_source": "host_image", "sha256": "cb374b0e22e563669e7e60285882828fde3211a4a5dccc9628fb2e81eb58f317"},
+    "relay-on": {"image": "return-loop/relay-on.png", "art_source": "host_image", "sha256": "07cc82d2b7fc6381dccc6f4c56e79f4ac139d19529b66c0601167fd75e51a80a"},
+    "shutter-closed": {"image": "return-loop/shutter-closed.png", "art_source": "host_image", "sha256": "e656e573ac06c56a61f347b0c1047c9157ee7abca92c5d67b7284b482060c088"},
+    "shutter-open": {"image": "return-loop/shutter-open.png", "art_source": "host_image", "sha256": "a21d681f18407b99f33cfad6dbffe9cc72145d2a664e16021bdf7a4431d0a981"},
+    "return-bridge": {"image": "return-loop/bridge.png", "art_source": "host_image", "sha256": "ecdcf1b1f511a74183dc810e5fc063798f72d85b75ae3bf4986eddfb6e4d44ee"},
+    "feed-wire": {"image": "return-loop/feed-wire.png", "art_source": "host_image", "sha256": "fc37eb8394983e46c8dad35f4e657040d5427e8da63659c2798ce3d53d16de73"},
+    "pcb": {"image": "return-loop/pcb.png", "art_source": "host_image", "sha256": "931a31d56f3167f008b349bcd8f0274554cac81fe2b05d6250d88da10b99b871"},
     "capacitors": {"image": "capacitors.png", "art_source": "host_image", "sha256": "e1b946b82eba6b4d84681c184d4025a2f96323ead58f6477ff81e2d3e8abd4d0"},
     "coil": {"image": "coil.png", "art_source": "host_image", "sha256": "f6af3435daae092aaec9f5079419d14aca04856d5e7f2b8d350f4af64f5aff76"},
     "exposed-cable": {"image": "exposed-cable.png", "art_source": "host_image", "sha256": "c5a6acb7634971c60ed878a3b2e65623e783e2731440378dea3b7ff4b651a09e"},
@@ -23,8 +31,10 @@
     "chamber-light": {"image": "distribution/chamber-light.png", "sha256": "9bfefc50481a5d87f16ba8b06dcf2dee4bc707fea18686a772c17d9910b2f5e9"}
   },
   "objects": [
+    {"id": "solder-side-pcb", "prop": "pcb", "x": 2650, "y": 1140, "anchor_px": [0, 304], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.8, "scale": 2},
+    {"id": "relay-feed", "prop": "feed-wire", "x": 3055, "y": 1074, "anchor_px": [9, 96], "solid": false, "layer": "rear", "sortY": 1, "opacity": 0.76, "scale": 2},
     {"id": "transformer-coil", "prop": "coil", "x": 1720, "y": 1140, "anchor_px": [138, 266], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.43, "scale": 1},
-    {"id": "rectifier-bank", "prop": "capacitors", "x": 2648, "y": 1140, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.26, "scale": 0.78},
+    {"id": "rectifier-bank", "prop": "capacitors", "x": 2460, "y": 1140, "anchor_px": [185, 248], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.26, "scale": 0.78},
     {"id": "output-socket", "prop": "output-port", "x": 500, "y": 694, "anchor_px": [212, 94], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.8, "scale": 1},
     {"id": "output-cable", "prop": "output-cable", "x": 540, "y": 636, "anchor_px": [0, 0], "solid": false, "layer": "rear", "sortY": 0, "opacity": 0.4, "scale": 1},
     {"id": "near-cable-1", "prop": "exposed-cable", "x": 72, "y": 696, "anchor_px": [135, 212], "solid": false, "layer": "front", "sortY": 720, "opacity": 1, "scale": 1},
