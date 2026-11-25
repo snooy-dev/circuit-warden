@@ -110,13 +110,15 @@ class PowerSupplyMap(GameObject):
         return self.reached_output
 
     def _draw_background(self, transform, opacity):
-        left, _, right, _ = transform.bounds
-        scale = max(self.background_height / self.background.h, (right - left) / self.background.w)
+        left, bottom, right, top = transform.bounds
+        scale = max(self.background_height / self.background.h, (right - left) / self.background.w,
+                    (top - bottom) / self.background.h)
         half_width = self.background.w * scale / 2
         half_height = self.background.h * scale / 2
         camera_x, camera_y = transform.center
         center = min(max(camera_x * (1 - self.parallax), right - half_width), left + half_width)
-        bounds = center - half_width, camera_y - half_height, center + half_width, camera_y + half_height
+        center_y = min(max(camera_y * (1 - self.parallax), top - half_height), bottom + half_height)
+        bounds = center - half_width, center_y - half_height, center + half_width, center_y + half_height
         draw_image(self.background, transform, bounds, opacity)
         rotor_x = bounds[0] + self.rotor_center[0] * scale
         rotor_y = bounds[3] - self.rotor_center[1] * scale

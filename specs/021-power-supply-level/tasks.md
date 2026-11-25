@@ -47,3 +47,9 @@
 - [x] T025 [US1] 안전한 연습 발판과 정비 전망대, 두 경로, 낙하·복귀, 출력의 충돌·시야·전하 배치를 실제 입력으로 확인한다 (`assets/levels/power-supply/map.json`, `tests/smoke/power_supply_smoke.py`, FR-011~FR-012)
 - [x] T026 [US1] 새 원경과 정비 구조물 및 방전 단서를 제작하고 화면에서 착지면·위험의 가독성을 확인한다 (`assets/levels/power-supply/`, `game/power_supply_map.py`, FR-013)
 - [x] T027 [US1] 맵·경로·기본 진입·재시작을 검사하고 기준 문서와 증거를 갱신한다 (`docs/`, `specs/021-power-supply-level/verification.md`, FR-011~FR-013)
+
+## 정비 샤프트와 순환 동선
+
+- [x] T028 [US1] 출시판 지도 및 방 연결 데이터를 대조하고 2층 순환 동선을 배치한다 (`assets/levels/power-supply/map.json`, FR-014~FR-015)
+- [x] T029 [US1] 첫 레벨의 수직 카메라와 기존 소재를 사용한 방별 구조물을 적용한다 (`game/scene.py`, `game/power_supply_map.py`, `assets/levels/power-supply/`, FR-016)
+- [x] T030 [US1] 중앙 출력 경로·배기 순환·전하·방전·오프닝을 확인하고 기준 문서와 실행 증거를 갱신한다 (`tests/smoke/power_supply_smoke.py`, `docs/`, `verification.md`, FR-014~FR-016)

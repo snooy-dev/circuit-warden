@@ -533,7 +533,7 @@ class CharacterScene(LevelScene):
         bounds = self.transform.bounds
         if bounds is None:
             return
-        left, _, right, _ = self.level.world_bounds
+        left, _, right, top = self.level.world_bounds
         half_width = min((bounds[2] - bounds[0]) / 2, (right - left) / 2)
         low, high = left + half_width, right - half_width
         camera_x = min(max(self.camera_center[0], low), high)
@@ -544,8 +544,13 @@ class CharacterScene(LevelScene):
             contact = self.level.blocking_contact(player, player.body, (direction, 0))
             if contact is not None and contact <= CONTACT_EPSILON:
                 target = camera_x
-        camera_x += (target - camera_x) * -expm1(-dt / CAMERA_FOLLOW_SECONDS)
-        self.camera_center = (camera_x, 0)
+        follow = -expm1(-dt / CAMERA_FOLLOW_SECONDS)
+        camera_x += (target - camera_x) * follow
+        camera_y = self.camera_center[1]
+        if self.level.power_supply:
+            target_y = min(max(player.y, 0), max(0, top - self.view_height / 2))
+            camera_y += (target_y - camera_y) * follow
+        self.camera_center = (camera_x, camera_y)
 
 
 def main():

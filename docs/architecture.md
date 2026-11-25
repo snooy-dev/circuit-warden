@@ -36,11 +36,14 @@
 | `main.py`, `game/` | 게임 진입·캐릭터 상태·레벨/장면 구현 |
 | `game/title.py` | 타이틀·설정 패널, 화면 모드와 게임 시작 |
 | `game/story_intro.py` | 전원 구역의 팬·방전·카메라 연출과 조작 인계 |
+| `game/power_supply_map.py` | 전원 구역 지형·배치·원경, 방전과 출력 상태 |
 | `assets/ui/` | 타이틀과 컷신에서 사용하는 Barlow Condensed 글꼴 · [라이선스](../licenses/barlow-OFL.txt) |
 | `game/training_map.py` | 훈련장 지형 충돌과 월드 표시 |
 | `tests/unit/`, `tests/integration/`, `tests/smoke/` | 모의 단위 검사·조합/실제 SDL 소프트웨어 검사·별도 실제 창 검사 |
 
 게임 Renderer는 지연 render_items 순회·UI 트리 수집·수명 잠금·실패 시 목록 해제를 소유한다. engine의 execute는 게임 타입 없이 준비된 목록과 그리기 콜백을 받으며 참조를 저장하지 않는다. drawing API는 검증된 출력 사각형/texture만 SDL backend로 전달한다. 내부 모듈은 담당 모듈을 직접 import하고 패키지 루트를 거치지 않는다. world에는 SDL 의존이 없지만 공개 루트 import는 기존처럼 Pico2D를 로드한다.
+
+전원 구역의 두 층은 `map.json`의 연속 월드와 같은 충돌 검사로 연결된다. `CharacterScene`은 전원 구역에서만 상향 추적을 적용하고, 월드 경계와 렌더 시야로 카메라 범위를 제한한다. 원경은 두 축의 패럴랙스를 쓰되 항상 시야를 덮는다.
 
 월드/UI/통합 예제는 작은 검사용 Block·패널을 공유하므로 tests/fixtures/framework_scenes.py에 묶어 중복을 피한다. 새로운 게임 동작·의존성·관리자 계층은 추가하지 않았다.
 

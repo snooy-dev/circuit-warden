@@ -138,3 +138,13 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 - **접촉 회귀** 게임 Python `-m unittest`로 `EnemyChargeTests.test_lethal_sword_hit_prevents_same_frame_charge_damage`와 `EnemyChargeTests.test_teleport_guard_only_prevents_damage_before_contact_deadline` 두 개를 실행해 통과했다.
 
 `docs/game-design.md`, `docs/art-direction.md`, `docs/progress.md`를 갱신했다. 전체 회귀와 사용자 직접 플레이는 미실행이다. 초심자가 도움 없이 두 경로를 읽는지는 플레이 평가가 남아 있다.
+
+## 정비 샤프트와 순환 동선
+
+2026-11-25 사용자 요청으로 출시판 잊혀진 교차로의 지도 캡처와 출시판 Outskirts의 방 영역·연결선 데이터를 대조하고 FR-014~FR-016을 구현했다. 실제 Outskirts 추출본의 방 영역 55개와 연결선 64개에서 `SU_A22`·`SU_S01` 및 `SU_C02`의 연결을 확인했다. 원작을 직접 실행하는 대신 지도와 게임에서 추출한 자료를 검토했다. [레퍼런스 관찰](plan.md#정비-샤프트와-순환-동선) · [전원 구역 동선도](../../art/levels/power-supply/shaft-loop/overview.png).
+
+- **SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/shaft-loop/sdl` 통과. 중앙 샤프트 점프와 클릭 전하 이동, 상층 카메라 범위, 중앙·배기 샤프트 각각에서 출력 점등을 확인했다. 배기 경로는 적을 처치하거나 전하를 소모하지 않고 진행했다. 상층 예고 및 피해 1회, 중앙 낙하 후 정비실 복귀, R 카메라 초기화, F6 및 전하 후보 39개의 배치도 확인했다. [샤프트](../../art/levels/power-supply/shaft-loop/sdl/character-power-supply-central-shaft.png) · [배선실](../../art/levels/power-supply/shaft-loop/sdl/character-power-supply-gallery.png) · [출력](../../art/levels/power-supply/shaft-loop/sdl/character-power-supply-output.png).
+- **기본 진입과 아트** 게임 Python으로 `.local-tools/verify-shaft-entry.py`를 실행해 타이틀, New Game, 낙뢰, 조작 인계를 확인했다. 기존 팬과 낙뢰 접점은 유지했고, 출력실 왼쪽 경계를 옮겨 케이블이 상층 바닥을 관통하지 않도록 했다. 기존 판금에서 잘라낸 천장과 격벽, 팬·코일·콘덴서, 상태별 접점, 2×2 픽셀을 실제 창에서 확인했다. [오프닝](../../art/levels/power-supply/shaft-loop/sdl/character-maintenance-opening.png).
+- **자동 검사** 게임 Python으로 `CharacterSceneTests.test_camera_lags_motion_freezes_at_walls_and_resets_with_player`, `CharacterSceneTests.test_camera_freezes_at_low_wall_inside_world_bounds`를 실행해 두 개 모두 통과했다. `map_bundle.py validate` 오류·경고 0개, `map_nav.py check` 목표 4곳 도달·좁은 틈 0개다. 웹 미리보기용으로 렌더 밴드를 평탄화한 사본의 `build_scene_preview.py --verify --strict`에서 Chromium 경로 4개를 확인했다. [브라우저 배치 미리보기](../../art/levels/power-supply/shaft-loop/preview/preview.html) · [브라우저 판정](../../art/levels/power-supply/shaft-loop/preview/scene-snapshot.json).
+
+게임 설계·아트 기준·아키텍처·진행 상태를 갱신했다. 전체 회귀는 실행 범위 밖이며, 사용자 직접 플레이와 초심자의 길 읽기는 미확인이다.
