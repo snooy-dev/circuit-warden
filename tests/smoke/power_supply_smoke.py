@@ -1,12 +1,15 @@
-"""실제 SDL 입력으로 전원 구역의 하강, 점검 덮개, 복구와 귀환을 검증한다."""
+"""실제 SDL 입력으로 전원 구역 8개 방의 통과, 복구와 귀환을 검증한다."""
 
 import argparse
+from ctypes import c_ubyte
 from math import isclose
 from pathlib import Path
 
 import pico2d.pico2d as pico
 
 from engine import Engine
+from game.character import SPEED
+from game.enemy import Enemy
 from game.scene import ALTERNATE_SIZE, DEFAULT_SIZE, CharacterScene
 from tests.smoke.character_smoke import push_key
 from tests.smoke.combat_reimplementation_smoke import CombatSmoke
@@ -40,11 +43,11 @@ class PowerSupplySmoke(CombatSmoke):
         push_key(key)
         if jump:
             push_key(pico.SDLK_SPACE)
-        try:
-            yield from self.wait_until(lambda: direction * (self.map_x() - map_x) >= 0)
-        except AssertionError as error:
-            raise AssertionError((map_x, self.map_x(), self.feet_y(),
-                                  actor.state, actor.jump_phase)) from error
+        deadline = self.elapsed + max(3, abs(map_x - self.map_x()) / SPEED + 1)
+        while direction * (self.map_x() - map_x) < 0:
+            assert self.elapsed < deadline, (map_x, self.map_x(), self.feet_y(),
+                                             actor.state, actor.jump_phase)
+            yield 0
         push_key(key, pico.SDL_KEYUP)
         if jump:
             yield from self.wait_until(lambda: actor.grounded)
@@ -55,7 +58,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.move_to(x, jump=True)
         assert isclose(self.feet_y(), y), (x, y, self.feet_y())
 
-    def click_charge(self, map_x, map_y, *, blocked=False):
+    def click_charge(self, map_x, map_y, *, blocked=False, at_room_edge=False):
         actor = self.character
         layout = self.level.layout
         center = layout._point(map_x, map_y)
@@ -63,10 +66,19 @@ class PowerSupplySmoke(CombatSmoke):
                       if all(abs(value - target) <= 4 for value, target in zip(charge.position, center)))
         assert candidate.active, (map_x, map_y, self.map_x(), self.feet_y())
         point = self.transform.point(*candidate.position)
+        output_w, output_h = self.engine.output_size
+        window_w, window_h = self.engine.window_size
+        window_x, window_y = point[0] * window_w / output_w, point[1] * window_h / output_h
+        if at_room_edge:
+            assert actor.can_place_center(candidate.position)
+            assert layout.blocks_teleport(actor, *candidate.position)
+            assert not candidate.render_items()
+            assert window_w <= window_x < window_w + 40, window_x
+            window_x = window_w - 1
         event = pico.SDL_Event()
         event.type = pico.SDL_MOUSEBUTTONDOWN
         event.button.button = pico.SDL_BUTTON_LEFT
-        event.button.x, event.button.y = map(round, point)
+        event.button.x, event.button.y = round(window_x), round(window_y)
         assert pico.SDL_PushEvent(event) == 1
         if blocked:
             start = self.map_x()
@@ -87,12 +99,66 @@ class PowerSupplySmoke(CombatSmoke):
             raise AssertionError((self.map_x(), feet_y, self.feet_y(), actor.state)) from error
         assert isclose(self.feet_y(), feet_y), (self.map_x(), feet_y, self.feet_y())
 
+    def capture(self, name):
+        _, bottom, _, top = self.level.layout.rooms[self.active_room]
+        if top - bottom < self.view_height:
+            width, height = self.engine.output_size
+            rgba = (c_ubyte * 4)()
+            for y in (5, height - 6):
+                rect = pico.SDL_Rect(width // 2, y, 1, 1)
+                assert pico.SDL_RenderReadPixels(pico.renderer, rect, pico.SDL_PIXELFORMAT_RGBA32,
+                                                 rgba, 4) == 0
+                assert tuple(rgba[:3]) == (0, 0, 0), (name, y, tuple(rgba))
+        super().capture(name)
+
+    def check_room_view(self, room, *, wall=None, tolerance=1e-6):
+        assert self.active_room == room, (self.active_room, room, self.character.center)
+        left, bottom, right, top = self.level.layout.rooms[room]
+        view_left, view_bottom, view_right, view_top = self.transform.bounds
+        assert left <= view_left + 1e-6 and right >= view_right - 1e-6, (
+            room, self.transform.bounds, (left, bottom, right, top))
+        if top - bottom >= self.view_height:
+            assert bottom <= view_bottom + 1e-6 and top >= view_top - 1e-6, (
+                room, self.transform.bounds, (left, bottom, right, top))
+        else:
+            assert isclose(view_bottom + view_top, bottom + top, abs_tol=1e-6), room
+        if wall == 'left':
+            assert isclose(view_left, left, abs_tol=tolerance), (room, view_left, left)
+        if wall == 'right':
+            assert isclose(view_right, right, abs_tol=tolerance), (room, view_right, right)
+
+    def cross_room(self, edge_x, origin, destination, feet_y, *, east, block_charge=None):
+        direction = 1 if east else -1
+        exit_wall, entry_wall = ('right', 'left') if east else ('left', 'right')
+        key = pico.SDLK_d if east else pico.SDLK_a
+        yield from self.move_to(edge_x - direction * 65)
+        yield from self.land_at(feet_y)
+        yield .65
+        self.check_room_view(origin, wall=exit_wall, tolerance=6)
+        self.screenshot = f'doorway-{origin}-{exit_wall}'
+        yield 0
+        if block_charge is not None:
+            yield from self.click_charge(*block_charge, blocked=True, at_room_edge=True)
+            assert self.active_room == origin
+
+        push_key(key)
+        for _ in self.wait_until(lambda: self.map_x() >= edge_x if east else self.map_x() < edge_x):
+            self.check_room_view(origin, wall=exit_wall, tolerance=6)
+            yield 0
+        self.check_room_view(destination, wall=entry_wall)
+        self.screenshot = f'doorway-{destination}-entered-{entry_wall}'
+        yield from self.wait_until(lambda: direction * (self.map_x() - edge_x) >= 65)
+        push_key(key, pico.SDL_KEYUP)
+        yield .035
+        yield from self.land_at(feet_y)
+
     def check_intake(self):
         actor = self.character
         layout = self.level.layout
         assert actor.collision_position == layout.player_start and actor.grounded
         assert layout.power_entry[0] < actor.x and layout.power_entry[1] > actor.y
-        assert self.level.enemy.collision_position == layout.enemy_start
+        assert all(not isinstance(obj, Enemy) for obj in self.level.objects)
+        self.check_room_view('service-core', wall='left')
         assert actor.spawn_opacity == 0.0
         initial_angle = layout.rotor_angle
         strike = self.level.power_entry_effect
@@ -114,7 +180,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield .04
         self.key_tap(pico.SDLK_F6)
         yield from self.wait_until(lambda: self.engine.window_size == ALTERNATE_SIZE)
-        assert layout.bounds[0] <= self.transform.bounds[0] + 1e-6
+        self.check_room_view('service-core')
         yield 0
         assert self._pixel_size == (512, 360)
         self.key_tap(pico.SDLK_F6)
@@ -186,18 +252,11 @@ class PowerSupplySmoke(CombatSmoke):
             yield from self.land_at(1620)
 
     def cross_transformer(self):
-        actor, enemy = self.character, self.level.enemy
-        yield from self.move_to(1240)
+        actor = self.character
+        yield from self.move_to(1160)
         yield from self.land_at(1750)
-        push_key(pico.SDLK_a)
-        yield from self.wait_until(lambda: actor.facing == -1 and 0 < actor.x - enemy.x <= 105)
-        push_key(pico.SDLK_a, pico.SDL_KEYUP)
-        self.key_tap(pico.SDLK_j)
-        yield from self.wait_until(lambda: enemy.hp == enemy.MAX_HP - 1)
-        self.screenshot = 'transformer-sword-hit'
-        yield from self.move_to(1410)
-        yield from self.step_to(1530, 1750)
         yield from self.move_to(1648)
+        yield from self.land_at(1750)
         health = actor.hp
         push_key(pico.SDLK_d)
         yield from self.wait_until(lambda: actor.hp == health - 1)
@@ -211,21 +270,91 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.land_at(1750)
         assert actor.hp == health - 1
 
+    def reach_relay(self):
+        yield from self.cross_room(3440, 'service-core', 'heat-exchangers', 1750, east=True,
+                                   block_charge=(3460, 1690))
+        yield from self.cross_room(3440, 'heat-exchangers', 'service-core', 1750, east=False)
+        yield from self.cross_room(3440, 'service-core', 'heat-exchangers', 1750, east=True)
+        yield from self.move_to(3675)
+        yield from self.step_to(3770, 1650)
+        yield from self.move_to(3955)
+        yield from self.step_to(4040, 1550)
+        yield from self.move_to(4380)
+        yield from self.land_at(1640)
+        yield from self.move_to(4600)
+        yield from self.land_at(1750)
+
+        yield from self.cross_room(4880, 'heat-exchangers', 'capacitor-reservoir', 1750, east=True)
+        yield from self.move_to(5260)
+        yield from self.step_to(5465, 1750)
+        yield from self.move_to(5625)
+        yield from self.step_to(5720, 1670)
+        yield from self.move_to(6070)
+        yield from self.land_at(1750)
+
+        yield from self.cross_room(6320, 'capacitor-reservoir', 'filter-gallery', 1750, east=True)
+        yield from self.move_to(6545)
+        yield from self.step_to(6640, 1630)
+        yield from self.move_to(6739)
+        yield from self.step_to(6840, 1540)
+        yield from self.move_to(7090)
+        yield from self.land_at(1650)
+        yield from self.move_to(7189)
+        yield from self.step_to(7280, 1570)
+        yield from self.move_to(7480)
+        yield from self.land_at(1660)
+        yield from self.move_to(7610)
+        yield from self.land_at(1750)
+        yield from self.cross_room(7760, 'filter-gallery', 'relay-tower', 1750, east=True)
+        yield from self.move_to(8450)
+
     def ascend_return(self):
         lower_camera = self.camera_center[1]
-        yield from self.move_to(2720)
-        yield from self.step_to(2605, 1628)
-        for x, y, feet in ((2580, 1325, 1388), (2580, 1074, 1142), (2730, 956, 1000)):
+        for x, y, feet in ((8595, 1565, 1630), (8590, 1324, 1390), (8415, 1204, 1270),
+                           (8230, 1074, 1140), (8000, 934, 1000)):
             yield from self.click_charge(x, y)
             self.screenshot = f'return-charge-{feet}'
             yield from self.land_at(feet)
+        yield from self.wait_until(lambda: self.camera_center[1] > lower_camera + 250)
+
+    def return_to_core(self):
+        yield from self.cross_room(7760, 'relay-tower', 'return-filters', 1000, east=False)
+        yield from self.move_to(7506)
+        yield from self.step_to(7360, 910)
+        yield from self.move_to(6970)
+        yield from self.land_at(970)
+        yield from self.move_to(6805)
+        yield from self.step_to(6690, 915)
+        yield from self.move_to(6500)
+        yield from self.land_at(1000)
+
+        yield from self.cross_room(6320, 'return-filters', 'return-capacitors', 1000, east=False)
+        yield from self.move_to(5940)
+        yield from self.land_at(1120)
+        yield from self.move_to(5775)
+        yield from self.step_to(5650, 1020)
+        yield from self.move_to(5535)
+        yield from self.step_to(5410, 920)
+        yield from self.move_to(5200)
+        yield from self.land_at(1000)
+
+        yield from self.cross_room(4880, 'return-capacitors', 'return-exchangers', 1000, east=False)
+        yield from self.move_to(4645)
+        yield from self.step_to(4520, 910)
+        yield from self.move_to(4250)
+        yield from self.land_at(1030)
+        yield from self.move_to(4125)
+        yield from self.step_to(3950, 970)
+        yield from self.move_to(3600)
+        yield from self.land_at(1000)
+        yield from self.cross_room(3440, 'return-exchangers', 'service-core', 1000, east=False)
+
         yield from self.move_to(2664)
         yield from self.step_to(2464, 1060)
         yield from self.move_to(2130)
         yield from self.step_to(2028, 1000)
         yield from self.move_to(1480)
         yield from self.land_at(1000)
-        assert self.camera_center[1] > lower_camera + 250
         self.screenshot = 'powered-bridge-over-shaft'
         yield .12
 
@@ -236,8 +365,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.descend_shaft()
         yield from self.reach_transformer()
         yield from self.cross_transformer()
-        for x in (2260, 2680):
-            yield from self.move_to(x)
+        yield from self.reach_relay()
         assert self.power_hint.visible and self.power_hint.text == 'W  RESTORE POWER'
         assert not layout.power_restored and layout.hatch_released == self.hatch
         self.screenshot = 'relay-before-restoration'
@@ -250,6 +378,7 @@ class PowerSupplySmoke(CombatSmoke):
         yield .10
 
         yield from self.ascend_return()
+        yield from self.return_to_core()
         yield from self.move_to(900)
         yield from self.wait_until(lambda: layout.reached_output)
         self.screenshot = 'output-reached'
@@ -259,12 +388,15 @@ class PowerSupplySmoke(CombatSmoke):
         yield from self.wait_until(lambda: self.character is not actor)
         assert not layout.reached_output and not layout.power_restored and not layout.hatch_released
         assert self.camera_center[1] == 0
+        self.check_room_view('service-core', wall='left')
+        assert all(not isinstance(obj, Enemy) for obj in self.level.objects)
         assert self.character.hp == actor.MAX_HP and self.character.collision_position == layout.player_start
         yield from self.wait_until(lambda: self.character.spawn_opacity == 1)
         self.screenshot = 'intake-after-reset'
         yield 0
         route = 'hatch opened and climbed' if self.hatch else 'hatch left closed'
-        print(f'PSU SDL PASS: {route}, shaft, sword, busbar, charged climb, bridge, output, reset, F6', flush=True)
+        print(f'PSU SDL PASS: {route}, 8 rooms and doorway cameras, busbar, relay, '
+              'charged climb, bridge, output, enemy-free reset, F6', flush=True)
 
 
 if __name__ == '__main__':

@@ -77,7 +77,10 @@ def surface(source, kind, size, offset=0):
 def write_bundle(path, level):
     lines = ['{']
     for key, value in level.items():
-        if key in {'layers', 'objects', 'spawns', 'interactions'}:
+        if key == 'camera' and 'rooms' in value:
+            lines += ['  "camera": {', f'    "bounds": {json.dumps(value["bounds"])},', '    "rooms": [',
+                      ',\n'.join('      ' + json.dumps(row) for row in value['rooms']), '    ]', '  },']
+        elif key in {'layers', 'objects', 'spawns', 'interactions'}:
             lines += [f'  "{key}": [', ',\n'.join('    ' + json.dumps(row) for row in value), '  ],']
         elif key in {'props', 'anchors'}:
             lines += [f'  "{key}": {{', ',\n'.join(f'    "{name}": {json.dumps(row)}' for name, row in value.items()),

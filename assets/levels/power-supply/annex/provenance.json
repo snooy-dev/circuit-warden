@@ -1,0 +1,599 @@
+{
+  "art_source": "host_image",
+  "model": "Codex ImageGen",
+  "estimateUsd": null,
+  "world_units_per_pixel": 2,
+  "sources": {
+    "art/levels/power-supply/annex/source/capacitors-prompt.txt": "f5289de5e037ddf78dcd57ee1434be42bd69770c587fe47fbf20051519260568",
+    "art/levels/power-supply/annex/source/capacitors.png": "9a8df9a0f2d7d4e91dd7a6e2684b7fdf83207af9d879343d9b4182ae6a03d369",
+    "art/levels/power-supply/annex/source/filter-prompt.txt": "08c91d29d9d1c07c257c7dcde3cb9051eb86a9811e73222e39b374030f453a48",
+    "art/levels/power-supply/annex/source/filter.png": "a86da09bf0cefb48bd078877e8a5016946f8d124b09122097d71fd71b899cf31",
+    "art/levels/power-supply/annex/source/raceway-prompt.txt": "1313918a5cddc031d2086a2a04d590e250402f28ccc1407a07d55e3e82500dbf",
+    "art/levels/power-supply/annex/source/raceway.png": "149a0f719edc94b0b33a09169af6d4be844a1a10635b3b6ff622420c73df8c88",
+    "art/levels/power-supply/annex/source/thermal-prompt.txt": "484e16175ac7f7b8c26766a9d8b3110e2f599d37a75ea3ff53b340b62698a003",
+    "art/levels/power-supply/annex/source/thermal.png": "13efdd85eb4e44eac45a885dba2bd7afd55bb4f4b1818ef4346605ba4e9c8568",
+    "art/levels/power-supply/transformer-hall/source/terrain.png": "844fb32e888bc5f6b991b7eb28e1e68e81157bfc66a78d493e6b84f927c190f5"
+  },
+  "assets": {
+    "annex-thermal": {
+      "image": "annex/annex-thermal.png",
+      "art_source": "host_image",
+      "sha256": "c411b01f2624a841ca368e8aecc5f599fc04175da64931152bc9c2128598158d",
+      "source": "thermal.png",
+      "logical_size": [
+        720,
+        320
+      ]
+    },
+    "annex-capacitors": {
+      "image": "annex/annex-capacitors.png",
+      "art_source": "host_image",
+      "sha256": "cad691b30357fb818a0de119c328bc8a170c7e527e2b6d71c400a6d9f7e29c7c",
+      "source": "capacitors.png",
+      "logical_size": [
+        720,
+        320
+      ]
+    },
+    "annex-filter": {
+      "image": "annex/annex-filter.png",
+      "art_source": "host_image",
+      "sha256": "10090a0120b58ee2903aef817bddec0a1d6f7068d4579413a5be8905565fe6c7",
+      "source": "filter.png",
+      "logical_size": [
+        720,
+        320
+      ]
+    },
+    "annex-race-thermal": {
+      "image": "annex/annex-race-thermal.png",
+      "art_source": "host_image",
+      "sha256": "3d8e3df3176ca20bdb2265b7960cad33b272046baf4aceaaa9eb9caaca4aee34",
+      "source": "raceway.png",
+      "logical_size": [
+        720,
+        434
+      ]
+    },
+    "annex-race-capacitors": {
+      "image": "annex/annex-race-capacitors.png",
+      "art_source": "host_image",
+      "sha256": "fc8b74ecd82fa88083575678c47451c9780109a818a466451f45a0f6ad1c6b1e",
+      "source": "raceway.png",
+      "logical_size": [
+        720,
+        434
+      ]
+    },
+    "annex-race-filter": {
+      "image": "annex/annex-race-filter.png",
+      "art_source": "host_image",
+      "sha256": "4509398ad287b40c1a8621550ae999006ed6677bf86eafc0f76f5eb93586f05e",
+      "source": "raceway.png",
+      "logical_size": [
+        720,
+        434
+      ]
+    },
+    "annex-deck-3408-32": {
+      "image": "annex/annex-deck-3408-32.png",
+      "art_source": "host_image",
+      "sha256": "0c42d6ba54e43abde3fab11fa7078a0c09ad89dddf9260d3b28ac01d4173f792",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        397
+      ]
+    },
+    "annex-deck-3408-1000": {
+      "image": "annex/annex-deck-3408-1000.png",
+      "art_source": "host_image",
+      "sha256": "f21b02bc8d7bad780776c5156bcbc410975213951f9711807ce77a64334beb6a",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        288
+      ]
+    },
+    "annex-deck-2960-1000": {
+      "image": "annex/annex-deck-2960-1000.png",
+      "art_source": "host_image",
+      "sha256": "d2d7f3c22a58781b5065602f3dbd77545f93f36da20f6baa638cb545a9081455",
+      "source": "terrain.png",
+      "logical_size": [
+        224,
+        12
+      ]
+    },
+    "annex-deck-4864-32": {
+      "image": "annex/annex-deck-4864-32.png",
+      "art_source": "host_image",
+      "sha256": "0c42d6ba54e43abde3fab11fa7078a0c09ad89dddf9260d3b28ac01d4173f792",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        397
+      ]
+    },
+    "annex-deck-4864-1000": {
+      "image": "annex/annex-deck-4864-1000.png",
+      "art_source": "host_image",
+      "sha256": "f21b02bc8d7bad780776c5156bcbc410975213951f9711807ce77a64334beb6a",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        288
+      ]
+    },
+    "annex-deck-6304-32": {
+      "image": "annex/annex-deck-6304-32.png",
+      "art_source": "host_image",
+      "sha256": "0c42d6ba54e43abde3fab11fa7078a0c09ad89dddf9260d3b28ac01d4173f792",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        397
+      ]
+    },
+    "annex-deck-6304-1000": {
+      "image": "annex/annex-deck-6304-1000.png",
+      "art_source": "host_image",
+      "sha256": "f21b02bc8d7bad780776c5156bcbc410975213951f9711807ce77a64334beb6a",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        288
+      ]
+    },
+    "annex-deck-7744-32": {
+      "image": "annex/annex-deck-7744-32.png",
+      "art_source": "host_image",
+      "sha256": "0c42d6ba54e43abde3fab11fa7078a0c09ad89dddf9260d3b28ac01d4173f792",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        397
+      ]
+    },
+    "annex-deck-7744-1000": {
+      "image": "annex/annex-deck-7744-1000.png",
+      "art_source": "host_image",
+      "sha256": "f21b02bc8d7bad780776c5156bcbc410975213951f9711807ce77a64334beb6a",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        288
+      ]
+    },
+    "annex-deck-9408-32": {
+      "image": "annex/annex-deck-9408-32.png",
+      "art_source": "host_image",
+      "sha256": "759731a401217470c2110791cd42ad130842d5b76fff2d21d92cfa0dd87c496c",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        859
+      ]
+    },
+    "annex-deck-3440-1750": {
+      "image": "annex/annex-deck-3440-1750.png",
+      "art_source": "host_image",
+      "sha256": "4550d999a644ad1df3c2bf324e2dcff62cc1461ce8f2ba05695ea8b62886dd3c",
+      "source": "terrain.png",
+      "logical_size": [
+        130,
+        51
+      ]
+    },
+    "annex-deck-3700-1650": {
+      "image": "annex/annex-deck-3700-1650.png",
+      "art_source": "host_image",
+      "sha256": "be6561cb5a79f748e15e700ee72edd914e99357cd899ce8061c99c7a439d9daf",
+      "source": "terrain.png",
+      "logical_size": [
+        140,
+        51
+      ]
+    },
+    "annex-deck-3980-1550": {
+      "image": "annex/annex-deck-3980-1550.png",
+      "art_source": "host_image",
+      "sha256": "b8c6ee79700c572ba721bf52208292003c18142fcaaf9d0ec7816fb19aaf9d5d",
+      "source": "terrain.png",
+      "logical_size": [
+        141,
+        51
+      ]
+    },
+    "annex-deck-4262-1640": {
+      "image": "annex/annex-deck-4262-1640.png",
+      "art_source": "host_image",
+      "sha256": "1c1a04314eb3c884e1604ff532d2e73d0ed10ef045572344ed2a8d2007300726",
+      "source": "terrain.png",
+      "logical_size": [
+        125,
+        51
+      ]
+    },
+    "annex-deck-4512-1750": {
+      "image": "annex/annex-deck-4512-1750.png",
+      "art_source": "host_image",
+      "sha256": "d50c8a3fb0174e49ad8390f7a68f2302bfb81609df4640c331e08a6ea74044b7",
+      "source": "terrain.png",
+      "logical_size": [
+        184,
+        51
+      ]
+    },
+    "annex-deck-4880-1750": {
+      "image": "annex/annex-deck-4880-1750.png",
+      "art_source": "host_image",
+      "sha256": "10c3fc2876ec2a7d277878ec867579cdfc463f809fe0176d85579117d86ca85d",
+      "source": "terrain.png",
+      "logical_size": [
+        195,
+        51
+      ]
+    },
+    "annex-deck-5270-1860": {
+      "image": "annex/annex-deck-5270-1860.png",
+      "art_source": "host_image",
+      "sha256": "b4554610f1263f135146c4a813b04be1beff3f5ae68e589ca5f4f93b02cc0061",
+      "source": "terrain.png",
+      "logical_size": [
+        75,
+        30
+      ]
+    },
+    "annex-deck-5420-1750": {
+      "image": "annex/annex-deck-5420-1750.png",
+      "art_source": "host_image",
+      "sha256": "d2ade8c0ffea98d5c1e49c3e0fbc979983e7a10c2464ebf562c3f0e6dadc5cca",
+      "source": "terrain.png",
+      "logical_size": [
+        115,
+        51
+      ]
+    },
+    "annex-deck-5650-1670": {
+      "image": "annex/annex-deck-5650-1670.png",
+      "art_source": "host_image",
+      "sha256": "cc60f4c96be3b8905bfdb10c6b65da3551a1e00ca37fd943ab3d29d21fd2e816",
+      "source": "terrain.png",
+      "logical_size": [
+        180,
+        51
+      ]
+    },
+    "annex-deck-6010-1750": {
+      "image": "annex/annex-deck-6010-1750.png",
+      "art_source": "host_image",
+      "sha256": "6d7fba7256765e0bc4eb58bb3d2d6c2434661eea3a341957e27756b826e7785b",
+      "source": "terrain.png",
+      "logical_size": [
+        155,
+        51
+      ]
+    },
+    "annex-deck-6320-1750": {
+      "image": "annex/annex-deck-6320-1750.png",
+      "art_source": "host_image",
+      "sha256": "f4e59508d8da6b4e20170c2f5a9f7287ad20831cabe0aae82cc4cb725c002205",
+      "source": "terrain.png",
+      "logical_size": [
+        125,
+        51
+      ]
+    },
+    "annex-deck-6570-1630": {
+      "image": "annex/annex-deck-6570-1630.png",
+      "art_source": "host_image",
+      "sha256": "417b5953505433b78b393f793b8fbec3f06e702263731557b15b1a0c50230c12",
+      "source": "terrain.png",
+      "logical_size": [
+        97,
+        51
+      ]
+    },
+    "annex-deck-6764-1540": {
+      "image": "annex/annex-deck-6764-1540.png",
+      "art_source": "host_image",
+      "sha256": "771f2d090dcaedfb9b74e0f46b8f346d708ea6fb82a0c9c438abc365faee7d3c",
+      "source": "terrain.png",
+      "logical_size": [
+        125,
+        51
+      ]
+    },
+    "annex-deck-7014-1650": {
+      "image": "annex/annex-deck-7014-1650.png",
+      "art_source": "host_image",
+      "sha256": "427621ab03e96744c4e31e31fce74eee07b0c718846dfc45b2298949df978e1c",
+      "source": "terrain.png",
+      "logical_size": [
+        100,
+        51
+      ]
+    },
+    "annex-deck-7214-1570": {
+      "image": "annex/annex-deck-7214-1570.png",
+      "art_source": "host_image",
+      "sha256": "b68b1578f9ad5450b94d80cbb40c771ecc6fd7b53c046d81cc13618f8fe1a890",
+      "source": "terrain.png",
+      "logical_size": [
+        104,
+        51
+      ]
+    },
+    "annex-deck-7422-1660": {
+      "image": "annex/annex-deck-7422-1660.png",
+      "art_source": "host_image",
+      "sha256": "056dfd216dd1c490753cf27e2a4d194c13622d532b2010266d9804b1ce14e05a",
+      "source": "terrain.png",
+      "logical_size": [
+        71,
+        51
+      ]
+    },
+    "annex-deck-7564-1750": {
+      "image": "annex/annex-deck-7564-1750.png",
+      "art_source": "host_image",
+      "sha256": "3888766e8f623f461229fac3eb95de392135711f33406ad3b29293f0fd94d14e",
+      "source": "terrain.png",
+      "logical_size": [
+        98,
+        51
+      ]
+    },
+    "annex-deck-7760-1750": {
+      "image": "annex/annex-deck-7760-1750.png",
+      "art_source": "host_image",
+      "sha256": "591544610d6de16b049ad4e4bfb155dcee21cf92f54677fca6ff59dfad91ac80",
+      "source": "terrain.png",
+      "logical_size": [
+        420,
+        51
+      ]
+    },
+    "annex-deck-8600-1750": {
+      "image": "annex/annex-deck-8600-1750.png",
+      "art_source": "host_image",
+      "sha256": "64721942605f685ae4a94a60e3cc79f87810917cbbce3da4098f23c6cbbb8ef1",
+      "source": "terrain.png",
+      "logical_size": [
+        420,
+        51
+      ]
+    },
+    "annex-deck-8530-1630": {
+      "image": "annex/annex-deck-8530-1630.png",
+      "art_source": "host_image",
+      "sha256": "1b69a329f2afb33614a0d296112e20e4f84fdd3ffc82528982033c5fd51510a6",
+      "source": "terrain.png",
+      "logical_size": [
+        75,
+        12
+      ]
+    },
+    "annex-deck-8718-1510": {
+      "image": "annex/annex-deck-8718-1510.png",
+      "art_source": "host_image",
+      "sha256": "d526439e6bb24d5185dcc9ecfd6f01f5e37637a0943a5808a2f842c12e5997ae",
+      "source": "terrain.png",
+      "logical_size": [
+        75,
+        12
+      ]
+    },
+    "annex-deck-8530-1390": {
+      "image": "annex/annex-deck-8530-1390.png",
+      "art_source": "host_image",
+      "sha256": "1b69a329f2afb33614a0d296112e20e4f84fdd3ffc82528982033c5fd51510a6",
+      "source": "terrain.png",
+      "logical_size": [
+        75,
+        12
+      ]
+    },
+    "annex-deck-8342-1270": {
+      "image": "annex/annex-deck-8342-1270.png",
+      "art_source": "host_image",
+      "sha256": "369db83ff84a05fc58465e3a274a48691f852c64a72bb8930e5323aeec6f35df",
+      "source": "terrain.png",
+      "logical_size": [
+        75,
+        12
+      ]
+    },
+    "annex-deck-8172-1140": {
+      "image": "annex/annex-deck-8172-1140.png",
+      "art_source": "host_image",
+      "sha256": "25f3a6d0f45eb192dc9df001dc43dba97bf2f50fffa3c981913a3df6599e99e8",
+      "source": "terrain.png",
+      "logical_size": [
+        65,
+        12
+      ]
+    },
+    "annex-deck-7760-1000": {
+      "image": "annex/annex-deck-7760-1000.png",
+      "art_source": "host_image",
+      "sha256": "9bf7ff396b131b50cd4719b53ee08171c4becac2c0e2382c06e96865be53ef9a",
+      "source": "terrain.png",
+      "logical_size": [
+        175,
+        12
+      ]
+    },
+    "annex-deck-7500-1000": {
+      "image": "annex/annex-deck-7500-1000.png",
+      "art_source": "host_image",
+      "sha256": "1c55248569143d1193cd41d2e9a16234c1095fb8c77035c07022fa62b10d2d58",
+      "source": "terrain.png",
+      "logical_size": [
+        130,
+        51
+      ]
+    },
+    "annex-deck-7400-1100": {
+      "image": "annex/annex-deck-7400-1100.png",
+      "art_source": "host_image",
+      "sha256": "6ea8f4586a7d9231da1f613314dbcc70b3770b8a728841a07400853192ea956a",
+      "source": "terrain.png",
+      "logical_size": [
+        50,
+        51
+      ]
+    },
+    "annex-deck-7080-910": {
+      "image": "annex/annex-deck-7080-910.png",
+      "art_source": "host_image",
+      "sha256": "284ac07a45bfc15f7430e072f43405b49f97b1cf166f8f1572f7d3b290cd220f",
+      "source": "terrain.png",
+      "logical_size": [
+        160,
+        51
+      ]
+    },
+    "annex-deck-6780-970": {
+      "image": "annex/annex-deck-6780-970.png",
+      "art_source": "host_image",
+      "sha256": "4d5d842c6aa3369b44d817553cc553b4a0eff047571c39b833002cb26ec1c8aa",
+      "source": "terrain.png",
+      "logical_size": [
+        150,
+        51
+      ]
+    },
+    "annex-deck-6600-915": {
+      "image": "annex/annex-deck-6600-915.png",
+      "art_source": "host_image",
+      "sha256": "c0ec7f494574f5cd1d7ca8100b87b822f3caf7e748e7e6109f2a4fc1baa77069",
+      "source": "terrain.png",
+      "logical_size": [
+        90,
+        51
+      ]
+    },
+    "annex-deck-6320-1000": {
+      "image": "annex/annex-deck-6320-1000.png",
+      "art_source": "host_image",
+      "sha256": "70c4beee8f38e565e86ea6a493e6e850f322930e5f02ea33f0ac821eefba176d",
+      "source": "terrain.png",
+      "logical_size": [
+        140,
+        51
+      ]
+    },
+    "annex-deck-6020-1000": {
+      "image": "annex/annex-deck-6020-1000.png",
+      "art_source": "host_image",
+      "sha256": "0d2be5d55102eb454d1a34242b55e50c709879d39049a43d367b0b27d2bc74b5",
+      "source": "terrain.png",
+      "logical_size": [
+        150,
+        51
+      ]
+    },
+    "annex-deck-5750-1120": {
+      "image": "annex/annex-deck-5750-1120.png",
+      "art_source": "host_image",
+      "sha256": "23faa58f449ab9ad1f44b20bff4d95155b93133fea4a825b3eaaa7bde93a9f67",
+      "source": "terrain.png",
+      "logical_size": [
+        135,
+        51
+      ]
+    },
+    "annex-deck-5510-1020": {
+      "image": "annex/annex-deck-5510-1020.png",
+      "art_source": "host_image",
+      "sha256": "b1c541cd0aed4845ef6ec6809c55e30a98dd665a01cdc564294a12b35b4aea65",
+      "source": "terrain.png",
+      "logical_size": [
+        120,
+        51
+      ]
+    },
+    "annex-deck-5280-920": {
+      "image": "annex/annex-deck-5280-920.png",
+      "art_source": "host_image",
+      "sha256": "710c3d87876352537145dbd2623745ce126a075247eae63be13f430fef964084",
+      "source": "terrain.png",
+      "logical_size": [
+        115,
+        51
+      ]
+    },
+    "annex-deck-4880-1000": {
+      "image": "annex/annex-deck-4880-1000.png",
+      "art_source": "host_image",
+      "sha256": "b53c940119decd5d5af38d4a53f312e0c88762eb45f44c1d9ea90bcd450473f1",
+      "source": "terrain.png",
+      "logical_size": [
+        200,
+        51
+      ]
+    },
+    "annex-deck-4620-1000": {
+      "image": "annex/annex-deck-4620-1000.png",
+      "art_source": "host_image",
+      "sha256": "d60c479aebc0f7392f054eeea788c0f66b4983690db78fc3c5d01d6fe4918529",
+      "source": "terrain.png",
+      "logical_size": [
+        130,
+        51
+      ]
+    },
+    "annex-deck-4410-910": {
+      "image": "annex/annex-deck-4410-910.png",
+      "art_source": "host_image",
+      "sha256": "0f12986abcdb2738ca59426c903dc6dd43ee10c3e4d499c1018f0c70c6ec023b",
+      "source": "terrain.png",
+      "logical_size": [
+        105,
+        51
+      ]
+    },
+    "annex-deck-4120-1030": {
+      "image": "annex/annex-deck-4120-1030.png",
+      "art_source": "host_image",
+      "sha256": "afcb15741de4d29e7b7bab443c970b18c2772e1fffce2fb17428088a09edd1d8",
+      "source": "terrain.png",
+      "logical_size": [
+        145,
+        51
+      ]
+    },
+    "annex-deck-4000-1150": {
+      "image": "annex/annex-deck-4000-1150.png",
+      "art_source": "host_image",
+      "sha256": "1045fa92190bfb5b769df616ebd8544864a3e3fb12ff16c0c90821b776129ac2",
+      "source": "terrain.png",
+      "logical_size": [
+        60,
+        51
+      ]
+    },
+    "annex-deck-3700-970": {
+      "image": "annex/annex-deck-3700-970.png",
+      "art_source": "host_image",
+      "sha256": "6264c870183e3f94ee7e92113cc26e26833aacd95212f77551152f453da26a60",
+      "source": "terrain.png",
+      "logical_size": [
+        150,
+        51
+      ]
+    },
+    "annex-deck-3440-1000": {
+      "image": "annex/annex-deck-3440-1000.png",
+      "art_source": "host_image",
+      "sha256": "4550d999a644ad1df3c2bf324e2dcff62cc1461ce8f2ba05695ea8b62886dd3c",
+      "source": "terrain.png",
+      "logical_size": [
+        130,
+        51
+      ]
+    }
+  }
+}

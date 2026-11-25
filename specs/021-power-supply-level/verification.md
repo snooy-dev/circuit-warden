@@ -194,3 +194,9 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 
 - **블록아웃** 실제 `Level`과 `Character`를 사용한 고정 간격 헤드리스 실행에서 하층 열교환실·콘덴서실·필터실, 배전탑, 상층 세 방과 출력을 연결했다. 배전탑의 점프·전하 상승, 낙하 지점 세 곳의 복귀, 복구 전 상층 셔터 차단을 확인했다.
 - **런타임** SDL 오프스크린에서 방 경계 좌표, 건너는 프레임의 X/Y 카메라 위치, 짧은 방의 검은 가림, 방 사이 순간이동 차단과 R 복귀를 확인했다. 파워 맵에서 적 리소스를 요청하지 않는다. `BasicEnemySceneTests`의 적 렌더링·재시작·검격 세 검사가 통과했다.
+- **실제 창** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir <경로>` 기본과 `--hatch`를 실행했다. 여덟 방, 첫 문턱 역방향 이동, 카메라의 출입구 전 정지와 첫 프레임 전환, 짧은 방 위·아래의 검은 픽셀, 방 건너 전하 차단, 버스바, 배전탑, 출력, F6와 R을 확인했다. 최초 화면 검토에서 다음 방의 전하 잔광이 가장자리에 들어왔고, 렌더링에서 방 소속을 확인하도록 수정했다. 최종 기본 경로를 다시 녹화해 출입구의 전하 표시와 입력 차단, 재시작 후 적이 없는 상태, 기본 New Game 진입을 확인했다. [SDL 왕복 녹화](../../art/levels/power-supply/annex/doorway.mp4) · [최종 기본 경로](../../art/levels/power-supply/annex/main/) · [덮개 경로](../../art/levels/power-supply/annex/hatch/).
+- **아트** 내장 ImageGen으로 방열기, 콘덴서, 필터와 상층 배선 원화를 생성했다. 도구 Python으로 `scripts/bake-power-supply-art/build_annex.py`를 실행해 2×2 픽셀용 원경과 발판을 구성했다. [전체 방 연결](../../art/levels/power-supply/annex/room-flow.png) · [제작 정보](../../assets/levels/power-supply/annex/provenance.json).
+- **관련 회귀** 게임 Python으로 `tests.integration.test_charge_scene`, `tests.integration.test_character_scene` 및 `tests.integration.test_basic_enemy.BasicEnemySceneTests`의 적 렌더링·재시작·검격 지정 메서드 세 개를 실행해 검사 37개를 통과했다.
+- **맵** 최종 `map_bundle.py validate`의 오류와 경고는 없었다. 복구 상태를 펼친 정적 Chromium 미리보기는 키 이동과 배치 목표 3곳을 통과했다. 평면 `map_nav.py check`의 `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 실제 방 연결과 이동은 SDL에서 판정했다. [평면 검사](../../art/levels/power-supply/annex/nav/nav-report.json) · [Chromium 기록](../../art/levels/power-supply/annex/preview/scene-snapshot.json).
+
+현재 설계·아트·기술 구조·전하 규칙·진행 상태를 갱신했다. 전체 회귀와 사용자 초회 플레이는 미실행이다.

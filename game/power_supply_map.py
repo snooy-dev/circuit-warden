@@ -23,7 +23,7 @@ class PowerSupplyMap(GameObject):
         world = data['world']
         self.half_width, self.half_height = world['width'] / 2, world['height'] / 2
         self.bounds = self._rect(0, 0, world['width'], world['height'])
-        self.rooms = {room['id']: self._rect(*room['rect']) for room in data['rooms']}
+        self.rooms = {room['id']: self._rect(*room['rect']) for room in data['camera']['rooms']}
         self.terrain = tuple(
             Collider(self._rect(*rect), 'terrain', blocks={'player', 'enemy'})
             for rect in data['collision']['rects'])

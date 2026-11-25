@@ -86,5 +86,9 @@ class Charge(GameObject):
         draw_sprite(frame, transform, self.position, frame.rect[2:], opacity)
 
     def render_items(self):
-        return () if self.spent else (RenderItem(self._draw, draw_order=-1,
-                                                opacity=self.spawn_opacity),)
+        if self.spent:
+            return ()
+        layout = getattr(self.level, 'layout', None)
+        if layout is not None and layout.room_at(self.position) != layout.room_at(self.level.player.center):
+            return ()
+        return (RenderItem(self._draw, draw_order=-1, opacity=self.spawn_opacity),)
