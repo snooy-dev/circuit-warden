@@ -19,7 +19,7 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "77a007fb9c31d34c9d03bbf2692443fb26ff33e6f415cd1c3f43709867ae5905",
+    "sha256": "7dd20d32aa1bc203e7b4c0ef4ad2ae104a71014dfd62e8e32e933ccb8196f7e2",
     "frameSize": [160, 192],
     "footPivot": [80, 112]
   }
