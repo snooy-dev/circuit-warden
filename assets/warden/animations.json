@@ -181,14 +181,14 @@
   "air_attack": {
     "file": "air_attack.png",
     "frameSize": [
-      192,
-      192
+      224,
+      208
     ],
     "columns": 6,
     "count": 18,
     "pivot": [
-      96,
-      112
+      112,
+      120
     ],
     "durationsMs": [
       17,

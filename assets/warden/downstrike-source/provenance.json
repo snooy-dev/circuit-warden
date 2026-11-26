@@ -20,7 +20,7 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "281ba46048450cb09c3ead34ca6b29809d28e55dac226e9b8f4d3024d62f90f6",
+    "sha256": "b2653bb99493ecf78c5f463ef10ce77f0e5c591638b0281842c6a9456b4dd1ae",
     "frameSize": [160, 192],
     "footPivot": [80, 112],
     "impactFrameIndex": 4
