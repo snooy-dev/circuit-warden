@@ -1,4 +1,13 @@
 {
+  "downstrike": {
+    "file": "downstrike.png",
+    "frameSize": [160, 192],
+    "columns": 5,
+    "count": 10,
+    "pivot": [80, 112],
+    "durationsMs": [65, 15, 15, 15, 15, 15, 15, 30, 30, 30],
+    "loop": false
+  },
   "hurt": {
     "file": "hurt-impact.png",
     "frameSize": [128, 104],

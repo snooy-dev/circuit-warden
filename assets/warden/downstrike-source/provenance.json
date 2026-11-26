@@ -1,0 +1,26 @@
+{
+  "body": {
+    "route": "host_image",
+    "file": "poses.png",
+    "sha256": "45c470c082fa1f5a441a535bed94087b7dc5afbc9b3d152617f39a352b9ded4d",
+    "references": [
+      "../../../art/warden/idle-ltx-hibit-v1/master/master_rgba.png",
+      "../../../art/warden/reference/energy-sword-master-v2.png"
+    ],
+    "intent": "전투 자세 3종. 동일 오른쪽 시점, 손에 연결된 에너지 검, 효과 없는 몸체와 무기, 투명 셀.",
+    "frameScale": "724px 셀을 128px로 내린 후 워든 16색에 정렬",
+    "footAnchorsInSourceCells": [[360, 527], [389, 515], [395, 524]]
+  },
+  "effects": {
+    "route": "pixelfx",
+    "revision": "a84159688af3ca37a4be05a0d422b94451b2e24e",
+    "sweep": "sweep.mjs",
+    "impact": "../../combat/source/provenance.json"
+  },
+  "runtime": {
+    "file": "../downstrike.png",
+    "sha256": "571fbd3c8145395002dc9f78cf498dec5caaf069c1715314604611b97509d201",
+    "frameSize": [160, 192],
+    "footPivot": [80, 112]
+  }
+}

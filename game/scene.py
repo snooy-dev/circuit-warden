@@ -15,7 +15,6 @@ from game_framework import Canvas, Collider, CollisionResponse, ImageStore, Labe
 from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_contact, overlaps
 
 from .character import DASH_KEYS, MOVE_KEYS, PUSHBACK_SECONDS, Character, _load_clip, load_clips
-from .downstrike import DownstrikeBurst
 from .effects import SpriteEffect
 from .enemy import ENEMY_TYPES, Enemy, PowerAssembly, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
@@ -207,7 +206,7 @@ class GameplayLevel(Level):
         clips = self.player.clips
         view_bounds = self.player.view_bounds
         for obj in self.objects:
-            if isinstance(obj, (SpriteEffect, DownstrikeBurst, TeleportLink)):
+            if isinstance(obj, (SpriteEffect, TeleportLink)):
                 obj.destroy()
         self.mode.pending_charge = self.mode.teleport_link = None
         self._remove_skill_charge()
@@ -250,7 +249,8 @@ class GameplayLevel(Level):
             struck.last_hit_attack = attack_id
             struck.take_hit()
             self.player.rebound_from_downstrike(feet_y)
-            self.spawn(DownstrikeBurst(point))
+            self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, self.player.facing, 1,
+                                    draw_order=1))
             self._sword_stop_remaining = SWORD_HIT_STOP
         self._resolve_enemy_contact(dt, player_position, protected_until, struck)
         if self.power_supply:
@@ -261,7 +261,7 @@ class GameplayLevel(Level):
                 self._show_player_hit(self.player.center, busbar_direction)
         if self.player.hp == 0:
             for obj in self.objects:
-                if isinstance(obj, (SpriteEffect, DownstrikeBurst)):
+                if isinstance(obj, SpriteEffect):
                     obj.destroy()
 
     def _resolve_sword(self, enemy, downstrike_hits):

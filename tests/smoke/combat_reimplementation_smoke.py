@@ -8,7 +8,8 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.character import GROUND_Y, JUMP_HEIGHT
-from game.downstrike import DownstrikeBurst, WINDUP
+from game.downstrike import WINDUP
+from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.training_map import LOW_WALL, PLATFORMS
 from tests.smoke.character_smoke import CharacterSmoke, push_key
@@ -170,9 +171,9 @@ class CombatSmoke(CharacterScene):
         yield from self.downstrike_exercise()
 
     def downstrike_exercise(self):
-        actor, enemy = self.character, self.level.enemy
+        actor, enemy = self.character, self.level.enemies[0]
         enemy.state, enemy.state_remaining = 'recover', 2
-        actor.x, actor.y, actor.velocity_y = enemy.x, 0, -90
+        actor.x, actor.y, actor.velocity_y = enemy.x, enemy.y - GROUND_Y, -90
         actor.air_dash_used = True
         push_key(pico.SDLK_s)
         push_key(pico.SDLK_j)
@@ -180,7 +181,7 @@ class CombatSmoke(CharacterScene):
         self.screenshot = 'downstrike-blade'
         yield from self.wait_until(lambda: enemy.hp == enemy.MAX_HP - 1)
         assert actor.jump_phase == 'rise' and actor.velocity_y > 0 and not actor.air_dash_used
-        assert any(isinstance(obj, DownstrikeBurst) for obj in self.level.objects)
+        assert any(isinstance(obj, SpriteEffect) for obj in self.level.objects)
         self.screenshot = 'downstrike-rebound'
         push_key(pico.SDLK_j, pico.SDL_KEYUP)
         push_key(pico.SDLK_s, pico.SDL_KEYUP)

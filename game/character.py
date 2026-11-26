@@ -95,7 +95,7 @@ def load_clips(images):
     except ValueError as error:
         raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
     clips = {}
-    names = ('idle', 'run_left', 'run_right', 'attack', 'air_attack', 'hurt') + tuple(
+    names = ('idle', 'run_left', 'run_right', 'attack', 'air_attack', 'downstrike', 'hurt') + tuple(
         f'{phase}_{direction}' for phase in (
             'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx',
             'jump_start', 'jump_rise', 'jump_fall', 'jump_land')
@@ -522,6 +522,7 @@ class Character(GameObject):
             self._machine.downstrike()
             self.downstrike_elapsed = 0.0
             self.attack_id += 1
+            self.player.play(self.clips['downstrike'], restart=True)
             started = False
         if self.state == 'downstrike':
             remaining = self._update_downstrike(dt, offset, direction, push_time)
@@ -664,6 +665,7 @@ class Character(GameObject):
             self.x = self.clamped_horizontal_target(x + direction * SPEED * (flight - push_time))
             self.facing = direction
         self.downstrike_elapsed += flight
+        self.player.update(flight)
         start = max(0.0, downstrike.WINDUP - elapsed)
         end = min(flight, downstrike.ACTIVE_END - elapsed)
         if start < end:
@@ -673,7 +675,6 @@ class Character(GameObject):
         if self.grounded or downstrike.DURATION - self.downstrike_elapsed <= CONTACT_EPSILON:
             self._machine.end_downstrike()
             return dt - flight
-        self._show_jump()
         return 0.0
 
     def rebound_from_downstrike(self, contact_height):
@@ -850,7 +851,7 @@ class Character(GameObject):
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
-        flip_x = self.state not in ('run', 'dash', 'jump', 'downstrike') and self.facing < 0
+        flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
         if self.state == 'attack':
             flip_x = self.attack_facing < 0
         link = self.arrival_link
@@ -878,8 +879,6 @@ class Character(GameObject):
         position = (x, y) if self.state == 'attack' and self.airborne_swing else (x, y - BODY_HEIGHT / 2)
         draw_sprite(frame, transform, position,
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
-        if self.state == 'downstrike':
-            downstrike.draw_blade(transform, position, self.downstrike_elapsed, opacity)
 
     def render_items(self):
         return (RenderItem(self._draw, opacity=self.spawn_opacity),)
