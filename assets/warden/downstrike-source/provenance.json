@@ -1,15 +1,16 @@
 {
   "body": {
-    "route": "keyframed_raster_parts",
+    "route": "local:comfyui-ltx25",
     "file": "poses.png",
-    "sha256": "3629119afacf47ae41def260cbe49658f52221543437df8fbdb80b5ebf5275fb",
+    "sha256": "434cb761cbb1bb77fb9fd3cf37b02508f67e6d753d7e84436cfffba68df5bea3",
     "references": [
-      "../../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png",
-      "../../../art/warden/reference/master-source.png",
-      "../../../art/warden/reference/energy-sword-master-v2.png"
+      "../../../art/warden/air-attack-side-master-v4/approved/master.png",
+      "../../../art/warden/full-body-air-attacks/down-impact-source.png",
+      "../../../art/warden/full-body-air-attacks/down-guided/clip.mp4",
+      "../../../art/warden/full-body-air-attacks/down-recovery/clip.mp4"
     ],
     "build": "../attack-source/build.py",
-    "intent": "측면과 사선 준비를 거쳐 정면에서 손과 검을 발밑으로 휘두른 뒤 공중 자세로 돌아오는 10프레임",
+    "intent": "측면 준비에서 어깨가 정면으로 돌아오고, 팔꿈치와 손이 골반 앞을 지나 발밑을 벤 뒤 공중 자세로 돌아오는 10프레임",
     "frameScale": "기준 워든 높이 80px, 워든 16색, 이진 알파",
     "footPivot": [104, 112]
   },
@@ -22,7 +23,7 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "949f8c37b8bc3a454142a3dedcdce79c0753ad957b00cbcc7a66a5fbb9e97d9d",
+    "sha256": "5515c7ab411eeb20e0cb558c9501609410ca27bb6e789699688a892288026725",
     "frameSize": [208, 208],
     "footPivot": [104, 112],
     "impactFrameIndex": 4

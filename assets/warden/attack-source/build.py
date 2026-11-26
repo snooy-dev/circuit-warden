@@ -1,15 +1,14 @@
-"""Bake the air and downward attacks from joint-keyed poses and pixelfx layers."""
+"""Composite the selected airborne animation cels with the sword effects."""
 from argparse import ArgumentParser
 import json
 from pathlib import Path
 
 from PIL import Image
 
-from poses import AIR, AIR_TIMES, DOWN, draw
-
 ROOT = Path(__file__).resolve().parents[3]
 WARDEN = ROOT / 'assets/warden'
 ART = ROOT / 'art/warden'
+AIR_TIMES = [0, 33, 59, 85, 100, 126, 160, 180, 205, 235, 263, 300]
 SIZE = (256, 224)
 PIVOT = (128, 136)
 COLUMNS = 6
@@ -59,7 +58,7 @@ def down_layer(effect):
     cropped = rotated.crop((left, top, right, bottom))
     scaled = cropped.resize((round(cropped.width * stretch), round(cropped.height * depth)),
                              Image.Resampling.NEAREST)
-    target = (104 + round((left - pivot_x) * stretch), 84 + round((top - pivot_y) * depth))
+    target = (104 + round((left - pivot_x) * stretch), 77 + round((top - pivot_y) * depth))
     return scaled, target
 
 
@@ -77,7 +76,8 @@ def main():
         expected.alpha_composite(effects[fx_index])
         assert expected.tobytes() == tile(ground, fx_index + 5, SIZE, COLUMNS).tobytes(), fx_index
 
-    poses = [draw(key, SIZE, (128, 158)) for key in AIR]
+    air_art = Image.open(WARDEN / 'attack-source/air-poses.png').convert('RGBA')
+    poses = [tile(air_art, i, SIZE, COLUMNS) for i in range(len(AIR_TIMES) - 1)]
     fx_end = GROUND_FX_START + len(effects) * GROUND_FX_FRAME_MS
     edges = sorted(set(AIR_TIMES).union(range(GROUND_FX_START, fx_end + 1, GROUND_FX_FRAME_MS)))
     frames = []
@@ -90,9 +90,8 @@ def main():
     sheet(frames, SIZE, COLUMNS).save(out / 'air_attack.png')
 
     down_size = (208, 208)
-    down = [draw(key, down_size, (104, 96)) for key in DOWN]
-    pose_path = out / 'poses.png' if out != WARDEN else out / 'downstrike-source/poses.png'
-    sheet(down, down_size, 5).save(pose_path)
+    down_art = Image.open(WARDEN / 'downstrike-source/poses.png').convert('RGBA')
+    down = [tile(down_art, i, down_size, 5) for i in range(10)]
     for frame_index, fx_index in enumerate((0, 2, 3, 4, 5), start=3):
         down[frame_index].alpha_composite(*down_layer(effects[fx_index]))
     sheet(down, down_size, 5).save(out / 'downstrike.png')
