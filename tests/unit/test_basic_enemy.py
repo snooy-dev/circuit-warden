@@ -125,7 +125,7 @@ class BasicEnemyTests(CombatFixture):
     def test_active_window_once_per_swing_and_removal(self):
         for hp in (2, 1, 0):
             self.click()
-            self.level.update(.142)
+            self.level.update(.124)
             self.assertEqual(self.enemy.hp, hp + 1)
             self.level.update(.001)
             self.assertEqual(self.enemy.hp, hp)
@@ -153,7 +153,7 @@ class BasicEnemyTests(CombatFixture):
         self.assertEqual(self.actor.buffered_action, 'attack')
 
         self.level.update(.03)
-        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .005 * .7)
+        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .004)
         self.assertEqual(self.enemy.state_remaining, recovery)
         self.assertAlmostEqual(spark.player.elapsed, .005)
         self.assertAlmostEqual(self.actor.buffer_remaining, .095)
@@ -170,7 +170,7 @@ class BasicEnemyTests(CombatFixture):
         self.assertEqual((self.enemy.hp, self.enemy.x), (3, 70))
         elapsed = self.actor.player.elapsed
         self.level.update(.02)
-        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .02 * .7)
+        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .016)
 
         self.enemy.x = -70
         self.level.update(.02)
@@ -521,7 +521,7 @@ class EnemyChargeTests(CombatFixture):
 
     def test_enemy_entering_at_sword_window_end_is_not_hit(self):
         self.start_mid_swing()
-        end_of_window = .20 / .7 - .15
+        end_of_window = .25 - .15
         self.enemy.x = ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + enemy_rules.CHARGE_SPEED * end_of_window
         self.enemy.facing = -1
         self.level.update(.15)

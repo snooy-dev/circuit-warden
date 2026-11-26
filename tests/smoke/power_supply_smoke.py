@@ -13,6 +13,7 @@ import pico2d.pico2d as pico
 from engine import Engine
 from game.character import SPEED
 from game.charge import CLICK_RADIUS
+from game.effects import SpriteEffect
 from game.enemy import CoolingFan, LeakingCapacitor
 from game.scene import DEFAULT_SIZE, CharacterScene
 from tests.smoke.character_smoke import CharacterSmoke, push_key
@@ -431,8 +432,11 @@ class PowerSupplySmoke(CharacterScene):
         assert actor.hp == actor.MAX_HP
         yield from self.shot('capacitor-windup')
         yield from self.wait_until(lambda: actor.hp == actor.MAX_HP - 1, expected='콘덴서 방전 피해')
+        assert any(isinstance(obj, SpriteEffect) and obj.scale == 1.3 for obj in self.level.objects)
+        yield from self.tap(pico.SDLK_j)
         yield from self.shot('capacitor-discharge')
         assert cap.state == 'charge'
+        yield from self.wait_until(lambda: actor.state == 'attack', expected='피격 후 예약한 공중 검격')
         yield from self.tap(pico.SDLK_r)
         assert self.active_room == 'intake' and self.character.hp == self.character.MAX_HP
         assert all(enemy.hp == enemy.MAX_HP for enemy in self.level.enemies)

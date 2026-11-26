@@ -62,6 +62,7 @@ class CombatSmoke(CharacterScene):
         yield from self.wait_until(lambda: actor.velocity_y <= 0)
         height = actor.y - GROUND_Y
         yield from self.wait_until(lambda: actor.grounded)
+        assert actor.state == 'run' and actor.jump_phase is None
         distance = actor.x
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
@@ -77,7 +78,7 @@ class CombatSmoke(CharacterScene):
         start = actor.x
         push_key(pico.SDLK_j)
         yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .14)
-        assert actor.x > start and actor.attack_facing == 1
+        assert actor.x > start and actor.attack_facing == 1, (start, actor.x, actor.attack_facing, actor.pressed)
         self.screenshot = 'ground-moving-swing-right'
         start = actor.x
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
@@ -109,7 +110,7 @@ class CombatSmoke(CharacterScene):
 
         short = yield from self.running_jump(short=True)
         long = yield from self.running_jump(short=False)
-        assert 65 < short[0] < 105 and 161 < long[0] <= JUMP_HEIGHT
+        assert 65 < short[0] < 105 and 161 < long[0] <= JUMP_HEIGHT + 1e-6, (short, long)
         assert long[1] > short[1] + 40
         print(f'점프 높이 / 거리: 짧게 {short[0]:.1f} / {short[1]:.1f}, '
               f'길게 {long[0]:.1f} / {long[1]:.1f}', flush=True)

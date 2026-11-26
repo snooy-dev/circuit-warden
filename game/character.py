@@ -37,11 +37,12 @@ TELEPORT_RISE_SECONDS = .24
 ARRIVAL_BLEND_SECONDS = .045
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
-ATTACK_PLAYBACK_RATE = .7
+ATTACK_PLAYBACK_RATE = .8
 ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
+HURT_INPUT_BUFFER_SECONDS = .15
 AIR_JUMP_BUFFER_SECONDS = .12
 LEDGE_JUMP_SECONDS = .08
 DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
@@ -428,8 +429,11 @@ class Character(GameObject):
 
     def _queue_action(self, action):
         self.buffered_action = action
-        self.buffer_remaining = (AIR_JUMP_BUFFER_SECONDS if action == 'jump' and not self.grounded
-                                 else INPUT_BUFFER_SECONDS)
+        self.buffer_remaining = INPUT_BUFFER_SECONDS
+        if action == 'jump' and not self.grounded:
+            self.buffer_remaining = AIR_JUMP_BUFFER_SECONDS
+        elif self.state == 'hurt' and action in ('attack', 'dash'):
+            self.buffer_remaining = HURT_INPUT_BUFFER_SECONDS
 
     def _release_jump(self):
         if self.jump_held:
@@ -437,11 +441,12 @@ class Character(GameObject):
 
     def _consume_action(self):
         action = self.buffered_action
-        free = self.state in ('idle', 'run')
+        landing = self.state == 'jump' and self.jump_phase == 'land' and self.grounded
+        free = self.state in ('idle', 'run') or landing
         allowed = free and self.grounded
         if action == 'jump' and self.jump_phase == 'fall':
             allowed = self.state == 'jump' and self.ledge_jump_remaining > 1e-9
-        if action == 'attack' and self.state == 'jump':
+        if action == 'attack' and self.state == 'jump' and not landing:
             allowed = self.jump_phase in ('rise', 'fall')
         if action == 'dash':
             attack_recovery = self.state == 'attack' and self.player.elapsed + 1e-9 >= ATTACK_ACTIVE_END
@@ -449,6 +454,8 @@ class Character(GameObject):
                 self.grounded or not self.air_dash_used) and self.pushback_remaining == 0
         if action is None or not allowed or self.view_bounds is None:
             return None
+        if landing and action != 'jump':
+            self._finish_landing()
         self.buffered_action = None
         self.ledge_jump_remaining = 0.0
         return action
@@ -640,6 +647,9 @@ class Character(GameObject):
                     self.jump_held = pico.SDLK_SPACE in self.pressed
                     self._take_off()
                     continue
+                if self.jump_phase == 'land' and self.move_direction and self.view_bounds is not None:
+                    self._finish_landing()
+                    return airborne_time + remaining
                 direction = 'right' if self.facing > 0 else 'left'
                 duration = sum(self.clips[f'jump_{self.jump_phase}_{direction}'].durations)
                 step = min(remaining, max(0, duration - self.jump_elapsed))
@@ -648,8 +658,7 @@ class Character(GameObject):
                 if duration - self.jump_elapsed > 1e-9:
                     break
                 if self.jump_phase == 'land':
-                    self.jump_phase = None
-                    self._machine.end_jump()
+                    self._finish_landing()
                     break
                 self._take_off()
             else:
@@ -661,6 +670,10 @@ class Character(GameObject):
             if remaining <= 1e-9:
                 break
         return airborne_time
+
+    def _finish_landing(self):
+        self.jump_phase = None
+        self._machine.end_jump()
 
     def _take_off(self):
         self.jump_phase, self.jump_elapsed = 'rise', 0.0

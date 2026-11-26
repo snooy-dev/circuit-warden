@@ -362,7 +362,7 @@ class CharacterTests(unittest.TestCase):
         actor.update(0)
         actor.control(key(pico.SDLK_a))
         elapsed = 0
-        for dt in (0, .15, .27):
+        for dt in (0, .15, .22):
             actor.update(dt)
             reference.update(dt)
             elapsed += dt
@@ -543,7 +543,7 @@ class CharacterTests(unittest.TestCase):
                 actor.control(key(forward, pico.SDL_KEYUP))
                 actor.control(key(reverse))
                 actor.update(.05)
-                self.assertAlmostEqual(actor.player.elapsed, .035)
+                self.assertAlmostEqual(actor.player.elapsed, .04)
                 self.assertEqual(actor.attack_facing, facing)
                 self.assertAlmostEqual(actor.x, start - facing * SPEED * .03)
                 with patch('game.character.draw_sprite') as draw:

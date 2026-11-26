@@ -246,7 +246,9 @@ class GameplayLevel(Level):
         if self.power_supply:
             if self.boss.hp == 0 and not self.layout.boss_defeated:
                 self.layout.defeat_boss()
-            self.layout.damage_on_busbar(self.player)
+            busbar_direction = self.layout.damage_on_busbar(self.player)
+            if busbar_direction is not None:
+                self._show_player_hit(self.player.center, busbar_direction)
         if self.player.hp == 0:
             for obj in self.objects:
                 if isinstance(obj, SpriteEffect):
@@ -428,7 +430,7 @@ class GameplayLevel(Level):
             player.bounce_from_enemy(side, speed, elapsed)
 
     def _show_player_hit(self, position, facing):
-        self.spawn(SpriteEffect(self.combat_clips['hit_spark'], position, facing, 1,
+        self.spawn(SpriteEffect(self.combat_clips['hit_spark'], position, facing, 1.3,
                                 draw_order=1))
 
 

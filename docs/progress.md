@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **착지·검격·피격 조작 반응:** 2026-11-26 사용자 요청으로 착지 중 일반 조작 전환, 검격 80% 시험 재생, 피격 중 공격·대시 150ms 예약과 피격 섬광을 적용했다. [명세](../specs/030-responsive-combat/spec.md) · [검증](../specs/030-responsive-combat/verification.md).
+
 - **전투 조작과 분기 안내:** 2026-11-26 사용자 요청으로 검격 유효타 뒤 대시 연결, 시작 시 A/D 방향 반영, 갈림길과 릴레이 복구 뒤 시험실 방향 안내를 적용했다. [명세](../specs/029-combat-feel/spec.md) · [검증](../specs/029-combat-feel/verification.md).
 
 - **첫 레벨 플레이 결함 개선:** 2026-11-26 사용자 요청으로 컷신 건너뛰기 직후 조작, 전하 밝기와 실제 이동 가능 여부, 전원 구역 완료·쓰러짐과 R 안내를 수정했다. [명세](../specs/028-playability-fixes/spec.md) · [검증](../specs/028-playability-fixes/verification.md).

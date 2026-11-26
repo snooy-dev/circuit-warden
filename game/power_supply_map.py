@@ -191,7 +191,10 @@ class PowerSupplyMap(GameObject):
         if (not self.power_restored and not player.teleport_guard_remaining
                 and overlaps(player.hurt_box, self.busbar)):
             left, _, right, _ = self.busbar
-            player.take_hit(-1 if player.x < (left + right) / 2 else 1)
+            direction = -1 if player.x < (left + right) / 2 else 1
+            if player.take_hit(direction):
+                return direction
+        return None
 
     def blocks_teleport(self, player, x, y):
         cx, cy = player.center

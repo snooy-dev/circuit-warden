@@ -4,12 +4,25 @@ from types import SimpleNamespace
 
 import pico2d.pico2d as pico
 
+from game.effects import SpriteEffect
 from game.scene import DEFAULT_SIZE
 from game.story_intro import PowerOpening
 from .test_power_supply_enemies import PowerSupplyFixture
 
 
 class PowerSupplyFlowTests(PowerSupplyFixture):
+    def test_busbar_damage_uses_player_spark_once(self):
+        actor, layout = self.scene.character, self.level.layout
+        left, bottom, right, _ = layout.busbar
+        actor.x, actor.y = (left + right) / 2, bottom
+        self.level.update(0)
+        self.assertEqual(actor.hp, actor.MAX_HP - 1)
+        spark, = (obj for obj in self.level.objects if isinstance(obj, SpriteEffect))
+        self.assertEqual((spark.position, spark.scale), (actor.center, 1.3))
+        self.level.update(0)
+        self.assertEqual(actor.hp, actor.MAX_HP - 1)
+        self.assertEqual([obj for obj in self.level.objects if isinstance(obj, SpriteEffect)], [spark])
+
     def test_cutscene_skip_accepts_following_movement_before_update(self):
         for shortcut in ('escape', 'click'):
             with self.subTest(shortcut=shortcut):

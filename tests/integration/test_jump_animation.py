@@ -49,30 +49,30 @@ class JumpAnimationTests(unittest.TestCase):
         scene.update(.2)
         self.assertAlmostEqual(actor.x, SPEED * .2)
         self.assertIs(actor.player.clip, actor.clips['air_attack'])
-        self.assertAlmostEqual(actor.player.elapsed, .14)
+        self.assertAlmostEqual(actor.player.elapsed, .16)
         self.key(scene, pico.SDLK_d, pico.SDL_KEYUP)
         self.key(scene, pico.SDLK_a)
         scene.update(.2)
         self.assertAlmostEqual(actor.y - GROUND_Y, JUMP_HEIGHT)
         self.assertEqual(actor.jump_phase, 'fall')
-        self.assertIs(actor.player.clip, actor.clips['air_attack'])
+        self.assertIs(actor.player.clip, actor.clips['jump_fall_left'])
         scene.update(.30)
         self.assertIs(actor.player.clip, actor.clips['jump_fall_left'])
         with patch('game.character.draw_sprite') as draw:
             actor._draw(scene.transform, 1)
             self.assertFalse(draw.call_args.kwargs['flip_x'])
+        self.key(scene, pico.SDLK_a, pico.SDL_KEYUP)
         scene.update(.10)
         self.assertTrue(actor.grounded)
         self.assertIs(actor.player.clip, actor.clips['jump_land_left'])
         x = actor.x
         self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
-        self.key(scene, pico.SDLK_SPACE)
-        scene.handle_event(SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT, x=0, y=0))
         scene.update(.179)
         self.assertEqual(actor.x, x)
         self.assertEqual(actor.state, 'jump')
         scene.update(.001)
         self.assertNotEqual(actor.state, 'jump')
+        self.key(scene, pico.SDLK_a)
         scene.update(.01)
         self.assertTrue(actor.grounded)
         self.assertLess(actor.x, x)
@@ -89,7 +89,7 @@ class JumpAnimationTests(unittest.TestCase):
             actor = scene.character
             self.assertTrue(actor.grounded)
             self.assertIsNone(actor.jump_phase)
-            self.assertAlmostEqual(actor.x, SPEED * .8)
+            self.assertAlmostEqual(actor.x, SPEED * .98)
             outcomes.append((actor.x, actor.y))
         self.assertAlmostEqual(outcomes[0][0], outcomes[1][0])
 
@@ -113,8 +113,9 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertEqual(actor.state, 'idle')
         self.assertFalse(actor.pressed)
 
-    def test_landing_during_dash_waits_for_dash_and_keeps_landing_direction(self):
+    def test_landing_during_dash_keeps_dash_direction_until_recovery(self):
         scene = self.scene()
+        scene.level.enemy.destroy()
         actor = scene.character
         self.key(scene, pico.SDLK_SPACE)
         scene.update(.73)
@@ -122,16 +123,13 @@ class JumpAnimationTests(unittest.TestCase):
         scene.update(.15)
         self.assertTrue(actor.grounded)
         self.key(scene, pico.SDLK_a)
-        scene.update(.35)
-        self.assertEqual(actor.jump_phase, 'land')
-        self.assertAlmostEqual(actor.jump_elapsed, .033)
-        self.assertEqual(actor.facing, 1)
-        self.assertIs(actor.player.clip, actor.clips['jump_land_right'])
+        scene.update(.30)
+        self.assertEqual((actor.state, actor.dash_facing), ('dash', 1))
+        scene.update(.017)
+        self.assertNotEqual(actor.state, 'dash')
         x = actor.x
-        scene.update(.146)
-        self.assertEqual(actor.x, x)
-        scene.update(.001)
         scene.update(.01)
+        self.assertEqual((actor.state, actor.facing), ('run', -1))
         self.assertLess(actor.x, x)
 
     def test_buffered_jump_takes_off_at_ground_contact_in_both_directions(self):
@@ -290,12 +288,12 @@ class JumpAnimationTests(unittest.TestCase):
                     scene.update(.12)
                 self.key(scene, pico.SDLK_j)
                 scene.update(0)
-                scene.update(.21)
+                scene.update(.18)
                 self.key(scene, pico.SDLK_a)
                 self.key(scene, pico.SDLK_LSHIFT)
                 scene.update(.04)
                 self.assertEqual((actor.state, actor.attack_facing), ('attack', 1))
-                scene.update(.038)
+                scene.update(.033)
                 self.assertEqual((actor.state, actor.dash_facing), ('dash', -1))
                 self.assertEqual(actor.air_dash_used, airborne)
                 self.assertTrue(actor.attack_sweeps)
@@ -319,6 +317,46 @@ class JumpAnimationTests(unittest.TestCase):
                 scene.update(.225 if not spent else .101)
                 self.assertEqual(actor.state, 'attack')
                 self.assertIsNone(actor.buffered_action)
+
+    def test_landing_keeps_movement_through_contact(self):
+        scene = self.scene()
+        scene.level.enemy.destroy()
+        actor = scene.character
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.80)
+        self.key(scene, pico.SDLK_d)
+        scene.update(.06)
+        self.assertTrue(actor.grounded)
+        self.assertEqual(actor.state, 'run')
+        self.assertAlmostEqual(actor.x, SPEED * .06)
+
+    def test_landing_allows_ground_attack_or_dash(self):
+        for symbol, expected in ((pico.SDLK_j, 'attack'), (pico.SDLK_LSHIFT, 'dash')):
+            with self.subTest(expected=expected):
+                scene = self.scene()
+                scene.level.enemy.destroy()
+                actor = scene.character
+                self.key(scene, pico.SDLK_SPACE)
+                scene.update(.831)
+                self.assertEqual(actor.jump_phase, 'land')
+                self.key(scene, symbol)
+                scene.update(0)
+                self.assertEqual(actor.state, expected)
+                self.assertIsNone(actor.jump_phase)
+                self.assertFalse(actor.air_dash_used)
+
+    def test_early_input_during_hurt_starts_after_recoil(self):
+        for symbol, expected in ((pico.SDLK_j, 'attack'), (pico.SDLK_LSHIFT, 'dash')):
+            with self.subTest(expected=expected):
+                scene = self.scene()
+                scene.level.enemy.destroy()
+                actor = scene.character
+                self.assertTrue(actor.take_hit(1))
+                self.key(scene, symbol)
+                scene.update(.105)
+                self.assertEqual(actor.state, 'hurt')
+                scene.update(.016)
+                self.assertEqual(actor.state, expected)
 
     def test_grounded_dash_consumes_jump_only_after_dash_finishes(self):
         scene = self.scene()
