@@ -2,26 +2,27 @@
   "body": {
     "route": "keyframed_raster_parts",
     "file": "poses.png",
-    "sha256": "f284231a2e85ba73afe4c63abb3ae548986951b826f5a86b20cffccbe5a1abce",
+    "sha256": "3629119afacf47ae41def260cbe49658f52221543437df8fbdb80b5ebf5275fb",
     "references": [
       "../../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png",
       "../../../art/warden/reference/master-source.png",
       "../../../art/warden/reference/energy-sword-master-v2.png"
     ],
-    "build": "build_poses.py",
-    "intent": "워든 측면 원화로 준비하고 정면 원화로 발밑을 벤 뒤 측면으로 돌아오는 10프레임",
+    "build": "../attack-source/build.py",
+    "intent": "측면과 사선 준비를 거쳐 정면에서 손과 검을 발밑으로 휘두른 뒤 공중 자세로 돌아오는 10프레임",
     "frameScale": "기준 워든 높이 80px, 워든 16색, 이진 알파",
     "footPivot": [104, 112]
   },
   "effects": {
     "route": "pixelfx",
     "revision": "a84159688af3ca37a4be05a0d422b94451b2e24e",
-    "sweep": "sweep.mjs",
+    "slash": "../../../art/warden/ground-crescent-discharge-refined/slash.png",
+    "discharge": "../../../art/warden/ground-crescent-discharge-refined/discharge.png",
     "impact": "../../combat/source/provenance.json"
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "dc086953f31a505357aa50dad80a3f7918c827b4aa37bfc09a6fd4c72eebda86",
+    "sha256": "949f8c37b8bc3a454142a3dedcdce79c0753ad957b00cbcc7a66a5fbb9e97d9d",
     "frameSize": [208, 208],
     "footPivot": [104, 112],
     "impactFrameIndex": 4
