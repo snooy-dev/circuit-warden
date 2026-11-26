@@ -2,7 +2,7 @@
   "body": {
     "route": "keyframed_raster_parts",
     "file": "poses.png",
-    "sha256": "51b7fa4a9a9db5a701222699f3530d2c820ae690876dfbdc93b58daf628767d3",
+    "sha256": "3b2724bba025db24e7686b55865e4062672f34c8875bf154782f1ef086c9f003",
     "references": [
       "../../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png",
       "../../../art/warden/reference/energy-sword-master-v2.png"
@@ -20,7 +20,7 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "d5fc7ee364cf727cf8ed03db157a2c58f4cec65ec6d25f86ed4c889e8f379806",
+    "sha256": "281ba46048450cb09c3ead34ca6b29809d28e55dac226e9b8f4d3024d62f90f6",
     "frameSize": [160, 192],
     "footPivot": [80, 112],
     "impactFrameIndex": 4
