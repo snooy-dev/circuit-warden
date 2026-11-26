@@ -8,7 +8,7 @@
 | run_left.png | art/warden/provisional-approved/run-v4/run_left/sheet.png | 618ef3377b2682ee6d15ab4052a208f041562adcaed406a0361977ca7460940e |
 | run_right.png | art/warden/provisional-approved/run-v4/run_right/sheet.png | c29d16562b7df8a8ec927b031ef1589bdf6252467afb648f1537af60977fc3aa |
 | attack.png | `art/warden/ground-step-slash-v1` 몸체 위에 `art/warden/ground-crescent-discharge-refined/slash.png`의 Pixelfx 분기 방전 초승달을 합성 | 0fc07afb21d30d24d5b37127a44baa3bc838225107085329f30bf53f2f110073 |
-| air_attack.png | `attack-source/air-poses.png`의 위→앞→아래 베기 자세에 지상 검격의 pixelfx 6프레임을 같은 크기로 합성. [로컬 ComfyUI 영상과 후속 자세 원화](../../art/warden/air-slash-arcs/) | 036718d608a2b22be89b212e03403d164dc95982239900b05cb37449a848c5fc |
+| air_attack.png | `attack-source/air-poses.png`의 검 전개와 회수 자세를 원본 영상의 깨끗한 프레임으로 보정하고 지상 검격의 pixelfx를 검끝에 맞춰 합성. [영상과 후속 자세 원화](../../art/warden/air-slash-arcs/) | a7d849606033aae2df3634e3aa0d24b16c3423211fd33cc11565b823fe56fde0 |
 | prepare_idle_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_left/sheet.png | efb9df7c2c976ace57b8a0d2448dac120bf4616e414edaa58bac91e12ae1ce1e |
 | prepare_idle_right.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_right/sheet.png | 3ba433a4573f4cf45a085579ab10bf5a355c72e528446974023bc0fff342c3d0 |
 | prepare_run_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_run_left/sheet.png | f4db13401e9771a363a726689ad5ab573b1e519955e07a8eba3e757c5023f4f5 |
