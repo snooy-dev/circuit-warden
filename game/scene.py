@@ -253,23 +253,25 @@ class GameplayLevel(Level):
             vx, vy = sweep.velocity
             sword_x, sword_y = sweep.origin
             sword_start, sword_end = sweep.times
-            for times, x, dx, _ in enemy.motion:
+            for times, (x, y), (dx, dy), _ in enemy.motion:
                 enemy_start, enemy_end = times
                 start, end = max(sword_start, enemy_start), min(sword_end, enemy_end)
                 if start > end:
                     continue
-                enemy_vx = dx / (enemy_end - enemy_start)
+                duration = enemy_end - enemy_start
+                enemy_vx, enemy_vy = dx / duration, dy / duration
                 span = end - start
                 x += enemy_vx * (start - enemy_start)
-                relative_position = x - vx * (start - sword_start), enemy.y - vy * (start - sword_start)
-                relative_motion = (enemy_vx - vx) * span, -vy * span
+                y += enemy_vy * (start - enemy_start)
+                relative_position = x - vx * (start - sword_start), y - vy * (start - sword_start)
+                relative_motion = (enemy_vx - vx) * span, (enemy_vy - vy) * span
                 contact = enemy.body.overlap_contact(
                     sweep.sword, relative_position, sweep.origin, (start, end), relative_motion,
                     sweep.active_window)
                 if contact is None:
                     continue
-                enemy_x = x + enemy_vx * (contact - start)
-                left, bottom, right, top = enemy.hurt_box_at(enemy_x)
+                enemy_position = x + enemy_vx * (contact - start), y + enemy_vy * (contact - start)
+                left, bottom, right, top = enemy.body.bounds_at(enemy_position)
                 step = contact - sword_start
                 sword_left, sword_bottom, sword_right, sword_top = sweep.sword.bounds_at(
                     (sword_x + vx * step, sword_y + vy * step))
@@ -325,12 +327,12 @@ class GameplayLevel(Level):
 
     @staticmethod
     def _enemy_impact(enemy, collider, motion, player_position, player_box, velocity):
-        (start, end), x, dx, _ = motion
+        (start, end), (x, y), (dx, dy), _ = motion
         vx, vy = velocity
         span = end - start
-        relative_position = x - vx * start, enemy.y - vy * start
+        relative_position = x - vx * start, y - vy * start
         box = collider.bounds_at(relative_position)
-        relative_motion = dx - vx * span, -vy * span
+        relative_motion = dx - vx * span, dy - vy * span
         fraction = 0 if overlaps(box, player_box) else blocking_contact(box, player_box, relative_motion)
         if fraction is None:
             return None
@@ -338,9 +340,9 @@ class GameplayLevel(Level):
         player_x = player_position[0] + vx * contact
         player_y = player_position[1] + vy * contact
         enemy_x = x + dx * fraction
-        left, _, right, top = collider.bounds_at((enemy_x, enemy.y))
+        left, _, right, top = collider.bounds_at((enemy_x, y + dy * fraction))
         side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else enemy.facing
-        if (collider is enemy.body and vy < 0 and abs(player_y - top) <= TIME_EPSILON
+        if (collider is enemy.body and relative_motion[1] > 0 and abs(player_y - top) <= TIME_EPSILON
                 and player_box[0] + vx * contact < right and left < player_box[2] + vx * contact):
             side = 0
         return contact, player_x, player_y, side

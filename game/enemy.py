@@ -171,10 +171,10 @@ class Enemy(GameObject):
         end = elapsed + step
         travel_end = elapsed + step * fraction
         if travel_end > elapsed:
-            self.motion.append(((elapsed, travel_end), self.x, moved, charge_id))
+            self.motion.append(((elapsed, travel_end), self.collision_position, (moved, 0), charge_id))
         self.x += moved
         if travel_end < end:
-            self.motion.append(((travel_end, end), self.x, 0.0, charge_id))
+            self.motion.append(((travel_end, end), self.collision_position, (0, 0), charge_id))
 
     def _draw(self, transform, opacity):
         if 0 < self.hit_remaining < HIT_REACTION_SECONDS and int(self.hit_remaining / .045) % 2 == 0:
