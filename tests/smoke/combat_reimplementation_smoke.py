@@ -8,6 +8,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.character import GROUND_Y, JUMP_HEIGHT
+from game.downstrike import DownstrikeBurst, WINDUP
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.training_map import LOW_WALL, PLATFORMS
 from tests.smoke.character_smoke import CharacterSmoke, push_key
@@ -16,17 +17,21 @@ from tests.smoke.character_smoke import CharacterSmoke, push_key
 class CombatSmoke(CharacterScene):
     capture = CharacterSmoke.capture
 
-    def __init__(self, output_dir, *, power_supply=False):
+    def __init__(self, output_dir, *, power_supply=False, downstrike_only=False):
         super().__init__(power_supply=power_supply)
         self.output_dir = output_dir
         self.elapsed = self.next_step = 0.0
         self.screenshot = None
         self.passed = False
+        self.downstrike_only = downstrike_only
 
     def enter(self, engine):
         super().enter(engine)
-        self.level.enemy.destroy()
-        self.scenario = self.exercise()
+        if self.downstrike_only:
+            self.scenario = self.downstrike_exercise()
+        else:
+            self.level.enemy.destroy()
+            self.scenario = self.exercise()
 
     def update(self, dt):
         super().update(dt)
@@ -162,14 +167,33 @@ class CombatSmoke(CharacterScene):
         yield .05
         assert self.character is not actor and self.camera_center == (0, 0)
         print(f'벽 접촉 x={wall_contact}, 고정 카메라 x={camera_x:.1f}', flush=True)
+        yield from self.downstrike_exercise()
+
+    def downstrike_exercise(self):
+        actor, enemy = self.character, self.level.enemy
+        enemy.state, enemy.state_remaining = 'recover', 2
+        actor.x, actor.y, actor.velocity_y = enemy.x, 0, -90
+        actor.air_dash_used = True
+        push_key(pico.SDLK_s)
+        push_key(pico.SDLK_j)
+        yield from self.wait_until(lambda: actor.state == 'downstrike' and actor.downstrike_elapsed >= WINDUP)
+        self.screenshot = 'downstrike-blade'
+        yield from self.wait_until(lambda: enemy.hp == enemy.MAX_HP - 1)
+        assert actor.jump_phase == 'rise' and actor.velocity_y > 0 and not actor.air_dash_used
+        assert any(isinstance(obj, DownstrikeBurst) for obj in self.level.objects)
+        self.screenshot = 'downstrike-rebound'
+        push_key(pico.SDLK_j, pico.SDL_KEYUP)
+        push_key(pico.SDLK_s, pico.SDL_KEYUP)
+        yield .08
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--downstrike-only', action='store_true')
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    scene = CombatSmoke(args.output_dir)
+    scene = CombatSmoke(args.output_dir, downstrike_only=args.downstrike_only)
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed, 'SDL 창이 검사를 마치기 전에 닫혔습니다.'
     print('PASS: combat reimplementation smoke', flush=True)

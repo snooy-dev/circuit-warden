@@ -11,10 +11,11 @@ import pico2d.pico2d as pico
 
 from engine import Engine, HEIGHT
 from engine.rendering.drawing import _sdl
-from game_framework import Canvas, ImageStore, Label, Level, LevelScene, draw_rect
+from game_framework import Canvas, Collider, CollisionResponse, ImageStore, Label, Level, LevelScene, draw_rect
 from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_contact, overlaps
 
 from .character import DASH_KEYS, MOVE_KEYS, PUSHBACK_SECONDS, Character, _load_clip, load_clips
+from .downstrike import DownstrikeBurst
 from .effects import SpriteEffect
 from .enemy import ENEMY_TYPES, Enemy, PowerAssembly, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
@@ -206,7 +207,7 @@ class GameplayLevel(Level):
         clips = self.player.clips
         view_bounds = self.player.view_bounds
         for obj in self.objects:
-            if isinstance(obj, (SpriteEffect, TeleportLink)):
+            if isinstance(obj, (SpriteEffect, DownstrikeBurst, TeleportLink)):
                 obj.destroy()
         self.mode.pending_charge = self.mode.teleport_link = None
         self._remove_skill_charge()
@@ -239,10 +240,19 @@ class GameplayLevel(Level):
         if self.power_entry_effect is not None:
             self._update_power_entry()
         self._update_environment()
+        downstrike_hits = []
         for enemy in self.enemies:
             if enemy.level is self:
-                self._resolve_sword(enemy)
-        self._resolve_enemy_contact(dt, player_position, protected_until)
+                self._resolve_sword(enemy, downstrike_hits)
+        struck = None
+        if downstrike_hits:
+            _, struck, attack_id, point, feet_y = min(downstrike_hits, key=lambda hit: hit[0])
+            struck.last_hit_attack = attack_id
+            struck.take_hit()
+            self.player.rebound_from_downstrike(feet_y)
+            self.spawn(DownstrikeBurst(point))
+            self._sword_stop_remaining = SWORD_HIT_STOP
+        self._resolve_enemy_contact(dt, player_position, protected_until, struck)
         if self.power_supply:
             if self.boss.hp == 0 and not self.layout.boss_defeated:
                 self.layout.defeat_boss()
@@ -251,10 +261,10 @@ class GameplayLevel(Level):
                 self._show_player_hit(self.player.center, busbar_direction)
         if self.player.hp == 0:
             for obj in self.objects:
-                if isinstance(obj, SpriteEffect):
+                if isinstance(obj, (SpriteEffect, DownstrikeBurst)):
                     obj.destroy()
 
-    def _resolve_sword(self, enemy):
+    def _resolve_sword(self, enemy, downstrike_hits):
         for sweep in self.player.attack_sweeps:
             if sweep.attack_id == enemy.last_hit_attack:
                 continue
@@ -283,6 +293,16 @@ class GameplayLevel(Level):
                 step = contact - sword_start
                 sword_left, sword_bottom, sword_right, sword_top = sweep.sword.bounds_at(
                     (sword_x + vx * step, sword_y + vy * step))
+                if sweep.sword is self.player.down_blade:
+                    point_x = (max(left, sword_left) + min(right, sword_right)) / 2
+                    point_y = min(top, sword_top)
+                    if point_y < sword_top:
+                        path = Collider((-1, point_y - sword_top, 1, 0), 'player', blocks={'terrain'})
+                        if self.collision_overlaps(self.player, path, (point_x, sword_top),
+                                                   response=CollisionResponse.BLOCK):
+                            continue
+                    downstrike_hits.append((contact, enemy, sweep.attack_id, (point_x, point_y), sword_top))
+                    return
                 facing = 1 if sweep.sword is self.player.swords[1] else -1
                 point = (max(left, sword_left) if facing > 0 else min(right, sword_right),
                          (max(bottom, sword_bottom) + min(top, sword_top)) / 2)
@@ -293,7 +313,7 @@ class GameplayLevel(Level):
                 self._sword_stop_remaining = SWORD_HIT_STOP
                 return
 
-    def _resolve_enemy_contact(self, dt, player_position, protected_until):
+    def _resolve_enemy_contact(self, dt, player_position, protected_until, struck=None):
         if dt == 0:
             return
         x0, y0 = player_position
@@ -304,7 +324,7 @@ class GameplayLevel(Level):
         for enemy in self.enemies:
             if enemy.level is self:
                 body_hit, attack_hit = self._enemy_impacts(enemy, player_position, player_box,
-                                                         (vx, vy), protected_until)
+                                                         (vx, vy), protected_until, ignore_body=enemy is struck)
                 if body_hit is not None and (first is None or body_hit[0] < first[0][0]):
                     first = body_hit, enemy
                 if attack_hit is not None and (damage is None or attack_hit[0] < damage[0][0]):
@@ -314,11 +334,12 @@ class GameplayLevel(Level):
             (contact, x, y, side, attack_point), enemy = impact
             self._push_player(enemy, x, y, side, dt - contact, damage is not None, attack_point)
 
-    def _enemy_impacts(self, enemy, player_position, player_box, velocity, protected_until):
+    def _enemy_impacts(self, enemy, player_position, player_box, velocity, protected_until, *, ignore_body=False):
         first_impact = None
         for motion in enemy.motion:
             charge_id = motion[3]
-            impact = self._enemy_impact(enemy, enemy.body, motion, player_position, player_box, velocity)
+            impact = (None if ignore_body else
+                      self._enemy_impact(enemy, enemy.body, motion, player_position, player_box, velocity))
             if first_impact is None:
                 first_impact = impact
             if charge_id is None or charge_id == enemy.last_contact_charge:
@@ -570,7 +591,7 @@ class CharacterScene(LevelScene):
                 name += b' | Output reached'
         if self.level.power_supply:
             name += b' | W: power'
-        pico.SDL_SetWindowTitle(pico.window, name + b' | A/D | Space: jump | J: attack | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
+        pico.SDL_SetWindowTitle(pico.window, name + b' | A/D | Space: jump | J: attack | Air S+J: downstrike | E: create charge | Shift: dash | LMB: charge / attack | RMB: nearest charge | R: restart | F6 / F11 | Esc')
 
     def handle_event(self, event):
         if event.type == pico.SDL_KEYDOWN:
@@ -673,7 +694,7 @@ def main():
     parser = argparse.ArgumentParser(description='Circuit Warden')
     parser.add_argument('--training', action='store_true', help='플랫폼 훈련장으로 시작')
     args = parser.parse_args()
-    print('게임플레이: A/D 이동 / Space 점프 / J 공격 / E 커서 위치에 전하 생성 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
+    print('게임플레이: A/D 이동 / Space 점프 / J 공격 / 공중 S+J 아래 베기 / E 커서 위치에 전하 생성 / Shift 대시 / 좌클릭: 활성 전하 순간이동·그 외 공격 / 우클릭: 가장 가까운 활성 전하 / R 전투 재시작 / F6 창 크기 / F11 전체화면 / Escape 종료', flush=True)
     scene = CharacterScene() if args.training else TitleScene(
         lambda: CharacterScene(power_supply=True, story_intro=True),
         sizes=(DEFAULT_SIZE, ALTERNATE_SIZE),

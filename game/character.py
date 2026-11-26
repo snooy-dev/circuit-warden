@@ -12,6 +12,7 @@ from game_framework import (Collider, CollisionResponse, GameObject, RenderItem,
                             SpriteFrame, SpritePlayer, draw_sprite)
 from game_framework.collision import CONTACT_EPSILON
 
+from . import downstrike
 from .effects import SpriteEffect
 
 
@@ -127,6 +128,8 @@ class Character(GameObject):
         -1: Collider((-ATTACK_REACH, 8, 0, 70), 'sword', overlaps={'enemy'}),
         1: Collider((0, 8, ATTACK_REACH, 70), 'sword', overlaps={'enemy'}),
     }
+    down_blade = Collider((-downstrike.HALF_WIDTH, -downstrike.REACH, downstrike.HALF_WIDTH, 0),
+                          'sword', overlaps={'enemy'})
 
     def __init__(self, clips):
         super().__init__()
@@ -152,6 +155,7 @@ class Character(GameObject):
         self.attack_id = 0
         self.attack_facing = 1
         self.airborne_swing = False
+        self.downstrike_elapsed = 0.0
         self.attack_sweeps = []
         self.jump_phase = None
         self.jump_elapsed = 0.0
@@ -163,9 +167,11 @@ class Character(GameObject):
         self.dash_effect = None
         self.air_dash_used = False
         self._machine = Machine(
-            states=('idle', 'run', 'attack', 'dash', 'jump', 'hurt'), initial='idle', auto_transitions=False,
+            states=('idle', 'run', 'attack', 'downstrike', 'dash', 'jump', 'hurt'),
+            initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
                          ['attack', ['idle', 'run', 'jump'], 'attack'], ['finish', 'attack', 'idle'],
+                         ['downstrike', 'jump', 'downstrike'], ['end_downstrike', 'downstrike', 'jump'],
                          ['dash', ['idle', 'run', 'jump', 'attack'], 'dash'], ['end_dash', 'dash', 'idle'],
                          ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle'],
                          ['hurt', '*', 'hurt'], ['recover_hurt', 'hurt', 'idle'],
@@ -412,7 +418,8 @@ class Character(GameObject):
             self.pressed.clear()
             self.buffered_action = None
             self._release_jump()
-        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {pico.SDLK_SPACE, pico.SDLK_j}:
+        elif event.type == pico.SDL_KEYDOWN and event.key in MOVE_KEYS | DASH_KEYS | {
+                pico.SDLK_SPACE, pico.SDLK_j, pico.SDLK_s}:
             if event.key == pico.SDLK_SPACE and event.key not in self.pressed:
                 self._queue_action('jump')
             if event.key == pico.SDLK_j and event.key not in self.pressed:
@@ -511,6 +518,17 @@ class Character(GameObject):
                 self._machine.jump()
                 self.jump_phase, self.jump_elapsed = 'start', 0.0
         started = action == 'attack'
+        if started and self.state == 'jump' and not self.grounded and pico.SDLK_s in self.pressed:
+            self._machine.downstrike()
+            self.downstrike_elapsed = 0.0
+            self.attack_id += 1
+            started = False
+        if self.state == 'downstrike':
+            remaining = self._update_downstrike(dt, offset, direction, push_time)
+            if self.state == 'downstrike':
+                return
+            push_time = max(0.0, push_time - (dt - remaining))
+            dt = remaining
         if started:
             if direction:
                 self.facing = direction
@@ -636,6 +654,41 @@ class Character(GameObject):
         if self.view_bounds is not None and direction and dt > 0:
             self.x = self.clamped_horizontal_target(self.x + direction * SPEED * dt)
             self.facing = direction
+
+    def _update_downstrike(self, dt, offset, direction, push_time):
+        x, y = self.collision_position
+        elapsed = self.downstrike_elapsed
+        step = min(dt, max(0.0, downstrike.DURATION - elapsed))
+        flight = self._advance_vertical(step)
+        if self.view_bounds is not None and direction and flight > push_time:
+            self.x = self.clamped_horizontal_target(x + direction * SPEED * (flight - push_time))
+            self.facing = direction
+        self.downstrike_elapsed += flight
+        start = max(0.0, downstrike.WINDUP - elapsed)
+        end = min(flight, downstrike.ACTIVE_END - elapsed)
+        if start < end:
+            self.attack_sweeps.append(AttackSweep(
+                self.attack_id, self.down_blade, (x, y), ((self.x - x) / flight, (self.y - y) / flight),
+                (offset, offset + flight), (offset + start, offset + end)))
+        if self.grounded or downstrike.DURATION - self.downstrike_elapsed <= CONTACT_EPSILON:
+            self._machine.end_downstrike()
+            return dt - flight
+        self._show_jump()
+        return 0.0
+
+    def rebound_from_downstrike(self, contact_height):
+        rise = max(0.0, contact_height - self.y)
+        if rise:
+            ceiling = self._blocking_contact((0, rise))
+            self.y += rise if ceiling is None else rise * ceiling
+        if self.state == 'downstrike':
+            self._machine.end_downstrike()
+        elif self.state in ('idle', 'run'):
+            self._machine.jump()
+        self.air_dash_used = False
+        self.pushback_remaining = self.air_recoil_velocity = 0.0
+        self._start_rebound(downstrike.BOUNCE_SPEED)
+        self._show_jump()
 
     def _update_jump(self, dt):
         remaining, airborne_time = dt, 0.0
@@ -797,7 +850,7 @@ class Character(GameObject):
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
-        flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
+        flip_x = self.state not in ('run', 'dash', 'jump', 'downstrike') and self.facing < 0
         if self.state == 'attack':
             flip_x = self.attack_facing < 0
         link = self.arrival_link
@@ -825,6 +878,8 @@ class Character(GameObject):
         position = (x, y) if self.state == 'attack' and self.airborne_swing else (x, y - BODY_HEIGHT / 2)
         draw_sprite(frame, transform, position,
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
+        if self.state == 'downstrike':
+            downstrike.draw_blade(transform, position, self.downstrike_elapsed, opacity)
 
     def render_items(self):
         return (RenderItem(self._draw, opacity=self.spawn_opacity),)
