@@ -13,6 +13,7 @@ import pico2d.pico2d as pico
 from engine import Engine
 from game.character import SPEED
 from game.charge import CLICK_RADIUS
+from game.enemy import CoolingFan, LeakingCapacitor
 from game.scene import DEFAULT_SIZE, CharacterScene
 from tests.smoke.character_smoke import CharacterSmoke, push_key
 
@@ -20,17 +21,18 @@ from tests.smoke.character_smoke import CharacterSmoke, push_key
 class PowerSupplySmoke(CharacterScene):
     capture = CharacterSmoke.capture
 
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, *, encounters_only=False):
         super().__init__(power_supply=True)
         self.output_dir = output_dir
         self.elapsed = self.next_step = 0
         self.rooms = []
         self.screenshot = None
         self.passed = False
+        self.encounters_only = encounters_only
 
     def enter(self, engine):
         super().enter(engine)
-        self.scenario = self.exercise()
+        self.scenario = self.check_monsters() if self.encounters_only else self.exercise()
 
     def update(self, dt):
         super().update(dt)
@@ -160,7 +162,8 @@ class PowerSupplySmoke(CharacterScene):
 
     def check_intake(self):
         actor = self.character
-        assert self.active_room == 'intake' and self.level.enemy is None
+        assert self.active_room == 'intake'
+        assert all(enemy.room != self.active_room for enemy in self.level.enemies)
         assert actor.collision_position == self.layout.player_start and actor.grounded
         assert not self.layout.power_restored and not self.layout.reached_output
         yield from self.wait_until(lambda: actor.spawn_opacity == 1, expected='낙뢰 등장 종료')
@@ -173,6 +176,22 @@ class PowerSupplySmoke(CharacterScene):
         yield from self.tap(pico.SDLK_w)
         assert not self.layout.power_restored
 
+    def air_dash(self, direction):
+        actor = self.character
+        key = pico.SDLK_d if direction > 0 else pico.SDLK_a
+        push_key(key)
+        push_key(pico.SDLK_SPACE)
+        yield from self.wait_until(lambda: actor.jump_phase == 'rise', expected='공중 회피 점프')
+        yield .29
+        assert not actor.grounded and actor.facing == direction
+        yield from self.tap(pico.SDLK_LSHIFT)
+        yield from self.wait_until(lambda: actor.state == 'dash', expected='공중 대시')
+        yield from self.wait_until(lambda: actor.state != 'dash', expected='공중 대시 종료')
+        yield from self.wait_until(lambda: actor.grounded, expected='공중 회피 착지')
+        push_key(key, pico.SDL_KEYUP)
+        push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+        yield 0
+
     def lower_route(self):
         yield from self.walk((1800, 2216), (1944, 2336), (1660, 2816))
         self.expect_room('coolant-sump')
@@ -181,6 +200,8 @@ class PowerSupplySmoke(CharacterScene):
         yield from self.shot('thermal-bank')
         health = self.character.hp
         yield from self.jump((1048, 2696))
+        yield from self.walk((916, 2696))
+        yield from self.air_dash(-1)
         yield from self.walk((306, 2816))
         assert self.character.hp == health
         self.expect_room('cooling-chimney')
@@ -194,6 +215,7 @@ class PowerSupplySmoke(CharacterScene):
         yield from self.jump((306, 1376))
         yield from self.walk((760, 1376))
         self.expect_room('filter-gallery')
+        yield from self.air_dash(1)
         yield from self.walk((1630, 1376))
         assert self.rooms == ['intake', 'central-distribution', 'coolant-sump', 'thermal-bank',
                               'cooling-chimney', 'filter-gallery', 'relay-tower'], self.rooms
@@ -201,6 +223,9 @@ class PowerSupplySmoke(CharacterScene):
     def upper_route(self):
         yield from self.walk((1718, 2096))
         yield from self.jump((1900, 2096))
+        yield from self.jump((2016, 1976), (2220, 1856))
+        yield from self.walk((2330, 1856))
+        yield from self.jump((2440, 1736))
         yield from self.walk((3120, 2096))
         self.expect_room('capacitor-reservoir')
         yield from self.click_charge(3304, 1904)
@@ -281,11 +306,49 @@ class PowerSupplySmoke(CharacterScene):
         self.expect_room('load-test-chamber')
         assert not self.layout.reached_output
         yield from self.shot('arena-entry')
+        yield from self.walk((1465, 656))
+        yield from self.air_dash(1)
         yield from self.walk((2200, 656))
         self.expect_room('load-test-chamber')
         assert not self.layout.reached_output
         yield from self.walk((self.layout.output[0] + self.layout.half_width, 656))
         self.expect_room('output-terminal')
+
+    def check_monsters(self):
+        actor = self.character
+        self.level.finish_power_entry()
+        dust = self.level.enemies[0]
+        actor.x, actor.y, actor.facing = dust.x - 104, dust.y, 1
+        yield 0
+        yield from self.shot('metal-dust')
+        yield from self.tap(pico.SDLK_j)
+        yield from self.wait_until(lambda: dust.hp == 2, expected='금속 먼지 검격')
+        yield from self.shot('metal-dust-hit')
+
+        fan = next(enemy for enemy in self.level.enemies if isinstance(enemy, CoolingFan)
+                   and enemy.room == 'capacitor-reservoir')
+        actor.x, actor.y = self.layout._point(4004, 1616)
+        yield from self.wait_until(lambda: fan.state == 'windup', expected='팬 예고')
+        yield from self.shot('cooling-fan-windup')
+        start = fan.x
+        yield from self.wait_until(lambda: fan.state == 'charge' and fan.x > start,
+                                   expected='팬의 공중 왕복')
+        yield from self.shot('cooling-fan-flight')
+        assert actor.hp == actor.MAX_HP
+
+        cap = next(enemy for enemy in self.level.enemies if isinstance(enemy, LeakingCapacitor))
+        actor.x, actor.y = cap.x - 102, cap.y
+        yield from self.wait_until(lambda: cap.state == 'windup', expected='콘덴서 예고')
+        yield .3
+        assert actor.hp == actor.MAX_HP
+        yield from self.shot('capacitor-windup')
+        yield from self.wait_until(lambda: actor.hp == actor.MAX_HP - 1, expected='콘덴서 방전 피해')
+        yield from self.shot('capacitor-discharge')
+        assert cap.state == 'charge'
+        yield from self.tap(pico.SDLK_r)
+        assert self.active_room == 'intake' and self.character.hp == self.character.MAX_HP
+        assert all(enemy.hp == enemy.MAX_HP for enemy in self.level.enemies)
+        print('몬스터 SDL: 검 적중, 팬 예고·비행, 콘덴서 예고·방전 피해, R 초기화', flush=True)
 
     def exercise(self):
         for route in (self.lower_route, self.upper_route):
@@ -310,6 +373,7 @@ class PowerSupplySmoke(CharacterScene):
             yield from self.reach_output()
             assert self.rooms[-3:] == ['filter-gallery', 'load-test-chamber', 'output-terminal'], self.rooms
             assert self.layout.reached_output and actor.hp > 0
+            assert all(enemy.level is self.level for enemy in self.level.enemies)
             yield from self.shot(f'{route.__name__}-output')
             print(f'{route.__name__} ({self.elapsed - start:.2f}s SDL): {" -> ".join(self.rooms)}',
                   flush=True)
@@ -320,16 +384,18 @@ class PowerSupplySmoke(CharacterScene):
             assert self.character.collision_position == self.layout.player_start
             assert not self.layout.power_restored and not self.layout.reached_output
             assert not self.layout.hatch_released
+        yield from self.check_monsters()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--visible', action='store_true', help='실제 창을 열고 실시간으로 실행')
+    parser.add_argument('--encounters-only', action='store_true', help='몬스터 전투만 검사')
     args = parser.parse_args()
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)
-    scene = PowerSupplySmoke(args.output_dir)
+    scene = PowerSupplySmoke(args.output_dir, encounters_only=args.encounters_only)
     engine = Engine(*DEFAULT_SIZE)
     if args.visible:
         engine.run(scene)

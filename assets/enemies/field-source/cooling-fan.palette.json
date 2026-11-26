@@ -1,0 +1,57 @@
+{
+  "schema": "generate2dsprite.palette.v1",
+  "colors": [
+    {
+      "hex": "#1a2738"
+    },
+    {
+      "hex": "#243345"
+    },
+    {
+      "hex": "#713314"
+    },
+    {
+      "hex": "#384a65"
+    },
+    {
+      "hex": "#445a78"
+    },
+    {
+      "hex": "#607894"
+    },
+    {
+      "hex": "#bc612d"
+    },
+    {
+      "hex": "#e58024"
+    },
+    {
+      "hex": "#829ab4"
+    },
+    {
+      "hex": "#f6954f"
+    },
+    {
+      "hex": "#fb9f5a"
+    },
+    {
+      "hex": "#abc1d6"
+    },
+    {
+      "hex": "#fdc111"
+    },
+    {
+      "hex": "#b9cee2"
+    },
+    {
+      "hex": "#c2d8ea"
+    },
+    {
+      "hex": "#0f1b2b",
+      "name": "outline"
+    }
+  ],
+  "transparent_index": 255,
+  "locked": false,
+  "source": "finish_frames hibit: 15 body colour(s) (k-means++ on luminance-weighted RGB of 200000 opaque source pixel(s), seed 0); outline auto #0f1b2b"
+}

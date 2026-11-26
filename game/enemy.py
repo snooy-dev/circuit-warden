@@ -1,9 +1,12 @@
-"""기본 적 금속 먼지 덩어리."""
+"""금속 먼지와 전원 구역 설비 몬스터."""
 
 import json
 from math import inf
 from pathlib import Path
 
+import pico2d.pico2d as pico
+
+from engine.rendering.drawing import _sdl
 from game_framework import Collider, GameObject, RenderItem, SpritePlayer, draw_sprite
 
 from .character import GROUND_Y, _load_clip
@@ -24,36 +27,42 @@ HIT_REACTION_SECONDS = .18
 HIT_RECOIL_SECONDS = .065
 HIT_RECOIL_SPEED = 8 / HIT_RECOIL_SECONDS
 
-NEXT_PHASE = {
-    'idle': ('approach', 0),
-    'windup': ('charge', CHARGE_SECONDS),
-    'charge': ('recover', RECOVER_SECONDS),
-    'recover': ('idle', IDLE_SECONDS),
-}
+NEXT_STATE = {'idle': 'approach', 'windup': 'charge', 'charge': 'recover', 'recover': 'idle'}
 
 
-def load_enemy_clips(images):
-    path = ASSETS / 'animations.json'
+def load_enemy_clips(images, kind='metal_dust'):
+    enemy_type = ENEMY_TYPES[kind]
+    path = ASSETS / ('animations.json' if kind == 'metal_dust' else 'field-enemies.json')
     try:
         animations = json.loads(path.read_text(encoding='utf-8'))
+        if kind != 'metal_dust':
+            animations = animations[kind]
         clips = {name: _load_clip(images, animations[name], ASSETS)
                  for name in ('idle', 'approach', 'windup', 'charge', 'recover')}
         for name, clip in clips.items():
             if clip.loop != (name in ('idle', 'approach')):
                 raise ValueError('idle/approach만 반복해야 합니다.')
-        for name, seconds in (('windup', WINDUP_SECONDS), ('charge', CHARGE_SECONDS),
-                              ('recover', RECOVER_SECONDS)):
+        for name in ('windup', 'charge', 'recover'):
+            seconds = enemy_type.TIMINGS[name]
             if abs(sum(clips[name].durations) - seconds) > 1e-9:
                 raise ValueError(f'{name} 클립 시간이 전투 시간과 다릅니다.')
     except (KeyError, TypeError, ValueError, OverflowError) as error:
         raise ValueError(f'적 애니메이션 설정 오류: {path}: {error}') from error
+    if enemy_type.DRAW_SCALE == 2:
+        texture = clips['idle'].frames[0].image._borrow().texture
+        _sdl(pico.SDL_SetTextureScaleMode(texture, pico.SDL_ScaleModeNearest))
     return clips
 
 
 class Enemy(GameObject):
     MAX_HP = 3
+    CHARGE_SPEED = CHARGE_SPEED
+    DRAW_SCALE = 1
+    TIMINGS = {'idle': IDLE_SECONDS, 'approach': 0, 'windup': WINDUP_SECONDS,
+               'charge': CHARGE_SECONDS, 'recover': RECOVER_SECONDS}
     body = Collider((-HURT_HALF_WIDTH, 0, HURT_HALF_WIDTH, BODY_HEIGHT), 'enemy',
                     blocks={'terrain'}, overlaps={'player', 'sword'})
+    attack_body = body
     colliders = (body,)
 
     def __init__(self, clips, *, position=(SPAWN_X, float(GROUND_Y)), x_limits=(-inf, inf), room=None):
@@ -69,7 +78,7 @@ class Enemy(GameObject):
         self._recoil_remaining = 0.0
         self._recoil_direction = 0
         self.state = 'idle'
-        self.state_remaining = IDLE_SECONDS
+        self.state_remaining = self.TIMINGS['idle']
         self.motion = []
         self._charge_id = 0
         self.last_hit_attack = 0
@@ -117,16 +126,17 @@ class Enemy(GameObject):
             if self.state == 'approach':
                 step, distance, ready = self._approach(target, dt)
                 if ready:
-                    self.state, self.state_remaining = 'windup', WINDUP_SECONDS
+                    self.state, self.state_remaining = 'windup', self.TIMINGS['windup']
                     self._charge_id += 1
             else:
                 step = min(dt, self.state_remaining)
                 if self.state == 'charge':
-                    distance = self.facing * CHARGE_SPEED * step
+                    distance = self.facing * self.CHARGE_SPEED * step
                     charge_id = self._charge_id
                 self.state_remaining -= step
                 if self.state_remaining == 0:
-                    self.state, self.state_remaining = NEXT_PHASE[self.state]
+                    self.state = NEXT_STATE[self.state]
+                    self.state_remaining = self.TIMINGS[self.state]
             if step > 0:
                 self.animation.update(step)
                 self._record_motion(elapsed, step, distance, charge_id)
@@ -137,14 +147,17 @@ class Enemy(GameObject):
     def _approach(self, target, dt):
         gap = target.x - self.x
         if self.room is not None and (abs(gap) > 280 or abs(target.y - self.y) > 90):
-            self.state, self.state_remaining = 'idle', IDLE_SECONDS
-            self.animation.play(self.clips['idle'])
-            return dt, 0.0, False
+            return self._wait_for_target(dt)
         if gap:
             self.facing = 1 if gap > 0 else -1
         time_to_windup = max(0.0, (abs(gap) - WINDUP_RANGE) / APPROACH_SPEED)
         step = min(dt, time_to_windup)
         return step, self.facing * APPROACH_SPEED * step, step == time_to_windup
+
+    def _wait_for_target(self, dt):
+        self.state, self.state_remaining = 'idle', self.TIMINGS['idle']
+        self.animation.play(self.clips['idle'])
+        return dt, 0.0, False
 
     def horizontal_distance(self, distance):
         left, right = self.x_limits
@@ -154,7 +167,7 @@ class Enemy(GameObject):
 
     def _record_motion(self, elapsed, step, distance, charge_id):
         moved = self.horizontal_distance(distance) if distance else 0.0
-        fraction = moved / distance if distance else 1
+        fraction = min(1, max(0, moved / distance)) if distance else 1
         end = elapsed + step
         travel_end = elapsed + step * fraction
         if travel_end > elapsed:
@@ -166,8 +179,42 @@ class Enemy(GameObject):
     def _draw(self, transform, opacity):
         if 0 < self.hit_remaining < HIT_REACTION_SECONDS and int(self.hit_remaining / .045) % 2 == 0:
             opacity *= .3
+        width, height = self.frame.rect[2:]
         draw_sprite(self.frame, transform, (self.x, self.y),
-                    self.frame.rect[2:], opacity, flip_x=self.facing < 0)
+                    (width * self.DRAW_SCALE, height * self.DRAW_SCALE), opacity, flip_x=self.facing < 0)
 
     def render_items(self):
         return (RenderItem(self._draw),)
+
+
+class CoolingFan(Enemy):
+    MAX_HP = 2
+    DRAW_SCALE = 2
+    TIMINGS = Enemy.TIMINGS | {'windup': .48, 'charge': .46, 'recover': .64}
+    body = Collider((-26, 0, 26, 38), 'enemy', blocks={'terrain'}, overlaps={'player', 'sword'})
+    attack_body = body
+    colliders = (body,)
+
+    def _approach(self, target, dt):
+        if abs(target.x - self.x) > 200 or abs(target.center[1] - (self.y + 19)) > 110:
+            return self._wait_for_target(dt)
+        self.facing = -self.facing
+        return 0.0, 0.0, True
+
+
+class LeakingCapacitor(Enemy):
+    MAX_HP = 2
+    CHARGE_SPEED = 0
+    DRAW_SCALE = 2
+    TIMINGS = Enemy.TIMINGS | {'windup': .66, 'charge': .16, 'recover': .85}
+    body = Collider((-24, 0, 24, 66), 'enemy', blocks={'terrain'}, overlaps={'player', 'sword'})
+    attack_body = Collider((-88, 0, 88, 52), 'enemy-pulse')
+    colliders = (body,)
+
+    def _approach(self, target, dt):
+        if abs(target.x - self.x) > 142 or abs(target.y - self.y) > 70:
+            return self._wait_for_target(dt)
+        return 0.0, 0.0, True
+
+
+ENEMY_TYPES = {'metal_dust': Enemy, 'cooling_fan': CoolingFan, 'leaking_capacitor': LeakingCapacitor}

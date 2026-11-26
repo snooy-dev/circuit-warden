@@ -10,7 +10,7 @@
 
 ## 코드 폴더 구조
 
-`GameplayLevel`은 `PowerSupplyMap.enemy_spawns`의 월드 좌표로 개체를 만들며 종류별 클립을 공유한다. 여러 적은 검격 ID와 돌진 접촉 ID를 각자 저장한다. 검으로 제거된 적을 제외한 접촉 후보에서 가장 이른 유효 피해 또는 몸통 반동을 한 번 적용한다. R은 씬을 유지한 채 적을 새로 등록한다. [적 전투](systems/basic-enemy.md).
+`GameplayLevel`은 `PowerSupplyMap.enemy_spawns`의 월드 좌표로 개체를 만들며 종류별 클립을 공유한다. 여러 적은 검격 ID와 적 공격의 접촉 ID를 각자 저장한다. 콘덴서의 방전은 몸통과 별도 범위로 같은 시간 구간을 스윕한다. 검으로 제거된 적을 제외한 접촉 후보에서 가장 이른 유효 피해 또는 몸통 반동을 한 번 적용한다. R은 씬을 유지한 채 적을 새로 등록한다. [적 전투](systems/basic-enemy.md).
 
 2026-11-11 승인된 책임 경계에 따라 게임의 조작 API는 game_framework, 창·루프·SDL 실행은 engine 패키지에 둔다. engine은 game_framework·game·tests를 import하지 않는다. 기존 `from engine import Engine, Scene`과 `from game_framework import ...` 공개 이름·동작은 유지한다.
 

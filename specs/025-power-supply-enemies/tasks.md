@@ -17,14 +17,14 @@
 
 ## Phase 3: User Story 1 - 구역별 몬스터
 
-- [ ] T006 [US1] assets/enemies/와 game/enemy.py에 냉각 팬·콘덴서의 원화, 스프라이트, 행동을 연결한다.
-- [ ] T007 [US1] 맵에 새 적을 넣고 자동 검사와 SDL 화면에서 예고·공격·회피·복구·출력을 확인한다.
-- [ ] T008 [US1] docs/의 레벨·적·아트 기준과 진행 상태를 갱신한다.
+- [x] T006 [US1] assets/enemies/와 game/enemy.py에 냉각 팬·콘덴서의 원화, 스프라이트, 행동을 연결한다.
+- [x] T007 [US1] 맵에 새 적을 넣고 자동 검사와 SDL 화면에서 예고·공격·회피·복구·출력을 확인한다.
+- [x] T008 [US1] docs/의 레벨·적·아트 기준과 진행 상태를 갱신한다.
 
 ## Phase 4: Documentation & Completion (mandatory)
 
-- [ ] T009 verification.md의 직접 검사와 미확인 항목을 spec/plan/tasks와 대조하고 남은 필요 작업을 해결한다.
-- [ ] T010 후속 증분을 검증된 파일만 선별해 커밋한다.
+- [x] T009 verification.md의 직접 검사와 미확인 항목을 spec/plan/tasks와 대조하고 남은 필요 작업을 해결한다.
+- [x] T010 후속 증분을 검증된 파일만 선별해 커밋한다.
 
 ## Dependencies & Execution Order
 

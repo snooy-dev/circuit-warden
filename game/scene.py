@@ -16,7 +16,7 @@ from game_framework.collision import CONTACT_EPSILON, TIME_EPSILON, blocking_con
 
 from .character import DASH_KEYS, MOVE_KEYS, PUSHBACK_SECONDS, Character, _load_clip, load_clips
 from .effects import SpriteEffect
-from .enemy import CHARGE_SPEED, Enemy, load_enemy_clips
+from .enemy import ENEMY_TYPES, Enemy, load_enemy_clips
 from .charge import ACTIVATION_DISTANCE, CLICK_RADIUS, Charge, ChargeArt
 from .mode import GameplayMode
 from .power_supply_map import PowerSupplyMap
@@ -93,7 +93,11 @@ class GameplayLevel(Level):
         else:
             self.spawn(TrainingMap())
         clips = load_clips(self.images)
-        self._enemy_clips = {'metal_dust': load_enemy_clips(self.images)}
+        if self.power_supply:
+            kinds = dict.fromkeys(kind for kind, _, _ in self.layout.enemy_spawns)
+            self._enemy_clips = {kind: load_enemy_clips(self.images, kind) for kind in kinds}
+        else:
+            self._enemy_clips = {'metal_dust': load_enemy_clips(self.images)}
         self._spawn_combatants(clips)
 
         self.charge_art = ChargeArt(self.images)
@@ -141,7 +145,7 @@ class GameplayLevel(Level):
             self.player.x, self.player.y = self.layout.player_start
             for kind, position, x_limits in self.layout.enemy_spawns:
                 room = self.layout.room_at((position[0], position[1] + 1))
-                self.enemies.append(self.spawn(Enemy(
+                self.enemies.append(self.spawn(ENEMY_TYPES[kind](
                     self._enemy_clips[kind], position=position, x_limits=x_limits, room=room)))
         else:
             self.enemies.append(self.spawn(Enemy(self._enemy_clips['metal_dust'])))
@@ -301,38 +305,45 @@ class GameplayLevel(Level):
             self._push_player(enemy, x, y, side, dt - contact, damage is not None)
 
     def _enemy_impacts(self, enemy, player_position, player_box, velocity, protected_until):
-        x0, y0 = player_position
-        vx, vy = velocity
-        first_impact = damage_impact = None
-        for times, x, dx, charge_id in enemy.motion:
-            start, end = times
-            span = end - start
-            relative_position = x - vx * start, enemy.y - vy * start
-            enemy_box = enemy.body.bounds_at(relative_position)
-            relative_motion = dx - vx * span, -vy * span
-            fraction = 0 if overlaps(enemy_box, player_box) else blocking_contact(
-                enemy_box, player_box, relative_motion)
-            if fraction is None:
-                continue
-            contact = start + span * fraction
-            player_x, player_y = x0 + vx * contact, y0 + vy * contact
-            enemy_x = x + dx * fraction
-            left, _, right, top = enemy.hurt_box_at(enemy_x)
-            if (vy < 0 and abs(player_y - top) <= TIME_EPSILON
-                    and player_box[0] + vx * contact < right and left < player_box[2] + vx * contact):
-                side = 0
-            else:
-                side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else enemy.facing
-            impact = contact, player_x, player_y, side
+        first_impact = None
+        for motion in enemy.motion:
+            charge_id = motion[3]
+            impact = self._enemy_impact(enemy, enemy.body, motion, player_position, player_box, velocity)
             if first_impact is None:
                 first_impact = impact
             if charge_id is None or charge_id == enemy.last_contact_charge:
                 continue
+            if enemy.attack_body is not enemy.body:
+                impact = self._enemy_impact(enemy, enemy.attack_body, motion,
+                                            player_position, player_box, velocity)
+            if impact is None:
+                continue
             enemy.last_contact_charge = charge_id
-            if contact + TIME_EPSILON >= protected_until:
-                damage_impact = impact
-                break
-        return first_impact, damage_impact
+            if impact[0] + TIME_EPSILON >= protected_until:
+                return first_impact, impact
+        return first_impact, None
+
+    @staticmethod
+    def _enemy_impact(enemy, collider, motion, player_position, player_box, velocity):
+        (start, end), x, dx, _ = motion
+        vx, vy = velocity
+        span = end - start
+        relative_position = x - vx * start, enemy.y - vy * start
+        box = collider.bounds_at(relative_position)
+        relative_motion = dx - vx * span, -vy * span
+        fraction = 0 if overlaps(box, player_box) else blocking_contact(box, player_box, relative_motion)
+        if fraction is None:
+            return None
+        contact = start + span * fraction
+        player_x = player_position[0] + vx * contact
+        player_y = player_position[1] + vy * contact
+        enemy_x = x + dx * fraction
+        left, _, right, top = collider.bounds_at((enemy_x, enemy.y))
+        side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else enemy.facing
+        if (collider is enemy.body and vy < 0 and abs(player_y - top) <= TIME_EPSILON
+                and player_box[0] + vx * contact < right and left < player_box[2] + vx * contact):
+            side = 0
+        return contact, player_x, player_y, side
 
     def _push_player(self, enemy, contact_x, contact_y, side, elapsed, damaged):
         player = self.player
@@ -376,7 +387,7 @@ class GameplayLevel(Level):
                    else player.body.bounds[2] - enemy.body.bounds[0])
             pursuit = 0.0
             if enemy.state == 'charge' and side == enemy.facing:
-                pursuit = CHARGE_SPEED * enemy.state_remaining
+                pursuit = enemy.CHARGE_SPEED * enemy.state_remaining
             edge = enemy.x + side * (gap + pursuit)
             target = player.clamped_horizontal_target(edge + side * TOP_EXIT_MARGIN)
             options.append((side * (target - edge), target, side))

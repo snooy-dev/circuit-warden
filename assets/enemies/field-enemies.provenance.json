@@ -1,0 +1,39 @@
+{
+  "imageRoute": "host-image_gen",
+  "finish": "Agent Sprite Forge hibit, binary alpha, majority downsample, 2 world units per pixel",
+  "fanMotion": "Three registered rotor poses from the same master, two warmer warning poses.",
+  "capacitorMotion": "Persistent terminal feet, warmer seam and swelling casing, amber range markers.",
+  "discharge": {
+    "effect": "lightning/thunderclap",
+    "commit": "a84159688af3ca37a4be05a0d422b94451b2e24e",
+    "sourceFrames": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "license": "MIT",
+    "ramp": [
+      "#3d2339",
+      "#753e40",
+      "#bd5c36",
+      "#e99343",
+      "#ffd382",
+      "#fff2c3"
+    ]
+  },
+  "sha256": {
+    "cooling-fan.png": "d8452051d3f14214a8ae3a471d668962b0d1a95e5e220f027b3977da745cd69f",
+    "field-source/cooling-fan.palette.json": "d5c71807ce46c9214ac1b42ecbe1533114cf7e9a169c7999c3d31205050e68a1",
+    "field-source/cooling-fan.png": "0ec73a7d75df2be3b1c8e978f0f4e2fc9562806c557f94c38445209b39f2bdfa",
+    "field-source/cooling-fan.prompt.txt": "add1c2da27fa76aef1b4e972ddd5393737b9186af24d4bd9d2bab8c302fa8d88",
+    "field-source/leaking-capacitor.palette.json": "ad2d98c78312df1624f7df96c0fc75f9d0edc3026d3e7a3604232977e3bb2eac",
+    "field-source/leaking-capacitor.png": "d60d80c6b1f2c142db3a2b3d5cf5a4b850479bd6a4265976d849244983f932bf",
+    "field-source/leaking-capacitor.prompt.txt": "7205df014b7b68cef83f64fa4ab292ae5a3d6826206205e6002a9c9fc01441d2",
+    "field-source/pixelfx-CREDITS.txt": "953db427f4c1bbbc6c9b8bd87f81fec3b80d158cb5135b2596823ae472b60cc3",
+    "leaking-capacitor.png": "6d8b09228bb6f19c326fc3acaafe6820bfe74fddad792c842701f3022ee81cf7"
+  },
+  "textLineEndings": "UTF-8 with LF line endings for checksum verification"
+}
