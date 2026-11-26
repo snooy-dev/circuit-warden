@@ -44,9 +44,9 @@ class DownstrikeTests(unittest.TestCase):
         high.state, high.state_remaining = 'recover', 2
         actor.air_dash_used = True
         self.press_downstrike()
-        self.scene.update(.06)
+        self.scene.update(.02)
         self.assertEqual((actor.state, high.hp, low.hp), ('downstrike', 3, 3))
-        self.scene.update(.09)
+        self.scene.update(.03)
         self.assertEqual((actor.state, actor.jump_phase, actor.velocity_y), ('jump', 'rise', BOUNCE_SPEED))
         self.assertFalse(actor.air_dash_used)
         self.assertEqual((actor.hp, high.hp, low.hp), (actor.MAX_HP, 2, 3))

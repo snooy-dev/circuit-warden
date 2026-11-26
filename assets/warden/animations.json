@@ -5,7 +5,7 @@
     "columns": 5,
     "count": 10,
     "pivot": [80, 112],
-    "durationsMs": [65, 15, 15, 15, 15, 15, 15, 30, 30, 30],
+    "durationsMs": [30, 15, 15, 15, 15, 15, 15, 30, 30, 30],
     "loop": false
   },
   "hurt": {

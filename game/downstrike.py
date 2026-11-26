@@ -1,9 +1,9 @@
 """공중 아래 베기의 타이밍과 판정 크기."""
 
 
-WINDUP = .065
-ACTIVE_END = .155
-DURATION = .245
+WINDUP = .030
+ACTIVE_END = .120
+DURATION = .210
 BOUNCE_SPEED = 550
 REACH = 76
 HALF_WIDTH = 27
