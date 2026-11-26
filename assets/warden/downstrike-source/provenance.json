@@ -1,15 +1,16 @@
 {
   "body": {
-    "route": "host_image",
+    "route": "keyframed_raster_parts",
     "file": "poses.png",
-    "sha256": "8831d0c28f8b1e02e6aa3c9f46f7b46c4246fe9c861c1adadc003a41930c5ca4",
+    "sha256": "51b7fa4a9a9db5a701222699f3530d2c820ae690876dfbdc93b58daf628767d3",
     "references": [
-      "../../../art/warden/idle-ltx-hibit-v1/master/master_rgba.png",
+      "../../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png",
       "../../../art/warden/reference/energy-sword-master-v2.png"
     ],
-    "intent": "전투 자세 3종. 동일 오른쪽 시점, 손에 연결된 에너지 검, 효과 없는 몸체와 무기, 투명 셀.",
-    "frameScale": "724px 셀을 128px로 내린 후 워든 16색에 정렬",
-    "footAnchorsInSourceCells": [[360, 527], [345, 500], [395, 524]]
+    "build": "build_poses.py",
+    "intent": "승인된 측면 체형과 검 원화에 준비·베기·회수 키프레임 10개를 적용한 몸체와 검",
+    "frameScale": "기준 워든 높이 80px, 워든 16색, 이진 알파",
+    "footPivot": [80, 112]
   },
   "effects": {
     "route": "pixelfx",
@@ -19,8 +20,9 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "7dd20d32aa1bc203e7b4c0ef4ad2ae104a71014dfd62e8e32e933ccb8196f7e2",
+    "sha256": "d5fc7ee364cf727cf8ed03db157a2c58f4cec65ec6d25f86ed4c889e8f379806",
     "frameSize": [160, 192],
-    "footPivot": [80, 112]
+    "footPivot": [80, 112],
+    "impactFrameIndex": 4
   }
 }

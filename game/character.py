@@ -864,7 +864,8 @@ class Character(GameObject):
         link = self.arrival_link
         if self.downstrike_impact:
             # 레벨의 히트스톱이 끝나고 다음 갱신이 시작될 때까지 베는 자세를 유지한다.
-            frame, flip_x = self.clips['downstrike'].frames[2], self.facing < 0
+            frame = self.clips['downstrike'].frames[downstrike.IMPACT_FRAME]
+            flip_x = self.facing < 0
         elif (self.state == 'idle' and link is not None and link.level is not None
               and link.elapsed < ARRIVAL_BLEND_SECONDS):
             direction = 'right' if self.facing > 0 else 'left'
