@@ -2,7 +2,7 @@
   "body": {
     "route": "local:comfyui-ltx25",
     "file": "poses.png",
-    "sha256": "7dff89ae187fb94855fc862dace68eb6bba99b33ea9ddd95c8bc3acf9f15dacc",
+    "sha256": "5e392369488e4b035bb14aa15b9554205640ce2cbfb6cf1c10911c94e8c66375",
     "references": [
       "../../../art/warden/air-attack-side-master-v4/approved/master.png",
       "../../../art/warden/full-body-air-attacks/down-impact-source.png",
@@ -12,7 +12,9 @@
       "../../../art/warden/air-slash-arcs/down-settle/clip.mp4",
       "../../../art/warden/air-slash-arcs/retouch/down-end-edit.png",
       "../../../art/warden/air-slash-arcs/retouch/down-recover-edit.png",
-      "../../../art/warden/full-body-air-attacks/down-recovery/clip.mp4"
+      "../../../art/warden/full-body-air-attacks/down-recovery/clip.mp4",
+      "../../../art/warden/air-slash-arcs/silhouette/down-pass-source.png",
+      "../../../art/warden/reference/energy-sword-master-v2.png"
     ],
     "build": "../attack-source/build.py",
     "intent": "정면에서 검 끝이 발밑 양옆을 가로지르고, 검이 반대쪽까지 빠진 자세에서 적중 정지하는 10프레임",
@@ -28,7 +30,7 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "8783fc528bd0c27311b6e297474dc2f135a986e8c0a16a680596432f6c0e6508",
+    "sha256": "f89934e10099484e8b6bdbed2a28e691094d2e10973842853ef66f66869cf1aa",
     "frameSize": [208, 208],
     "footPivot": [104, 112],
     "impactFrameIndex": 4
