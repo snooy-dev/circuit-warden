@@ -35,6 +35,8 @@ class PowerSupplyMap(GameObject):
         relay = next(item for item in data['interactions'] if item['id'] == 'relay')
         self.relay = self._point(relay['x'], relay['y'])
         self.relay_reach = relay['reach']
+        self.fork_approach = self._rect(*data['navigation']['fork_approach'])
+        self.relay_return = self._rect(*data['navigation']['relay_return'])
         hatch = next(item for item in data['interactions'] if item['id'] == 'hatch-release')
         self.hatch_release = self._point(hatch['x'], hatch['y'])
         self.hatch_reach = hatch['reach']
@@ -163,6 +165,17 @@ class PowerSupplyMap(GameObject):
 
     def interaction_hint(self, player):
         return {'relay': 'W  RESTORE POWER', 'hatch': 'W  RELEASE HATCH'}.get(self._interaction(player))
+
+    def navigation_hint(self, player):
+        if self.boss_defeated:
+            return None
+        x, y = player.collision_position
+        left, bottom, right, top = self.relay_return if self.power_restored else self.fork_approach
+        if left <= x <= right and bottom <= y <= top:
+            if self.power_restored:
+                return 'LEFT AND UP TO LOAD TEST'
+            return 'DROP TO COOLING  /  JUMP RIGHT FROM THE EDGE'
+        return None
 
     def interact(self, player):
         action = self._interaction(player)

@@ -177,6 +177,8 @@ class PowerSupplySmoke(CharacterScene):
     def common_route(self):
         yield from self.walk((1650, 2096))
         self.expect_room('central-distribution')
+        yield from self.shot('central-fork-hint')
+        assert self.power_hint.visible and self.power_hint.text == 'DROP TO COOLING  /  JUMP RIGHT FROM THE EDGE'
         yield from self.tap(pico.SDLK_w)
         assert not self.layout.power_restored
 
@@ -454,6 +456,7 @@ class PowerSupplySmoke(CharacterScene):
             assert self.layout.power_restored and self.layout.closed_shutters != closed
             assert not self.layout.reached_output and self.layout.interaction_hint(actor) is None
             yield from self.shot(f'{route.__name__}-relay')
+            assert self.power_hint.visible and self.power_hint.text == 'LEFT AND UP TO LOAD TEST'
             if route == self.lower_route:
                 yield from self.check_shortcut()
             yield from self.reach_output()

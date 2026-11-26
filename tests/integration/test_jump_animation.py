@@ -279,6 +279,47 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertEqual((actor.state, actor.jump_phase), ('jump', 'rise'))
         self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED - GRAVITY * .01)
 
+    def test_attack_recovery_dash_uses_direction_and_keeps_last_sweep(self):
+        for airborne in (False, True):
+            with self.subTest(airborne=airborne):
+                scene = self.scene()
+                scene.level.enemy.destroy()
+                actor = scene.character
+                if airborne:
+                    self.key(scene, pico.SDLK_SPACE)
+                    scene.update(.12)
+                self.key(scene, pico.SDLK_j)
+                scene.update(0)
+                scene.update(.21)
+                self.key(scene, pico.SDLK_a)
+                self.key(scene, pico.SDLK_LSHIFT)
+                scene.update(.04)
+                self.assertEqual((actor.state, actor.attack_facing), ('attack', 1))
+                scene.update(.038)
+                self.assertEqual((actor.state, actor.dash_facing), ('dash', -1))
+                self.assertEqual(actor.air_dash_used, airborne)
+                self.assertTrue(actor.attack_sweeps)
+                scene.update(.11)
+                self.assertFalse(actor.attack_sweeps)
+
+    def test_recovery_dash_respects_buffer_expiry_and_air_dash_limit(self):
+        for spent in (False, True):
+            with self.subTest(spent=spent):
+                scene = self.scene()
+                scene.level.enemy.destroy()
+                actor = scene.character
+                if spent:
+                    self.key(scene, pico.SDLK_SPACE)
+                    scene.update(.12)
+                    actor.air_dash_used = True
+                self.key(scene, pico.SDLK_j)
+                scene.update(0)
+                scene.update(.21 if spent else .08)
+                self.key(scene, pico.SDLK_LSHIFT)
+                scene.update(.225 if not spent else .101)
+                self.assertEqual(actor.state, 'attack')
+                self.assertIsNone(actor.buffered_action)
+
     def test_grounded_dash_consumes_jump_only_after_dash_finishes(self):
         scene = self.scene()
         scene.level.enemy.destroy()

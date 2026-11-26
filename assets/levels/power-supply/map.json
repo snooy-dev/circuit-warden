@@ -290,6 +290,10 @@
     {"kind": "leaking_capacitor", "position": [4150, 1376], "x_limits": [4150, 4150]},
     {"kind": "power_assembly", "position": [1640, 656], "x_limits": [1248, 2160]}
   ],
+  "navigation": {
+    "fork_approach": [1472, 1950, 256, 155],
+    "relay_return": [1440, 720, 840, 680]
+  },
   "interactions": [
     {"id": "relay", "x": 2180, "y": 1334.5, "reach": 66},
     {"id": "output", "x": 3504, "y": 614.5, "reach": 58},

@@ -460,7 +460,8 @@ class CharacterScene(LevelScene):
             elif self.level.layout.reached_output:
                 hint = 'OUTPUT REACHED  /  R RESTART'
             else:
-                hint = self.level.layout.interaction_hint(self.character)
+                layout = self.level.layout
+                hint = layout.interaction_hint(self.character) or layout.navigation_hint(self.character)
         self.power_hint.visible = hint is not None
         if hint is not None:
             self.power_hint.text = hint

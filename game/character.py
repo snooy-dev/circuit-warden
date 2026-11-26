@@ -165,7 +165,7 @@ class Character(GameObject):
             states=('idle', 'run', 'attack', 'dash', 'jump', 'hurt'), initial='idle', auto_transitions=False,
             transitions=[['move', 'idle', 'run'], ['stop', 'run', 'idle'],
                          ['attack', ['idle', 'run', 'jump'], 'attack'], ['finish', 'attack', 'idle'],
-                         ['dash', ['idle', 'run', 'jump'], 'dash'], ['end_dash', 'dash', 'idle'],
+                         ['dash', ['idle', 'run', 'jump', 'attack'], 'dash'], ['end_dash', 'dash', 'idle'],
                          ['jump', ['idle', 'run'], 'jump'], ['end_jump', 'jump', 'idle'],
                          ['hurt', '*', 'hurt'], ['recover_hurt', 'hurt', 'idle'],
                          ['teleport', '*', 'idle']],
@@ -444,7 +444,8 @@ class Character(GameObject):
         if action == 'attack' and self.state == 'jump':
             allowed = self.jump_phase in ('rise', 'fall')
         if action == 'dash':
-            allowed = (free or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
+            attack_recovery = self.state == 'attack' and self.player.elapsed + 1e-9 >= ATTACK_ACTIVE_END
+            allowed = (free or attack_recovery or self.state == 'jump' and self.jump_phase in ('rise', 'fall')) and (
                 self.grounded or not self.air_dash_used) and self.pushback_remaining == 0
         if action is None or not allowed or self.view_bounds is None:
             return None
@@ -489,6 +490,8 @@ class Character(GameObject):
             self.air_recoil_velocity = 0.0
         if action == 'dash':
             entry = 'prepare_run' if self.state == 'run' else 'prepare_idle'
+            if direction:
+                self.facing = direction
             self._machine.dash()
             self.dash_effect = None
             self._play_dash_phase(entry)

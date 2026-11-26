@@ -95,7 +95,17 @@ class CombatSmoke(CharacterScene):
         self.screenshot = 'ground-moving-swing-left'
         push_key(pico.SDLK_j, pico.SDL_KEYUP)
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
-        yield .25
+        yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .155)
+        push_key(pico.SDLK_d)
+        push_key(pico.SDLK_LSHIFT)
+        yield from self.wait_until(lambda: actor.state == 'dash')
+        assert actor.dash_facing == 1 and actor.attack_facing == -1
+        start = actor.x
+        yield from self.wait_until(lambda: actor.dash_phase == 'dash' and actor.x > start)
+        self.screenshot = 'recovery-dash-right'
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: actor.state != 'dash')
 
         short = yield from self.running_jump(short=True)
         long = yield from self.running_jump(short=False)
