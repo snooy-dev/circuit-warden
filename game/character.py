@@ -156,6 +156,7 @@ class Character(GameObject):
         self.attack_facing = 1
         self.airborne_swing = False
         self.downstrike_elapsed = 0.0
+        self.downstrike_impact = False
         self.attack_sweeps = []
         self.jump_phase = None
         self.jump_elapsed = 0.0
@@ -308,6 +309,7 @@ class Character(GameObject):
         self.hp -= 1
         self.invulnerability_remaining = max(0.0, .75 - elapsed)
         self.hurt_remaining = HURT_SECONDS
+        self.downstrike_impact = False
         self.attack_sweeps.clear()
         self.arrival_link = None
         self.buffered_action, self.buffer_remaining = None, 0.0
@@ -387,6 +389,7 @@ class Character(GameObject):
     def teleport(self, position):
         if not self.can_teleport(position):
             return False
+        self.downstrike_impact = False
         self.arrival_link = None
         self.hurt_remaining = 0.0
         self.attack_sweeps.clear()
@@ -468,6 +471,7 @@ class Character(GameObject):
         return action
 
     def update(self, dt):
+        self.downstrike_impact = False
         self.invulnerability_remaining = max(0.0, self.invulnerability_remaining - dt)
         self.teleport_guard_remaining = max(0.0, self.teleport_guard_remaining - dt)
         self.attack_sweeps.clear()
@@ -690,6 +694,7 @@ class Character(GameObject):
         self.pushback_remaining = self.air_recoil_velocity = 0.0
         self._start_rebound(downstrike.BOUNCE_SPEED)
         self._show_jump()
+        self.downstrike_impact = True
 
     def _update_jump(self, dt):
         remaining, airborne_time = dt, 0.0
@@ -855,8 +860,11 @@ class Character(GameObject):
         if self.state == 'attack':
             flip_x = self.attack_facing < 0
         link = self.arrival_link
-        if (self.state == 'idle' and link is not None and link.level is not None
-                and link.elapsed < ARRIVAL_BLEND_SECONDS):
+        if self.downstrike_impact:
+            # 레벨의 히트스톱이 끝나고 다음 갱신이 시작될 때까지 베는 자세를 유지한다.
+            frame, flip_x = self.clips['downstrike'].frames[2], self.facing < 0
+        elif (self.state == 'idle' and link is not None and link.level is not None
+              and link.elapsed < ARRIVAL_BLEND_SECONDS):
             direction = 'right' if self.facing > 0 else 'left'
             frames = self.clips[f'jump_land_{direction}'].frames
             frame, flip_x = frames[len(frames) // 3], False
