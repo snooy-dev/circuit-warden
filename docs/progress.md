@@ -8,7 +8,7 @@
 
 - **일반 몬스터 이동과 스폰:** 2026-11-26 요청으로 중앙 금속 먼지와 팬 두 마리의 배치를 조정했다. 금속 먼지가 시작 위치로 복귀하고, 팬이 예고한 방향의 비행 거리에 맞춰 이동한다. 일반 적의 예고·공격 중 방을 나가면 다시 들어올 때 새 예고를 거친다. [명세](../specs/031-enemy-encounters/spec.md) · [검증](../specs/031-enemy-encounters/verification.md).
 
-- **착지·검격·피격 조작 반응:** 2026-11-26 사용자 요청으로 착지 중 일반 조작 전환, 검격 80% 시험 재생, 피격 중 공격·대시 150ms 예약과 피격 섬광을 적용했다. [명세](../specs/030-responsive-combat/spec.md) · [검증](../specs/030-responsive-combat/verification.md).
+- **착지·검격·피격 조작 반응:** 2026-11-26 사용자 요청으로 착지 중 일반 조작 전환, 검격 80% 시험 재생, 피격 중 공격·대시 150ms 예약과 피격 섬광을 적용했다. 지상 검격을 이어가며 바로 이륙하도록 연결했다. [명세](../specs/030-responsive-combat/spec.md) · [검증](../specs/030-responsive-combat/verification.md).
 
 - **전투 조작과 분기 안내:** 2026-11-26 사용자 요청으로 검격 유효타 뒤 대시 연결, 시작 시 A/D 방향 반영, 갈림길과 릴레이 복구 뒤 시험실 방향 안내를 적용했다. [명세](../specs/029-combat-feel/spec.md) · [검증](../specs/029-combat-feel/verification.md).
 

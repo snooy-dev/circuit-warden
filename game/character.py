@@ -454,6 +454,8 @@ class Character(GameObject):
         landing = self.state == 'jump' and self.jump_phase == 'land' and self.grounded
         free = self.state in ('idle', 'run') or landing
         allowed = free and self.grounded
+        if action == 'jump' and self.state == 'attack':
+            allowed = self.grounded
         if action == 'jump' and self.jump_phase == 'fall':
             allowed = self.state == 'jump' and self.ledge_jump_remaining > 1e-9
         if action == 'attack' and self.state == 'jump' and not landing:
@@ -516,7 +518,7 @@ class Character(GameObject):
             self.air_dash_used = not self.grounded
         elif action == 'jump':
             self.jump_held = pico.SDLK_SPACE in self.pressed
-            if self.state == 'jump':
+            if self.state in ('jump', 'attack'):
                 self._take_off()
             else:
                 self._machine.jump()
@@ -633,7 +635,7 @@ class Character(GameObject):
             self.jump_phase, self.jump_elapsed = 'fall', 0.0
         flight = self._advance_vertical(step)
         self._walk_during_attack(direction, (step if grounded else flight) - push_time)
-        landed = self.airborne_swing and self.grounded
+        landed = not grounded and self.grounded
         attack_time = flight if landed else step
         if not started:
             self.player.update(attack_time * ATTACK_PLAYBACK_RATE)

@@ -263,6 +263,23 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertEqual(actor.jump_phase, 'rise')
         self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED)
 
+    def test_jump_can_lift_a_ground_attack_without_restarting_it(self):
+        scene = self.scene()
+        scene.level.enemy.destroy()
+        actor = scene.character
+        self.key(scene, pico.SDLK_j)
+        scene.update(.08)
+        elapsed = actor.player.elapsed
+        height = actor.y
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.03)
+        self.assertEqual((actor.state, actor.jump_phase), ('attack', 'rise'))
+        self.assertGreater(actor.y, height)
+        self.assertIs(actor.player.clip, actor.clips['attack'])
+        self.assertGreater(actor.player.elapsed, elapsed)
+        scene.update(.42)
+        self.assertEqual((actor.state, actor.jump_phase), ('jump', 'fall'))
+
     def test_air_attack_landing_can_consume_jump_at_contact(self):
         scene = self.scene()
         actor = scene.character

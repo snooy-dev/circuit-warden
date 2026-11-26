@@ -28,3 +28,13 @@
 ## 문서 영향
 
 공용 조작은 [기본 게임플레이](../../docs/systems/basic-gameplay.md), 피해·섬광은 [기본 적 전투](../../docs/systems/basic-enemy.md), 갱신 경계와 입력 보관 시간은 [기술 구조](../../docs/architecture.md), 구현 상태는 [진행 상태](../../docs/progress.md)에 반영했다. 전체 회귀와 사람이 느끼는 조작감 평가는 실행하지 않았다.
+
+## 지상 검격 중 이륙
+
+게임 가상환경의 `python -B -m unittest`로 아래 세 통합 검사만 실행했고 모두 통과했다.
+
+- `tests.integration.test_jump_animation.JumpAnimationTests.test_jump_can_lift_a_ground_attack_without_restarting_it`
+- `tests.integration.test_jump_animation.JumpAnimationTests.test_air_attack_landing_can_consume_jump_at_contact`
+- `tests.integration.test_jump_animation.JumpAnimationTests.test_attack_recovery_dash_uses_direction_and_keeps_last_sweep`
+
+검격 중 Space 입력에서 상승이 시작되고 검격 클립이 이어지며 종료 뒤 낙하 모션으로 돌아갔다. 기존 공중 검격 착지와 대시 연결도 확인했다. 실제 창 플레이와 게임 전체 조작감 평가는 미확인이다.
