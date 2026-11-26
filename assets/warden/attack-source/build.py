@@ -10,6 +10,8 @@ WARDEN = ROOT / 'assets/warden'
 ART = ROOT / 'art/warden'
 AIR_TIMES = [0, 18, 68, 84, 100, 120, 140, 160, 180, 220, 256, 300]
 SIZE = (256, 224)
+DOWN_SIZE = (208, 208)
+DOWN_TIMES = [0, 8, 18, 30, 47, 66, 85, 103, 120, 162]
 PIVOT = (128, 136)
 COLUMNS = 6
 GROUND_FX_START = 100
@@ -49,23 +51,11 @@ def sheet(frames, size, columns):
     return atlas
 
 
-def down_layer(effect):
-    # Point the horizontal electrical sweep down, with a broad opening at the feet.
-    rotated = effect.transpose(Image.Transpose.ROTATE_270)
-    pivot_x, pivot_y = SIZE[1] - 1 - 90, PIVOT[0]
-    left, top, right, bottom = rotated.getchannel('A').getbbox()
-    stretch, depth = 1.32, .72
-    cropped = rotated.crop((left, top, right, bottom))
-    scaled = cropped.resize((round(cropped.width * stretch), round(cropped.height * depth)),
-                             Image.Resampling.NEAREST)
-    target = (104 + round((left - pivot_x) * stretch), 77 + round((top - pivot_y) * depth))
-    return scaled, target
-
-
 def main():
     parser = ArgumentParser()
     parser.add_argument('output', type=Path, nargs='?', default=WARDEN)
     out = parser.parse_args().output
+    source = out if (out / 'attack-source').is_dir() else WARDEN
     effects = list(ground_layers())
     ground = Image.open(WARDEN / 'attack.png').convert('RGBA')
     body_dir = ART / 'provisional-approved/basic-attack-hk-v6-arm-v3/frames'
@@ -76,7 +66,7 @@ def main():
         expected.alpha_composite(effects[fx_index])
         assert expected.tobytes() == tile(ground, fx_index + 5, SIZE, COLUMNS).tobytes(), fx_index
 
-    air_art = Image.open(WARDEN / 'attack-source/air-poses.png').convert('RGBA')
+    air_art = Image.open(source / 'attack-source/air-poses.png').convert('RGBA')
     poses = [tile(air_art, i, SIZE, COLUMNS) for i in range(len(AIR_TIMES) - 1)]
     fx_end = GROUND_FX_START + len(effects) * GROUND_FX_FRAME_MS
     edges = sorted(set(AIR_TIMES).union(range(GROUND_FX_START, fx_end + 1, GROUND_FX_FRAME_MS)))
@@ -89,12 +79,14 @@ def main():
         frames.append(frame)
     sheet(frames, SIZE, COLUMNS).save(out / 'air_attack.png')
 
-    down_size = (208, 208)
-    down_art = Image.open(WARDEN / 'downstrike-source/poses.png').convert('RGBA')
-    down = [tile(down_art, i, down_size, 5) for i in range(10)]
-    for frame_index, fx_index in enumerate((1, 2, 3, 4, 5), start=3):
-        down[frame_index].alpha_composite(*down_layer(effects[fx_index]))
-    sheet(down, down_size, 5).save(out / 'downstrike.png')
+    down_art = Image.open(source / 'downstrike-source/poses.png').convert('RGBA')
+    down_sweep = Image.open(source / 'downstrike-source/sweep.png').convert('RGBA')
+    down_frames = []
+    for i in range(len(DOWN_TIMES)):
+        frame = tile(down_art, i, DOWN_SIZE, 5)
+        frame.alpha_composite(tile(down_sweep, i, DOWN_SIZE, 5))
+        down_frames.append(frame)
+    sheet(down_frames, DOWN_SIZE, 5).save(out / 'downstrike.png')
     print(json.dumps({'count': len(frames), 'durationsMs': [b - a for a, b in zip(edges, edges[1:])]}))
 
 

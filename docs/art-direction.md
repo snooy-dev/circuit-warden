@@ -269,7 +269,7 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 2026-11-11 사용자 요청에 따라 idle v7·Run v4의 PNG 시트 3장을 `assets/warden/idle.png`, `run_left.png`, `run_right.png`로 복사했다. 이름의 버전을 제거했으며 원본 PNG 바이트와 프레임별 시간·기준점을 보존했다. [게임 자산 출처](../assets/warden/README.md)에 원본 경로·SHA-256을, animations.json에 런타임 규격을 기록한다. .gitattributes는 PNG를 일반 Git 바이너리로 관리한다. 걷기는 포함하지 않는다.
 
-지상 기본 공격의 `assets/warden/attack.png`는 HK v6·팔 보정 v3의 준비와 타격, 로컬 ComfyUI LTX 회복 세 자세, 대기 연결을 사용한다. 2026-11-24 사용자가 선택한 pixelfx 분기 방전 초승달을 몸체 위에 1.2배로 합성했다. 타격 정점의 굵은 방전은 짙은 청색 테두리와 흰 중심선을 쓰고 회복에 들어서기 전에 사라진다. 공중 일반 검격은 지상과 같은 pixelfx 6프레임을 같은 크기와 발 기준점으로 합성한다. 아래 베기는 같은 방전을 발밑에 펼치고 타격 시 가장 밝게 표시한다. 좌측은 수평 반전한다. [자산 규격과 출처](../assets/warden/README.md) · [기본 게임플레이](systems/basic-gameplay.md).
+지상 기본 공격의 `assets/warden/attack.png`는 HK v6·팔 보정 v3의 준비와 타격, 로컬 ComfyUI LTX 회복 세 자세, 대기 연결을 사용한다. 2026-11-24 사용자가 선택한 pixelfx 분기 방전 초승달을 몸체 위에 1.2배로 합성했다. 타격 정점의 굵은 방전은 짙은 청색 테두리와 흰 중심선을 쓰고 회복에 들어서기 전에 사라진다. 공중 일반 검격은 몸통과 양팔이 함께 도는 자세 위에 지상 검격과 같은 pixelfx 6프레임을 같은 크기와 발 기준점으로 합성한다. 아래 베기는 화면을 향해 돌아 같은 손으로 발밑을 훑고 반대편으로 검을 올려 회수한다. 전용 pixelfx 잔상은 검 끝의 궤적을 따라 짙은 청색 테두리와 밝은 청록·흰색 중심선으로 표현한다. 좌측은 수평 반전한다. [자산 규격과 출처](../assets/warden/README.md) · [기본 게임플레이](systems/basic-gameplay.md).
 
 이전 지상 v6 아웃라인 있음과 별도 전기 베기 v4의 규격·검증은 [011 당시 검증](../specs/011-basic-gameplay/verification.md)에 보존했다.
 

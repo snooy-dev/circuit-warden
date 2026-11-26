@@ -1,30 +1,40 @@
 {
   "body": {
-    "route": "authored_raster_rig",
+    "route": "authored_full_body_raster_rig",
     "file": "poses.png",
-    "sha256": "8aaf51b2e4b737cf528ecd52d360f5bc7137e7ec54bf8ed02f7328cdd8bc530f",
+    "sha256": "658ee590e8ebb1105a928f172bc3a1495aef20077e605fc0fd354a95209d91b1",
     "references": [
       "../../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png",
       "../../../art/warden/reference/master-source.png",
       "../../../art/warden/reference/energy-sword-master-v2.png"
     ],
     "build": "../attack-source/grip_rig.py",
-    "intent": "정면에서 검 끝이 발밑 양옆을 가로지르고, 검이 반대쪽까지 빠진 자세에서 적중 정지하는 10프레임",
+    "intent": "공중 측면 자세에서 정면으로 돌아 검 끝이 발밑을 가로지르고, 같은 손으로 반대편까지 회수하는 10프레임",
     "frameScale": "기준 워든 높이 80px, 워든 16색, 이진 알파",
-    "footPivot": [104, 112]
+    "footPivot": [
+      104,
+      112
+    ]
   },
   "effects": {
     "route": "pixelfx",
     "revision": "a84159688af3ca37a4be05a0d422b94451b2e24e",
-    "slash": "../../../art/warden/ground-crescent-discharge-refined/slash.png",
-    "discharge": "../../../art/warden/ground-crescent-discharge-refined/discharge.png",
+    "source": "../attack-source/down-sweep.mjs",
+    "file": "sweep.png",
+    "sha256": "944616a5e8a296f2720ebe9e87e6c3a5e0ba4201e36d4708752571e3361ac88e",
     "impact": "../../combat/source/provenance.json"
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "dd85230d05cebf5b1e5ae2995bd65b73422340ab849546bcf06771830b77902e",
-    "frameSize": [208, 208],
-    "footPivot": [104, 112],
+    "sha256": "bce209819f56669e7257dacbe09a1887f74e30bea1961d2e5a2b1e8d2384e258",
+    "frameSize": [
+      208,
+      208
+    ],
+    "footPivot": [
+      104,
+      112
+    ],
     "impactFrameIndex": 4
   }
 }
