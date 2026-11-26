@@ -39,6 +39,10 @@ class PowerSupplyMap(GameObject):
         self.hatch_reach = hatch['reach']
         player_spawn = next(entry for entry in data['spawns'] if entry['id'] == 'start')
         self.player_start = self._point(player_spawn['x'], player_spawn['feet_y'])
+        self.enemy_spawns = tuple(
+            (entry['kind'], self._point(*entry['position']),
+             tuple(x - self.half_width for x in entry['x_limits']))
+            for entry in data['enemies'])
         self.start_room = self.room_at(self.player_start)
         _, intake_bottom, _, intake_top = self.rooms[self.start_room]
         self.start_camera_y = (intake_bottom + intake_top) / 2

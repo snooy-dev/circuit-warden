@@ -72,9 +72,7 @@ class GameplayLevel(Level):
         super().__init__(GameplayMode())
         self.images = images
         self.player = None
-        self.enemy = None
-        self._last_hit_attack = 0
-        self._last_contact_charge = None
+        self.enemies = []
         self._sword_stop_remaining = 0.0
         self.charges = []
         self.charge_art = None
@@ -95,10 +93,8 @@ class GameplayLevel(Level):
         else:
             self.spawn(TrainingMap())
         clips = load_clips(self.images)
-        enemy_clips = None if self.power_supply else load_enemy_clips(self.images)
-        self._spawn_combatants(clips, enemy_clips)
-        self._last_hit_attack = 0
-        self._last_contact_charge = None
+        self._enemy_clips = {'metal_dust': load_enemy_clips(self.images)}
+        self._spawn_combatants(clips)
 
         self.charge_art = ChargeArt(self.images)
         self.link_art = LinkArt(self.images)
@@ -134,13 +130,21 @@ class GameplayLevel(Level):
         elapsed = max(0.0, animation.elapsed - self.power_entry_impact)
         self.player.spawn_opacity = elapsed / self.power_entry_reveal
 
-    def _spawn_combatants(self, clips, enemy_clips):
+    @property
+    def enemy(self):
+        return self.enemies[0] if not self.power_supply and self.enemies else None
+
+    def _spawn_combatants(self, clips):
         self.player = self.spawn(Character(clips))
         self.player.world_bounds = self.world_bounds
         if self.power_supply:
             self.player.x, self.player.y = self.layout.player_start
-        if enemy_clips is not None:
-            self.enemy = self.spawn(Enemy(enemy_clips))
+            for kind, position, x_limits in self.layout.enemy_spawns:
+                room = self.layout.room_at((position[0], position[1] + 1))
+                self.enemies.append(self.spawn(Enemy(
+                    self._enemy_clips[kind], position=position, x_limits=x_limits, room=room)))
+        else:
+            self.enemies.append(self.spawn(Enemy(self._enemy_clips['metal_dust'])))
 
     def _reset_environment(self):
         previous = tuple(charge.position for charge in self.charges)
@@ -192,7 +196,6 @@ class GameplayLevel(Level):
 
     def reset_combat(self):
         clips = self.player.clips
-        enemy_clips = None if self.enemy is None else self.enemy.clips
         view_bounds = self.player.view_bounds
         for obj in self.objects:
             if isinstance(obj, (SpriteEffect, TeleportLink)):
@@ -201,16 +204,15 @@ class GameplayLevel(Level):
         self._remove_skill_charge()
         self._cast_cooldown = 0.0
         self.player.destroy()
-        if self.enemy is not None:
-            self.enemy.destroy()
-        self._spawn_combatants(clips, enemy_clips)
+        for enemy in self.enemies:
+            enemy.destroy()
+        self.enemies.clear()
+        self._spawn_combatants(clips)
         self.player.view_bounds = view_bounds
         if self.power_supply:
             self.layout.reset()
             self._start_power_entry()
         self._reset_environment()
-        self._last_hit_attack = 0
-        self._last_contact_charge = None
         self._sword_stop_remaining = 0.0
 
     def update(self, dt):
@@ -229,10 +231,10 @@ class GameplayLevel(Level):
         if self.power_entry_effect is not None:
             self._update_power_entry()
         self._update_environment()
-        if self.enemy is not None and self.enemy.level is self:
-            self._resolve_sword()
-            if self.enemy.level is self:
-                self._resolve_enemy_contact(dt, player_position, protected_until)
+        for enemy in self.enemies:
+            if enemy.level is self:
+                self._resolve_sword(enemy)
+        self._resolve_enemy_contact(dt, player_position, protected_until)
         if self.power_supply:
             self.layout.damage_on_busbar(self.player)
         if self.player.hp == 0:
@@ -240,14 +242,14 @@ class GameplayLevel(Level):
                 if isinstance(obj, SpriteEffect):
                     obj.destroy()
 
-    def _resolve_sword(self):
+    def _resolve_sword(self, enemy):
         for sweep in self.player.attack_sweeps:
-            if sweep.attack_id == self._last_hit_attack:
+            if sweep.attack_id == enemy.last_hit_attack:
                 continue
             vx, vy = sweep.velocity
             sword_x, sword_y = sweep.origin
             sword_start, sword_end = sweep.times
-            for times, x, dx, _ in self.enemy.motion:
+            for times, x, dx, _ in enemy.motion:
                 enemy_start, enemy_end = times
                 start, end = max(sword_start, enemy_start), min(sword_end, enemy_end)
                 if start > end:
@@ -255,23 +257,23 @@ class GameplayLevel(Level):
                 enemy_vx = dx / (enemy_end - enemy_start)
                 span = end - start
                 x += enemy_vx * (start - enemy_start)
-                relative_position = x - vx * (start - sword_start), self.enemy.y - vy * (start - sword_start)
+                relative_position = x - vx * (start - sword_start), enemy.y - vy * (start - sword_start)
                 relative_motion = (enemy_vx - vx) * span, -vy * span
-                contact = self.enemy.body.overlap_contact(
+                contact = enemy.body.overlap_contact(
                     sweep.sword, relative_position, sweep.origin, (start, end), relative_motion,
                     sweep.active_window)
                 if contact is None:
                     continue
                 enemy_x = x + enemy_vx * (contact - start)
-                left, bottom, right, top = self.enemy.hurt_box_at(enemy_x)
+                left, bottom, right, top = enemy.hurt_box_at(enemy_x)
                 step = contact - sword_start
                 sword_left, sword_bottom, sword_right, sword_top = sweep.sword.bounds_at(
                     (sword_x + vx * step, sword_y + vy * step))
                 facing = 1 if sweep.sword is self.player.swords[1] else -1
                 point = (max(left, sword_left) if facing > 0 else min(right, sword_right),
                          (max(bottom, sword_bottom) + min(top, sword_top)) / 2)
-                self._last_hit_attack = sweep.attack_id
-                self.enemy.take_hit(facing)
+                enemy.last_hit_attack = sweep.attack_id
+                enemy.take_hit(facing)
                 self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, facing, 1,
                                         draw_order=1))
                 self._sword_stop_remaining = SWORD_HIT_STOP
@@ -284,12 +286,29 @@ class GameplayLevel(Level):
         # shortcut: 한 갱신의 워든 궤적은 선형 근사, 프레임 내 세부 궤적이 필요해지면 행동별 경로를 전달한다.
         vx, vy = (self.player.x - x0) / dt, (self.player.y - y0) / dt
         player_box = self.player.body.bounds_at(player_position)
+        first = damage = None
+        for enemy in self.enemies:
+            if enemy.level is self:
+                body_hit, attack_hit = self._enemy_impacts(enemy, player_position, player_box,
+                                                         (vx, vy), protected_until)
+                if body_hit is not None and (first is None or body_hit[0] < first[0][0]):
+                    first = body_hit, enemy
+                if attack_hit is not None and (damage is None or attack_hit[0] < damage[0][0]):
+                    damage = attack_hit, enemy
+        impact = damage or first
+        if impact is not None:
+            (contact, x, y, side), enemy = impact
+            self._push_player(enemy, x, y, side, dt - contact, damage is not None)
+
+    def _enemy_impacts(self, enemy, player_position, player_box, velocity, protected_until):
+        x0, y0 = player_position
+        vx, vy = velocity
         first_impact = damage_impact = None
-        for times, x, dx, charge_id in self.enemy.motion:
+        for times, x, dx, charge_id in enemy.motion:
             start, end = times
             span = end - start
-            relative_position = x - vx * start, self.enemy.y - vy * start
-            enemy_box = self.enemy.body.bounds_at(relative_position)
+            relative_position = x - vx * start, enemy.y - vy * start
+            enemy_box = enemy.body.bounds_at(relative_position)
             relative_motion = dx - vx * span, -vy * span
             fraction = 0 if overlaps(enemy_box, player_box) else blocking_contact(
                 enemy_box, player_box, relative_motion)
@@ -298,29 +317,27 @@ class GameplayLevel(Level):
             contact = start + span * fraction
             player_x, player_y = x0 + vx * contact, y0 + vy * contact
             enemy_x = x + dx * fraction
-            left, _, right, top = self.enemy.hurt_box_at(enemy_x)
+            left, _, right, top = enemy.hurt_box_at(enemy_x)
             if (vy < 0 and abs(player_y - top) <= TIME_EPSILON
                     and player_box[0] + vx * contact < right and left < player_box[2] + vx * contact):
                 side = 0
             else:
-                side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else self.enemy.facing
+                side = -1 if player_x < enemy_x else 1 if player_x > enemy_x else enemy.facing
             impact = contact, player_x, player_y, side
             if first_impact is None:
                 first_impact = impact
-            if charge_id is None or charge_id == self._last_contact_charge:
+            if charge_id is None or charge_id == enemy.last_contact_charge:
                 continue
-            self._last_contact_charge = charge_id
+            enemy.last_contact_charge = charge_id
             if contact + TIME_EPSILON >= protected_until:
                 damage_impact = impact
                 break
-        if first_impact is not None:
-            contact, player_x, player_y, side = damage_impact or first_impact
-            self._push_player(player_x, player_y, side, dt - contact, damage_impact is not None)
+        return first_impact, damage_impact
 
-    def _push_player(self, contact_x, contact_y, side, elapsed, damaged):
-        player, enemy = self.player, self.enemy
+    def _push_player(self, enemy, contact_x, contact_y, side, elapsed, damaged):
+        player = self.player
         if not side:
-            self._eject_from_enemy_top(contact_x, elapsed, damaged)
+            self._eject_from_enemy_top(enemy, contact_x, elapsed, damaged)
             return
         if damaged:
             player.x, player.y = contact_x, contact_y
@@ -345,10 +362,10 @@ class GameplayLevel(Level):
         if side * (player.x - target) < 0:
             player.move_enemy_push(target)
             if side * (player.x - target) < 0:
-                enemy.x = player.x - side * gap
+                enemy.x += enemy.horizontal_distance(player.x - side * gap - enemy.x)
 
-    def _eject_from_enemy_top(self, contact_x, elapsed, damaged):
-        player, enemy = self.player, self.enemy
+    def _eject_from_enemy_top(self, enemy, contact_x, elapsed, damaged):
+        player = self.player
         player.x, player.y = contact_x, enemy.hurt_box[3]
         preferred = 1 if contact_x > enemy.x else -1
         if enemy.state == 'charge' or contact_x == enemy.x:

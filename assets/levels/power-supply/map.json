@@ -278,6 +278,13 @@
   "spawns": [
     {"id": "start", "x": 652, "y": 2054.5, "feet_y": 2096, "entry_origin": [622, 1648]}
   ],
+  "enemies": [
+    {"kind": "metal_dust", "position": [2380, 2096], "x_limits": [2150, 2660]},
+    {"kind": "metal_dust", "position": [2260, 2816], "x_limits": [2070, 2470]},
+    {"kind": "metal_dust", "position": [720, 2816], "x_limits": [580, 810]},
+    {"kind": "metal_dust", "position": [990, 1376], "x_limits": [820, 1130]},
+    {"kind": "metal_dust", "position": [1680, 656], "x_limits": [1410, 1930]}
+  ],
   "interactions": [
     {"id": "relay", "x": 2180, "y": 1334.5, "reach": 66},
     {"id": "output", "x": 3504, "y": 614.5, "reach": 58},
