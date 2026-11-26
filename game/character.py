@@ -43,6 +43,7 @@ ATTACK_ACTIVE_END = .20
 ATTACK_REACH = 85
 INPUT_BUFFER_SECONDS = .1
 AIR_JUMP_BUFFER_SECONDS = .12
+LEDGE_JUMP_SECONDS = .08
 DASH_KEYS = {pico.SDLK_LSHIFT, pico.SDLK_RSHIFT}
 LEFT_KEYS = {pico.SDLK_a}
 RIGHT_KEYS = {pico.SDLK_d}
@@ -154,6 +155,7 @@ class Character(GameObject):
         self.jump_phase = None
         self.jump_elapsed = 0.0
         self.jump_held = None  # 직접 시작한 점프만 Space 해제에 반응한다.
+        self.ledge_jump_remaining = 0.0
         self.rise_start_speed = JUMP_SPEED
         self.dash_remaining = 0.0
         self.dash_phase = None
@@ -242,6 +244,7 @@ class Character(GameObject):
     def begin_enemy_push(self, direction, elapsed):
         if self.hp == 0 or self.state == 'hurt':
             return
+        self.ledge_jump_remaining = 0.0
         if self.state == 'dash':
             self._cancel_dash()
             self._machine.end_dash()
@@ -273,6 +276,7 @@ class Character(GameObject):
 
     def _start_rebound(self, speed):
         self.jump_held = None
+        self.ledge_jump_remaining = 0.0
         self.jump_phase, self.jump_elapsed = 'rise', 0.0
         self.velocity_y = self.rise_start_speed = speed
 
@@ -379,6 +383,7 @@ class Character(GameObject):
         self.hurt_remaining = 0.0
         self.attack_sweeps.clear()
         self.jump_held = None
+        self.ledge_jump_remaining = 0.0
         self._machine.teleport()
         self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
         self.velocity_y = 0.0
@@ -433,6 +438,8 @@ class Character(GameObject):
         action = self.buffered_action
         free = self.state in ('idle', 'run')
         allowed = free and self.grounded
+        if action == 'jump' and self.jump_phase == 'fall':
+            allowed = self.state == 'jump' and self.ledge_jump_remaining > 1e-9
         if action == 'attack' and self.state == 'jump':
             allowed = self.jump_phase in ('rise', 'fall')
         if action == 'dash':
@@ -441,6 +448,7 @@ class Character(GameObject):
         if action is None or not allowed or self.view_bounds is None:
             return None
         self.buffered_action = None
+        self.ledge_jump_remaining = 0.0
         return action
 
     def update(self, dt):
@@ -467,6 +475,7 @@ class Character(GameObject):
             self._update(dt - step, offset=step)
 
     def _update(self, dt, action=None, offset=0):
+        self.ledge_jump_remaining = max(0.0, self.ledge_jump_remaining - dt)
         if self.state == 'hurt':
             step = self._update_hurt(dt)
             if self.state == 'hurt':
@@ -483,10 +492,13 @@ class Character(GameObject):
             self.dash_effect = None
             self._play_dash_phase(entry)
             self.air_dash_used = not self.grounded
-        elif action == 'jump' and self.state != 'jump':
-            self._machine.jump()
-            self.jump_phase, self.jump_elapsed = 'start', 0.0
+        elif action == 'jump':
             self.jump_held = pico.SDLK_SPACE in self.pressed
+            if self.state == 'jump':
+                self._take_off()
+            else:
+                self._machine.jump()
+                self.jump_phase, self.jump_elapsed = 'start', 0.0
         started = action == 'attack'
         if started:
             if direction:
@@ -532,8 +544,11 @@ class Character(GameObject):
                 # 대시 완료 갱신에서는 같은 시간을 이동에 중복 사용하지 않는다.
                 self.x = start
                 if not finished_dash:
+                    walked_on_ground = destination != start and self.state in ('idle', 'run') and self.grounded
                     self._move_horizontal(destination)
                     destination = self.x
+                    if walked_on_ground and not self.grounded:
+                        self.ledge_jump_remaining = LEDGE_JUMP_SECONDS
                 if destination != start:
                     self.facing = direction
                     clip = self.clips['run_right' if direction > 0 else 'run_left']
@@ -691,6 +706,7 @@ class Character(GameObject):
                     self.y = float(GROUND_Y)
                 self.air_dash_used = False
                 self.jump_held = None
+                self.ledge_jump_remaining = 0.0
                 break
         if self.jump_phase in ('rise', 'fall'):
             if self.grounded:

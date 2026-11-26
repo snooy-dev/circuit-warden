@@ -158,6 +158,74 @@ class JumpAnimationTests(unittest.TestCase):
             self.assertTrue(actor.grounded)
             self.assertEqual(actor.state, 'idle')  # Holding Space does not chain again.
 
+    def platform_edge(self, facing=1):
+        scene = self.scene()
+        scene.level.enemy.destroy()
+        actor = scene.character
+        left, _, right, actor.y = PLATFORMS[3]
+        actor.x = right + actor.body.bounds[2] - 1 if facing > 0 else left + actor.body.bounds[0] + 1
+        actor.facing = facing
+        self.assertTrue(actor.grounded)
+        return scene, actor
+
+    def test_ledge_jump_takes_off_once_and_respects_space_release(self):
+        for facing, speed_factor in ((-1, .65), (1, 1)):
+            with self.subTest(facing=facing):
+                scene, actor = self.platform_edge(facing)
+                self.key(scene, pico.SDLK_d if facing > 0 else pico.SDLK_a)
+                scene.update(.01)
+                scene.update(.079)
+                self.assertEqual(actor.jump_phase, 'fall')
+                y = actor.y
+                self.key(scene, pico.SDLK_SPACE)
+                if speed_factor < 1:
+                    self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+                scene.update(0)
+                self.assertEqual(actor.jump_phase, 'rise')
+                self.assertAlmostEqual(actor.velocity_y, JUMP_SPEED * speed_factor)
+                self.assertEqual(actor.y, y)
+                self.assertIsNone(actor.buffered_action)
+                self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+                self.key(scene, pico.SDLK_SPACE)
+                scene.update(.01)
+                self.assertLess(actor.velocity_y, JUMP_SPEED * speed_factor)
+                self.assertEqual(actor.buffered_action, 'jump')
+
+    def test_ledge_jump_expires_and_space_still_buffers_for_landing(self):
+        scene, actor = self.platform_edge()
+        self.key(scene, pico.SDLK_d)
+        scene.update(.01)
+        scene.update(.08)
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.121)
+        self.assertEqual(actor.jump_phase, 'fall')
+        self.assertIsNone(actor.buffered_action)
+        scene.update(.05)
+        self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.1)
+        self.assertEqual(actor.jump_phase, 'rise')
+        self.assertIsNone(actor.buffered_action)
+
+    def test_ledge_jump_is_unavailable_after_dash_push_or_teleport(self):
+        for action in ('dash', 'push', 'teleport'):
+            with self.subTest(action=action):
+                scene, actor = self.platform_edge()
+                if action == 'dash':
+                    self.key(scene, pico.SDLK_LSHIFT)
+                    scene.update(.468)
+                elif action == 'push':
+                    actor.begin_enemy_push(1, .01)
+                else:
+                    actor.view_bounds = actor.world_bounds
+                    self.assertTrue(actor.teleport((actor.x + 10, actor.center[1])))
+                self.assertFalse(actor.grounded)
+                self.assertEqual(actor.ledge_jump_remaining, 0)
+                self.key(scene, pico.SDLK_SPACE)
+                scene.update(0)
+                self.assertNotAlmostEqual(actor.velocity_y, JUMP_SPEED)
+                self.assertEqual(actor.buffered_action, 'jump')
+
     def test_platform_buffered_tap_matches_split_updates(self):
         outcomes = []
         for steps in ((.16,), (.04,) * 4):
