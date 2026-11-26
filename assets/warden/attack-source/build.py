@@ -8,7 +8,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[3]
 WARDEN = ROOT / 'assets/warden'
 ART = ROOT / 'art/warden'
-AIR_TIMES = [0, 18, 82, 120, 140, 160, 180, 200, 220, 246, 274, 300]
+AIR_TIMES = [0, 18, 68, 84, 100, 120, 140, 160, 180, 220, 256, 300]
 SIZE = (256, 224)
 PIVOT = (128, 136)
 COLUMNS = 6

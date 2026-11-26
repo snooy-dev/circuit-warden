@@ -184,7 +184,7 @@
     "columns": 6,
     "count": 12,
     "pivot": [128, 136],
-    "durationsMs": [18, 64, 18, 20, 20, 20, 20, 20, 20, 26, 28, 26],
+    "durationsMs": [18, 50, 16, 16, 20, 20, 20, 20, 20, 20, 36, 44],
     "loop": false
   },
   "prepare_idle_left": {
