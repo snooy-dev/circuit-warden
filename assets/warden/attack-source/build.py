@@ -8,7 +8,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[3]
 WARDEN = ROOT / 'assets/warden'
 ART = ROOT / 'art/warden'
-AIR_TIMES = [0, 33, 59, 85, 100, 126, 160, 180, 205, 235, 263, 300]
+AIR_TIMES = [0, 28, 50, 78, 100, 120, 140, 160, 180, 220, 256, 300]
 SIZE = (256, 224)
 PIVOT = (128, 136)
 COLUMNS = 6
@@ -92,7 +92,7 @@ def main():
     down_size = (208, 208)
     down_art = Image.open(WARDEN / 'downstrike-source/poses.png').convert('RGBA')
     down = [tile(down_art, i, down_size, 5) for i in range(10)]
-    for frame_index, fx_index in enumerate((0, 2, 3, 4, 5), start=3):
+    for frame_index, fx_index in enumerate((1, 2, 3, 4, 5), start=3):
         down[frame_index].alpha_composite(*down_layer(effects[fx_index]))
     sheet(down, down_size, 5).save(out / 'downstrike.png')
     print(json.dumps({'count': len(frames), 'durationsMs': [b - a for a, b in zip(edges, edges[1:])]}))

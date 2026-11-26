@@ -2,15 +2,17 @@
   "body": {
     "route": "local:comfyui-ltx25",
     "file": "poses.png",
-    "sha256": "434cb761cbb1bb77fb9fd3cf37b02508f67e6d753d7e84436cfffba68df5bea3",
+    "sha256": "18ed342d9099fbeb2277474e042d0b4241a88c8d58044d8eb7981d62c32cc87d",
     "references": [
       "../../../art/warden/air-attack-side-master-v4/approved/master.png",
       "../../../art/warden/full-body-air-attacks/down-impact-source.png",
       "../../../art/warden/full-body-air-attacks/down-guided/clip.mp4",
-      "../../../art/warden/full-body-air-attacks/down-recovery/clip.mp4"
+      "../../../art/warden/air-slash-arcs/down-exit-original.png",
+      "../../../art/warden/air-slash-arcs/down-sweep/clip.mp4",
+      "../../../art/warden/air-slash-arcs/down-settle/clip.mp4"
     ],
     "build": "../attack-source/build.py",
-    "intent": "측면 준비에서 어깨가 정면으로 돌아오고, 팔꿈치와 손이 골반 앞을 지나 발밑을 벤 뒤 공중 자세로 돌아오는 10프레임",
+    "intent": "정면에서 검 끝이 발밑 양옆을 가로지르고, 검이 반대쪽까지 빠진 자세에서 적중 정지하는 10프레임",
     "frameScale": "기준 워든 높이 80px, 워든 16색, 이진 알파",
     "footPivot": [104, 112]
   },
@@ -23,7 +25,7 @@
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "5515c7ab411eeb20e0cb558c9501609410ca27bb6e789699688a892288026725",
+    "sha256": "b9df944418acff1bf8fad18aab7002990c489f055e21afe259fb39ac00a8fc66",
     "frameSize": [208, 208],
     "footPivot": [104, 112],
     "impactFrameIndex": 4
