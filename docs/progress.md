@@ -4,6 +4,8 @@
 
 ## 현재 단계
 
+- **첫 레벨 플레이 결함 개선:** 2026-11-26 사용자 요청으로 컷신 건너뛰기 직후 조작, 전하 밝기와 실제 이동 가능 여부, 전원 구역 완료·쓰러짐과 R 안내를 수정했다. [명세](../specs/028-playability-fixes/spec.md) · [검증](../specs/028-playability-fixes/verification.md).
+
 - **발판 끝 점프:** 2026-11-26 요청으로 일반 이동 중 발판을 벗어난 직후 80ms 미만에 누른 Space를 한 번 허용한다. 훈련장 통합 검사에서 좌우 이탈·만료·착지 선입력을 확인했다. 실제 플레이에서 유예 길이를 확인할 필요가 있다. [명세](../specs/027-ledge-jump/spec.md) · [검증](../specs/027-ledge-jump/verification.md).
 
 - **첫 보스 전원 조립체:** 2026-11-26 사용자 요청 및 기획서 20~21쪽에 따라 부하 시험실에 보스를 배치했다. 케이블·전기탄·도약 착지 공격을 구별하고 검으로 처치하면 출력 셔터가 열린다. [명세](../specs/026-power-supply-boss/spec.md) · [검증](../specs/026-power-supply-boss/verification.md).

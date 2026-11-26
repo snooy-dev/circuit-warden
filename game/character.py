@@ -356,10 +356,11 @@ class Character(GameObject):
         if self.view_bounds is None:
             return False
         x, y = position
-        left, _, right, top = self.view_bounds
+        left, bottom, right, top = self.view_bounds
         layout = getattr(self.level, 'layout', None)
         return (left + self._left_margin <= x <= right - self._right_margin
-                and y <= top - BODY_HEIGHT / 2 and self.can_place_center(position)
+                and bottom + BODY_HEIGHT / 2 <= y <= top - BODY_HEIGHT / 2
+                and self.can_place_center(position)
                 and (layout is None or not layout.blocks_teleport(self, x, y)))
 
     def can_place_center(self, position):

@@ -453,7 +453,14 @@ class CharacterScene(LevelScene):
         if not self.level.power_supply or not self.engine.output_valid:
             return super().draw()
 
-        hint = self.level.layout.interaction_hint(self.character) if self.opening is None else None
+        hint = None
+        if self.opening is None:
+            if self.character.hp == 0:
+                hint = 'WARDEN DOWN  /  R RESTART'
+            elif self.level.layout.reached_output:
+                hint = 'OUTPUT REACHED  /  R RESTART'
+            else:
+                hint = self.level.layout.interaction_hint(self.character)
         self.power_hint.visible = hint is not None
         if hint is not None:
             self.power_hint.text = hint
@@ -575,6 +582,8 @@ class CharacterScene(LevelScene):
             viewport = self.engine.viewport if self.engine.output_valid else (0, 0, 0, 0)
             self.opening.input.handle_event(event, self.opening.canvas.transform(viewport),
                                             self.engine.event_to_output(event))
+            if self.opening.skipped:
+                self._finish_opening()
             return
         previous_player = self.character
         previous_player.view_bounds = self.transform.bounds
@@ -595,16 +604,19 @@ class CharacterScene(LevelScene):
     def handle_escape(self):
         if self.opening is None:
             return False
-        self.opening.skip()
+        self._finish_opening()
         return True
+
+    def _finish_opening(self):
+        opening, self.opening = self.opening, None
+        opening.close()
+        self.character.view_bounds = self.transform.bounds
 
     def update(self, dt):
         if self.opening is not None:
             self._follow_camera(0, self.character.x)
-            if self.opening.skipped or (self.engine.output_valid and self.opening.update(dt)):
-                opening, self.opening = self.opening, None
-                opening.close()
-                self.character.view_bounds = self.transform.bounds
+            if self.engine.output_valid and self.opening.update(dt):
+                self._finish_opening()
             return
         self.character.view_bounds = self.transform.bounds
         previous_x = self.character.x

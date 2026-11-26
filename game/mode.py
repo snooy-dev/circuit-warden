@@ -29,8 +29,7 @@ class GameplayMode(GameMode):
 
     def _teleport(self, charge, origin):
         player = self.level.player
-        if (charge.level is not self.level or not charge.in_range(origin)
-                or not player.can_teleport(charge.position)):
+        if charge.level is not self.level or not charge.can_activate(origin):
             return
         x, y = player.center
         if hypot(x - charge.position[0], y - charge.position[1]) <= 1e-6:
@@ -44,7 +43,7 @@ class GameplayMode(GameMode):
             start, player.center, self.level.link_art, self.level.combat_clips['charge_spent']))
         player.arrival_link = self.teleport_link
         for candidate in self.level.charges:
-            candidate.active = candidate.in_range(self.activation_origin)
+            candidate.active = candidate.can_activate(self.activation_origin)
 
     def after_update(self):
         if self.level.player.hp == 0:
@@ -66,7 +65,7 @@ class GameplayMode(GameMode):
                     # 갱신 후 생성한 효과는 다음 프레임부터 경과 시간을 모두 소비한다.
                     self.teleport_link.update(0)
         for candidate in self.level.charges:
-            candidate.active = candidate.in_range(self.activation_origin)
+            candidate.active = candidate.can_activate(self.activation_origin)
 
     def on_end(self):
         self.level.charge_art = None
@@ -110,8 +109,7 @@ class GameplayMode(GameMode):
                 if point is not None:
                     candidates = [(hypot(point[0] - charge.position[0], point[1] - charge.position[1]),
                                    index, charge) for index, charge in enumerate(self.level.charges)
-                                  if charge.level is self.level and charge.in_range(self.activation_origin)
-                                  and player.can_teleport(charge.position)]
+                                  if charge.level is self.level and charge.can_activate(self.activation_origin)]
                     if candidates:
                         distance, _, charge = min(candidates)
                         if automatic or distance <= CLICK_RADIUS:

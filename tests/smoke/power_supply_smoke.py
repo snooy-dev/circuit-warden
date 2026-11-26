@@ -137,14 +137,14 @@ class PowerSupplySmoke(CharacterScene):
         x, y = self.layout._point(map_x, map_y)
         charge = min(self.level.charges, key=lambda item: (
             (item.position[0] - x) ** 2 + (item.position[1] - y) ** 2))
-        assert charge.active and actor.can_place_center(charge.position), (map_x, map_y, self.feet)
+        assert charge.in_range(actor.center) and actor.can_place_center(charge.position), (map_x, map_y, self.feet)
         if blocked_by_room:
             assert self.active_room != blocked_by_room == self.layout.room_at(charge.position)
             assert self.layout.blocks_teleport(actor, *charge.position)
-            assert not actor.can_teleport(charge.position)
+            assert not charge.active and not actor.can_teleport(charge.position)
             assert not charge.render_items()
         else:
-            assert actor.can_teleport(charge.position), (map_x, map_y, self.feet)
+            assert charge.active and actor.can_teleport(charge.position), (map_x, map_y, self.feet)
         output_x, output_y = self.transform.point(*charge.position)
         window_w, window_h = self.engine.window_size
         output_w, output_h = self.engine.output_size
@@ -227,7 +227,7 @@ class PowerSupplySmoke(CharacterScene):
     def upper_route(self):
         yield from self.walk((1718, 2096))
         yield from self.jump((1900, 2096))
-        yield from self.jump((2016, 1976), (2220, 1856))
+        yield from self.jump((2050, 1976), (2220, 1856))
         yield from self.walk((2330, 1856))
         yield from self.jump((2440, 1736))
         yield from self.walk((3120, 2096))
@@ -390,8 +390,14 @@ class PowerSupplySmoke(CharacterScene):
         yield from self.walk((3504, 656))
         assert self.layout.reached_output
         yield from self.shot('boss-output')
+        assert self.power_hint.visible and self.power_hint.text == 'OUTPUT REACHED  /  R RESTART'
+        self.character.hp = 0
+        yield from self.shot('warden-down')
+        assert self.power_hint.visible and self.power_hint.text == 'WARDEN DOWN  /  R RESTART'
         yield from self.tap(pico.SDLK_r)
         assert self.level.boss.hp == self.level.boss.MAX_HP and not self.layout.boss_defeated
+        yield 0
+        assert not self.power_hint.visible and self.character.hp == self.character.MAX_HP
         print('PASS: closed gate, three boss attacks, sword defeat, output, reset', flush=True)
 
     def check_monsters(self):
@@ -453,6 +459,8 @@ class PowerSupplySmoke(CharacterScene):
             yield from self.reach_output()
             assert self.rooms[-3:] == ['filter-gallery', 'load-test-chamber', 'output-terminal'], self.rooms
             assert self.layout.reached_output and actor.hp > 0
+            yield 0
+            assert self.power_hint.visible and self.power_hint.text == 'OUTPUT REACHED  /  R RESTART'
             assert all(enemy.level is self.level for enemy in self.level.enemies if enemy is not self.level.boss)
             yield from self.shot(f'{route.__name__}-output')
             print(f'{route.__name__} ({self.elapsed - start:.2f}s SDL): {" -> ".join(self.rooms)}',
@@ -464,6 +472,8 @@ class PowerSupplySmoke(CharacterScene):
             assert self.character.collision_position == self.layout.player_start
             assert not self.layout.power_restored and not self.layout.reached_output
             assert not self.layout.hatch_released
+            yield 0
+            assert not self.power_hint.visible
         yield from self.check_monsters()
 
 

@@ -48,7 +48,7 @@ class Charge(GameObject):
         self.spawn_opacity = 1.0
 
     def on_spawn(self):
-        self.active = self.in_range(self.level.mode.activation_origin)
+        self.active = self.can_activate(self.level.mode.activation_origin)
 
     def spend(self):
         self.spent = True
@@ -61,13 +61,17 @@ class Charge(GameObject):
         x, y = origin
         return not self.spent and hypot(self.position[0] - x, self.position[1] - y) <= ACTIVATION_DISTANCE
 
+    def can_activate(self, origin):
+        return (self.level is not None and self.in_range(origin)
+                and self.level.player.can_teleport(self.position))
+
     def update(self, dt):
         if not isfinite(dt) or dt < 0:
             raise ValueError('dt는 유한한 비음수 초여야 합니다.')
         if self.spent:
             self.spent_elapsed += dt
             return
-        self.active = self.in_range(self.level.mode.activation_origin)
+        self.active = self.can_activate(self.level.mode.activation_origin)
         if dt == 0:
             return
         self.elapsed = (self.elapsed + dt) % 3
