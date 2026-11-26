@@ -1,10 +1,10 @@
 {
   "downstrike": {
     "file": "downstrike.png",
-    "frameSize": [160, 192],
+    "frameSize": [208, 208],
     "columns": 5,
     "count": 10,
-    "pivot": [80, 112],
+    "pivot": [104, 112],
     "durationsMs": [8, 10, 12, 17, 19, 19, 18, 17, 42, 48],
     "loop": false
   },
@@ -180,36 +180,11 @@
   },
   "air_attack": {
     "file": "air_attack.png",
-    "frameSize": [
-      224,
-      208
-    ],
+    "frameSize": [256, 224],
     "columns": 6,
-    "count": 18,
-    "pivot": [
-      112,
-      120
-    ],
-    "durationsMs": [
-      17,
-      16,
-      17,
-      17,
-      16,
-      17,
-      17,
-      16,
-      17,
-      17,
-      16,
-      17,
-      17,
-      16,
-      17,
-      17,
-      16,
-      17
-    ],
+    "count": 23,
+    "pivot": [128, 136],
+    "durationsMs": [17, 16, 17, 17, 16, 17, 17, 3, 13, 7, 10, 10, 7, 13, 3, 17, 17, 3, 13, 17, 17, 16, 17],
     "loop": false
   },
   "prepare_idle_left": {
