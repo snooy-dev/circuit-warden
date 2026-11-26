@@ -420,7 +420,7 @@ class PowerSupplySmoke(CharacterScene):
         yield from self.wait_until(lambda: fan.state == 'windup', expected='팬 예고')
         yield from self.shot('cooling-fan-windup')
         start = fan.x
-        yield from self.wait_until(lambda: fan.state == 'charge' and fan.x > start,
+        yield from self.wait_until(lambda: fan.state == 'charge' and fan.x < start,
                                    expected='팬의 공중 왕복')
         yield from self.shot('cooling-fan-flight')
         assert actor.hp == actor.MAX_HP

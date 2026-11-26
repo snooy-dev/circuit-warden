@@ -18,6 +18,7 @@ HURT_HALF_WIDTH = 42
 SPAWN_X = 220.0
 IDLE_SECONDS = .18
 APPROACH_SPEED = 100
+RETURN_SPEED = 65
 WINDUP_RANGE = 72
 WINDUP_SECONDS = .45
 CHARGE_SPEED = 350
@@ -55,6 +56,7 @@ def load_enemy_clips(images, kind='metal_dust'):
 class Enemy(GameObject):
     MAX_HP = 3
     CHARGE_SPEED = CHARGE_SPEED
+    HITS_WHILE_BLOCKED = True
     DRAW_SCALE = 1
     TIMINGS = {'idle': IDLE_SECONDS, 'approach': 0, 'windup': WINDUP_SECONDS,
                'charge': CHARGE_SECONDS, 'recover': RECOVER_SECONDS}
@@ -71,6 +73,7 @@ class Enemy(GameObject):
         self.clips = clips
         self.animation = SpritePlayer(clips['idle'])
         self.x, self.y = position
+        self.home_x = self.x
         self.x_limits = x_limits
         self.room = room
         self.facing = -1
@@ -113,6 +116,8 @@ class Enemy(GameObject):
         self.motion.clear()
         target = self.level.player
         if self.room is not None and self.level.layout.room_at(target.center) != self.room:
+            if self.state in ('windup', 'charge'):
+                self._wait_for_target(0)
             return
         self.hit_remaining = max(0.0, self.hit_remaining - dt)
         self.animation.play(self.clips[self.state])
@@ -148,7 +153,12 @@ class Enemy(GameObject):
     def _approach(self, target, dt):
         gap = target.x - self.x
         if self.room is not None and (abs(gap) > 280 or abs(target.y - self.y) > 90):
-            return self._wait_for_target(dt)
+            home_gap = self.home_x - self.x
+            if abs(home_gap) <= 1e-7:
+                return self._wait_for_target(dt)
+            self.facing = 1 if home_gap > 0 else -1
+            step = min(dt, abs(home_gap) / RETURN_SPEED)
+            return step, self.facing * RETURN_SPEED * step, False
         if gap:
             self.facing = 1 if gap > 0 else -1
         time_to_windup = max(0.0, (abs(gap) - WINDUP_RANGE) / APPROACH_SPEED)
@@ -175,7 +185,8 @@ class Enemy(GameObject):
             self.motion.append(((elapsed, travel_end), self.collision_position, (moved, 0), charge_id))
         self.x += moved
         if travel_end < end:
-            self.motion.append(((travel_end, end), self.collision_position, (0, 0), charge_id))
+            stationary_hit = charge_id if self.HITS_WHILE_BLOCKED else None
+            self.motion.append(((travel_end, end), self.collision_position, (0, 0), stationary_hit))
 
     def _draw(self, transform, opacity):
         if 0 < self.hit_remaining < HIT_REACTION_SECONDS and int(self.hit_remaining / .045) % 2 == 0:
@@ -191,6 +202,7 @@ class Enemy(GameObject):
 class CoolingFan(Enemy):
     MAX_HP = 2
     DRAW_SCALE = 2
+    HITS_WHILE_BLOCKED = False
     TIMINGS = Enemy.TIMINGS | {'windup': .48, 'charge': .46, 'recover': .64}
     body = Collider((-26, 0, 26, 38), 'enemy', blocks={'terrain'}, overlaps={'player', 'sword'})
     attack_body = body
@@ -199,7 +211,15 @@ class CoolingFan(Enemy):
     def _approach(self, target, dt):
         if abs(target.x - self.x) > 200 or abs(target.center[1] - (self.y + 19)) > 110:
             return self._wait_for_target(dt)
-        self.facing = -self.facing
+        reach = CHARGE_SPEED * self.TIMINGS['charge']
+        left, right = self.horizontal_distance(-reach), self.horizontal_distance(reach)
+        distance = right if target.x >= self.x else left
+        if abs(distance) < self.body.bounds[2] - self.body.bounds[0]:
+            distance = max((left, right), key=abs)
+        if not distance:
+            return self._wait_for_target(dt)
+        self.facing = 1 if distance > 0 else -1
+        self.CHARGE_SPEED = abs(distance) / self.TIMINGS['charge']
         return 0.0, 0.0, True
 
 

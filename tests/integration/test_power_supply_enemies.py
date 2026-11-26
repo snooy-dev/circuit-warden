@@ -100,15 +100,48 @@ class PowerSupplyEnemyTests(PowerSupplyFixture):
         actor.x, actor.y = fan.x - 110, fan.y - 28
         start = fan.collision_position
         fan.update(.38)
-        self.assertEqual((fan.state, fan.facing, fan.collision_position), ('windup', 1, start))
+        self.assertEqual((fan.state, fan.facing, fan.collision_position), ('windup', -1, start))
         self.assertTrue(all(charge is None for _, _, _, charge in fan.motion))
         fan.update(.74)
-        self.assertEqual((fan.state, fan.x, fan.y), ('recover', fan.x_limits[1], start[1]))
+        self.assertEqual(fan.state, 'recover')
+        self.assertAlmostEqual(fan.x, fan.x_limits[0])
+        self.assertEqual(fan.y, start[1])
         self.assertIn(1, [charge for _, _, _, charge in fan.motion])
-        actor.x = fan.x - 75
+        self.assertTrue(all(dx < 0 for _, _, (dx, _), charge in fan.motion if charge is not None))
+        actor.x = fan.x + 75
         fan.update(1.77)
-        self.assertEqual((fan.state, fan.x, fan.y, fan.facing),
-                         ('recover', fan.x_limits[0], start[1], -1))
+        self.assertEqual((fan.state, fan.y, fan.facing), ('recover', start[1], 1))
+        self.assertAlmostEqual(fan.x, fan.x_limits[1])
+        fan.x = fan.x_limits[1]
+        fan.state, fan.state_remaining = 'charge', .20
+        fan.update(.10)
+        self.assertTrue(fan.motion)
+        self.assertTrue(all(delta == (0, 0) and charge is None for _, _, delta, charge in fan.motion))
+
+    def test_dust_returns_to_its_spawn_when_player_is_above_detection(self):
+        enemy, actor = self.level.enemies[0], self.level.player
+        actor.x, actor.y = enemy.home_x, enemy.y + 130
+        enemy.x -= 60
+        enemy.state, enemy.state_remaining = 'recover', .05
+        enemy.update(.50)
+        self.assertGreater(enemy.x, enemy.home_x - 60)
+        self.assertLess(enemy.x, enemy.home_x)
+        enemy.update(.75)
+        self.assertAlmostEqual(enemy.x, enemy.home_x)
+        self.assertEqual(enemy.state, 'idle')
+        self.assertTrue(all(charge is None for _, _, _, charge in enemy.motion))
+
+    def test_leaving_room_ends_attack_and_return_requires_new_windup(self):
+        cap = next(enemy for enemy in self.level.enemies if isinstance(enemy, LeakingCapacitor))
+        actor = self.level.player
+        cap.state, cap.state_remaining, cap._charge_id = 'charge', .12, 1
+        actor.x, actor.y = self.level.layout.player_start
+        cap.update(.016)
+        self.assertEqual((cap.state, cap.motion), ('idle', []))
+        actor.x, actor.y = cap.x - 110, cap.y
+        cap.update(.20)
+        self.assertEqual(cap.state, 'windup')
+        self.assertTrue(all(charge is None for _, _, _, charge in cap.motion))
 
     def test_capacitor_discharges_outside_its_body_after_windup(self):
         level = self.level

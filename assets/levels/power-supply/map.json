@@ -280,13 +280,13 @@
     {"id": "start", "x": 652, "y": 2054.5, "feet_y": 2096, "entry_origin": [622, 1648]}
   ],
   "enemies": [
-    {"kind": "metal_dust", "position": [2380, 2096], "x_limits": [2150, 2660]},
+    {"kind": "metal_dust", "position": [2320, 2096], "x_limits": [2288, 2490]},
     {"kind": "metal_dust", "position": [2260, 2816], "x_limits": [2070, 2470]},
     {"kind": "metal_dust", "position": [720, 2816], "x_limits": [580, 810]},
-    {"kind": "cooling_fan", "position": [315, 1980], "x_limits": [259, 365]},
+    {"kind": "cooling_fan", "position": [365, 1980], "x_limits": [259, 365]},
     {"kind": "metal_dust", "position": [990, 1376], "x_limits": [820, 1130]},
     {"kind": "leaking_capacitor", "position": [3670, 2096], "x_limits": [3670, 3670]},
-    {"kind": "cooling_fan", "position": [4100, 1524], "x_limits": [4020, 4170]},
+    {"kind": "cooling_fan", "position": [4170, 1524], "x_limits": [4020, 4170]},
     {"kind": "leaking_capacitor", "position": [4150, 1376], "x_limits": [4150, 4150]},
     {"kind": "power_assembly", "position": [1640, 656], "x_limits": [1248, 2160]}
   ],
