@@ -12,7 +12,7 @@
 
 - **전투 조작과 분기 안내:** 2026-11-26 사용자 요청으로 검격 유효타 뒤 대시 연결, 시작 시 A/D 방향 반영, 갈림길과 릴레이 복구 뒤 시험실 방향 안내를 적용했다. [명세](../specs/029-combat-feel/spec.md) · [검증](../specs/029-combat-feel/verification.md).
 
-- **첫 레벨 플레이 결함 개선:** 2026-11-26 사용자 요청으로 컷신 건너뛰기 직후 조작, 전하 밝기와 실제 이동 가능 여부, 전원 구역 완료·쓰러짐과 R 안내를 수정했다. [명세](../specs/028-playability-fixes/spec.md) · [검증](../specs/028-playability-fixes/verification.md).
+- **첫 레벨 플레이 결함 개선:** 2026-11-26 사용자 요청으로 컷신 이후 조작과 전하 표시, 완료·쓰러짐 안내를 수정했다. 후속 검토에서 우클릭으로 현재 위치의 전하를 건너뛰고 보스 처치 뒤 출력 단자 방향을 표시하도록 했다. [명세](../specs/028-playability-fixes/spec.md) · [검증](../specs/028-playability-fixes/verification.md).
 
 - **발판 끝 점프:** 2026-11-26 요청으로 일반 이동 중 발판을 벗어난 직후 80ms 미만에 누른 Space를 한 번 허용한다. 훈련장 통합 검사에서 좌우 이탈·만료·착지 선입력을 확인했다. 실제 플레이에서 유예 길이를 확인할 필요가 있다. [명세](../specs/027-ledge-jump/spec.md) · [검증](../specs/027-ledge-jump/verification.md).
 

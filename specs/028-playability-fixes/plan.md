@@ -1,5 +1,7 @@
 # Implementation Plan: 첫 레벨 플레이 결함 개선
 
+우클릭 자동 선택에서 이동 기준점과 같은 전하만 제외한다. 보스 처치 후 부하 시험실과 출력실에는 기존 길안내 영역을 사용해 최종 출력 단자 방향을 표시한다.
+
 **Date** 2026-11-26 | **Spec** [spec.md](spec.md) | **Status** Ready
 
 ## Technical Context

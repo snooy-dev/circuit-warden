@@ -264,9 +264,27 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(scene.character.center, fresh.position)
         self.assertTrue(fresh.spent)
 
+    def test_right_click_skips_charge_at_current_position(self):
+        scene = self.open_scene()
+        actor = scene.character
+        x, y = actor.center
+        same, next_charge, *other_charges = scene.level.charges
+        same.position = (x, y)
+        next_charge.position = (x - 100, y)
+        for charge in other_charges:
+            charge.destroy()
+        self.assertTrue(same.can_activate(actor.center))
+        self.click(same.position, pico.SDL_BUTTON_RIGHT)
+        self.assertFalse(same.spent)
+        self.assertTrue(next_charge.spent)
+        self.assertEqual(actor.center, next_charge.position)
+
     def test_right_click_same_position_does_not_create_link(self):
         scene = self.open_scene()
         target = scene.level.charges[2]
+        for charge in scene.level.charges:
+            if charge is not target:
+                charge.destroy()
         scene.character.teleport(target.position)
         velocity = scene.character.velocity_y
         self.click((0, 0), pico.SDL_BUTTON_RIGHT)

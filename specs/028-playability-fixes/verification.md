@@ -27,3 +27,7 @@
 ## 문서 영향
 
 컷신 인계는 [게임 설계](../../docs/game-design.md#오프닝-스토리-컷신), 전하 도착 조건은 [순간이동 규칙](../../docs/systems/charge-teleport.md), 화면 복귀 안내는 [기본 적 전투](../../docs/systems/basic-enemy.md)에 반영했다. [진행 상태](../../docs/progress.md)에 현재 적용 범위를 기록했다. 전체 회귀와 사람의 난이도·조작감 평가는 실행하지 않았다.
+
+## 전하 선택과 마지막 목적지 안내
+
+게임 가상환경에서 `python -B -m unittest`로 `ChargeSceneTests`의 겹친 전하 두 경우와 연쇄 순간이동, `PowerSupplyBossTests.test_gate_requires_both_relay_and_boss_and_resets`를 실행해 4개가 통과했다. 기준점에 겹친 전하만 있을 때 이동하지 않고, 다른 유효 전하가 있으면 그쪽으로 이동했다. 보스 처치 뒤 출력 안내가 나타나고 출력 완료 뒤 종료되는 것을 확인했다. 이번 변경의 실제 창 플레이는 하지 않았다.

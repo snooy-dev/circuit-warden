@@ -167,9 +167,11 @@ class PowerSupplyMap(GameObject):
         return {'relay': 'W  RESTORE POWER', 'hatch': 'W  RELEASE HATCH'}.get(self._interaction(player))
 
     def navigation_hint(self, player):
-        if self.boss_defeated:
-            return None
         x, y = player.collision_position
+        if self.boss_defeated:
+            if not self.reached_output and self.room_at((x, y)) in ('load-test-chamber', 'output-terminal'):
+                return 'LEFT TO OUTPUT TERMINAL' if x > self.output[0] else 'RIGHT TO OUTPUT TERMINAL'
+            return None
         left, bottom, right, top = self.relay_return if self.power_restored else self.fork_approach
         if left <= x <= right and bottom <= y <= top:
             if self.power_restored:

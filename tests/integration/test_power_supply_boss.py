@@ -20,6 +20,7 @@ class PowerSupplyBossTests(PowerSupplyFixture):
         layout.interact(actor)
         self.assertTrue(layout.power_restored)
         self.place(2256, 656)
+        self.assertNotEqual(layout.navigation_hint(actor), 'RIGHT TO OUTPUT TERMINAL')
         floor = actor.y
         self.assertLess(level.blocking_contact(actor, actor.body, (150, 0)), 1)
         actor.y += 112
@@ -33,7 +34,12 @@ class PowerSupplyBossTests(PowerSupplyFixture):
         level.update(.016)
         self.assertIsNone(boss.level)
         self.assertNotIn(layout.boss_gate, layout.closed_shutters)
+        self.assertEqual(layout.navigation_hint(actor), 'RIGHT TO OUTPUT TERMINAL')
+        self.place(3600, 656)
+        self.assertEqual(layout.navigation_hint(actor), 'LEFT TO OUTPUT TERMINAL')
+        self.place(3504, 656)
         self.assertTrue(layout.check_output(actor))
+        self.assertIsNone(layout.navigation_hint(actor))
         self.place(2256, 656)
         self.assertIsNone(level.blocking_contact(actor, actor.body, (150, 0)))
         level.reset_combat()
