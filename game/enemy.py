@@ -7,7 +7,7 @@ from pathlib import Path
 import pico2d.pico2d as pico
 
 from engine.rendering.drawing import _sdl
-from game_framework import Collider, GameObject, RenderItem, SpritePlayer, draw_sprite
+from game_framework import Collider, GameObject, RenderItem, SpritePlayer, draw_rect, draw_sprite
 
 from .character import GROUND_Y, _load_clip
 
@@ -38,19 +38,17 @@ def load_enemy_clips(images, kind='metal_dust'):
         if kind != 'metal_dust':
             animations = animations[kind]
         clips = {name: _load_clip(images, animations[name], ASSETS)
-                 for name in ('idle', 'approach', 'windup', 'charge', 'recover')}
+                 for name in enemy_type.CLIP_NAMES}
         for name, clip in clips.items():
-            if clip.loop != (name in ('idle', 'approach')):
-                raise ValueError('idle/approach만 반복해야 합니다.')
-        for name in ('windup', 'charge', 'recover'):
-            seconds = enemy_type.TIMINGS[name]
-            if abs(sum(clips[name].durations) - seconds) > 1e-9:
+            if clip.loop != (name in enemy_type.LOOP_CLIPS):
+                raise ValueError(f'{name}의 반복 설정이 전투 상태와 다릅니다.')
+            if not clip.loop and abs(sum(clip.durations) - enemy_type.TIMINGS[name]) > 1e-9:
                 raise ValueError(f'{name} 클립 시간이 전투 시간과 다릅니다.')
     except (KeyError, TypeError, ValueError, OverflowError) as error:
         raise ValueError(f'적 애니메이션 설정 오류: {path}: {error}') from error
     if enemy_type.DRAW_SCALE == 2:
-        texture = clips['idle'].frames[0].image._borrow().texture
-        _sdl(pico.SDL_SetTextureScaleMode(texture, pico.SDL_ScaleModeNearest))
+        for image in {clip.frames[0].image for clip in clips.values()}:
+            _sdl(pico.SDL_SetTextureScaleMode(image._borrow().texture, pico.SDL_ScaleModeNearest))
     return clips
 
 
@@ -60,10 +58,13 @@ class Enemy(GameObject):
     DRAW_SCALE = 1
     TIMINGS = {'idle': IDLE_SECONDS, 'approach': 0, 'windup': WINDUP_SECONDS,
                'charge': CHARGE_SECONDS, 'recover': RECOVER_SECONDS}
+    CLIP_NAMES = tuple(TIMINGS)
+    LOOP_CLIPS = ('idle', 'approach')
     body = Collider((-HURT_HALF_WIDTH, 0, HURT_HALF_WIDTH, BODY_HEIGHT), 'enemy',
                     blocks={'terrain'}, overlaps={'player', 'sword'})
     attack_body = body
     colliders = (body,)
+    extra_attacks = ()
 
     def __init__(self, clips, *, position=(SPAWN_X, float(GROUND_Y)), x_limits=(-inf, inf), room=None):
         super().__init__()
@@ -217,4 +218,144 @@ class LeakingCapacitor(Enemy):
         return 0.0, 0.0, True
 
 
-ENEMY_TYPES = {'metal_dust': Enemy, 'cooling_fan': CoolingFan, 'leaking_capacitor': LeakingCapacitor}
+class PowerAssembly(Enemy):
+    MAX_HP = 8
+    DRAW_SCALE = 2
+    CHARGE_SPEED = 0
+    TIMINGS = {'idle': .36, 'lash_windup': .58, 'lash': .18, 'shot_windup': .72, 'shot': 1.12,
+               'jump_windup': .64, 'leap': .70, 'slam': .20, 'recover': .96}
+    CLIP_NAMES = (*TIMINGS, 'bolt')
+    LOOP_CLIPS = ('idle', 'bolt')
+    NEXT = {'lash_windup': 'lash', 'shot_windup': 'shot', 'jump_windup': 'leap', 'leap': 'slam',
+            'lash': 'recover', 'shot': 'recover', 'slam': 'recover', 'recover': 'idle'}
+    body = Collider((-64, 0, 64, 136), 'enemy', blocks={'terrain'}, overlaps={'player', 'sword'})
+    attack_body = body
+    colliders = (body,)
+    lash_boxes = {-1: Collider((-164, 6, -36, 96), 'boss-lash'),
+                  1: Collider((36, 6, 164, 96), 'boss-lash')}
+    slam_box = Collider((-146, 0, 146, 54), 'boss-slam')
+    bolt_box = Collider((-12, -10, 12, 10), 'boss-bolt')
+
+    def __init__(self, clips, *, position, x_limits, room):
+        super().__init__(clips, position=position, x_limits=x_limits, room=room)
+        self.floor = self.y
+        self.extra_attacks = []
+        self.landing = self.leap_start = self.x
+        self.bolt = None
+        self.bolt_animation = SpritePlayer(clips['bolt'])
+
+    def take_hit(self, direction=0):
+        super().take_hit()
+
+    def update(self, dt):
+        self.motion.clear()
+        self.extra_attacks.clear()
+        target = self.level.player
+        if self.level.layout.room_at(target.center) != self.room:
+            if self.state != 'idle':
+                self.y = self.floor
+                self.bolt = None
+                self._set_state('idle')
+            return
+        self.hit_remaining = max(0.0, self.hit_remaining - dt)
+        elapsed = 0.0
+        while elapsed + 1e-9 < dt:
+            step = min(dt - elapsed, self.state_remaining)
+            if self.state == 'leap':
+                step = min(step, 1 / 60)
+            self._advance(elapsed, step)
+            elapsed += step
+            self.state_remaining -= step
+            if self.state_remaining > 1e-9:
+                continue
+            if self.state == 'idle':
+                gap = target.x - self.x
+                if abs(gap) <= 540:
+                    self._choose_attack(target, gap)
+                else:
+                    self.state_remaining = self.TIMINGS['idle']
+            else:
+                self._set_state(self.NEXT[self.state])
+
+    def _set_state(self, state):
+        self.state = state
+        self.state_remaining = self.TIMINGS[state]
+        self.animation.play(self.clips[state], restart=True)
+        if state == 'shot':
+            self.bolt = self.x + 70 * self.facing, self.y + 44
+            self.bolt_animation.play(self.clips['bolt'], restart=True)
+        elif state == 'recover':
+            self.bolt = None
+
+    def _choose_attack(self, target, gap):
+        if gap:
+            self.facing = 1 if gap > 0 else -1
+        self._charge_id += 1
+        if self._charge_id % 3 == 0:
+            self.leap_start = self.x
+            left, right = self.x_limits
+            self.landing = min(right, max(left, target.x + self.facing * 40))
+            self._set_state('jump_windup')
+        else:
+            self._set_state('lash_windup' if abs(gap) <= 170 else 'shot_windup')
+
+    def _advance(self, elapsed, step):
+        times = elapsed, elapsed + step
+        x, y = self.collision_position
+        if self.state == 'leap':
+            phase = 1 - max(0, self.state_remaining - step) / self.TIMINGS['leap']
+            self.x = self.leap_start + phase * (self.landing - self.leap_start)
+            self.y = self.floor + 760 * phase * (1 - phase)
+        delta = self.x - x, self.y - y
+        self.motion.append((times, (x, y), delta, None))
+        self.animation.update(step)
+        if self.state == 'lash':
+            self.extra_attacks.append((self.lash_boxes[self.facing], (times, (x, y), delta, self._charge_id)))
+        elif self.state == 'slam':
+            self.extra_attacks.append((self.slam_box, (times, (x, y), delta, self._charge_id)))
+        elif self.bolt is not None:
+            self._advance_bolt(elapsed, step)
+
+    def _advance_bolt(self, elapsed, step):
+        x, y = self.bolt
+        layout = self.level.layout
+        left = layout.rooms[self.room][0]
+        right = layout.boss_gate[0]
+        speed = self.facing * 430
+        distance = min(right - 12, max(left + 12, x + speed * step)) - x
+        if distance and self._charge_id != self.last_contact_charge:
+            ids = self._charge_id
+            self.extra_attacks.append((self.bolt_box, ((elapsed, elapsed + distance / speed),
+                                                      (x, y), (distance, 0), ids)))
+        next_x = x + distance
+        self.bolt = (next_x, y) if left + 12 < next_x < right - 12 else None
+        self.bolt_animation.update(step)
+
+    def _draw(self, transform, opacity):
+        super()._draw(transform, opacity)
+        if self.bolt is not None and self.last_contact_charge != self._charge_id:
+            frame = self.bolt_animation.frame
+            width, height = frame.rect[2:]
+            draw_sprite(frame, transform, self.bolt, (width * 2, height * 2), opacity,
+                        flip_x=self.facing < 0)
+
+    def _draw_warning(self, transform, opacity):
+        if self.state in ('jump_windup', 'leap', 'slam'):
+            left, right = self.landing - 146, self.landing + 146
+            color = (255, 202, 114) if self.state == 'slam' else (231, 101, 64)
+        elif self.state in ('lash_windup', 'lash'):
+            left, _, right, _ = self.lash_boxes[self.facing].bounds_at(self.collision_position)
+            color = (255, 217, 130) if self.state == 'lash' else (194, 116, 58)
+        else:
+            return
+        for x in range(round(left), round(right), 18):
+            draw_rect(transform, (x, self.floor + 3, min(x + 11, right), self.floor + 7), color, opacity)
+        for x in (left, right - 4):
+            draw_rect(transform, (x, self.floor + 3, x + 4, self.floor + 15), color, opacity)
+
+    def render_items(self):
+        return (RenderItem(self._draw_warning, -1), *super().render_items())
+
+
+ENEMY_TYPES = {'metal_dust': Enemy, 'cooling_fan': CoolingFan, 'leaking_capacitor': LeakingCapacitor,
+               'power_assembly': PowerAssembly}

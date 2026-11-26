@@ -29,6 +29,7 @@ class PowerSupplyMap(GameObject):
             for rect in data['collision']['rects'])
         self.devices = tuple((item['kind'], self._rect(*item['rect']))
                              for item in data['collision']['power_devices'])
+        self.boss_gate = next(bounds for kind, bounds in self.devices if kind == 'boss-shutter')
         self.busbar = self._rect(*data['collision']['busbar'])
         self.teleport_barriers = tuple(self._rect(*rect) for rect in data['collision'].get('teleport_barriers', ()))
         relay = next(item for item in data['interactions'] if item['id'] == 'relay')
@@ -132,12 +133,18 @@ class PowerSupplyMap(GameObject):
         self.reached_output = False
         self.power_restored = False
         self.hatch_released = False
+        self.boss_defeated = False
+        self._place_devices()
+
+    def defeat_boss(self):
+        self.boss_defeated = True
         self._place_devices()
 
     def _place_devices(self):
         self.closed_shutters = tuple(bounds for kind, bounds in self.devices
                                      if (kind in ('shutter', 'powered-hatch') and not self.power_restored)
-                                     or (kind == 'hatch' and not self.hatch_released))
+                                     or (kind == 'hatch' and not self.hatch_released)
+                                     or (kind == 'boss-shutter' and not self.boss_defeated))
         active_bridges = tuple(bounds for kind, bounds in self.devices
                                if kind == 'bridge' and self.power_restored)
         self.colliders = self.terrain + tuple(
@@ -184,7 +191,8 @@ class PowerSupplyMap(GameObject):
                    for bounds in self.closed_shutters + self.teleport_barriers)
 
     def check_output(self, player):
-        if self.reached_output or not self.power_restored or not player.hp or not player.grounded:
+        if (self.reached_output or not self.power_restored or not self.boss_defeated
+                or not player.hp or not player.grounded):
             return False
         x, y = player.center
         self.reached_output = hypot(x - self.output[0], y - self.output[1]) <= self.output_reach
@@ -231,8 +239,9 @@ class PowerSupplyMap(GameObject):
                 draw_rect(transform, (edge, bottom, edge + 12, top),
                           (81, 157, 144) if opened else (172, 120, 62), opacity)
             return
-        image = self.shutter_art[self.power_restored]
-        lower = top - image.h * 2 if self.power_restored else bottom
+        opened = self.boss_defeated if kind == 'boss-shutter' else self.power_restored
+        image = self.shutter_art[opened]
+        lower = top - image.h * 2 if opened else bottom
         draw_image(image, transform, (left, lower, right, top), opacity)
 
     def _draw_hatch_release(self, bounds, transform, opacity):

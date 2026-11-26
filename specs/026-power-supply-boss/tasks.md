@@ -15,14 +15,14 @@
 
 ## Phase 3: User Story 1 - 보스와 출구
 
-- [ ] T004 [US1] assets/enemies/와 game/enemy.py에 전원 조립체 원화, 세 공격, 경고와 회복을 연결한다.
-- [ ] T005 [US1] game/power_supply_map.py와 맵 데이터에 보스·전하·셔터·처치·R을 연결한다.
-- [ ] T006 [US1] 표적 자동 검사, 두 경로 및 실제 SDL 보스 전투를 확인한다.
+- [x] T004 [US1] assets/enemies/와 game/enemy.py에 전원 조립체 원화, 세 공격, 경고와 회복을 연결한다.
+- [x] T005 [US1] game/power_supply_map.py와 맵 데이터에 보스·전하·셔터·처치·R을 연결한다.
+- [x] T006 [US1] 표적 자동 검사, 두 경로 및 실제 SDL 보스 전투를 확인한다.
 
 ## Phase 4: Documentation & Completion (mandatory)
 
-- [ ] T007 게임·적·아트·구조·진행과 verification.md를 결과에 맞춘다.
-- [ ] T008 요구와 코드·검증을 대조하고 최종 증분을 커밋한다.
+- [x] T007 게임·적·아트·구조·진행과 verification.md를 결과에 맞춘다.
+- [x] T008 요구와 코드·검증을 대조하고 최종 증분을 커밋한다.
 
 ## Dependencies & Execution Order
 

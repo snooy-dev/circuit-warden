@@ -16,6 +16,7 @@
 |---|---|
 | 기본 적의 타격·돌진·모션 시간 경계·피격 보호·재시작 | unit/test_basic_enemy.py, integration/test_basic_enemy.py |
 | 전원 구역의 몬스터 배치·다중 검격·공중 왕복·방전 | integration/test_power_supply_enemies.py |
+| 첫 보스의 세 공격·도약 고도·출구 셔터·퇴각과 재시작 | integration/test_power_supply_boss.py |
 | 캐릭터 이동·공격 전이·재생 | unit/test_character.py의 해당 메서드 |
 | 이미지 로딩·실패/종료 해제 | integration/test_character_scene.py, test_scene_integration.py의 해당 메서드 |
 | 루프·이벤트·장면 수명 | unit/test_engine.py, test_game_framework.py의 해당 메서드 |
@@ -32,6 +33,7 @@
 |---|---|
 | 기본 적의 이동·공격 포즈·양방향 전투·회피·체력·재시작 | `.\.venv\Scripts\python.exe -B -m tests.smoke.basic_enemy_smoke --output-dir $testOutput` |
 | 전원 구역의 몬스터 전투와 실제 화면 | `.\.venv\Scripts\python.exe -B -m tests.smoke.power_supply_smoke --visible --encounters-only --output-dir $testOutput` |
+| 첫 보스 처치, 출력 셔터, 실제 화면 | `.\.venv\Scripts\python.exe -B -m tests.smoke.power_supply_smoke --visible --boss-only --output-dir $testOutput` |
 | 이동·공중 명중·돌진 회피·전하 생성과 소비·창 좌표 | `.\.venv\Scripts\python.exe tests/smoke/charge_smoke.py --output-dir $testOutput` |
 | 캐릭터 출력·입력 | `.\.venv\Scripts\python.exe -B tests/smoke/character_smoke.py --output-dir $testOutput` |
 | 월드·카메라·이미지 | `.\.venv\Scripts\python.exe -B tests/smoke/world_smoke.py $testOutput` |

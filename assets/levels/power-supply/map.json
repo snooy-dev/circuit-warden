@@ -242,7 +242,8 @@
       {"kind": "shutter", "rect": [1536, 840, 32, 176]},
       {"kind": "powered-hatch", "rect": [2464, 1376, 224, 64]},
       {"kind": "bridge", "rect": [2464, 1376, 72, 18]},
-      {"kind": "hatch", "rect": [3112, 1376, 160, 64]}
+      {"kind": "hatch", "rect": [3112, 1376, 160, 64]},
+      {"kind": "boss-shutter", "rect": [2320, 464, 20, 192]}
     ],
     "teleport_barriers": [
       [480, 0, 3360, 32],
@@ -287,7 +288,7 @@
     {"kind": "leaking_capacitor", "position": [3670, 2096], "x_limits": [3670, 3670]},
     {"kind": "cooling_fan", "position": [4100, 1524], "x_limits": [4020, 4170]},
     {"kind": "leaking_capacitor", "position": [4150, 1376], "x_limits": [4150, 4150]},
-    {"kind": "metal_dust", "position": [1680, 656], "x_limits": [1410, 1930]}
+    {"kind": "power_assembly", "position": [1640, 656], "x_limits": [1248, 2160]}
   ],
   "interactions": [
     {"id": "relay", "x": 2180, "y": 1334.5, "reach": 66},
@@ -307,6 +308,8 @@
     "charge-10": {"point": [1848, 1070], "variants": [[1844, 1072], [1848, 1070], [1852, 1068]]},
     "charge-11": {"point": [1152, 1312], "variants": [[1148, 1314], [1152, 1312], [1156, 1310]]},
     "charge-12": {"point": [116, 2138], "variants": [[112, 2140], [116, 2138], [120, 2136]]},
-    "charge-13": {"point": [316, 1788], "variants": [[312, 1790], [316, 1788], [320, 1786]]}
+    "charge-13": {"point": [316, 1788], "variants": [[312, 1790], [316, 1788], [320, 1786]]},
+    "charge-14": {"point": [1370, 576], "variants": [[1366, 578], [1370, 576], [1374, 574]]},
+    "charge-15": {"point": [1910, 576], "variants": [[1906, 578], [1910, 576], [1914, 574]]}
   }
 }

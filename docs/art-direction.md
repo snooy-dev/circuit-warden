@@ -34,6 +34,12 @@ ImageGen 원화는 논리 픽셀 하나가 월드 두 단위가 되도록 다수
 
 최종 몸체의 보이는 크기는 팬 64×40, 콘덴서 48×68 월드 단위이며 전원 구역과 같은 2×2 논리 픽셀을 쓴다. 방전은 pixelfx의 `lightning/thunderclap`에서 가져온 프레임을 앰버 팔레트로 가공했다. 원화·프롬프트·색상표·MIT 표기는 [제작 자료](../assets/enemies/field-source/), 런타임 크기와 시간은 [클립 설정](../assets/enemies/field-enemies.json), 가공 및 해시는 [출처](../assets/enemies/field-enemies.provenance.json)에 있다.
 
+## 전원 조립체 보스
+
+GameDesign 20쪽의 기울어진 청록 콘덴서, 갈라진 십자 벤트, 구리 코일, 두꺼운 두 케이블과 단자 끝을 유지한다. 내장 ImageGen 원화를 hi-bit로 가공한 기본 실루엣은 204×138 월드 단위다. 부하 시험실의 어두운 원경에서는 은색 벤트와 코일이 윤곽을 잡는다. 팔을 접는 자세와 코일 채도 변화, 붉은 착지 표지가 각 피해 범위를 예고한다.
+
+원화에 등록한 15개 몸체 셀과 4개 전기탄 셀을 2×2 격자로 재생한다. 전기탄과 착지 전류는 pixelfx의 `lightning/ball-lightning`과 `lightning/thunderclap`에서 가져왔다. [원화·프롬프트](../assets/enemies/boss-source/) · [출처와 해시](../assets/enemies/power-assembly.provenance.json) · [MIT 표기](../assets/enemies/field-source/pixelfx-CREDITS.txt).
+
 ## 워든 원화 기준
 
 캐릭터의 정체성과 무기 용도는 [게임 설계](game-design.md#주인공-워든warden)가 소유한다. **제작 시 고정 디자인은 이 절의 수치·형태·명암·변형 규칙을 사용한다.** 아래 원화 파일은 측정 출처와 시각 대조용이다. 파일 이름이나 새 생성 결과를 보고 매번 다른 디자인을 추론하지 않는다. 동작의 궤적·자세·시간은 [동작별 적용 범위](#동작별-적용-범위)에서 따로 정한다.

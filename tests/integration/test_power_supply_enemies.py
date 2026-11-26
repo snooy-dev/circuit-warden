@@ -5,12 +5,12 @@ from unittest.mock import Mock, patch
 
 import pico2d.pico2d as pico
 
-from game.enemy import CoolingFan, Enemy, LeakingCapacitor
+from game.enemy import CoolingFan, Enemy, LeakingCapacitor, PowerAssembly
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game_framework.collision import overlaps
 
 
-class PowerSupplyEnemyTests(unittest.TestCase):
+class PowerSupplyFixture(unittest.TestCase):
     def setUp(self):
         surface = pico.SDL_CreateRGBSurfaceWithFormat(0, 800, 600, 32, pico.SDL_PIXELFORMAT_RGBA32)
         self.assertTrue(surface)
@@ -29,13 +29,16 @@ class PowerSupplyEnemyTests(unittest.TestCase):
         self.level = self.scene.level
         self.level.finish_power_entry()
 
+
+class PowerSupplyEnemyTests(PowerSupplyFixture):
     def test_spawns_clear_terrain_and_controls_and_reset(self):
         level = self.level
         layout = level.layout
         enemies = tuple(level.enemies)
-        self.assertEqual([type(enemy) for enemy in enemies].count(Enemy), 5)
+        self.assertEqual([type(enemy) for enemy in enemies].count(Enemy), 4)
         self.assertEqual(sum(isinstance(enemy, CoolingFan) for enemy in enemies), 2)
         self.assertEqual(sum(isinstance(enemy, LeakingCapacitor) for enemy in enemies), 2)
+        self.assertIsInstance(level.boss, PowerAssembly)
         self.assertNotIn(None, {enemy.room for enemy in enemies})
         self.assertFalse({'intake', 'relay-tower', 'output-terminal'} & {enemy.room for enemy in enemies})
         terrain = tuple(c.bounds for c in layout.terrain) + tuple(b for _, b in layout.devices)

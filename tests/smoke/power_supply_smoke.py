@@ -21,7 +21,7 @@ from tests.smoke.character_smoke import CharacterSmoke, push_key
 class PowerSupplySmoke(CharacterScene):
     capture = CharacterSmoke.capture
 
-    def __init__(self, output_dir, *, encounters_only=False):
+    def __init__(self, output_dir, *, encounters_only=False, boss_only=False):
         super().__init__(power_supply=True)
         self.output_dir = output_dir
         self.elapsed = self.next_step = 0
@@ -29,10 +29,14 @@ class PowerSupplySmoke(CharacterScene):
         self.screenshot = None
         self.passed = False
         self.encounters_only = encounters_only
+        self.boss_only = boss_only
 
     def enter(self, engine):
         super().enter(engine)
-        self.scenario = self.check_monsters() if self.encounters_only else self.exercise()
+        if self.boss_only:
+            self.scenario = self.check_boss_only()
+        else:
+            self.scenario = self.check_monsters() if self.encounters_only else self.exercise()
 
     def update(self, dt):
         super().update(dt)
@@ -306,13 +310,89 @@ class PowerSupplySmoke(CharacterScene):
         self.expect_room('load-test-chamber')
         assert not self.layout.reached_output
         yield from self.shot('arena-entry')
-        yield from self.walk((1465, 656))
-        yield from self.air_dash(1)
+        yield from self.fight_boss()
+        assert self.layout.boss_defeated
         yield from self.walk((2200, 656))
         self.expect_room('load-test-chamber')
         assert not self.layout.reached_output
         yield from self.walk((self.layout.output[0] + self.layout.half_width, 656))
         self.expect_room('output-terminal')
+
+    def fight_boss(self):
+        boss, actor = self.level.boss, self.character
+        direction = 0
+        jump_started = None
+        seen = set()
+        deadline = self.elapsed + 50
+        while boss.hp:
+            assert self.elapsed < deadline and actor.hp > 0, (
+                '보스 처치', self.feet, actor.hp, boss.hp, boss.x, boss.state)
+            if boss.state not in seen:
+                seen.add(boss.state)
+                self.screenshot = 'boss-' + boss.state
+            if boss.y > boss.floor + 170 and 'apex' not in seen:
+                seen.add('apex')
+                self.screenshot = 'boss-apex'
+            if boss.bolt is not None and abs(boss.x - boss.bolt[0]) > 155 and 'bolt-flight' not in seen:
+                seen.add('bolt-flight')
+                self.screenshot = 'boss-bolt-flight'
+            gap = boss.x - actor.x
+            toward = 1 if gap > 0 else -1
+            move = toward if abs(gap) > 122 else -toward if abs(gap) < 99 else 0
+            danger = boss.state in ('jump_windup', 'leap', 'slam') and abs(actor.x - boss.landing) < 180
+            if danger:
+                can_go_right = boss.landing + 180 < self.layout.boss_gate[0] - 24
+                move = 1 if actor.x > boss.landing and can_go_right else -1
+            if direction != move:
+                if direction:
+                    push_key(pico.SDLK_d if direction > 0 else pico.SDLK_a, pico.SDL_KEYUP)
+                if move:
+                    push_key(pico.SDLK_d if move > 0 else pico.SDLK_a)
+                direction = move
+            bolt_close = (boss.bolt is not None
+                          and 0 <= (actor.x - boss.bolt[0]) * boss.facing < 150)
+            lash_close = (boss.state == 'lash_windup' and boss.state_remaining < .25
+                          and toward != boss.facing and abs(gap) < 185)
+            if jump_started is not None and actor.grounded and self.elapsed - jump_started > .2:
+                push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
+                jump_started = None
+            elif jump_started is None and actor.grounded and (bolt_close or lash_close):
+                push_key(pico.SDLK_SPACE)
+                jump_started = self.elapsed
+            elif (boss.state == 'recover' and boss.state_remaining > .24 and 92 < abs(gap) < 143
+                  and actor.state in ('idle', 'run') and not actor.pushback_remaining):
+                if actor.facing != toward:
+                    push_key(pico.SDLK_d if toward > 0 else pico.SDLK_a)
+                    yield 0
+                    push_key(pico.SDLK_d if toward > 0 else pico.SDLK_a, pico.SDL_KEYUP)
+                    direction = 0
+                yield from self.tap(pico.SDLK_j)
+            yield 0
+        for key in (pico.SDLK_a, pico.SDLK_d, pico.SDLK_SPACE):
+            push_key(key, pico.SDL_KEYUP)
+        assert {'lash', 'shot', 'leap', 'slam'} <= seen, seen
+        yield from self.shot('boss-defeated')
+
+    def check_boss_only(self):
+        self.level.finish_power_entry()
+        self.character.x, self.character.y = self.layout._point(2180, 1376)
+        yield from self.tap(pico.SDLK_w)
+        self.character.x, self.character.y = self.layout._point(2256, 656)
+        yield 0
+        yield from self.blocked_input(pico.SDLK_d)
+        assert isclose(self.feet[0], 2296, abs_tol=.01), self.feet
+        yield from self.shot('boss-closed-gate')
+        self.character.x, self.character.y = self.layout._point(993, 656)
+        yield 0
+        self.expect_room('load-test-chamber')
+        yield from self.fight_boss()
+        assert self.layout.power_restored and self.layout.boss_defeated
+        yield from self.walk((3504, 656))
+        assert self.layout.reached_output
+        yield from self.shot('boss-output')
+        yield from self.tap(pico.SDLK_r)
+        assert self.level.boss.hp == self.level.boss.MAX_HP and not self.layout.boss_defeated
+        print('PASS: closed gate, three boss attacks, sword defeat, output, reset', flush=True)
 
     def check_monsters(self):
         actor = self.character
@@ -373,7 +453,7 @@ class PowerSupplySmoke(CharacterScene):
             yield from self.reach_output()
             assert self.rooms[-3:] == ['filter-gallery', 'load-test-chamber', 'output-terminal'], self.rooms
             assert self.layout.reached_output and actor.hp > 0
-            assert all(enemy.level is self.level for enemy in self.level.enemies)
+            assert all(enemy.level is self.level for enemy in self.level.enemies if enemy is not self.level.boss)
             yield from self.shot(f'{route.__name__}-output')
             print(f'{route.__name__} ({self.elapsed - start:.2f}s SDL): {" -> ".join(self.rooms)}',
                   flush=True)
@@ -391,11 +471,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', type=Path)
     parser.add_argument('--visible', action='store_true', help='실제 창을 열고 실시간으로 실행')
-    parser.add_argument('--encounters-only', action='store_true', help='몬스터 전투만 검사')
+    scenario = parser.add_mutually_exclusive_group()
+    scenario.add_argument('--encounters-only', action='store_true', help='일반 몬스터 전투만 검사')
+    scenario.add_argument('--boss-only', action='store_true', help='보스부터 출력까지 검사')
     args = parser.parse_args()
     if args.output_dir:
         args.output_dir.mkdir(parents=True, exist_ok=True)
-    scene = PowerSupplySmoke(args.output_dir, encounters_only=args.encounters_only)
+    scene = PowerSupplySmoke(args.output_dir, encounters_only=args.encounters_only, boss_only=args.boss_only)
     engine = Engine(*DEFAULT_SIZE)
     if args.visible:
         engine.run(scene)
