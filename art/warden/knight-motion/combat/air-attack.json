@@ -1,0 +1,22 @@
+{
+  "file": "air-attack.png",
+  "frameSize": [
+    256,
+    224
+  ],
+  "columns": 6,
+  "count": 6,
+  "pivot": [
+    128,
+    136
+  ],
+  "durationsMs": [
+    32,
+    30,
+    32,
+    53,
+    50,
+    45
+  ],
+  "loop": false
+}

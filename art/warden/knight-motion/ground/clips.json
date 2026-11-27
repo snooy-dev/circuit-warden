@@ -1,0 +1,85 @@
+{
+  "cellSize": [
+    256,
+    224
+  ],
+  "pivot": [
+    128,
+    136
+  ],
+  "facing": "right",
+  "clips": {
+    "idle": {
+      "sheet": "idle.png",
+      "frameCount": 9,
+      "durationsMs": [
+        130,
+        110,
+        115,
+        160,
+        130,
+        115,
+        155,
+        170,
+        145
+      ],
+      "loop": true
+    },
+    "walk": {
+      "sheet": "walk.png",
+      "frameCount": 8,
+      "durationsMs": [
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110
+      ],
+      "loop": true
+    },
+    "run-start": {
+      "sheet": "run-start.png",
+      "frameCount": 4,
+      "durationsMs": [
+        48,
+        45,
+        48,
+        40
+      ],
+      "loop": false
+    },
+    "run": {
+      "sheet": "run.png",
+      "frameCount": 8,
+      "durationsMs": [
+        62,
+        48,
+        60,
+        65,
+        62,
+        48,
+        60,
+        65
+      ],
+      "loop": true
+    },
+    "sprint": {
+      "sheet": "sprint.png",
+      "frameCount": 8,
+      "durationsMs": [
+        48,
+        40,
+        46,
+        48,
+        48,
+        40,
+        46,
+        48
+      ],
+      "loop": true
+    }
+  }
+}

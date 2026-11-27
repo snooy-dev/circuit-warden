@@ -1,0 +1,22 @@
+{
+  "file": "hurt.png",
+  "frameSize": [
+    256,
+    224
+  ],
+  "columns": 6,
+  "count": 6,
+  "pivot": [
+    128,
+    136
+  ],
+  "durationsMs": [
+    18,
+    45,
+    47,
+    45,
+    40,
+    45
+  ],
+  "loop": false
+}

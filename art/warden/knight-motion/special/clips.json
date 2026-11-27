@@ -1,0 +1,309 @@
+{
+  "cellSize": [
+    256,
+    224
+  ],
+  "pivot": [
+    128,
+    136
+  ],
+  "restBodyHeight": 80,
+  "alpha": "binary",
+  "palette": "assets/warden/idle.png",
+  "artSource": "existing Warden art",
+  "status": "review",
+  "clips": {
+    "rebound": {
+      "sheet": "rebound.png",
+      "frameCount": 7,
+      "columns": 7,
+      "rows": 1,
+      "durationsMs": [
+        22,
+        26,
+        28,
+        32,
+        40,
+        48,
+        54
+      ],
+      "loop": false,
+      "facing": "right",
+      "phases": [
+        "contact",
+        "spring",
+        "retract",
+        "recover",
+        "rise",
+        "settle",
+        "handoff"
+      ],
+      "source": {
+        "warden": [
+          "../combat/downstrike.png",
+          "../air/jump-rise.png"
+        ],
+        "poseReference": [
+          "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash",
+          "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites"
+        ]
+      },
+      "alphaBounds": [
+        [
+          104,
+          57,
+          164,
+          167
+        ],
+        [
+          100,
+          56,
+          158,
+          165
+        ],
+        [
+          97,
+          51,
+          180,
+          137
+        ],
+        [
+          97,
+          50,
+          186,
+          129
+        ],
+        [
+          89,
+          51,
+          145,
+          136
+        ],
+        [
+          87,
+          52,
+          143,
+          138
+        ],
+        [
+          86,
+          53,
+          144,
+          139
+        ]
+      ]
+    },
+    "charge-arrival": {
+      "sheet": "charge-arrival.png",
+      "frameCount": 8,
+      "columns": 8,
+      "rows": 1,
+      "durationsMs": [
+        24,
+        30,
+        28,
+        24,
+        22,
+        25,
+        31,
+        36
+      ],
+      "loop": false,
+      "facing": "right",
+      "phases": [
+        "brace",
+        "load",
+        "absorb",
+        "recover",
+        "rise",
+        "overshoot",
+        "relax",
+        "rest"
+      ],
+      "source": {
+        "warden": [
+          "../../motion-audit-v4/source/side-rgba.png"
+        ],
+        "poseReference": [
+          "https://github.com/DaxMakinGames/HollowKnightGodot/blob/main/Player/Sprites/knight_dash.png"
+        ]
+      },
+      "alphaBounds": [
+        [
+          104,
+          63,
+          165,
+          136
+        ],
+        [
+          103,
+          65,
+          164,
+          136
+        ],
+        [
+          102,
+          63,
+          162,
+          136
+        ],
+        [
+          102,
+          60,
+          161,
+          136
+        ],
+        [
+          102,
+          57,
+          161,
+          136
+        ],
+        [
+          102,
+          54,
+          162,
+          136
+        ],
+        [
+          102,
+          55,
+          162,
+          136
+        ],
+        [
+          102,
+          56,
+          162,
+          136
+        ]
+      ]
+    },
+    "teleport-front": {
+      "sheet": "teleport-front.png",
+      "frameCount": 14,
+      "columns": 8,
+      "rows": 2,
+      "durationsMs": [
+        28,
+        26,
+        25,
+        24,
+        18,
+        14,
+        16,
+        14,
+        18,
+        24,
+        28,
+        32,
+        38,
+        45
+      ],
+      "loop": false,
+      "facing": "front",
+      "phases": [
+        "rest",
+        "anticipate",
+        "brace",
+        "load",
+        "release",
+        "flash",
+        "absent",
+        "reappear",
+        "materialize",
+        "absorb",
+        "recover",
+        "relax",
+        "settle",
+        "rest"
+      ],
+      "source": {
+        "warden": [
+          "../../motion-audit-v4/source/front.png"
+        ]
+      },
+      "alphaBounds": [
+        [
+          95,
+          56,
+          147,
+          136
+        ],
+        [
+          95,
+          59,
+          147,
+          136
+        ],
+        [
+          95,
+          63,
+          147,
+          136
+        ],
+        [
+          95,
+          65,
+          147,
+          136
+        ],
+        [
+          95,
+          61,
+          147,
+          136
+        ],
+        [
+          95,
+          55,
+          147,
+          136
+        ],
+        null,
+        [
+          95,
+          54,
+          147,
+          136
+        ],
+        [
+          95,
+          59,
+          147,
+          136
+        ],
+        [
+          95,
+          62,
+          147,
+          136
+        ],
+        [
+          95,
+          60,
+          147,
+          136
+        ],
+        [
+          95,
+          58,
+          147,
+          136
+        ],
+        [
+          95,
+          57,
+          147,
+          136
+        ],
+        [
+          95,
+          56,
+          147,
+          136
+        ]
+      ]
+    }
+  }
+}

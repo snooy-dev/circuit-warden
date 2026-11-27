@@ -1,0 +1,97 @@
+{
+  "cellSize": [
+    256,
+    224
+  ],
+  "pivot": [
+    128,
+    136
+  ],
+  "facing": "right",
+  "clips": {
+    "jump-start": {
+      "sheet": "jump-start.png",
+      "frameCount": 4,
+      "durationsMs": [
+        28,
+        24,
+        24,
+        34
+      ],
+      "loop": false
+    },
+    "jump-rise": {
+      "sheet": "jump-rise.png",
+      "frameCount": 6,
+      "durationsMs": [
+        35,
+        45,
+        48,
+        52,
+        55,
+        63
+      ],
+      "loop": false
+    },
+    "jump-fall": {
+      "sheet": "jump-fall.png",
+      "frameCount": 6,
+      "durationsMs": [
+        52,
+        50,
+        52,
+        62,
+        54,
+        50
+      ],
+      "loop": true
+    },
+    "jump-land": {
+      "sheet": "jump-land.png",
+      "frameCount": 6,
+      "durationsMs": [
+        25,
+        24,
+        38,
+        42,
+        40,
+        40
+      ],
+      "loop": false
+    },
+    "air-dash": {
+      "sheet": "air-dash.png",
+      "frameCount": 10,
+      "durationsMs": [
+        20,
+        20,
+        25,
+        30,
+        28,
+        24,
+        23,
+        25,
+        25,
+        30
+      ],
+      "loop": false
+    },
+    "ground-dash": {
+      "sheet": "ground-dash.png",
+      "frameCount": 10,
+      "durationsMs": [
+        20,
+        20,
+        25,
+        30,
+        28,
+        24,
+        23,
+        25,
+        25,
+        30
+      ],
+      "loop": false
+    }
+  }
+}

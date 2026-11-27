@@ -1,0 +1,325 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>워든 동작 검토</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#151d28;color:#eff5fa;font:16px/1.45 system-ui,sans-serif}main{max-width:950px;margin:35px auto;padding:0 20px}h1{font-size:28px}section{background:#273445;border-radius:10px;padding:18px;margin:20px 0}canvas{display:block;width:min(100%,580px);height:auto;margin:auto;image-rendering:pixelated}select,button{font:inherit;color:inherit;background:#304155;padding:7px 12px;border:1px solid #708395;border-radius:5px}button{cursor:pointer}nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}output{font-variant-numeric:tabular-nums}a{color:#86e4ff}summary{cursor:pointer}img{max-width:100%;margin:12px 0}label{display:inline-flex;gap:6px;align-items:center}</style><main><h1>워든 동작 검토</h1><nav><label>동작 <select id="clip"></select></label><label>배속 <select id="speed"><option>1</option><option>0.5</option><option>0.25</option></select></label><label><input id="mirror" type="checkbox">왼쪽 보기</label></nav>
+<section><canvas id="stage" width="290" height="168" aria-label="워든 스프라이트 재생 화면"></canvas></section><nav><button id="play">일시정지</button><button id="prev">이전 프레임</button><button id="next">다음 프레임</button><output id="info"></output></nav>
+<details open><summary style="margin-top:28px">기사 원본과 워든의 달리기 비교</summary><img src="run-comparison.gif" alt="기사와 워든이 몸을 낮춰 출발한 뒤 반복 보폭으로 달리는 모습"><p>두 캐릭터를 워든의 재생 시간에 맞춰 표시했습니다. <a href="https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites">이동 원본</a> · <a href="https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight">베기 원본</a></p></details></main>
+<script>
+const manifest={
+  "frameSize": [
+    256,
+    224
+  ],
+  "pivot": [
+    128,
+    136
+  ],
+  "facing": "right",
+  "frontFacing": [
+    "teleport-front"
+  ],
+  "clips": {
+    "idle": {
+      "name": "대기",
+      "sheet": "ground/idle.png",
+      "durationsMs": [
+        130,
+        110,
+        115,
+        160,
+        130,
+        115,
+        155,
+        170,
+        145
+      ],
+      "loop": true,
+      "columns": 9
+    },
+    "walk": {
+      "name": "걷기",
+      "sheet": "ground/walk.png",
+      "durationsMs": [
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "run-start": {
+      "name": "달리기 출발",
+      "sheet": "ground/run-start.png",
+      "durationsMs": [
+        48,
+        45,
+        48,
+        40
+      ],
+      "loop": false,
+      "columns": 4
+    },
+    "run": {
+      "name": "달리기",
+      "sheet": "ground/run.png",
+      "durationsMs": [
+        62,
+        48,
+        60,
+        65,
+        62,
+        48,
+        60,
+        65
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "sprint": {
+      "name": "전력 질주",
+      "sheet": "ground/sprint.png",
+      "durationsMs": [
+        48,
+        40,
+        46,
+        48,
+        48,
+        40,
+        46,
+        48
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "jump-start": {
+      "name": "발구름",
+      "sheet": "air/jump-start.png",
+      "durationsMs": [
+        28,
+        24,
+        24,
+        34
+      ],
+      "loop": false,
+      "columns": 4
+    },
+    "jump-rise": {
+      "name": "상승",
+      "sheet": "air/jump-rise.png",
+      "durationsMs": [
+        35,
+        45,
+        48,
+        52,
+        55,
+        63
+      ],
+      "loop": false,
+      "columns": 6
+    },
+    "jump-fall": {
+      "name": "낙하",
+      "sheet": "air/jump-fall.png",
+      "durationsMs": [
+        52,
+        50,
+        52,
+        62,
+        54,
+        50
+      ],
+      "loop": true,
+      "columns": 6
+    },
+    "jump-land": {
+      "name": "착지",
+      "sheet": "air/jump-land.png",
+      "durationsMs": [
+        25,
+        24,
+        38,
+        42,
+        40,
+        40
+      ],
+      "loop": false,
+      "columns": 6
+    },
+    "ground-dash": {
+      "name": "지상 대시",
+      "sheet": "air/ground-dash.png",
+      "durationsMs": [
+        20,
+        20,
+        25,
+        30,
+        28,
+        24,
+        23,
+        25,
+        25,
+        30
+      ],
+      "loop": false,
+      "columns": 10
+    },
+    "air-dash": {
+      "name": "공중 대시",
+      "sheet": "air/air-dash.png",
+      "durationsMs": [
+        20,
+        20,
+        25,
+        30,
+        28,
+        24,
+        23,
+        25,
+        25,
+        30
+      ],
+      "loop": false,
+      "columns": 10
+    },
+    "ground-attack": {
+      "name": "지상 베기",
+      "sheet": "combat/ground-attack.png",
+      "durationsMs": [
+        35,
+        32,
+        28,
+        49,
+        54,
+        52
+      ],
+      "loop": false,
+      "columns": 6
+    },
+    "air-attack": {
+      "name": "공중 베기",
+      "sheet": "combat/air-attack.png",
+      "durationsMs": [
+        32,
+        30,
+        32,
+        53,
+        50,
+        45
+      ],
+      "loop": false,
+      "columns": 6
+    },
+    "downstrike": {
+      "name": "아래 베기",
+      "sheet": "combat/downstrike.png",
+      "durationsMs": [
+        30,
+        25,
+        28,
+        48,
+        49,
+        36,
+        38
+      ],
+      "loop": false,
+      "columns": 7
+    },
+    "rebound": {
+      "name": "반동",
+      "sheet": "special/rebound.png",
+      "durationsMs": [
+        22,
+        26,
+        28,
+        32,
+        40,
+        48,
+        54
+      ],
+      "loop": false,
+      "columns": 7
+    },
+    "hurt": {
+      "name": "피격",
+      "sheet": "combat/hurt.png",
+      "durationsMs": [
+        18,
+        45,
+        47,
+        45,
+        40,
+        45
+      ],
+      "loop": false,
+      "columns": 6
+    },
+    "charge-arrival": {
+      "name": "전하 도착",
+      "sheet": "special/charge-arrival.png",
+      "durationsMs": [
+        24,
+        30,
+        28,
+        24,
+        22,
+        25,
+        31,
+        36
+      ],
+      "loop": false,
+      "columns": 8
+    },
+    "teleport-front": {
+      "name": "정면 순간이동",
+      "sheet": "special/teleport-front.png",
+      "durationsMs": [
+        28,
+        26,
+        25,
+        24,
+        18,
+        14,
+        16,
+        14,
+        18,
+        24,
+        28,
+        32,
+        38,
+        45
+      ],
+      "loop": false,
+      "columns": 8
+    }
+  },
+  "poseReferences": {
+    "movement": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+    "slash": "https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight",
+    "downSlash": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash"
+  },
+  "art": "워든 측면·정면 원화와 검 원화",
+  "timing": "워든 검토용 재생 시간"
+};
+const ctx=stage.getContext('2d');ctx.imageSmoothingEnabled=false;
+let index=0,time=0,playing=true,last=performance.now(),sheet=new Image();
+for(const [key,entry] of Object.entries(manifest.clips))clip.add(new Option(entry.name,key));
+function config(){return manifest.clips[clip.value]}
+function total(){return config().durationsMs.length}
+function display(){
+ const c=config(), flipped=mirror.checked && clip.value!=='teleport-front';
+ ctx.clearRect(0,0,290,168);ctx.fillStyle='#58697a';ctx.fillRect(0,123,290,1);
+ if(sheet.complete && sheet.naturalWidth){
+ ctx.save();ctx.translate(145,123);ctx.scale(flipped?-1:1,1);
+ ctx.drawImage(sheet,index%c.columns*256,Math.floor(index/c.columns)*224,256,224,-128,-136,256,224);ctx.restore()}
+ info.value=(index+1)+' / '+total()+' 프레임 · '+c.durationsMs[index]+' ms';
+}
+function load(){index=0;time=0;sheet=new Image();sheet.onload=display;sheet.src=config().sheet;display()}
+function toggle(value){playing=value;play.textContent=value?'일시정지':'재생'}
+function step(delta){toggle(false);index=(index+total()+delta)%total();time=0;display()}
+function tick(now){if(playing){time+=Math.min(now-last,100)*Number(speed.value);const c=config();while(time>=c.durationsMs[index]+(!c.loop&&index===total()-1?300:0)){time-=c.durationsMs[index]+(!c.loop&&index===total()-1?300:0);index=(index+1)%total()}}last=now;display();requestAnimationFrame(tick)}
+clip.value='run';clip.onchange=load;prev.onclick=()=>step(-1);next.onclick=()=>step(1);play.onclick=()=>toggle(!playing);load();requestAnimationFrame(tick)
+</script></html>
