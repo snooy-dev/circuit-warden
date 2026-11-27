@@ -12,8 +12,20 @@
       "image": "references/idle.png",
       "frames": [
         0,
+        0,
+        0,
+        0,
+        2,
+        2,
+        2,
         2,
         3,
+        3,
+        3,
+        3,
+        6,
+        6,
+        6,
         6
       ],
       "label": "기사 대기",
@@ -290,7 +302,7 @@
       "label": "기사 Dreamgate 발동 · 귀환 배치",
       "source": "https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png",
       "surrogate": false,
-      "note": "Dreamgate 아틀라스의 원본 스프라이트를 사용해 소실과 귀환 구간을 배치했습니다. 중간 투명 칸은 소실을 표시하며 귀환 순서는 워든 검토용입니다."
+      "note": "Dreamgate 원본의 준비·압축·섬광을 워든 프레임과 짝지었습니다. 7번은 정면 섬광 실루엣이며 뒤쪽은 귀환 순서로 재배치했습니다."
     }
   }
 }

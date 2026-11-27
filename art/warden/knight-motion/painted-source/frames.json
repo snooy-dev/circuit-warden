@@ -1,7 +1,19 @@
 {
-  "description": "사용한 전신 원화와 셀 번호. 원화 시트의 왼쪽 위부터 행 우선으로 1부터 센다. null은 소실 프레임이다.",
+  "description": "보정한 전신 원화의 셀 번호. 왼쪽 위부터 행 우선으로 1부터 센다. 최종 시트는 2×2 픽셀 단위로 정렬하며 무늬를 따라 전류가 이동한다. 대시에는 옅은 이전 자세의 잔상을 합성했다.",
   "clips": {
     "idle": [
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
       {
         "sheet": "start.png",
         "cell": 1
@@ -12,7 +24,43 @@
       },
       {
         "sheet": "start.png",
+        "cell": 2
+      },
+      {
+        "sheet": "start.png",
+        "cell": 2
+      },
+      {
+        "sheet": "start.png",
+        "cell": 2
+      },
+      {
+        "sheet": "start.png",
         "cell": 3
+      },
+      {
+        "sheet": "start.png",
+        "cell": 3
+      },
+      {
+        "sheet": "start.png",
+        "cell": 3
+      },
+      {
+        "sheet": "start.png",
+        "cell": 3
+      },
+      {
+        "sheet": "start.png",
+        "cell": 4
+      },
+      {
+        "sheet": "start.png",
+        "cell": 4
+      },
+      {
+        "sheet": "start.png",
+        "cell": 4
       },
       {
         "sheet": "start.png",
@@ -233,28 +281,28 @@
     ],
     "ground-dash": [
       {
-        "sheet": "start.png",
-        "cell": 5
+        "sheet": "dash.png",
+        "cell": 1
       },
       {
         "sheet": "dash.png",
-        "cell": 6
+        "cell": 2
       },
       {
         "sheet": "dash.png",
-        "cell": 7
+        "cell": 3
       },
       {
         "sheet": "dash.png",
-        "cell": 8
+        "cell": 3
       },
       {
         "sheet": "dash.png",
-        "cell": 9
+        "cell": 4
       },
       {
         "sheet": "dash.png",
-        "cell": 10
+        "cell": 2
       },
       {
         "sheet": "start.png",
@@ -268,23 +316,23 @@
       },
       {
         "sheet": "dash.png",
-        "cell": 6
+        "cell": 2
       },
       {
         "sheet": "dash.png",
-        "cell": 7
+        "cell": 3
       },
       {
         "sheet": "dash.png",
-        "cell": 8
+        "cell": 3
       },
       {
         "sheet": "dash.png",
-        "cell": 9
+        "cell": 4
       },
       {
         "sheet": "dash.png",
-        "cell": 10
+        "cell": 2
       },
       {
         "sheet": "jump.png",
@@ -455,20 +503,20 @@
     ],
     "charge-arrival": [
       {
-        "sheet": "special.png",
+        "sheet": "dash.png",
+        "cell": 3
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 4
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 2
+      },
+      {
+        "sheet": "dash.png",
         "cell": 5
-      },
-      {
-        "sheet": "special.png",
-        "cell": 6
-      },
-      {
-        "sheet": "special.png",
-        "cell": 7
-      },
-      {
-        "sheet": "special.png",
-        "cell": 8
       },
       {
         "sheet": "start.png",
@@ -478,48 +526,51 @@
     "teleport-front": [
       {
         "sheet": "special.png",
-        "cell": 9
+        "cell": 1
       },
       {
         "sheet": "special.png",
-        "cell": 10
+        "cell": 2
       },
       {
         "sheet": "special.png",
-        "cell": 11
+        "cell": 3
       },
       {
         "sheet": "special.png",
-        "cell": 12
+        "cell": 3
       },
       {
         "sheet": "special.png",
-        "cell": 13
+        "cell": 4
       },
       {
         "sheet": "special.png",
-        "cell": 14
-      },
-      null,
-      {
-        "sheet": "special.png",
-        "cell": 15
+        "cell": 5
       },
       {
         "sheet": "special.png",
-        "cell": 13
+        "cell": 6
       },
       {
         "sheet": "special.png",
-        "cell": 11
+        "cell": 5
       },
       {
         "sheet": "special.png",
-        "cell": 10
+        "cell": 4
       },
       {
         "sheet": "special.png",
-        "cell": 9
+        "cell": 3
+      },
+      {
+        "sheet": "special.png",
+        "cell": 2
+      },
+      {
+        "sheet": "special.png",
+        "cell": 1
       }
     ]
   }

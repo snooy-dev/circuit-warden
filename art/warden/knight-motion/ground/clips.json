@@ -11,14 +11,28 @@
   "clips": {
     "idle": {
       "sheet": "idle.png",
-      "frameCount": 4,
+      "frameCount": 16,
       "durationsMs": [
-        275,
-        330,
-        325,
-        300
+        69,
+        69,
+        68,
+        69,
+        82,
+        83,
+        83,
+        82,
+        81,
+        81,
+        82,
+        81,
+        75,
+        75,
+        75,
+        75
       ],
-      "loop": true
+      "loop": true,
+      "columns": 8,
+      "rows": 2
     },
     "walk": {
       "sheet": "walk.png",

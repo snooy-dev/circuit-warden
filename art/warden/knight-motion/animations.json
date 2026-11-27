@@ -16,13 +16,25 @@
       "name": "대기",
       "sheet": "ground/idle.png",
       "durationsMs": [
-        275,
-        330,
-        325,
-        300
+        69,
+        69,
+        68,
+        69,
+        82,
+        83,
+        83,
+        82,
+        81,
+        81,
+        82,
+        81,
+        75,
+        75,
+        75,
+        75
       ],
       "loop": true,
-      "columns": 4
+      "columns": 8
     },
     "walk": {
       "name": "걷기",
@@ -268,12 +280,12 @@
         24,
         18,
         14,
-        16,
+        42,
         14,
         31,
         39,
         45,
-        70
+        44
       ],
       "loop": false,
       "columns": 8
@@ -284,6 +296,10 @@
     "slash": "https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight",
     "downSlash": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash"
   },
-  "art": "ImageGen 전신 원화 · 기사 포즈와 워든 측면 원화 참조 · 완성 셀 단위 축소 및 피벗 정렬",
-  "timing": "워든 검토용 재생 시간"
+  "art": "ImageGen 전신 원화 보정 · 무외곽선 2×2 hi-bit · 청록 전류 무늬",
+  "timing": "워든 검토용 재생 시간",
+  "pixelSize": [
+    2,
+    2
+  ]
 }
