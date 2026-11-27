@@ -106,7 +106,7 @@ class ChargeTeleportTests(unittest.TestCase):
         for hz in (48, 144):
             charge = Charge(None, (0, 0))
             mode = SimpleNamespace(activation_origin=(0, 0))
-            charge._level = SimpleNamespace(mode=mode)
+            charge._level = SimpleNamespace(mode=mode, player=self.character)
             for active, duration in ((True, .125), (False, .125), (True, .25), (False, .5)):
                 mode.activation_origin = (0, 0) if active else (1000, 0)
                 previous = charge.value, charge.velocity

@@ -1,0 +1,95 @@
+{
+  "cellSize": [
+    256,
+    224
+  ],
+  "pivot": [
+    128,
+    136
+  ],
+  "facing": "right",
+  "clips": {
+    "idle": {
+      "sheet": "idle.png",
+      "frameCount": 16,
+      "durationsMs": [
+        69,
+        69,
+        68,
+        69,
+        82,
+        83,
+        83,
+        82,
+        81,
+        81,
+        82,
+        81,
+        75,
+        75,
+        75,
+        75
+      ],
+      "loop": true,
+      "columns": 8,
+      "rows": 2
+    },
+    "walk": {
+      "sheet": "walk.png",
+      "frameCount": 8,
+      "durationsMs": [
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110
+      ],
+      "loop": true
+    },
+    "run-start": {
+      "sheet": "run-start.png",
+      "frameCount": 5,
+      "durationsMs": [
+        24,
+        35,
+        40,
+        40,
+        42
+      ],
+      "loop": false
+    },
+    "run": {
+      "sheet": "run.png",
+      "frameCount": 8,
+      "durationsMs": [
+        62,
+        48,
+        60,
+        65,
+        62,
+        48,
+        60,
+        65
+      ],
+      "loop": true
+    },
+    "sprint": {
+      "sheet": "sprint.png",
+      "frameCount": 8,
+      "durationsMs": [
+        48,
+        40,
+        46,
+        48,
+        48,
+        40,
+        46,
+        48
+      ],
+      "loop": true
+    }
+  }
+}

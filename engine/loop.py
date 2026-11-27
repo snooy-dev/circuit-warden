@@ -78,10 +78,11 @@ class Engine(Display):
                     pico.SDL_RENDER_TARGETS_RESET, pico.SDL_RENDER_DEVICE_RESET))
                 self.reset_generation += len(self.render_resets)
                 for event in events:
-                    if event.type == pico.SDL_QUIT or (
-                        event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_ESCAPE
-                    ):
+                    if event.type == pico.SDL_QUIT:
                         self.stop()
+                    elif event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_ESCAPE:
+                        if self._scene.handle_escape() is not True:
+                            self.stop()
                     else:
                         self._scene.handle_event(event)
                     if not self._running:

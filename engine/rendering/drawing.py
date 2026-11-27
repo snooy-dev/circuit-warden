@@ -26,6 +26,26 @@ def draw_rect(rect, color, opacity):
             _sdl(pico.SDL_SetRenderDrawBlendMode(pico.renderer, blend.value))
 
 
+def draw_horizontal_gradient(rect, color, left_opacity, right_opacity):
+    x, y, width, height = rect
+    left = pico.SDL_Color(*color, round(255 * left_opacity))
+    right = pico.SDL_Color(*color, round(255 * right_opacity))
+    vertices = (pico.SDL_Vertex * 4)(
+        pico.SDL_Vertex(pico.SDL_FPoint(x, y), left),
+        pico.SDL_Vertex(pico.SDL_FPoint(x + width, y), right),
+        pico.SDL_Vertex(pico.SDL_FPoint(x + width, y + height), right),
+        pico.SDL_Vertex(pico.SDL_FPoint(x, y + height), left),
+    )
+    indices = (c_int * 6)(0, 1, 2, 0, 2, 3)
+    blend = c_int()
+    _sdl(pico.SDL_GetRenderDrawBlendMode(pico.renderer, byref(blend)))
+    try:
+        _sdl(pico.SDL_SetRenderDrawBlendMode(pico.renderer, pico.SDL_BLENDMODE_BLEND))
+        _sdl(pico.SDL_RenderGeometry(pico.renderer, None, vertices, 4, indices, 6))
+    finally:
+        _sdl(pico.SDL_SetRenderDrawBlendMode(pico.renderer, blend.value))
+
+
 def draw_image(texture, rect, opacity, *, image=None, source=None, flip_x=False, angle=0):
     rect = pico.SDL_FRect(*rect)
     access = c_int()

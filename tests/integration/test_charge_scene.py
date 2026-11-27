@@ -8,9 +8,9 @@ from unittest.mock import patch
 import pico2d.pico2d as pico
 
 from game.charge import ASSETS
-from game.character import ARRIVAL_BLEND_SECONDS, BODY_HEIGHT, GROUND_Y
+from game.character import BODY_HEIGHT, GROUND_Y
 from game.scene import CAST_COOLDOWN, ENVIRONMENT_RECHARGE, CharacterScene
-from game.teleport_link import TeleportLink
+from game.teleport_link import DURATION, TeleportLink
 from tests.integration import test_character_scene as fixtures
 
 
@@ -264,9 +264,27 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(scene.character.center, fresh.position)
         self.assertTrue(fresh.spent)
 
+    def test_right_click_skips_charge_at_current_position(self):
+        scene = self.open_scene()
+        actor = scene.character
+        x, y = actor.center
+        same, next_charge, *other_charges = scene.level.charges
+        same.position = (x, y)
+        next_charge.position = (x - 100, y)
+        for charge in other_charges:
+            charge.destroy()
+        self.assertTrue(same.can_activate(actor.center))
+        self.click(same.position, pico.SDL_BUTTON_RIGHT)
+        self.assertFalse(same.spent)
+        self.assertTrue(next_charge.spent)
+        self.assertEqual(actor.center, next_charge.position)
+
     def test_right_click_same_position_does_not_create_link(self):
         scene = self.open_scene()
         target = scene.level.charges[2]
+        for charge in scene.level.charges:
+            if charge is not target:
+                charge.destroy()
         scene.character.teleport(target.position)
         velocity = scene.character.velocity_y
         self.click((0, 0), pico.SDL_BUTTON_RIGHT)
@@ -342,7 +360,7 @@ class ChargeSceneTests(unittest.TestCase):
         self.assertEqual(actor.visual_center, first.end)
         with patch('game.character.draw_sprite') as draw:
             actor._draw(scene.transform, 1)
-        self.assertIs(draw.call_args.args[0], actor.clips['jump_rise_right'].frames[0])
+        self.assertIs(draw.call_args.args[0], actor.clips['teleport-front'].frames[0])
         self.assertEqual(draw.call_args.args[2], (first.end[0], first.end[1] - BODY_HEIGHT / 2))
         scene.draw()
         self.assertEqual(first.frame_index, 0)
@@ -364,19 +382,24 @@ class ChargeSceneTests(unittest.TestCase):
         scene.exit()
         self.assertIsNone(second._frames)
 
-    def test_ground_arrival_uses_braced_pose_then_returns_to_idle(self):
+    def test_ground_arrival_uses_unmirrored_front_pose_then_returns_to_idle(self):
         scene = self.open_scene()
         actor = scene.character
+        actor.facing = -1
         target = scene.level.charges[2]
         target.position = (120, actor.center[1])
         self.click(target.position)
         self.assertTrue(actor.grounded)
         with patch('game.character.draw_sprite') as draw:
             actor._draw(scene.transform, 1)
-            frames = actor.clips['jump_land_right'].frames
-            self.assertIs(draw.call_args.args[0], frames[len(frames) // 3])
+            frames = actor.clips['teleport-front'].frames
+            self.assertIs(draw.call_args.args[0], frames[0])
+            self.assertFalse(draw.call_args.kwargs['flip_x'])
             scene.update(0)
-            scene.update(ARRIVAL_BLEND_SECONDS)
+            scene.update(DURATION / 2)
+            actor._draw(scene.transform, 1)
+            self.assertIs(draw.call_args.args[0], frames[6])
+            scene.update(DURATION / 2)
             actor._draw(scene.transform, 1)
             self.assertIs(draw.call_args.args[0], actor.player.frame)
 

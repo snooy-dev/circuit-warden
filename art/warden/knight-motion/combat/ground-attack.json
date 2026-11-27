@@ -1,0 +1,21 @@
+{
+  "file": "ground-attack.png",
+  "frameSize": [
+    256,
+    224
+  ],
+  "columns": 5,
+  "count": 5,
+  "pivot": [
+    128,
+    136
+  ],
+  "durationsMs": [
+    22,
+    59,
+    59,
+    72,
+    118
+  ],
+  "loop": false
+}

@@ -80,7 +80,7 @@ class BasicEnemySceneTests(unittest.TestCase):
                     self.assertEqual(enemy.hp, hp)
                     scene.update(.02)
                     self.assertEqual(enemy.hp, hp)
-                    scene.update(.23)
+                    scene.update(.37)
                 self.assertIsNone(enemy.level)
                 self.assertNotIn(enemy, scene.level.objects)
             finally:
@@ -132,14 +132,13 @@ class BasicEnemySceneTests(unittest.TestCase):
                     scene.update(0)
                     scene.update(.11)
                     self.assertEqual(actor.state, action)
-                    effects = [obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)]
-                    self.assertEqual(len(effects), int(action == 'dash'))
+                    motion_image = actor.player.frame.image
                     actor.take_hit()
                     enemy.take_hit()
                     charges = tuple(scene.level.charges)
                     scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r, repeat=0))
                     scene.update(0)
-                    self.assertTrue(all(obj.level is None for obj in (actor, enemy, *effects)))
+                    self.assertTrue(all(obj.level is None for obj in (actor, enemy)))
                     self.assertTrue(all(charge.level is None for charge in charges))
                     self.assertTrue(all(charge.level is scene.level for charge in scene.level.charges))
                     self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
@@ -152,10 +151,12 @@ class BasicEnemySceneTests(unittest.TestCase):
                     self.assertIs(scene.level.enemy.frame, enemy.clips['idle'].frames[0])
                     self.assertEqual(scene.level.enemy.animation.elapsed, 0)
                     self.assertFalse(image.closed)
+                    self.assertFalse(motion_image.closed)
                     scene.draw()
                 finally:
                     scene.exit()
                 self.assertTrue(image.closed)
+                self.assertTrue(motion_image.closed)
 
     def test_teleport_cancels_active_sword_without_resetting_health(self):
         scene = CharacterScene()
@@ -165,7 +166,7 @@ class BasicEnemySceneTests(unittest.TestCase):
             enemy.x, enemy.state, enemy.state_remaining = 70, 'recover', 10
             actor._queue_action('attack')
             scene.update(0)
-            scene.update(.11)
+            scene.update(.15)
             self.assertIsNotNone(actor.active_attack)
             self.assertEqual(enemy.hp, 2)
             actor.hp, actor.invulnerability_remaining = 4, .4
@@ -270,7 +271,7 @@ class BasicEnemySceneTests(unittest.TestCase):
         self.assertIs(actor.player.clip, actor.clips['air_attack'])
         scene.handle_event(attack)
         self.assertIsNone(actor.buffered_action)
-        scene.update(DURATION + .01)
+        scene.update(.15)
         self.assertEqual((actor.state, enemy.hp), ('attack', 2))
         self.assertFalse(actor.grounded)
         hit_spark, = (obj for obj in scene.level.objects if isinstance(obj, SpriteEffect))
@@ -286,5 +287,5 @@ class BasicEnemySceneTests(unittest.TestCase):
         self.assertTrue(entry.spent and escape.spent)
         scene.update(.1)
         self.assertEqual(enemy.hp, 2)
-        scene.update(.10)
+        scene.update(.15)
         self.assertIsNone(hit_spark.level)

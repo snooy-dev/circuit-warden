@@ -134,3 +134,58 @@ git diff --check
 .\.venv\Scripts\python.exe -m unittest tests.integration.test_basic_enemy.BasicEnemySceneTests.test_real_attack_sheet_hits_three_times_in_both_directions
 git diff --check
 ```
+
+## 이동 공격과 속도·효과 조정
+
+- **FR-010, SC-006** — 지상 공격 시작부터 A/D로 이동한다. 입력을 반전해도 진행 중인 스윙 방향이 고정된다. 표적 자동 검사에서 지상·공중 이동 타격, 타격 범위 경계, 벽 정지, 입력 버퍼와 착지·순간이동·피격의 취소를 확인했다. 30개를 통과했다.
+- **FR-012, SC-008** — 원본 클립 시계에 0.7배를 적용해 지상 약 486ms, 공중 약 429ms로 진행한다. 타격 시작과 종료는 실제 경과 약 143ms와 286ms다. 기존 합성을 픽셀 단위로 재현한 뒤 몸체·피벗 및 비활성 셀을 보존하면서 효과를 최근접 방식으로 확대했다. 지상 최대 높이 82→98px, 공중 83→100px이며 셀 경계에서 잘리지 않았다.
+- **SDL** — 기본 전원 구역의 1280×720 창에서 J와 A/D를 주입하고 지상 좌우 전후 프레임과 공중 이동 공격을 캡처했다. 좌우 및 공중 타격 프레임을 열어 확대된 베기를 확인했다. 훈련장과 캐릭터 입력·감사·전하 SDL 검사도 통과했다.
+- **수렴** — 명세·계획·작업을 런타임 코드 및 시트, 표적 검사, 기술 구조, 조작·적 전투, 아트 기준 및 자산 출처와 대조했다. 사용자 직접 플레이와 전체 회귀는 실행하지 않았다.
+
+```powershell
+$localCheck = '.local-tools/verification/attack-tuning'
+$out = Join-Path $env:TEMP 'circuit-warden-attack-tuning'
+$checks = .\.venv\Scripts\python.exe "$localCheck/test_names.py"
+.\.venv\Scripts\python.exe -B -m unittest -q @checks tests.unit.test_input_buffer.InputBufferTests.test_focus_loss_clears_buffer
+.\.local-tools\python\Scripts\python.exe "$localCheck/bake.py"
+.\.venv\Scripts\python.exe -B "$localCheck/smoke.py" $localCheck
+.\.venv\Scripts\python.exe -B -m tests.smoke.combat_reimplementation_smoke --output-dir $localCheck
+.\.venv\Scripts\python.exe -B -m tests.smoke.character_smoke --output-dir $out
+.\.venv\Scripts\python.exe -B -m tests.smoke.audit_smoke --output-dir $out
+.\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $out
+git diff --check
+```
+
+## 검 적중 연출
+
+- **FR-013** — 적중 피해와 스파크가 확정된 프레임에서 정지와 방향성 흔들림을 시작한다. 정지는 45ms, 흔들림은 90ms다. 적의 첫 피격 자세는 최대 불투명도로 유지하고 시뮬레이션이 재개되면 피격 깜박임을 진행한다. 참고 영상과 적용 지점은 [계획](plan.md#follow-up-검-적중-연출)에 기록했다.
+- **SC-009** — 표적 자동 검사 13개에서 지상·공중 적중, 헛스윙, 45ms 경계를 넘긴 갱신의 잔여 시간, 정지 중 입력, 재시작, 치명타 우선순위와 순간이동 취소를 확인했다.
+- **SDL** — 전원 구역과 훈련장의 1280×720 실제 창에서 J를 주입해 좌우 지상 적중·공중 적중·헛스윙을 비교했다. 적중 자세가 멈춘 뒤 재개하고 그리기 중 카메라만 좌우로 이동했다가 돌아오는 것을 확인했다. 전하 SDL 검사도 통과했다. [전원 구역 적중 화면](../../.local-tools/verification/sword-impact/power/character-right-impact.png).
+- **수렴** — 기본 적 전투·기술 구조·진행 상태와 구현을 대조하고 FR-013·SC-009의 남은 구현 항목이 없는지 확인했다. 전체 회귀 및 사용자 조작감 평가는 수행하지 않았다.
+
+```powershell
+$localCheck = '.local-tools/verification/sword-impact'
+$checks = Get-Content "$localCheck/test-names.txt"
+.\.venv\Scripts\python.exe -B -m unittest -q @checks
+.\.venv\Scripts\python.exe -B "$localCheck/smoke.py"
+$out = Join-Path $env:TEMP 'circuit-warden-sword-impact'
+New-Item -ItemType Directory -Force $out | Out-Null
+.\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $out
+git diff --check
+```
+
+## 할로우 나이트 일반 검격 참고
+
+- **참고** — [공식 전투 영상의 기존 프레임 관찰](../019-combat-feedback/research.md)에서 공격 방향과 접점에 짧게 나타나는 효과, 다음 행동으로 넘어가는 흐름을 사용했다. 45ms 정지와 최대 8 월드 단위·65ms 적 밀림은 워든 기준의 조정값이다.
+- **FR-013, SC-009** — 자동 검사 14개로 좌우 밀림, 벽 정지, 돌진 상태 잔여 시간, 지상·공중의 검 피해, 헛스윙·선입력·재시작과 순간이동을 확인했다. 전원 구역·훈련장 1280×720 SDL 창에서 좌우 지상 적중, 공중 적중, 헛스윙을 비교했다. 적중 후 적이 열린 공간에서 8 월드 단위 이동했고 그리기 투영이 평상시 카메라와 일치했다. 전하 SDL도 통과했다.
+- **수렴** — 기존 스파크와 45ms 히트스톱, 워든의 이동 공격, 적 밀림과 일반 카메라 추적을 코드·명세·기술 구조·적 전투·진행 상태에서 대조했다. 전체 회귀와 사용자 직접 플레이 평가는 수행하지 않았다.
+
+```powershell
+$checks = Get-Content '.local-tools/verification/sword-impact/test-names.txt'
+.\.venv\Scripts\python.exe -B -m unittest -q @checks tests.unit.test_basic_enemy.BasicEnemyTests.test_sword_recoil_stops_at_a_wall_and_suspends_a_charge
+.\.venv\Scripts\python.exe -B .local-tools/verification/hollow-knight-impact/smoke.py
+$externalOut = Join-Path $env:TEMP 'circuit-warden-hollow-knight-impact'
+New-Item -ItemType Directory -Force $externalOut | Out-Null
+.\.venv\Scripts\python.exe -B -m tests.smoke.charge_smoke --output-dir $externalOut
+git diff --check
+```

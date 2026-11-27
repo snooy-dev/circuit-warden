@@ -1,0 +1,21 @@
+{
+  "file": "downstrike.png",
+  "frameSize": [
+    256,
+    224
+  ],
+  "columns": 5,
+  "count": 5,
+  "pivot": [
+    128,
+    136
+  ],
+  "durationsMs": [
+    18,
+    42,
+    42,
+    52,
+    60
+  ],
+  "loop": false
+}

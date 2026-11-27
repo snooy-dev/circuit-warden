@@ -1,0 +1,20 @@
+{
+  "imageRoute": "host-image_gen",
+  "reference": "Circuit_Warden_GameDesign.pptx, slide 20",
+  "sourceAlphaThreshold": 218,
+  "finish": "Forge hibit majority, 19-colour master, 2x2 logical grid",
+  "poses": "One master, registered deformation and warm coil planes",
+  "pixelfx": {
+    "commit": "a84159688af3ca37a4be05a0d422b94451b2e24e",
+    "bolt": "lightning/ball-lightning frames 17/22/26/28",
+    "slam": "lightning/thunderclap frames 7/9/12",
+    "license": "MIT, field-source/pixelfx-CREDITS.txt"
+  },
+  "sha256": {
+    "boss-source/power-assembly.palette.json": "1756541ca716733afafcc0d64ee5bbe8e9ac074e075a124185e67d3b423890db",
+    "boss-source/power-assembly.png": "da55621b90a6208b40a675041d95a4f966fbd6dbc2a5db4258429ef126c6da0c",
+    "boss-source/power-assembly.prompt.txt": "9e7bf392fb13e6761aa97b25bfa0cf56350d24d11c8cf965bdfd2d0b823e20e2",
+    "power-assembly.png": "ad1e484e08f056b5e5442b274a93c98755f128111c3ba91e5beecb933f3a123a",
+    "power-assembly-bolt.png": "6e48e918617c1d56e6e1f32f0fde64d49c70ff68d3c83d1139a3208670fe8797"
+  }
+}

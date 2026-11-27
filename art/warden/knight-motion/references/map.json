@@ -1,0 +1,299 @@
+{
+  "cell": {
+    "width": 256,
+    "height": 224,
+    "pivot": [
+      128,
+      136
+    ]
+  },
+  "animations": {
+    "idle": {
+      "image": "references/idle.png",
+      "frames": [
+        0,
+        0,
+        0,
+        0,
+        2,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        3,
+        6,
+        6,
+        6,
+        6
+      ],
+      "label": "기사 대기",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": ""
+    },
+    "walk": {
+      "image": "references/walk.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "label": "기사 달리기 · 걷기 대체 비교",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": true,
+      "note": "공개 원본 목록의 Walk는 확인했으나 파일 다운로드가 차단되어, 워든의 보폭과 대조할 수 있도록 기사 달리기 8프레임을 표시합니다."
+    },
+    "run-start": {
+      "image": "references/run-start.png",
+      "frames": [
+        0,
+        0,
+        1,
+        2,
+        3
+      ],
+      "label": "기사 달리기 출발",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": ""
+    },
+    "run": {
+      "image": "references/run.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "label": "기사 달리기",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": ""
+    },
+    "sprint": {
+      "image": "references/sprint.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "label": "기사 Sprintmaster",
+      "source": "https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png",
+      "surrogate": false,
+      "note": "Sprintmaster 아틀라스의 원본 스프라이트입니다. 표시 순서는 프레임 자세를 보고 짝지었습니다."
+    },
+    "jump-start": {
+      "image": "references/jump-start.png",
+      "frames": [
+        0,
+        1,
+        1,
+        2
+      ],
+      "label": "기사 대기 → 점프 초반",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": "대기 자세와 기사 점프 초반을 이어서 표시합니다."
+    },
+    "jump-rise": {
+      "image": "references/jump-rise.png",
+      "frames": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "label": "기사 점프 상승",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": ""
+    },
+    "jump-fall": {
+      "image": "references/jump-fall.png",
+      "frames": [
+        0,
+        0,
+        2,
+        3,
+        5,
+        2
+      ],
+      "label": "기사 낙하",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": ""
+    },
+    "jump-land": {
+      "image": "references/jump-land.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "label": "기사 낙하 → 지상 복귀 대체 비교",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": true,
+      "note": "공개 원본 목록의 Land는 확인했으나 파일 다운로드가 차단되어, 기사 낙하 마지막과 지상 자세를 표시합니다."
+    },
+    "ground-dash": {
+      "image": "references/ground-dash.png",
+      "frames": [
+        0,
+        0,
+        1,
+        2,
+        4,
+        6,
+        6
+      ],
+      "label": "기사 Mothwing Cloak 대시",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": "지상·공중 비교에 같은 기사 대시 몸체를 사용합니다."
+    },
+    "air-dash": {
+      "image": "references/air-dash.png",
+      "frames": [
+        0,
+        0,
+        1,
+        2,
+        4,
+        6,
+        6
+      ],
+      "label": "기사 Mothwing Cloak 대시",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": false,
+      "note": "지상·공중 비교에 같은 기사 대시 몸체를 사용합니다."
+    },
+    "ground-attack": {
+      "image": "references/ground-attack.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "label": "기사 일반 베기",
+      "source": "https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight",
+      "surrogate": false,
+      "note": "Slash_000~004의 몸체 셀을 순서대로 한 번씩 표시합니다. 000은 중립 자세이며 003과 004의 몸체 그림은 같습니다. 시간은 워든 검토용입니다."
+    },
+    "air-attack": {
+      "image": "references/air-attack.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "label": "기사 일반 베기",
+      "source": "https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight",
+      "surrogate": false,
+      "note": "Slash_000~004의 몸체 셀을 순서대로 한 번씩 표시합니다. 000은 중립 자세이며 003과 004의 몸체 그림은 같습니다. 시간은 워든 검토용입니다."
+    },
+    "downstrike": {
+      "image": "references/downstrike.png",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "label": "기사 아래 베기",
+      "source": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash",
+      "surrogate": false,
+      "note": "DownSlash_000~004의 몸체 셀을 순서대로 한 번씩 표시합니다. 000은 중립 자세이며 003과 004의 몸체 그림은 같습니다. 시간은 워든 검토용입니다."
+    },
+    "rebound": {
+      "image": "references/rebound.png",
+      "frames": [
+        0,
+        1,
+        1,
+        2,
+        2,
+        3,
+        4,
+        5
+      ],
+      "label": "기사 아래 베기 → 상승 대체 비교",
+      "source": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash",
+      "surrogate": true,
+      "note": "첫 셀은 하단 베기 2번과 같은 기사 접촉 자세입니다. 이어지는 상승은 기사 점프 원본을 사용한 대체 비교입니다."
+    },
+    "hurt": {
+      "image": "references/hurt.png",
+      "frames": [
+        0,
+        1,
+        3,
+        6,
+        8,
+        9
+      ],
+      "label": "기사 저체력 대기 · 피격 대체 비교",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": true,
+      "note": "실제 피격 순간의 원본 프레임은 확인하지 못했습니다. 이 스트립은 저체력 대기의 몸체 자세입니다."
+    },
+    "charge-arrival": {
+      "image": "references/charge-arrival.png",
+      "frames": [
+        0,
+        1,
+        3,
+        4,
+        4
+      ],
+      "label": "기사 대시 종료",
+      "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+      "surrogate": true,
+      "note": "기사의 대시 후반과 지상 복귀 자세를 이어 붙인 비교입니다."
+    },
+    "teleport-front": {
+      "image": "references/teleport-front.png",
+      "frames": [
+        0,
+        1,
+        2,
+        2,
+        3,
+        4,
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "label": "기사 Dreamgate 발동 · 귀환 배치",
+      "source": "https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png",
+      "surrogate": false,
+      "note": "Dreamgate 원본의 준비·압축·섬광을 워든 프레임과 짝지었습니다. 7번은 정면 섬광 실루엣이며 뒤쪽은 귀환 순서로 재배치했습니다."
+    }
+  }
+}

@@ -1,0 +1,812 @@
+{
+  "art_source": "host_image",
+  "model": "Codex ImageGen",
+  "estimateUsd": null,
+  "world_units_per_pixel": 2,
+  "sources": {
+    "art/levels/power-supply/annex/source/capacitors.png": "9a8df9a0f2d7d4e91dd7a6e2684b7fdf83207af9d879343d9b4182ae6a03d369",
+    "art/levels/power-supply/annex/source/filter.png": "a86da09bf0cefb48bd078877e8a5016946f8d124b09122097d71fd71b899cf31",
+    "art/levels/power-supply/annex/source/thermal.png": "13efdd85eb4e44eac45a885dba2bd7afd55bb4f4b1818ef4346605ba4e9c8568",
+    "art/levels/power-supply/network/source/diagnostic.png": "56fe7c47968f429997db3d6db3073297e9d3d8252bfd16a663ccf9219c80aa9c",
+    "art/levels/power-supply/network/source/surge.png": "01089fa8a3a266a35364939204d265281102c67afee212bf9df8d9c4752864a3",
+    "art/levels/power-supply/transformer-hall/source/relay.png": "8d4a13f74f5c8a95d2fe13e027452af51da28c6a61d81133f9a1d3b02e7dfe1a",
+    "art/levels/power-supply/transformer-hall/source/terrain.png": "844fb32e888bc5f6b991b7eb28e1e68e81157bfc66a78d493e6b84f927c190f5",
+    "art/levels/power-supply/transformer-hall/source/transformer.png": "5d491f46845436339156501490157e65cb3bacb17bc6951434e34c7166c81126",
+    "art/levels/power-supply/vertical/source/connector.png": "8c2f9cf4dde52e46120e0b4755a3b1a7bf680f9e5d37cfb2b6a3a782d7f01add",
+    "art/levels/power-supply/vertical/source/framing.png": "79ed45e06d6c96a3ad561d689f2f11c9387eddd7029322e5d6514187ecb55df6",
+    "art/levels/power-supply/vertical/source/plenum.png": "21e73675b5d173e2b072b3a201190e20ce7d1522a3e604da7557458617d06d22",
+    "art/levels/power-supply/vertical/source/riser.png": "499a56aef210280ad8ba3936d67b3df37181f11e51bf9853da6cde485d606a9d"
+  },
+  "assets": {
+    "vertical-intake-shell": {
+      "image": "vertical/vertical-intake-shell.png",
+      "sha256": "5e61868a248ef9de650cdcf29dc9528c4a0e8c2ac3e14591bac30fe7a0fca13d",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        480,
+        360
+      ]
+    },
+    "vertical-central-distribution-rear": {
+      "image": "vertical/vertical-central-distribution-rear.png",
+      "sha256": "f1b16e92f18e76533a06907d61e6af5167898e1342e0715860076cd0ccc89e6f",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/plenum.png"
+      ],
+      "logical_size": [
+        720,
+        360
+      ]
+    },
+    "vertical-central-distribution-shell": {
+      "image": "vertical/vertical-central-distribution-shell.png",
+      "sha256": "e85dd6b0f9e9bd75ec04854a7cfb75c1900d718d5365a36b8ca6934a29606ef4",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        720,
+        360
+      ]
+    },
+    "vertical-coolant-sump-rear": {
+      "image": "vertical/vertical-coolant-sump-rear.png",
+      "sha256": "9a75771f3be4d8a7961473119cab9262b1cbd07f4cd140f1958607c3f0662b69",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/transformer.png"
+      ],
+      "logical_size": [
+        720,
+        380
+      ]
+    },
+    "vertical-coolant-sump-shell": {
+      "image": "vertical/vertical-coolant-sump-shell.png",
+      "sha256": "f1a389f911fa2f77a9a97fc95231df3ae71072618e23c1b60a77ffa59fe4002e",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        720,
+        380
+      ]
+    },
+    "vertical-thermal-bank-rear": {
+      "image": "vertical/vertical-thermal-bank-rear.png",
+      "sha256": "64b3471f890800111cec09db66b4fed255ca1012f032695474fbc3b0045820b2",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/annex/source/thermal.png"
+      ],
+      "logical_size": [
+        480,
+        360
+      ]
+    },
+    "vertical-thermal-bank-shell": {
+      "image": "vertical/vertical-thermal-bank-shell.png",
+      "sha256": "586fb34d0c21b6012dad8956fff27368a0112e7fe75dab8a1193c6efc2673bda",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        480,
+        360
+      ]
+    },
+    "vertical-cooling-chimney-rear": {
+      "image": "vertical/vertical-cooling-chimney-rear.png",
+      "sha256": "232888c341b470ba278e0ca6f551a34882aab8c68b1377d3c40368587b425c8d",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/riser.png"
+      ],
+      "logical_size": [
+        240,
+        1080
+      ]
+    },
+    "vertical-cooling-chimney-shell": {
+      "image": "vertical/vertical-cooling-chimney-shell.png",
+      "sha256": "c5baad5110e962be75260573b8efbb0425fc6409c77251f6c0fb233f64d6a19b",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        240,
+        1080
+      ]
+    },
+    "vertical-filter-gallery-rear": {
+      "image": "vertical/vertical-filter-gallery-rear.png",
+      "sha256": "d329d10e44c73d52c89acc52c33fe59942da0f08b88e3113a495c477196a5391",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/annex/source/filter.png"
+      ],
+      "logical_size": [
+        480,
+        380
+      ]
+    },
+    "vertical-filter-gallery-shell": {
+      "image": "vertical/vertical-filter-gallery-shell.png",
+      "sha256": "4bc021dfc3eb47eba5e9d2f6655d39d39fbd77b2d99bec41a2832cf73f0d8b2f",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        480,
+        380
+      ]
+    },
+    "vertical-capacitor-reservoir-rear": {
+      "image": "vertical/vertical-capacitor-reservoir-rear.png",
+      "sha256": "03617b10a506f064c53f12dcaec42df91c2b1bdb6db32a9b0cdf155d9bf5d636",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/annex/source/capacitors.png"
+      ],
+      "logical_size": [
+        720,
+        380
+      ]
+    },
+    "vertical-capacitor-reservoir-shell": {
+      "image": "vertical/vertical-capacitor-reservoir-shell.png",
+      "sha256": "989a92125c3ccb2ea1560f9a2b6cf18fe7707c248915d79b4b2759e56dd38c9e",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/plenum.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        720,
+        380
+      ]
+    },
+    "vertical-diagnostic-loft-rear": {
+      "image": "vertical/vertical-diagnostic-loft-rear.png",
+      "sha256": "127748d7c8efe2162f26c277abe0fd2a85f80c3b6c8ca7e6c354a8659cf40311",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/network/source/diagnostic.png"
+      ],
+      "logical_size": [
+        720,
+        340
+      ]
+    },
+    "vertical-diagnostic-loft-shell": {
+      "image": "vertical/vertical-diagnostic-loft-shell.png",
+      "sha256": "227f0f5def1ac2ecf37bb85265327ae88bbc034599259ca5eb7cad60835b7825",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/plenum.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        720,
+        340
+      ]
+    },
+    "vertical-relay-tower-rear": {
+      "image": "vertical/vertical-relay-tower-rear.png",
+      "sha256": "c37970b4be9592e957fe4a0d2c0856ac32a2276b26c64b829160c0cac5728ebf",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/relay.png"
+      ],
+      "logical_size": [
+        720,
+        340
+      ]
+    },
+    "vertical-relay-tower-shell": {
+      "image": "vertical/vertical-relay-tower-shell.png",
+      "sha256": "14ab06b6ad923b070488ec4e1b74dfaa85dedb22aebea6ed7d1213b808c266ab",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        720,
+        340
+      ]
+    },
+    "vertical-load-test-chamber-rear": {
+      "image": "vertical/vertical-load-test-chamber-rear.png",
+      "sha256": "ade0593f74962cb15944ecdc9d8c659312b6de2d9bf4d148d25b5685e405df25",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/network/source/surge.png"
+      ],
+      "logical_size": [
+        930,
+        340
+      ]
+    },
+    "vertical-load-test-chamber-shell": {
+      "image": "vertical/vertical-load-test-chamber-shell.png",
+      "sha256": "bdac77fbb588a9f492aae0a66ce2d93fb0767cdc912e596d256b9a59e9c212a3",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/riser.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        930,
+        340
+      ]
+    },
+    "vertical-output-terminal-rear": {
+      "image": "vertical/vertical-output-terminal-rear.png",
+      "sha256": "eef6bb08574d6eae21202720c3ebfc22d907476d418f5de112cb3c63a83c32b3",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/connector.png"
+      ],
+      "logical_size": [
+        750,
+        360
+      ]
+    },
+    "vertical-output-terminal-shell": {
+      "image": "vertical/vertical-output-terminal-shell.png",
+      "sha256": "e81d7880a84d265e62aaee42a67ac418e943ed7ba7134c195509ad431c5486e9",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/transformer-hall/source/terrain.png",
+        "art/levels/power-supply/vertical/source/plenum.png",
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        750,
+        360
+      ]
+    },
+    "vertical-frame-1": {
+      "image": "vertical/vertical-frame-1.png",
+      "sha256": "41b83dc4caafbeab435e14f61a083f5606e74ea09135528b851bfe3fca84f084",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        108
+      ]
+    },
+    "vertical-lintel-1": {
+      "image": "vertical/vertical-lintel-1.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-frame-2": {
+      "image": "vertical/vertical-frame-2.png",
+      "sha256": "41b83dc4caafbeab435e14f61a083f5606e74ea09135528b851bfe3fca84f084",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        108
+      ]
+    },
+    "vertical-lintel-2": {
+      "image": "vertical/vertical-lintel-2.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-rim-3-left": {
+      "image": "vertical/vertical-rim-3-left.png",
+      "sha256": "d24fa75ec776ee0b5e57816f27d4fa6395cfee5bc0a9f393bb6116a50b856900",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-rim-3-right": {
+      "image": "vertical/vertical-rim-3-right.png",
+      "sha256": "8cc633976b021855046b8dfe11adf880308e037530f46d7dd212ccb5bcfb1020",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-coupler-3": {
+      "image": "vertical/vertical-coupler-3.png",
+      "sha256": "e43f5a07a33ae05ec3f7a8b59a636a5d067ba289e51e1f967b54e35727608d57",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        47,
+        36
+      ]
+    },
+    "vertical-frame-4": {
+      "image": "vertical/vertical-frame-4.png",
+      "sha256": "41b83dc4caafbeab435e14f61a083f5606e74ea09135528b851bfe3fca84f084",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        108
+      ]
+    },
+    "vertical-lintel-4": {
+      "image": "vertical/vertical-lintel-4.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-frame-5": {
+      "image": "vertical/vertical-frame-5.png",
+      "sha256": "41b83dc4caafbeab435e14f61a083f5606e74ea09135528b851bfe3fca84f084",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        108
+      ]
+    },
+    "vertical-lintel-5": {
+      "image": "vertical/vertical-lintel-5.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-frame-6": {
+      "image": "vertical/vertical-frame-6.png",
+      "sha256": "b8a99600eb67212f6fd4c0ed762ef842fc84af8172ca78a6d14a148b9c40343f",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        104
+      ]
+    },
+    "vertical-lintel-6": {
+      "image": "vertical/vertical-lintel-6.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-frame-7": {
+      "image": "vertical/vertical-frame-7.png",
+      "sha256": "b8a99600eb67212f6fd4c0ed762ef842fc84af8172ca78a6d14a148b9c40343f",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        104
+      ]
+    },
+    "vertical-lintel-7": {
+      "image": "vertical/vertical-lintel-7.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-frame-8": {
+      "image": "vertical/vertical-frame-8.png",
+      "sha256": "13235834b428dd0fb023bd422838b901bdfcaf5269d4b301292249985d6ccdf3",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        160
+      ]
+    },
+    "vertical-lintel-8": {
+      "image": "vertical/vertical-lintel-8.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-frame-9": {
+      "image": "vertical/vertical-frame-9.png",
+      "sha256": "b8a99600eb67212f6fd4c0ed762ef842fc84af8172ca78a6d14a148b9c40343f",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        104
+      ]
+    },
+    "vertical-lintel-9": {
+      "image": "vertical/vertical-lintel-9.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-rim-10-left": {
+      "image": "vertical/vertical-rim-10-left.png",
+      "sha256": "d24fa75ec776ee0b5e57816f27d4fa6395cfee5bc0a9f393bb6116a50b856900",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-rim-10-right": {
+      "image": "vertical/vertical-rim-10-right.png",
+      "sha256": "8cc633976b021855046b8dfe11adf880308e037530f46d7dd212ccb5bcfb1020",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-coupler-10": {
+      "image": "vertical/vertical-coupler-10.png",
+      "sha256": "e43f5a07a33ae05ec3f7a8b59a636a5d067ba289e51e1f967b54e35727608d57",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        47,
+        36
+      ]
+    },
+    "vertical-rim-11-left": {
+      "image": "vertical/vertical-rim-11-left.png",
+      "sha256": "d24fa75ec776ee0b5e57816f27d4fa6395cfee5bc0a9f393bb6116a50b856900",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-rim-11-right": {
+      "image": "vertical/vertical-rim-11-right.png",
+      "sha256": "8cc633976b021855046b8dfe11adf880308e037530f46d7dd212ccb5bcfb1020",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-coupler-11": {
+      "image": "vertical/vertical-coupler-11.png",
+      "sha256": "e43f5a07a33ae05ec3f7a8b59a636a5d067ba289e51e1f967b54e35727608d57",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        47,
+        36
+      ]
+    },
+    "vertical-rim-12-left": {
+      "image": "vertical/vertical-rim-12-left.png",
+      "sha256": "d24fa75ec776ee0b5e57816f27d4fa6395cfee5bc0a9f393bb6116a50b856900",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-rim-12-right": {
+      "image": "vertical/vertical-rim-12-right.png",
+      "sha256": "8cc633976b021855046b8dfe11adf880308e037530f46d7dd212ccb5bcfb1020",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-coupler-12": {
+      "image": "vertical/vertical-coupler-12.png",
+      "sha256": "e43f5a07a33ae05ec3f7a8b59a636a5d067ba289e51e1f967b54e35727608d57",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        47,
+        36
+      ]
+    },
+    "vertical-rim-13-left": {
+      "image": "vertical/vertical-rim-13-left.png",
+      "sha256": "d24fa75ec776ee0b5e57816f27d4fa6395cfee5bc0a9f393bb6116a50b856900",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-rim-13-right": {
+      "image": "vertical/vertical-rim-13-right.png",
+      "sha256": "8cc633976b021855046b8dfe11adf880308e037530f46d7dd212ccb5bcfb1020",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        104
+      ]
+    },
+    "vertical-coupler-13": {
+      "image": "vertical/vertical-coupler-13.png",
+      "sha256": "e43f5a07a33ae05ec3f7a8b59a636a5d067ba289e51e1f967b54e35727608d57",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        47,
+        36
+      ]
+    },
+    "vertical-frame-14": {
+      "image": "vertical/vertical-frame-14.png",
+      "sha256": "41b83dc4caafbeab435e14f61a083f5606e74ea09135528b851bfe3fca84f084",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        24,
+        108
+      ]
+    },
+    "vertical-lintel-14": {
+      "image": "vertical/vertical-lintel-14.png",
+      "sha256": "47f7687d9d28c6fdd72e04dab2bc6e5fc7977c9a6223e6e58b63aa97de192e87",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        74,
+        23
+      ]
+    },
+    "vertical-chimney-return": {
+      "image": "vertical/vertical-chimney-return.png",
+      "sha256": "e64ef464729c265478b22806b398f49a99b1638e51498dc0a8f9ca61b40dbb1b",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        51,
+        154
+      ]
+    },
+    "vertical-chimney-inlet": {
+      "image": "vertical/vertical-chimney-inlet.png",
+      "sha256": "3950ddc14f212676e7f1c71d38b8fd41ef3e0d293f99d49ef493b087d64fbcee",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        57,
+        178
+      ]
+    },
+    "vertical-charge-conduit": {
+      "image": "vertical/vertical-charge-conduit.png",
+      "sha256": "5dcaa53e6f7498ddd67f171fcc1bcd229605b8383aa0ba4b0e5ba7095deb3e1b",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        48,
+        184
+      ]
+    },
+    "vertical-output-coupler": {
+      "image": "vertical/vertical-output-coupler.png",
+      "sha256": "8260a8999d61aef64778aa7e00a82d522c6dd1f39338f55e226e43404e44749a",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        54,
+        44
+      ]
+    },
+    "vertical-cooling-elbow": {
+      "image": "vertical/vertical-cooling-elbow.png",
+      "sha256": "f8ca422c563935541f83944158ed830f7415d7d590bc530b06273d3937eace65",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        83,
+        92
+      ]
+    },
+    "vertical-switchback-elbow": {
+      "image": "vertical/vertical-switchback-elbow.png",
+      "sha256": "952001dbb1e0deeb16d3c22ea865533c379f92ff0ad986fee86b18dffd7d5051",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        83,
+        92
+      ]
+    },
+    "vertical-hub-strut": {
+      "image": "vertical/vertical-hub-strut.png",
+      "sha256": "fc5da045ed90701bfd047cb0cc0ef21653116b3dfc127fa4b2fb6a6f8e5c5c92",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        351,
+        216
+      ]
+    },
+    "vertical-capacitor-strut": {
+      "image": "vertical/vertical-capacitor-strut.png",
+      "sha256": "5c01e1823f058b88d8d6a093146acc6a3e6e122653a78b2a59cf4f731f4124ce",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        467,
+        314
+      ]
+    },
+    "vertical-chimney-left-rail": {
+      "image": "vertical/vertical-chimney-left-rail.png",
+      "sha256": "2c5a4ad2362caa9acd3c5b5bd42011bee71e76903b7884ce4a7d6049684cf200",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        690
+      ]
+    },
+    "vertical-chimney-right-rail": {
+      "image": "vertical/vertical-chimney-right-rail.png",
+      "sha256": "423e7459e49b73deb7ebafa1b50ff9ba987c8923449daafc588176e87d73b6c0",
+      "art_source": "host_image",
+      "sources": [
+        "art/levels/power-supply/vertical/source/framing.png"
+      ],
+      "logical_size": [
+        23,
+        753
+      ]
+    }
+  }
+}

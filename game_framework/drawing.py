@@ -23,6 +23,15 @@ def draw_rect(transform, bounds, color, opacity=1):
         backend.draw_rect(_output_rect(transform, bounds), color, opacity)
 
 
+def draw_horizontal_gradient(transform, bounds, color, *, left_opacity, right_opacity):
+    """같은 색의 알파를 좌우로 보간해 그린다."""
+    _opacity(left_opacity)
+    _opacity(right_opacity)
+    if transform.valid:
+        backend.draw_horizontal_gradient(
+            _output_rect(transform, bounds), color, left_opacity, right_opacity)
+
+
 def _image_source(image, source):
     source = tuple(source)
     if len(source) != 4 or any(type(value) is not int for value in source):

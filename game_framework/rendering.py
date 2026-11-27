@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from engine.rendering.renderer import execute
 
 from ._validation import _bounds, _opacity
+from .ui import _visible_ui
 
 
 @dataclass(frozen=True)
@@ -84,32 +85,11 @@ class Renderer:
         if not transform.valid or canvas._closed:
             return
         self._drawing = canvas._rendering = True
-        stack = []
         try:
-            width, height = transform.logical_size
-            for root in reversed(sorted(canvas.roots, key=lambda n: n.draw_order)):
-                stack.append((root, (0, 0)))
-            while stack:
-                element, parent_origin = stack.pop()
-                element._validate()
-                if not element.visible:
-                    continue
-                x, y = parent_origin[0] + element.x, parent_origin[1] + element.y
-                if element.parent is None:
-                    x += element.anchor[0] * width
-                    y += element.anchor[1] * height
-                origin = (x, y)
-                bounds = element.bounds
-                if bounds is not None:
-                    left, top, right, bottom = _bounds(bounds)
-                    bounds = left + x, top + y, right + x, bottom + y
-                if (element.opacity > 0 and (bounds is None or
-                        _intersects(bounds, transform.bounds, 1 / transform.scale))):
+            for element, origin, bounds in _visible_ui(canvas, transform):
+                if bounds is None or _intersects(bounds, transform.bounds, 1 / transform.scale):
                     self.ui_items.append((element, origin, element.opacity))
-                for child in reversed(sorted(element.children, key=lambda n: n.draw_order)):
-                    stack.append((child, origin))
             execute(self.ui_items, lambda item: item[0].draw(item[1], transform, item[2]))
         finally:
-            stack.clear()
             self.ui_items.clear()
             self._drawing = canvas._rendering = False

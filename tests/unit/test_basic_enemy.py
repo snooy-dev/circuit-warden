@@ -22,13 +22,16 @@ class CombatFixture(unittest.TestCase):
         idle = SpriteClip((frame,), (.5,))
         attack = SpriteClip((frame,) * 7, (.05,) * 7, loop=False)
         clips = dict(idle=idle, run_left=idle, run_right=idle, attack=attack,
-                     air_attack=attack, hurt=SpriteClip((frame,), (HURT_SECONDS,), loop=False))
+                     air_attack=attack, hurt=SpriteClip((frame,), (HURT_SECONDS,), loop=False),
+                     walk=idle, sprint=idle, rebound=idle)
+        clips['run-start'] = clips['teleport-front'] = idle
         for direction in ('left', 'right'):
             for phase in ('start', 'rise', 'fall', 'land'):
                 clips[f'jump_{phase}_{direction}'] = idle
         clips.update(prepare_idle_right=SpriteClip((frame,), (.1,), loop=False),
-                     dash_right=SpriteClip((frame,), (.2,), loop=False),
-                     dash_fx_right=attack)
+                     dash_right=SpriteClip((frame,), (.2,), loop=False))
+        clips['air_prepare_right'] = clips['prepare_idle_right']
+        clips['air_dash_right'] = clips['dash_right']
         enemy_clips = {
             'idle': SpriteClip((frame,), (.6,)),
             'approach': SpriteClip((frame, frame), (.2, .2)),
@@ -125,17 +128,81 @@ class BasicEnemyTests(CombatFixture):
     def test_active_window_once_per_swing_and_removal(self):
         for hp in (2, 1, 0):
             self.click()
-            self.level.update(.099)
+            self.level.update(.124)
             self.assertEqual(self.enemy.hp, hp + 1)
             self.level.update(.001)
             self.assertEqual(self.enemy.hp, hp)
-            for _ in range(26):
+            for _ in range(41):
                 self.level.update(.01)
             self.assertEqual(self.enemy.hp, hp)
         self.assertIsNone(self.enemy.level)
         self.assertNotIn(self.enemy, self.level.objects)
 
-    def test_ground_attack_plants_then_recovery_movement_stops_at_wall(self):
+    def test_sword_hit_pauses_simulation_and_keeps_accepting_input(self):
+        self.click()
+        self.level.update(.15)
+        self.assertEqual(self.enemy.hp, 2)
+        spark, = (obj for obj in self.level.objects if isinstance(obj, SpriteEffect))
+        elapsed, recovery = self.actor.player.elapsed, self.enemy.state_remaining
+        position = self.enemy.x
+
+        self.level.update(.02)
+        self.assertEqual((self.actor.player.elapsed, self.enemy.state_remaining, spark.player.elapsed),
+                         (elapsed, recovery, 0))
+        with patch('game.enemy.draw_sprite') as draw:
+            self.enemy.render_items()[0].drawable(None, 1)
+        self.assertEqual(draw.call_args.args[4], 1)
+        self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_j))
+        self.assertEqual(self.actor.buffered_action, 'attack')
+
+        self.level.update(.03)
+        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .004)
+        self.assertEqual(self.enemy.state_remaining, recovery)
+        self.assertAlmostEqual(spark.player.elapsed, .005)
+        self.assertAlmostEqual(self.actor.buffer_remaining, .095)
+        self.assertGreater(self.enemy.x, position)
+        self.level.update(.07)
+        self.assertAlmostEqual(self.enemy.x, position + 8)
+        self.assertAlmostEqual(self.enemy.state_remaining, recovery - .01)
+        self.assertEqual(self.enemy.hp, 2)
+
+    def test_miss_does_not_pause_and_restart_clears_left_hit_feedback(self):
+        self.actor.facing = -1
+        self.click()
+        self.level.update(.15)
+        self.assertEqual((self.enemy.hp, self.enemy.x), (3, 70))
+        elapsed = self.actor.player.elapsed
+        self.level.update(.02)
+        self.assertAlmostEqual(self.actor.player.elapsed - elapsed, .016)
+
+        self.enemy.x = -70
+        self.level.update(.02)
+        self.assertEqual(self.enemy.hp, 2)
+        self.level.update(.05)
+        self.assertLess(self.enemy.x, -70)
+        self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r))
+        self.level.update(.02)
+        self.assertAlmostEqual(self.level.player.player.elapsed, .02)
+        self.assertEqual(self.level.enemy.x, enemy_rules.SPAWN_X)
+
+    def test_sword_recoil_stops_at_a_wall_and_suspends_a_charge(self):
+        wall = GameObject()
+        wall.colliders = (Collider((116, GROUND_Y, 117, 0), 'terrain', blocks={'enemy'}),)
+        self.level.spawn(wall)
+        self.click()
+        self.level.update(.15)
+        self.enemy.state, self.enemy.state_remaining, self.enemy.facing = 'charge', .2, -1
+
+        self.level.update(.10)
+        self.assertAlmostEqual(self.enemy.hurt_box[2], 116)
+        self.assertAlmostEqual(self.enemy.state_remaining, .2)
+        self.assertTrue(all(charge_id is None for _, _, _, charge_id in self.enemy.motion))
+
+        self.level.update(.02)
+        self.assertLess(self.enemy.hurt_box[2], 116)
+        self.assertAlmostEqual(self.enemy.state_remaining, .19)
+
+    def test_moving_ground_attack_stops_at_wall_without_reaching_beyond_it(self):
         wall = GameObject()
         wall.colliders = (Collider((30, GROUND_Y, 31, 0), 'terrain', blocks={'player'}),)
         self.level.spawn(wall)
@@ -143,21 +210,25 @@ class BasicEnemyTests(CombatFixture):
         self.click()
         self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
         self.level.update(.12)
-        self.assertAlmostEqual(self.actor.x, 0)
-        self.assertIsNotNone(self.actor.active_attack)
+        self.assertAlmostEqual(self.actor.x, 6)
+        self.assertIsNone(self.actor.active_attack)
         self.assertEqual(self.enemy.hp, 3)
         self.level.update(.15)
         self.assertAlmostEqual(self.actor.x, 6)
+        self.assertIsNotNone(self.actor.active_attack)
         self.assertEqual(self.actor.hurt_box[2], 30)
         self.assertEqual(self.enemy.hp, 3)
 
-    def test_air_sword_hits_target_reached_only_during_active_horizontal_motion(self):
-        for facing, key in ((1, pico.SDLK_d), (-1, pico.SDLK_a)):
-            for gap, expected_hp in ((36, 2), (50, 3)):
-                with self.subTest(facing=facing, gap=gap):
+    def test_sword_hits_target_reached_only_during_active_horizontal_motion(self):
+        for height in (0, 95):
+            for facing, key, gap, expected_hp in (
+                (1, pico.SDLK_d, 36, 2), (1, pico.SDLK_d, 70, 3),
+                (-1, pico.SDLK_a, 36, 2), (-1, pico.SDLK_a, 70, 3),
+            ):
+                with self.subTest(height=height, facing=facing, gap=gap):
                     self.level.reset_combat()
                     actor, enemy = self.level.player, self.level.enemy
-                    actor.y, enemy.y = GROUND_Y + 95, GROUND_Y + 60
+                    actor.y, enemy.y = GROUND_Y + height, GROUND_Y + min(height, 60)
                     enemy.x = facing * (ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + gap)
                     enemy.state, enemy.state_remaining = 'recover', 10
                     actor.facing = facing
@@ -165,7 +236,7 @@ class BasicEnemyTests(CombatFixture):
                     self.level.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=key))
                     self.level.update(.13)
                     self.assertEqual(enemy.hp, 3)
-                    self.level.update(.10)
+                    self.level.update(.17)
                     self.assertGreater(facing * actor.x, gap)
                     self.assertEqual(enemy.hp, expected_hp)
 
@@ -181,7 +252,7 @@ class BasicEnemyTests(CombatFixture):
                 self.click()
                 self.level.update(.15)
                 self.assertEqual(self.enemy.hp, expected)
-                self.level.update(.3)
+                self.level.update(.36)
 
     def test_split_long_update_keeps_active_attack_snapshot(self):
         self.click()
@@ -198,7 +269,7 @@ class BasicEnemyTests(CombatFixture):
     def test_inactive_attack_and_trail_cannot_hit(self):
         self.enemy.x = 220
         self.click()
-        self.level.update(.2)
+        self.level.update(.286)
         self.enemy.x = 70
         self.level.update(.01)
         self.level.update(.3)
@@ -453,14 +524,16 @@ class EnemyChargeTests(CombatFixture):
 
     def test_enemy_entering_at_sword_window_end_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + 17.5, -1
-        self.level.update(.1)
+        end_of_window = .25 - .15
+        self.enemy.x = ATTACK_REACH + enemy_rules.HURT_HALF_WIDTH + enemy_rules.CHARGE_SPEED * end_of_window
+        self.enemy.facing = -1
+        self.level.update(.15)
         self.assertEqual(self.enemy.hp, 3)
 
     def test_enemy_entering_after_sword_active_window_is_not_hit(self):
         self.start_mid_swing()
-        self.enemy.x, self.enemy.facing = 164, -1
-        self.level.update(.1)
+        self.enemy.x, self.enemy.facing = 180, -1
+        self.level.update(.15)
         self.assertEqual(self.enemy.hp, 3)
 
     def start_mid_swing(self):

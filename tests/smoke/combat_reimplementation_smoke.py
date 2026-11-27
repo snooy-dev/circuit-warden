@@ -8,6 +8,8 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.character import GROUND_Y, JUMP_HEIGHT
+from game.downstrike import REACH, WINDUP
+from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.training_map import LOW_WALL, PLATFORMS
 from tests.smoke.character_smoke import CharacterSmoke, push_key
@@ -16,17 +18,21 @@ from tests.smoke.character_smoke import CharacterSmoke, push_key
 class CombatSmoke(CharacterScene):
     capture = CharacterSmoke.capture
 
-    def __init__(self, output_dir, *, power_supply=False):
+    def __init__(self, output_dir, *, power_supply=False, downstrike_only=False):
         super().__init__(power_supply=power_supply)
         self.output_dir = output_dir
         self.elapsed = self.next_step = 0.0
         self.screenshot = None
         self.passed = False
+        self.downstrike_only = downstrike_only
 
     def enter(self, engine):
         super().enter(engine)
-        self.level.enemy.destroy()
-        self.scenario = self.exercise()
+        if self.downstrike_only:
+            self.scenario = self.downstrike_exercise()
+        else:
+            self.level.enemy.destroy()
+            self.scenario = self.exercise()
 
     def update(self, dt):
         super().update(dt)
@@ -62,6 +68,7 @@ class CombatSmoke(CharacterScene):
         yield from self.wait_until(lambda: actor.velocity_y <= 0)
         height = actor.y - GROUND_Y
         yield from self.wait_until(lambda: actor.grounded)
+        assert actor.state == 'run' and actor.jump_phase is None
         distance = actor.x
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_key(pico.SDLK_SPACE, pico.SDL_KEYUP)
@@ -77,12 +84,13 @@ class CombatSmoke(CharacterScene):
         start = actor.x
         push_key(pico.SDLK_j)
         yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .14)
-        assert isclose(actor.x, start) and actor.attack_facing == 1
-        self.screenshot = 'ground-planted-swing-right'
+        assert actor.x > start and actor.attack_facing == 1, (start, actor.x, actor.attack_facing, actor.pressed)
+        self.screenshot = 'ground-moving-swing-right'
+        start = actor.x
         push_key(pico.SDLK_d, pico.SDL_KEYUP)
         push_key(pico.SDLK_a)
         yield .055
-        assert isclose(actor.x, start) and actor.attack_facing == 1
+        assert actor.state == 'attack' and actor.x < start and actor.attack_facing == 1
         yield from self.wait_until(lambda: actor.state == 'run' and actor.x < start)
         assert actor.facing == -1
         push_key(pico.SDLK_j, pico.SDL_KEYUP)
@@ -90,15 +98,25 @@ class CombatSmoke(CharacterScene):
         start = actor.x
         push_key(pico.SDLK_j)
         yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .14)
-        assert isclose(actor.x, start) and actor.attack_facing == -1
-        self.screenshot = 'ground-planted-swing-left'
+        assert actor.x < start and actor.attack_facing == -1
+        self.screenshot = 'ground-moving-swing-left'
         push_key(pico.SDLK_j, pico.SDL_KEYUP)
         push_key(pico.SDLK_a, pico.SDL_KEYUP)
-        yield .25
+        yield from self.wait_until(lambda: actor.state == 'attack' and actor.player.elapsed >= .155)
+        push_key(pico.SDLK_d)
+        push_key(pico.SDLK_LSHIFT)
+        yield from self.wait_until(lambda: actor.state == 'dash')
+        assert actor.dash_facing == 1 and actor.attack_facing == -1
+        start = actor.x
+        yield from self.wait_until(lambda: actor.dash_phase == 'dash' and actor.x > start)
+        self.screenshot = 'recovery-dash-right'
+        push_key(pico.SDLK_LSHIFT, pico.SDL_KEYUP)
+        push_key(pico.SDLK_d, pico.SDL_KEYUP)
+        yield from self.wait_until(lambda: actor.state != 'dash')
 
         short = yield from self.running_jump(short=True)
         long = yield from self.running_jump(short=False)
-        assert 65 < short[0] < 105 and 161 < long[0] <= JUMP_HEIGHT
+        assert 65 < short[0] < 105 and 161 < long[0] <= JUMP_HEIGHT + 1e-6, (short, long)
         assert long[1] > short[1] + 40
         print(f'점프 높이 / 거리: 짧게 {short[0]:.1f} / {short[1]:.1f}, '
               f'길게 {long[0]:.1f} / {long[1]:.1f}', flush=True)
@@ -150,14 +168,33 @@ class CombatSmoke(CharacterScene):
         yield .05
         assert self.character is not actor and self.camera_center == (0, 0)
         print(f'벽 접촉 x={wall_contact}, 고정 카메라 x={camera_x:.1f}', flush=True)
+        yield from self.downstrike_exercise()
+
+    def downstrike_exercise(self):
+        actor, enemy = self.character, self.level.enemies[0]
+        enemy.state, enemy.state_remaining = 'recover', 2
+        actor.x, actor.y, actor.velocity_y = enemy.x, enemy.hurt_box[3] + REACH + 12, -90
+        actor.air_dash_used = True
+        push_key(pico.SDLK_s)
+        push_key(pico.SDLK_j)
+        yield from self.wait_until(lambda: actor.state == 'downstrike' and actor.downstrike_elapsed >= WINDUP)
+        self.screenshot = 'downstrike-blade'
+        yield from self.wait_until(lambda: enemy.hp == enemy.MAX_HP - 1)
+        assert actor.jump_phase == 'rise' and actor.velocity_y > 0 and not actor.air_dash_used
+        assert any(isinstance(obj, SpriteEffect) for obj in self.level.objects)
+        self.screenshot = 'downstrike-rebound'
+        push_key(pico.SDLK_j, pico.SDL_KEYUP)
+        push_key(pico.SDLK_s, pico.SDL_KEYUP)
+        yield .08
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--downstrike-only', action='store_true')
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    scene = CombatSmoke(args.output_dir)
+    scene = CombatSmoke(args.output_dir, downstrike_only=args.downstrike_only)
     Engine(*DEFAULT_SIZE).run(scene)
     assert scene.passed, 'SDL 창이 검사를 마치기 전에 닫혔습니다.'
     print('PASS: combat reimplementation smoke', flush=True)

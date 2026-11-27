@@ -1,0 +1,103 @@
+{
+  "art_source": "host_image",
+  "model": "Codex ImageGen",
+  "estimateUsd": null,
+  "world_units_per_pixel": 2,
+  "source_directory": "art/levels/power-supply/return-loop/source",
+  "sources": {
+    "device-atlas.png": "7271d574adf1963abe81c3890cb734b7961cb656bcf792fe30cd0d73a2b3c9ce",
+    "devices-prompt.txt": "b7f05bd066c627226673e019d63b4ab3247a77747c952f9f1914313835789e69",
+    "pcb-prompt.txt": "fe68caab3fde42f39a9277cb9a5a6b77b5d6d9c0e8b29b273c3ccd164687facf",
+    "pcb.png": "6510a5f22de02be0336d627ca6256688b754a8ed2664f4794e16a62904b69625"
+  },
+  "assets": {
+    "relay-off": {
+      "size": [
+        52,
+        61
+      ],
+      "opaque_colors": 15,
+      "sha256": "cb374b0e22e563669e7e60285882828fde3211a4a5dccc9628fb2e81eb58f317",
+      "crop": [
+        342,
+        72,
+        733,
+        525
+      ]
+    },
+    "relay-on": {
+      "size": [
+        52,
+        61
+      ],
+      "opaque_colors": 17,
+      "sha256": "07cc82d2b7fc6381dccc6f4c56e79f4ac139d19529b66c0601167fd75e51a80a"
+    },
+    "shutter-closed": {
+      "size": [
+        23,
+        124
+      ],
+      "opaque_colors": 11,
+      "sha256": "e656e573ac06c56a61f347b0c1047c9157ee7abca92c5d67b7284b482060c088",
+      "crop": [
+        1121,
+        0,
+        1305,
+        537
+      ]
+    },
+    "shutter-open": {
+      "size": [
+        23,
+        12
+      ],
+      "opaque_colors": 5,
+      "sha256": "a21d681f18407b99f33cfad6dbffe9cc72145d2a664e16021bdf7a4431d0a981"
+    },
+    "bridge": {
+      "size": [
+        131,
+        14
+      ],
+      "opaque_colors": 11,
+      "sha256": "ecdcf1b1f511a74183dc810e5fc063798f72d85b75ae3bf4986eddfb6e4d44ee",
+      "crop": [
+        114,
+        765,
+        947,
+        832
+      ]
+    },
+    "feed-wire": {
+      "size": [
+        18,
+        96
+      ],
+      "opaque_colors": 11,
+      "sha256": "fc37eb8394983e46c8dad35f4e657040d5427e8da63659c2798ce3d53d16de73",
+      "crop": [
+        1153,
+        574,
+        1232,
+        998
+      ]
+    },
+    "feed-wire-on": {
+      "size": [
+        18,
+        96
+      ],
+      "opaque_colors": 11,
+      "sha256": "aaae87e20862a6002ab165e1e7f14a7880a9d412798252611ae654eb47adbb64"
+    },
+    "pcb": {
+      "size": [
+        320,
+        304
+      ],
+      "opaque_colors": 18,
+      "sha256": "931a31d56f3167f008b349bcd8f0274554cac81fe2b05d6250d88da10b99b871"
+    }
+  }
+}

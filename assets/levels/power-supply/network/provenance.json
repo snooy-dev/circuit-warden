@@ -1,0 +1,503 @@
+{
+  "art_source": "host_image",
+  "model": "Codex ImageGen",
+  "world_units_per_pixel": 2,
+  "sources": {
+    "art/levels/power-supply/network/source/diagnostic.png": "56fe7c47968f429997db3d6db3073297e9d3d8252bfd16a663ccf9219c80aa9c",
+    "art/levels/power-supply/network/source/surge.png": "01089fa8a3a266a35364939204d265281102c67afee212bf9df8d9c4752864a3",
+    "art/levels/power-supply/network/source/aging.png": "2853de323f3bf9bf26287d92349371f960d0acd33f346d738bf712a7836fbcce",
+    "art/levels/power-supply/transformer-hall/source/terrain.png": "844fb32e888bc5f6b991b7eb28e1e68e81157bfc66a78d493e6b84f927c190f5"
+  },
+  "assets": {
+    "network-diagnostic": {
+      "image": "network/network-diagnostic.png",
+      "art_source": "host_image",
+      "sha256": "98f5aff10eb1e8f9f5e82e820b50cdff0f34e34b839f49d628bad7cab67a563f",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        264
+      ]
+    },
+    "network-surge": {
+      "image": "network/network-surge.png",
+      "art_source": "host_image",
+      "sha256": "4ff9c1a88bf4db6311774ef12f8419181bab82dcf061b7517db444925cec5560",
+      "source": "surge.png",
+      "logical_size": [
+        1220,
+        275
+      ]
+    },
+    "network-deck-5750-1070": {
+      "image": "network/network-deck-5750-1070.png",
+      "art_source": "host_image",
+      "sha256": "d0c4d61bc26a8d9b59a1b2fc719f0aab9667e15f23772906052c1c46d5d66af0",
+      "source": "terrain.png",
+      "logical_size": [
+        59,
+        12
+      ]
+    },
+    "network-deck-5900-1190": {
+      "image": "network/network-deck-5900-1190.png",
+      "art_source": "host_image",
+      "sha256": "5f44bcefe6711a110ede10cf237eeaaf198c6f886a3be68b157e4d18f8c78f16",
+      "source": "terrain.png",
+      "logical_size": [
+        60,
+        12
+      ]
+    },
+    "network-deck-5750-1310": {
+      "image": "network/network-deck-5750-1310.png",
+      "art_source": "host_image",
+      "sha256": "d0c4d61bc26a8d9b59a1b2fc719f0aab9667e15f23772906052c1c46d5d66af0",
+      "source": "terrain.png",
+      "logical_size": [
+        59,
+        12
+      ]
+    },
+    "network-deck-5900-1430": {
+      "image": "network/network-deck-5900-1430.png",
+      "art_source": "host_image",
+      "sha256": "5f44bcefe6711a110ede10cf237eeaaf198c6f886a3be68b157e4d18f8c78f16",
+      "source": "terrain.png",
+      "logical_size": [
+        60,
+        12
+      ]
+    },
+    "network-deck-5750-1550": {
+      "image": "network/network-deck-5750-1550.png",
+      "art_source": "host_image",
+      "sha256": "d0c4d61bc26a8d9b59a1b2fc719f0aab9667e15f23772906052c1c46d5d66af0",
+      "source": "terrain.png",
+      "logical_size": [
+        59,
+        12
+      ]
+    },
+    "network-deck-5480-795": {
+      "image": "network/network-deck-5480-795.png",
+      "art_source": "host_image",
+      "sha256": "80b253a44520b9cb00f9c58838d7e76640e01f23e0ca7bc1fcfe2f0782d928b1",
+      "source": "terrain.png",
+      "logical_size": [
+        70,
+        12
+      ]
+    },
+    "network-deck-5300-670": {
+      "image": "network/network-deck-5300-670.png",
+      "art_source": "host_image",
+      "sha256": "ebe8f2359fca71b531520903389d6de5f89968ad6f52ae6c8e55815c6483141a",
+      "source": "terrain.png",
+      "logical_size": [
+        65,
+        12
+      ]
+    },
+    "network-deck-4770-660": {
+      "image": "network/network-deck-4770-660.png",
+      "art_source": "host_image",
+      "sha256": "1407bc80039b45ced52cdefe8c3b713371c7f08f4493ca5ada0608ed72f55831",
+      "source": "terrain.png",
+      "logical_size": [
+        277,
+        12
+      ]
+    },
+    "network-deck-4864-32": {
+      "image": "network/network-deck-4864-32.png",
+      "art_source": "host_image",
+      "sha256": "15e5cc97e7d4783bf1eba71c517982b053552a3415f0c62f6dbe0bac31e2e9e4",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        224
+      ]
+    },
+    "network-deck-4864-660": {
+      "image": "network/network-deck-4864-660.png",
+      "art_source": "host_image",
+      "sha256": "62ae452467de502a496c3b66cf03cfb109c20e5f1ee1caf2f44170fe0a5bd535",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        83
+      ]
+    },
+    "network-deck-7214-1570": {
+      "image": "network/network-deck-7214-1570.png",
+      "art_source": "host_image",
+      "sha256": "8e376aeba361c5780be1250e7c8e2cca85ceb0347bd3182d4e836c3fd0e620a3",
+      "source": "terrain.png",
+      "logical_size": [
+        104,
+        12
+      ]
+    },
+    "network-deck-7214-1594": {
+      "image": "network/network-deck-7214-1594.png",
+      "art_source": "host_image",
+      "sha256": "49507d6529d125110f21a53d9c92a9ad6ebd9867d7a0a851056d6f9259e04a62",
+      "source": "terrain.png",
+      "logical_size": [
+        20,
+        163
+      ]
+    },
+    "network-deck-7422-1694": {
+      "image": "network/network-deck-7422-1694.png",
+      "art_source": "host_image",
+      "sha256": "bfe96d6107d4516ae1a91989ec2a74e7a423327c7d6e19dd49c2a9788f16e9ff",
+      "source": "terrain.png",
+      "logical_size": [
+        71,
+        51
+      ]
+    },
+    "network-deck-7760-1750": {
+      "image": "network/network-deck-7760-1750.png",
+      "art_source": "host_image",
+      "sha256": "b1b5f74d9de02dea9852f2ea92b785bc1e20f5de2751bb8fd14bd513b35815d9",
+      "source": "terrain.png",
+      "logical_size": [
+        635,
+        51
+      ]
+    },
+    "network-deck-9200-1750": {
+      "image": "network/network-deck-9200-1750.png",
+      "art_source": "host_image",
+      "sha256": "106d050121314e3ec2d7320a2590a7a4dd5a9565ec170bd4bc445238176de965",
+      "source": "terrain.png",
+      "logical_size": [
+        120,
+        51
+      ]
+    },
+    "network-deck-7032-2360": {
+      "image": "network/network-deck-7032-2360.png",
+      "art_source": "host_image",
+      "sha256": "97b45ee4ca49348f3cc6c6621b77fbdc19551405abb76e67bf31464e22331c07",
+      "source": "terrain.png",
+      "logical_size": [
+        104,
+        51
+      ]
+    },
+    "network-deck-7050-2250": {
+      "image": "network/network-deck-7050-2250.png",
+      "art_source": "host_image",
+      "sha256": "a506c5cb35d10a7fa301c87469e3f1866143a105745a7aa520a2a8b278f061b8",
+      "source": "terrain.png",
+      "logical_size": [
+        63,
+        12
+      ]
+    },
+    "network-deck-7254-2148": {
+      "image": "network/network-deck-7254-2148.png",
+      "art_source": "host_image",
+      "sha256": "7dfb03dbadc71b9dc39bbfd37d569abf1627cdf70dea3333c5d5e4798bcc5ad7",
+      "source": "terrain.png",
+      "logical_size": [
+        56,
+        12
+      ]
+    },
+    "network-deck-7336-2030": {
+      "image": "network/network-deck-7336-2030.png",
+      "art_source": "host_image",
+      "sha256": "d2aefdddd41294d4ab6a8aeb9b2043ee596f94918e516c088623c83a2a52f311",
+      "source": "terrain.png",
+      "logical_size": [
+        49,
+        10
+      ]
+    },
+    "network-deck-7254-1910": {
+      "image": "network/network-deck-7254-1910.png",
+      "art_source": "host_image",
+      "sha256": "3ddb6306ad85084cd5d180b855f8a3ddf9300db85bffe288ce472b4692f286b4",
+      "source": "terrain.png",
+      "logical_size": [
+        37,
+        12
+      ]
+    },
+    "network-deck-7336-1792": {
+      "image": "network/network-deck-7336-1792.png",
+      "art_source": "host_image",
+      "sha256": "2884cd3d977a2356bca870137f952294b3dbcba0a3ec0ece003caa1c6f20f449",
+      "source": "terrain.png",
+      "logical_size": [
+        43,
+        12
+      ]
+    },
+    "network-deck-9240-2350": {
+      "image": "network/network-deck-9240-2350.png",
+      "art_source": "host_image",
+      "sha256": "522b8e485659d52f784c854a23a00f464a17ef3b7309e6a112879feae36ea04b",
+      "source": "terrain.png",
+      "logical_size": [
+        84,
+        51
+      ]
+    },
+    "network-deck-9120-2230": {
+      "image": "network/network-deck-9120-2230.png",
+      "art_source": "host_image",
+      "sha256": "87a9cb0cd5475099530e84227469667de3f94e69a243cde46afafbc49a956638",
+      "source": "terrain.png",
+      "logical_size": [
+        53,
+        12
+      ]
+    },
+    "network-deck-9004-2110": {
+      "image": "network/network-deck-9004-2110.png",
+      "art_source": "host_image",
+      "sha256": "540d31ae8451e84e9d658a4226f95a456776926ad5ddc169fc6109839235549f",
+      "source": "terrain.png",
+      "logical_size": [
+        51,
+        12
+      ]
+    },
+    "network-deck-9123-1990": {
+      "image": "network/network-deck-9123-1990.png",
+      "art_source": "host_image",
+      "sha256": "66050ca2220b312fc4f27a9ae39be8ba621a73ba5cde96a1ff81f93925628bc8",
+      "source": "terrain.png",
+      "logical_size": [
+        46,
+        12
+      ]
+    },
+    "network-deck-9030-1870": {
+      "image": "network/network-deck-9030-1870.png",
+      "art_source": "host_image",
+      "sha256": "8f4ef2d02001ea2ae797f035e5064d5f2a7ab6b0ce0f99292258fd035e6014df",
+      "source": "terrain.png",
+      "logical_size": [
+        41,
+        12
+      ]
+    },
+    "network-deck-7000-2470": {
+      "image": "network/network-deck-7000-2470.png",
+      "art_source": "host_image",
+      "sha256": "e517c9238d2fb76f97e21cbb22b9d3e5e29d0f109d2122a5e0c3843c514d88f0",
+      "source": "terrain.png",
+      "logical_size": [
+        1220,
+        51
+      ]
+    },
+    "network-deck-7000-1920": {
+      "image": "network/network-deck-7000-1920.png",
+      "art_source": "host_image",
+      "sha256": "7742151ef6130c0aa9f70c5ce04b537d6700c2bc2e5f637cae6d6573329972aa",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        275
+      ]
+    },
+    "network-deck-9408-1920": {
+      "image": "network/network-deck-9408-1920.png",
+      "art_source": "host_image",
+      "sha256": "7742151ef6130c0aa9f70c5ce04b537d6700c2bc2e5f637cae6d6573329972aa",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        275
+      ]
+    },
+    "network-facing-service-core": {
+      "image": "network/network-facing-service-core.png",
+      "art_source": "host_image",
+      "sha256": "f72a18a7775d981ea90b9fadb1ed4bd3a859907c62711754e6dfe903a978ff8e",
+      "source": "diagnostic.png",
+      "logical_size": [
+        1720,
+        443
+      ]
+    },
+    "network-facing-heat-exchangers": {
+      "image": "network/network-facing-heat-exchangers.png",
+      "art_source": "host_image",
+      "sha256": "d1795264c10d8e12a23a150d6ed5a9c45241b6e789b088728c34f97ba55990ce",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        168
+      ]
+    },
+    "network-facing-capacitor-reservoir": {
+      "image": "network/network-facing-capacitor-reservoir.png",
+      "art_source": "host_image",
+      "sha256": "6a7089dfcf8dd8908d9e4c28d901f33b55d4b680b1627994cbfd5c1a986367f4",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        108
+      ]
+    },
+    "network-facing-filter-gallery": {
+      "image": "network/network-facing-filter-gallery.png",
+      "art_source": "host_image",
+      "sha256": "192aafd639738689439f1172063f20228745900c53452909534079510974fbf3",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        173
+      ]
+    },
+    "network-facing-relay-tower": {
+      "image": "network/network-facing-relay-tower.png",
+      "art_source": "host_image",
+      "sha256": "99425b12fb66453f7a19ca1367590e73b8a8beb530231b7d4ee361f0ec5f7e17",
+      "source": "diagnostic.png",
+      "logical_size": [
+        840,
+        68
+      ]
+    },
+    "network-facing-return-filters": {
+      "image": "network/network-facing-return-filters.png",
+      "art_source": "host_image",
+      "sha256": "9cb18c8d7f2d08df3ad68222ca65d92f2e618cb1c869136a41f6950f12b2d7eb",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        168
+      ]
+    },
+    "network-facing-return-capacitors": {
+      "image": "network/network-facing-return-capacitors.png",
+      "art_source": "host_image",
+      "sha256": "a23df7fc29e5e9d81cf973646687fd78e11873746a20d2c87e74862652f7421e",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        163
+      ]
+    },
+    "network-facing-return-exchangers": {
+      "image": "network/network-facing-return-exchangers.png",
+      "art_source": "host_image",
+      "sha256": "84b35a77cd52d8a6bcadfe560b331d9a8bb50738fd093829b92235daabadc0c5",
+      "source": "diagnostic.png",
+      "logical_size": [
+        720,
+        168
+      ]
+    },
+    "network-facing-load-test-chamber": {
+      "image": "network/network-facing-load-test-chamber.png",
+      "art_source": "host_image",
+      "sha256": "e028d66f2734bb28120279e47272a4c4c46e86a68d39da67730a1c7d082acd07",
+      "source": "diagnostic.png",
+      "logical_size": [
+        1220,
+        128
+      ]
+    },
+    "network-lint": {
+      "image": "network/network-lint.png",
+      "art_source": "host_image",
+      "sha256": "e7d377cb1c93a76ba4ae770d9678d6ea9e825d42a11f493d53eaae1cbb8bb1c0",
+      "source": "aging.png",
+      "logical_size": [
+        110,
+        20
+      ]
+    },
+    "network-rust": {
+      "image": "network/network-rust.png",
+      "art_source": "host_image",
+      "sha256": "5e8bd804a4299bfe8fdff82c51b65b5790595eb43ae1f32b03a81244aa67a1a5",
+      "source": "aging.png",
+      "logical_size": [
+        114,
+        19
+      ]
+    },
+    "network-residue": {
+      "image": "network/network-residue.png",
+      "art_source": "host_image",
+      "sha256": "7f8d86baca5df5324c9fd9500ee2ccd4eadb42b5677352b3d5c90bc8d39493e3",
+      "source": "aging.png",
+      "logical_size": [
+        87,
+        18
+      ]
+    },
+    "network-grime": {
+      "image": "network/network-grime.png",
+      "art_source": "host_image",
+      "sha256": "29d4ea17d16fd69547916dc9a1259859398dee713fc5cea6e991796ab1cdc80b",
+      "source": "aging.png",
+      "logical_size": [
+        109,
+        20
+      ]
+    },
+    "network-upright-capacitor-west": {
+      "image": "network/network-upright-capacitor-west.png",
+      "art_source": "host_image",
+      "sha256": "f41652e6af5b6bdbb53d02b4621a95435a77a43623e31eb706e6f4ab2e7508ce",
+      "source": "aging.png",
+      "logical_size": [
+        18,
+        298
+      ]
+    },
+    "network-upright-capacitor-east": {
+      "image": "network/network-upright-capacitor-east.png",
+      "art_source": "host_image",
+      "sha256": "f41652e6af5b6bdbb53d02b4621a95435a77a43623e31eb706e6f4ab2e7508ce",
+      "source": "aging.png",
+      "logical_size": [
+        18,
+        298
+      ]
+    },
+    "network-upright-filter-chute": {
+      "image": "network/network-upright-filter-chute.png",
+      "art_source": "host_image",
+      "sha256": "325034444d2f27330d37398dd6165b5ac7fbc71bb5dc792f91f3b1e19b334c82",
+      "source": "aging.png",
+      "logical_size": [
+        18,
+        175
+      ]
+    },
+    "network-upright-surge-intake": {
+      "image": "network/network-upright-surge-intake.png",
+      "art_source": "host_image",
+      "sha256": "325034444d2f27330d37398dd6165b5ac7fbc71bb5dc792f91f3b1e19b334c82",
+      "source": "aging.png",
+      "logical_size": [
+        18,
+        175
+      ]
+    },
+    "network-upright-surge-return": {
+      "image": "network/network-upright-surge-return.png",
+      "art_source": "host_image",
+      "sha256": "f67b2352a95faabc72841ee13cb4baa6eb3adf49ed5826c20a815a815dd459b2",
+      "source": "aging.png",
+      "logical_size": [
+        18,
+        207
+      ]
+    }
+  }
+}

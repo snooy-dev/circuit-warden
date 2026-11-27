@@ -1,0 +1,296 @@
+{
+  "frameSize": [
+    256,
+    224
+  ],
+  "pivot": [
+    128,
+    136
+  ],
+  "facing": "right",
+  "frontFacing": [
+    "teleport-front"
+  ],
+  "clips": {
+    "idle": {
+      "name": "대기",
+      "sheet": "ground/idle.png",
+      "durationsMs": [
+        69,
+        69,
+        68,
+        69,
+        82,
+        83,
+        83,
+        82,
+        81,
+        81,
+        82,
+        81,
+        75,
+        75,
+        75,
+        75
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "walk": {
+      "name": "걷기",
+      "sheet": "ground/walk.png",
+      "durationsMs": [
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110,
+        110
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "run-start": {
+      "name": "달리기 출발",
+      "sheet": "ground/run-start.png",
+      "durationsMs": [
+        24,
+        35,
+        40,
+        40,
+        42
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "run": {
+      "name": "달리기",
+      "sheet": "ground/run.png",
+      "durationsMs": [
+        62,
+        48,
+        60,
+        65,
+        62,
+        48,
+        60,
+        65
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "sprint": {
+      "name": "전력 질주",
+      "sheet": "ground/sprint.png",
+      "durationsMs": [
+        48,
+        40,
+        46,
+        48,
+        48,
+        40,
+        46,
+        48
+      ],
+      "loop": true,
+      "columns": 8
+    },
+    "jump-start": {
+      "name": "발구름",
+      "sheet": "air/jump-start.png",
+      "durationsMs": [
+        26,
+        26,
+        27,
+        31
+      ],
+      "loop": false,
+      "columns": 4
+    },
+    "jump-rise": {
+      "name": "상승",
+      "sheet": "air/jump-rise.png",
+      "durationsMs": [
+        40,
+        50,
+        65,
+        68,
+        75
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "jump-fall": {
+      "name": "낙하",
+      "sheet": "air/jump-fall.png",
+      "durationsMs": [
+        52,
+        50,
+        52,
+        62,
+        54,
+        50
+      ],
+      "loop": true,
+      "columns": 6
+    },
+    "jump-land": {
+      "name": "착지",
+      "sheet": "air/jump-land.png",
+      "durationsMs": [
+        25,
+        38,
+        42,
+        50,
+        54
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "ground-dash": {
+      "name": "지상 대시",
+      "sheet": "air/ground-dash.png",
+      "durationsMs": [
+        20,
+        25,
+        31,
+        46,
+        48,
+        45,
+        35
+      ],
+      "loop": false,
+      "columns": 7
+    },
+    "air-dash": {
+      "name": "공중 대시",
+      "sheet": "air/air-dash.png",
+      "durationsMs": [
+        20,
+        25,
+        31,
+        46,
+        48,
+        45,
+        35
+      ],
+      "loop": false,
+      "columns": 7
+    },
+    "ground-attack": {
+      "name": "지상 베기",
+      "sheet": "combat/ground-attack.png",
+      "durationsMs": [
+        22,
+        59,
+        59,
+        72,
+        118
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "air-attack": {
+      "name": "공중 베기",
+      "sheet": "combat/air-attack.png",
+      "durationsMs": [
+        22,
+        59,
+        59,
+        72,
+        118
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "downstrike": {
+      "name": "아래 베기",
+      "sheet": "combat/downstrike.png",
+      "durationsMs": [
+        18,
+        42,
+        42,
+        52,
+        60
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "rebound": {
+      "name": "반동",
+      "sheet": "special/rebound.png",
+      "durationsMs": [
+        23,
+        23,
+        25,
+        28,
+        30,
+        32,
+        36,
+        45
+      ],
+      "loop": false,
+      "columns": 8
+    },
+    "hurt": {
+      "name": "피격",
+      "sheet": "combat/hurt.png",
+      "durationsMs": [
+        18,
+        30,
+        37,
+        45,
+        60,
+        50
+      ],
+      "loop": false,
+      "columns": 6
+    },
+    "charge-arrival": {
+      "name": "대시 종료",
+      "sheet": "special/charge-arrival.png",
+      "durationsMs": [
+        32,
+        37,
+        39,
+        53,
+        59
+      ],
+      "loop": false,
+      "columns": 5
+    },
+    "teleport-front": {
+      "name": "정면 순간이동",
+      "sheet": "special/teleport-front.png",
+      "durationsMs": [
+        28,
+        26,
+        25,
+        24,
+        18,
+        14,
+        42,
+        14,
+        31,
+        39,
+        45,
+        44
+      ],
+      "loop": false,
+      "columns": 8
+    }
+  },
+  "poseReferences": {
+    "movement": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+    "slash": "https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight",
+    "downSlash": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash"
+  },
+  "art": "ImageGen 전신 원화 보정 · 무외곽선 2×2 hi-bit · 청록 전류 무늬",
+  "timing": "워든 검토용 재생 시간",
+  "pixelSize": [
+    2,
+    2
+  ]
+}

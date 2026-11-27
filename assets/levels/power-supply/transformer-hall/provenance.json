@@ -1,0 +1,279 @@
+{
+  "art_source": "host_image",
+  "model": "Codex ImageGen",
+  "estimateUsd": null,
+  "world_units_per_pixel": 2,
+  "source_directory": "art/levels/power-supply/transformer-hall/source",
+  "sources": {
+    "intake-prompt.txt": "52343fdfa44dc04f95c8d36a30bf99a77bfe4e2feecaaf2b7e8b065e406a23dc",
+    "intake.png": "35a06d995407e2623dd9d0af2b4b42c2d8af0102c62cbe3895089fca7d468560",
+    "relay-prompt.txt": "f84255bdf0d19e0798f3b39694ec7306a900900a1bc90afbaaf92d18ce214ee3",
+    "relay.png": "8d4a13f74f5c8a95d2fe13e027452af51da28c6a61d81133f9a1d3b02e7dfe1a",
+    "terrain-prompt.txt": "2b17bf6ba4f8feeb19747e1b081c8633f41598d82c28037ba41212e45a28a522",
+    "terrain.png": "844fb32e888bc5f6b991b7eb28e1e68e81157bfc66a78d493e6b84f927c190f5",
+    "transformer-prompt.txt": "563121b8b298c87698a07f6ec908d2ca0320b27a99358257927a70fabdaef61b",
+    "transformer.png": "5d491f46845436339156501490157e65cb3bacb17bc6951434e34c7166c81126"
+  },
+  "assets": {
+    "hall-intake": {
+      "image": "transformer-hall/hall-intake.png",
+      "art_source": "host_image",
+      "sha256": "464f5efaf2fcda931b1923bd3e6b6ecca13daff10c2706a1978d2e1279d02513",
+      "source": "intake.png",
+      "logical_size": [
+        576,
+        384
+      ]
+    },
+    "hall-transformer": {
+      "image": "transformer-hall/hall-transformer.png",
+      "art_source": "host_image",
+      "sha256": "441948ef36345258ed043e18d7566f33bebcd690b882674b65b177a32c4c55a4",
+      "source": "transformer.png",
+      "logical_size": [
+        615,
+        395
+      ]
+    },
+    "hall-relay": {
+      "image": "transformer-hall/hall-relay.png",
+      "art_source": "host_image",
+      "sha256": "d6ae160c771e35f4e4cf41d537eea87b59473d878e0843ad2b0ebcf17c596a3b",
+      "source": "relay.png",
+      "logical_size": [
+        370,
+        449
+      ]
+    },
+    "hall-relay-powered": {
+      "image": "transformer-hall/hall-relay-powered.png",
+      "art_source": "host_image",
+      "sha256": "7f458d09dfd6f797993d72217a7132080a30c5677aaf11cc8b760305f596d7f7",
+      "source": "relay.png",
+      "logical_size": [
+        370,
+        449
+      ]
+    },
+    "hall-plinth-steel": {
+      "image": "transformer-hall/hall-plinth-steel.png",
+      "art_source": "host_image",
+      "sha256": "18ee91c99ac33e02204c0065fef77c8890fbe85d8f818d6a2a4b6d0fb13124d3",
+      "source": "terrain.png",
+      "logical_size": [
+        542,
+        51
+      ]
+    },
+    "hall-plinth-sink": {
+      "image": "transformer-hall/hall-plinth-sink.png",
+      "art_source": "host_image",
+      "sha256": "e4aecd0e508e04a1312e15619b44691611757462cd5aaaa18804f3344caef1e1",
+      "source": "terrain.png",
+      "logical_size": [
+        566,
+        72
+      ]
+    },
+    "hall-plinth-board": {
+      "image": "transformer-hall/hall-plinth-board.png",
+      "art_source": "host_image",
+      "sha256": "29aa0af9dca10358e9c40012c65eb0e9e6fbaa2a72b735f23a730b5d352d24cc",
+      "source": "terrain.png",
+      "logical_size": [
+        322,
+        55
+      ]
+    },
+    "hall-deck-250-694": {
+      "image": "transformer-hall/hall-deck-250-694.png",
+      "art_source": "host_image",
+      "sha256": "707eaee22130e5ee100a2c10d873dfc46251c39255aa7685ac2197c26de39882",
+      "source": "terrain.png",
+      "logical_size": [
+        405,
+        12
+      ]
+    },
+    "hall-deck-218-420": {
+      "image": "transformer-hall/hall-deck-218-420.png",
+      "art_source": "host_image",
+      "sha256": "961b06107b8b7f911859b19d514f7b4c6dbf11fc8a5c8a7304e31cfdb9613373",
+      "source": "terrain.png",
+      "logical_size": [
+        16,
+        149
+      ]
+    },
+    "hall-deck-250-420": {
+      "image": "transformer-hall/hall-deck-250-420.png",
+      "art_source": "host_image",
+      "sha256": "490aef2b539397f6d51a0424c11e93911ca04124eae688ba200b5a8e76f19c07",
+      "source": "terrain.png",
+      "logical_size": [
+        405,
+        13
+      ]
+    },
+    "hall-deck-510-1030": {
+      "image": "transformer-hall/hall-deck-510-1030.png",
+      "art_source": "host_image",
+      "sha256": "5acd5a2258f972a6e41b904f65c2e6253f319dee5e6140e50dc9097741b06b7f",
+      "source": "terrain.png",
+      "logical_size": [
+        65,
+        12
+      ]
+    },
+    "hall-deck-675-918": {
+      "image": "transformer-hall/hall-deck-675-918.png",
+      "art_source": "host_image",
+      "sha256": "93343b6677972471b0b4eabe8019cc49007f3302d52ebe6d64d59928180966d7",
+      "source": "terrain.png",
+      "logical_size": [
+        50,
+        12
+      ]
+    },
+    "hall-deck-818-806": {
+      "image": "transformer-hall/hall-deck-818-806.png",
+      "art_source": "host_image",
+      "sha256": "c96717d93d571dee1668e975141b445f1075b854e187ecda680997fd5b35cc16",
+      "source": "terrain.png",
+      "logical_size": [
+        52,
+        12
+      ]
+    },
+    "hall-deck-1220-694": {
+      "image": "transformer-hall/hall-deck-1220-694.png",
+      "art_source": "host_image",
+      "sha256": "cef75ce1fddcaec34df13f837c1599f32c2c49b44485197da801d05a1a2b80e7",
+      "source": "terrain.png",
+      "logical_size": [
+        55,
+        12
+      ]
+    },
+    "hall-deck-1210-1030": {
+      "image": "transformer-hall/hall-deck-1210-1030.png",
+      "art_source": "host_image",
+      "sha256": "4e6df4ac7137f668de22befc3cbdfc5cfe1601fcacc47a6b36b1dc1249f283c0",
+      "source": "terrain.png",
+      "logical_size": [
+        60,
+        12
+      ]
+    },
+    "hall-deck-1360-930": {
+      "image": "transformer-hall/hall-deck-1360-930.png",
+      "art_source": "host_image",
+      "sha256": "3bb574b1bf0d01ab2296f6f132e6932a3d611a7681d41d902e14ee77de23ef02",
+      "source": "terrain.png",
+      "logical_size": [
+        50,
+        12
+      ]
+    },
+    "hall-deck-1740-930": {
+      "image": "transformer-hall/hall-deck-1740-930.png",
+      "art_source": "host_image",
+      "sha256": "3b5b4c07a99186464c43d5ef0d263c03c78a7827ccf84b1a16438251fdd05a29",
+      "source": "terrain.png",
+      "logical_size": [
+        200,
+        12
+      ]
+    },
+    "hall-deck-1722-1092": {
+      "image": "transformer-hall/hall-deck-1722-1092.png",
+      "art_source": "host_image",
+      "sha256": "3a2e884cd60b5cd9961542d671880ada75fb994c9906063008d09659460b023e",
+      "source": "terrain.png",
+      "logical_size": [
+        17,
+        24
+      ]
+    },
+    "hall-deck-2110-1090": {
+      "image": "transformer-hall/hall-deck-2110-1090.png",
+      "art_source": "host_image",
+      "sha256": "089bc7c2954d707fd215cc81ce75f3845a8b77f0b0d397c4b1520f945314b60b",
+      "source": "terrain.png",
+      "logical_size": [
+        18,
+        25
+      ]
+    },
+    "hall-deck-1730-694": {
+      "image": "transformer-hall/hall-deck-1730-694.png",
+      "art_source": "host_image",
+      "sha256": "1ab6e86e8f88a5c2ea8846df6730c6fbb9e883d47dc75f373c5e6140a879bcfa",
+      "source": "terrain.png",
+      "logical_size": [
+        395,
+        12
+      ]
+    },
+    "hall-deck-2548-1030": {
+      "image": "transformer-hall/hall-deck-2548-1030.png",
+      "art_source": "host_image",
+      "sha256": "2e413fcc3e48ed2310f06c89f25359f39e32f6c723de15a2cfb1bbdc6a8e7b4e",
+      "source": "terrain.png",
+      "logical_size": [
+        43,
+        12
+      ]
+    },
+    "hall-deck-2464-918": {
+      "image": "transformer-hall/hall-deck-2464-918.png",
+      "art_source": "host_image",
+      "sha256": "5358571f6b3ea0e7d5d235002248ad9c045362edca02e3e8807bde714abb423c",
+      "source": "terrain.png",
+      "logical_size": [
+        28,
+        12
+      ]
+    },
+    "hall-deck-2544-806": {
+      "image": "transformer-hall/hall-deck-2544-806.png",
+      "art_source": "host_image",
+      "sha256": "33afdd14b4ce18d466232e9cd6996818ae57f7c06876a407c670ae334cb966e2",
+      "source": "terrain.png",
+      "logical_size": [
+        44,
+        12
+      ]
+    },
+    "hall-bridge": {
+      "image": "transformer-hall/hall-bridge.png",
+      "art_source": "host_image",
+      "sha256": "e44171e638ff536affcba531b5bd6e3de2e23f3aca1e19d51bb455185979b16b",
+      "source": "terrain.png",
+      "logical_size": [
+        200,
+        12
+      ]
+    },
+    "hall-busbar-safe": {
+      "image": "transformer-hall/hall-busbar-safe.png",
+      "art_source": "host_image",
+      "sha256": "cc02730846acc0d5d38fe9185014a712c25b11ae7435df820d5fbd42c05f59f6",
+      "source": "terrain.png",
+      "logical_size": [
+        69,
+        16
+      ]
+    },
+    "hall-busbar-live": {
+      "image": "transformer-hall/hall-busbar-live.png",
+      "art_source": "host_image",
+      "sha256": "5763ae7a853809bf34f4dcb5044c0a446e9bd9a1a8649754702e4932e3f4727f",
+      "source": "terrain.png + maintenance/arc-live.png",
+      "logical_size": [
+        69,
+        16
+      ]
+    }
+  }
+}

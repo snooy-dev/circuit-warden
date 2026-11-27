@@ -21,10 +21,10 @@ class InputBufferTests(unittest.TestCase):
         actor = self.character
         self.attack()
         actor.update(0)
-        actor.update(.05)
+        actor.update(.075)
         self.press(pico.SDLK_LSHIFT)
         self.press(pico.SDLK_SPACE)
-        actor.update(.05)
+        actor.update(.075)
         self.assertEqual((actor.state, actor.jump_phase), ('jump', 'start'))
         self.assertIsNone(actor.buffered_action)
         actor.update(1.1)
@@ -54,18 +54,16 @@ class InputBufferTests(unittest.TestCase):
                 if expected_state == 'attack':
                     self.assertEqual(actor.player.elapsed, 0)
 
-    def test_landing_interrupts_air_attack_and_buffers_ground_attack(self):
+    def test_landing_accepts_a_new_ground_attack(self):
         actor = self.character
         self.press(pico.SDLK_SPACE)
         actor.update(.12 + .75)
+        self.assertEqual((actor.state, actor.jump_phase), ('jump', 'land'))
         self.attack()
         actor.update(.1)
-        self.assertEqual((actor.state, actor.jump_phase), ('jump', 'land'))
-        self.assertIsNone(actor.buffered_action)
-        actor.update(.08)
-        self.attack()
-        actor.update(.05)
         self.assertEqual(actor.state, 'attack')
+        self.assertIsNone(actor.jump_phase)
+        self.assertIsNone(actor.buffered_action)
 
     def test_focus_loss_clears_buffer(self):
         actor = self.character
@@ -74,7 +72,7 @@ class InputBufferTests(unittest.TestCase):
         self.press(pico.SDLK_SPACE)
         actor.control(SimpleNamespace(type=pico.SDL_WINDOWEVENT,
                                       event=pico.SDL_WINDOWEVENT_FOCUS_LOST))
-        actor.update(.1)
+        actor.update(.15)
         self.assertEqual(actor.state, 'idle')
         self.assertIsNone(actor.buffered_action)
 

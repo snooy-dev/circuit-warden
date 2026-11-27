@@ -118,3 +118,106 @@ ImageGen 편집본에서 손상 구간만 선택해 기존 케이블에 합성�
 
 - `.venv\Scripts\python.exe art/levels/power-supply/entry-camera-shake/smoke.py art/levels/power-supply/entry-camera-shake/frames`로 실제 SDL에서 12.5ms 간격으로 진행하며 타격 전과 직후의 카메라 위치, 그리기 직후 입력 좌표 복원, R 재시작과 조기 이동 중단을 확인했다.
 - 실제 화면 5장에서 케이스 벽의 같은 영역을 픽셀 단위로 대조해 예상 변위와 최종 원위치를 확인했다. 전체 레벨 주행과 사용자 직접 플레이는 미실행이다.
+
+## 레벨 동선 재설계
+
+2026-11-24 FR-008~FR-010을 확인했다. 변경 전에는 네 발판의 하부가 72px로 워든 키 83px보다 낮았다. 실제 충돌 계산에서 32px 중앙 틈에 폭 48px인 몸통이 양쪽으로 8px씩 걸렸다. 대기·달리기 프레임의 발 기준점과 불투명 발끝은 0~1px 차이였다.
+
+- **배치 검사** `map_bundle.py validate --bundle assets/levels/power-supply/map.json`은 오류·경고 0개, `map_nav.py check --bundle assets/levels/power-supply/map.json --output-dir .local-tools/level-redesign-nav`는 목표 4곳 도달과 얇은 틈 0개를 보고했다. 텍스처 알파 경계를 대조해 발판 9개와 방열판 2개의 그림·충돌 경계가 일치하는 것을 확인했다. 하부 최소 높이는 110px, 상부 중앙 틈은 80px다.
+- **실제 SDL 입력** `.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir .local-tools/level-redesign-sdl` 통과. 입구 발판 아래로 양방향 주행, 연습 발판 착지, 두 방열판 왕복, 변환부 하부 주행, 중앙 발판 양방향 점프와 틈에서 바닥까지 낙하, 상부 전하 좌클릭 순간이동, 경로 합류, 출력 점등, R·F6을 확인했다. 전하 후보 48곳의 배치도 검사했다. 적의 접근을 확인한 뒤 지형 반복 검사에서는 적을 제거했다. SDL 캡처에서 방열판 착지, 중앙 틈 낙하, 출력 점등을 관찰했다.
+- **훈련장** `test_jump_onto_training_platform_and_walk_off`, `test_camera_freezes_at_low_wall_inside_world_bounds`, `test_lands_on_platform_and_stops_rise_at_ceiling`을 `unittest`로 실행해 3개가 통과했다. 하부 최소 높이는 104px이며 기존 훈련장 검사에 발판 하부를 달리는 입력을 추가했다.
+- 점프를 재현하는 SDL을 경로 검증에 사용했다. 이전 브라우저·Tiled 산출물은 재생성하지 않았다. 이번 범위의 전체 회귀와 사용자 직접 플레이는 미실행이다.
+
+## 전망대와 전력 변환부 재제작
+
+2026-11-24 사용자 요청으로 FR-011~FR-013을 기본 `New Game`에 적용했다. 블록아웃에서 적과 겹친 전하 후보를 이동하고, 몸통보다 좁던 하강 틈 및 하부 턱과 회수 발판의 간격을 넓혔다. `host_image` 경로의 ImageGen으로 원경과 투명 구조물 원본을 각각 생성했다. 원경은 `hibit_plate.py plate --size 980x400 --colors 20 --preview-scale 1`로 가공했다. 구조물은 투명 셀을 추출해 착지 사각형에 맞춰 가공했다. 증분에서 생성한 출력등은 워든에 가려지지 않도록 옆으로 옮겼다. 회전 날개·시작 전선·바닥·코일은 기존 에셋을 사용했다. [원경 원본](../../art/levels/power-supply/maintenance/scenery-source.png) · [구조물 원본](../../art/levels/power-supply/maintenance/structures-source.png).
+
+- **SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/maintenance/sdl` 통과. 연습 발판, 전망대 시야, 상부 클릭 순간이동, 예고 중 안전과 방전 시 피해 1회, 중앙 낙하·재등반, 상부 출력, 전하 소비·적 처치 없이 하부 출력, R과 F6을 확인했다. 전하 후보 24곳에서 몸통 배치를 확인했다. [전망대](../../art/levels/power-supply/maintenance/sdl/character-power-supply-overlook.png) · [방전](../../art/levels/power-supply/maintenance/sdl/character-power-supply-live-arc.png) · [출력](../../art/levels/power-supply/maintenance/sdl/character-power-supply-output.png).
+- **기본 진입** 게임 Python으로 `.local-tools/verify-maintenance-entry.py`를 실행해 `main()`에서 Enter로 New Game 선택, 낙뢰, 조작 인계 후 우측 이동을 확인했다. [오프닝](../../art/levels/power-supply/maintenance/sdl/character-maintenance-opening.png).
+- **맵 데이터** `map_bundle.py validate --bundle assets/levels/power-supply/map.json` 오류·경고 0개. 같은 맵에 대한 `map_nav.py check`는 목표 3곳 도달, 좁은 틈 경고 0개다. 웹 미리보기는 런타임의 오브젝트 레이어를 한 밴드로 평탄화한 사본에 `build_scene_preview.py --verify --strict`를 실행했다. Chromium에서 전망대·회수 발판·출력 경로 3곳이 통과했다. 점프와 방전은 SDL에서 검사했다. [브라우저 미리보기](../../art/levels/power-supply/maintenance/preview/preview.html) · [경로 결과](../../art/levels/power-supply/maintenance/preview/scene-snapshot.json).
+- **접촉 회귀** 게임 Python `-m unittest`로 `EnemyChargeTests.test_lethal_sword_hit_prevents_same_frame_charge_damage`와 `EnemyChargeTests.test_teleport_guard_only_prevents_damage_before_contact_deadline` 두 개를 실행해 통과했다.
+
+`docs/game-design.md`, `docs/art-direction.md`, `docs/progress.md`를 갱신했다. 전체 회귀와 사용자 직접 플레이는 미실행이다. 초심자가 도움 없이 두 경로를 읽는지는 플레이 평가가 남아 있다.
+
+## 정비 샤프트와 순환 동선
+
+2026-11-25 사용자 요청으로 출시판 잊혀진 교차로의 지도 캡처와 출시판 Outskirts의 방 영역·연결선 데이터를 대조하고 FR-014~FR-016을 구현했다. 실제 Outskirts 추출본의 방 영역 55개와 연결선 64개에서 `SU_A22`·`SU_S01` 및 `SU_C02`의 연결을 확인했다. 원작을 직접 실행하는 대신 지도와 게임에서 추출한 자료를 검토했다. [레퍼런스 관찰](plan.md#정비-샤프트와-순환-동선) · [전원 구역 동선도](../../art/levels/power-supply/shaft-loop/overview.png).
+
+- **SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/shaft-loop/sdl` 통과. 중앙 샤프트 점프와 클릭 전하 이동, 상층 카메라 범위, 중앙·배기 샤프트 각각에서 출력 점등을 확인했다. 배기 경로는 적을 처치하거나 전하를 소모하지 않고 진행했다. 상층 예고 및 피해 1회, 중앙 낙하 후 정비실 복귀, R 카메라 초기화, F6 및 전하 후보 39개의 배치도 확인했다. [샤프트](../../art/levels/power-supply/shaft-loop/sdl/character-power-supply-central-shaft.png) · [배선실](../../art/levels/power-supply/shaft-loop/sdl/character-power-supply-gallery.png) · [출력](../../art/levels/power-supply/shaft-loop/sdl/character-power-supply-output.png).
+- **기본 진입과 아트** 게임 Python으로 `.local-tools/verify-shaft-entry.py`를 실행해 타이틀, New Game, 낙뢰, 조작 인계를 확인했다. 기존 팬과 낙뢰 접점은 유지했고, 출력실 왼쪽 경계를 옮겨 케이블이 상층 바닥을 관통하지 않도록 했다. 기존 판금에서 잘라낸 천장과 격벽, 팬·코일·콘덴서, 상태별 접점, 2×2 픽셀을 실제 창에서 확인했다. [오프닝](../../art/levels/power-supply/shaft-loop/sdl/character-maintenance-opening.png).
+- **자동 검사** 게임 Python으로 `CharacterSceneTests.test_camera_lags_motion_freezes_at_walls_and_resets_with_player`, `CharacterSceneTests.test_camera_freezes_at_low_wall_inside_world_bounds`를 실행해 두 개 모두 통과했다. `map_bundle.py validate` 오류·경고 0개, `map_nav.py check` 목표 4곳 도달·좁은 틈 0개다. 웹 미리보기용으로 렌더 밴드를 평탄화한 사본의 `build_scene_preview.py --verify --strict`에서 Chromium 경로 4개를 확인했다. [브라우저 배치 미리보기](../../art/levels/power-supply/shaft-loop/preview/preview.html) · [브라우저 판정](../../art/levels/power-supply/shaft-loop/preview/scene-snapshot.json).
+
+게임 설계·아트 기준·아키텍처·진행 상태를 갱신했다. 전체 회귀는 실행 범위 밖이며, 사용자 직접 플레이와 초심자의 길 읽기는 미확인이다.
+
+## 배전망 복구와 상층 귀환
+
+2026-11-25 사용자 피드백에 따라 Team Cherry의 왕의 길·교차로 입구·Goam 방 실제 프레임과 출시판 교차로 캡처, Videocult의 수직 이동·수평 이동 화면을 열어 육안으로 확인했다. 천장과 바닥을 큰 어둠으로 묶고 이동면과 핵심 물체에 국소 대비를 주는 방식을 각 방의 판금 실루엣과 조명에 적용했다. 환경은 2560×1440에서 4320×1920으로 넓혔다. 회전 팬·전선·코일·콘덴서·출력 단자는 기존 자산을 선택 배치했고, 팬 하우징 트림과 조명은 기존 픽셀과 색상 마스크로 제작했다. [인게임 레퍼런스 관찰](plan.md#배전망-복구와-상층-귀환) · [출시판 캡처](https://hollowknight.wiki/w/File:Screenshot_HK_Forgotten_Crossroads_06.png).
+
+- **SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir art/levels/power-supply/distribution/sdl` 통과. 초기 출력 셔터의 이동·순간이동 차단, 릴레이 밖 W 무효, 두 장치의 순차 작동, 전력교 중앙 착지, 예고 및 피격, 상층 덕트와 중앙 귀환, 출력 점등, R의 전원·충돌 초기화, F6 및 전하 후보 57곳의 배치를 확인했다. [초기 셔터](../../art/levels/power-supply/distribution/sdl/character-distribution-locked-output.png) · [전력교](../../art/levels/power-supply/distribution/sdl/character-distribution-powered-bridge.png) · [상층 귀환](../../art/levels/power-supply/distribution/sdl/character-distribution-return-duct.png) · [출력](../../art/levels/power-supply/distribution/sdl/character-distribution-output.png).
+- **기본 진입** 게임 Python으로 `.local-tools/verify-distribution-entry.py`를 실행해 타이틀, New Game, 낙뢰, 조작 인계와 이동을 확인했다. [오프닝](../../art/levels/power-supply/distribution/sdl/character-maintenance-opening.png).
+- **맵·회귀 검사** `map_bundle.py validate`, `map_nav.py check` 통과. 목표 4곳과 충돌 데이터에 경고 0개다. `build_scene_preview.py --verify --strict`는 정적 배치를 평탄화한 사본에서 경로 4개를 통과했다. 전원 상태 변화는 SDL 판정이다. `test_camera_lags_motion_freezes_at_walls_and_resets_with_player`, `test_skill_cast_preserves_air_action_and_is_spent_once`도 통과했다. [배치 미리보기](../../art/levels/power-supply/distribution/map-preview/preview.html).
+
+게임 설계·아트 기준·기술 구조·기본 조작·전하 규칙·진행 상태를 갱신했다. 원작은 실제 플레이 화면으로 관찰했다. 사용자 직접 플레이에서 장치 발견과 시각 품질은 미확인이다. 전체 회귀는 실행하지 않았다.
+
+## 전원 복구와 귀환 지름길
+
+- **블록아웃** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke`를 `--output-dir .local-tools/return-graybox`로 실행했다. 실제 SDL의 키·마우스 입력으로 복구 전 셔터, 출력실 순간이동 차단, 범위 밖 W, 단일 릴레이, 점프 상승, 정비교 중앙 착지, 출력, R 및 창 크기 전환을 확인했다.
+- **전하 상승** 같은 명령에 `--charge-return --output-dir .local-tools/return-graybox-charge`를 지정했다. 배전실 바로 위 전하를 클릭해 아래 발판을 건너뛰고, 같은 귀환로로 출력에 도달했다.
+- **배치 검사** 도구 Python의 `map_bundle.py validate`와 `map_nav.py check`를 `assets/levels/power-supply/map.json`에 실행했다. 배치 경고와 도달 불가 목표가 없었다. 점프와 전원 상태는 SDL에서 판정했다. [정비교 블록아웃](../../art/levels/power-supply/return-loop/graybox/character-return-powered-bridge.png).
+- **hi-bit 제작** 내장 ImageGen으로 장치 시트와 기판 원화를 만들었다. 도구 Python으로 `scripts/bake-power-supply-art/build.py`를 실행해 다수결 축소, 배경 팔레트 정리, 이진 알파와 파일 해시를 확인했다. 독립 화면 검토에서 릴레이 상태 차이가 약해 급전선도 점등하고 정비교 상단선을 밝게 조정했다. 닫힌 셔터의 발밑 정합과 열린 통행 공간을 화면에서 확인했다. [원화·프롬프트](../../art/levels/power-supply/return-loop/source/) · [제작 정보](../../assets/levels/power-supply/return-loop/provenance.json) · [최종 화면](../../art/levels/power-supply/return-loop/sdl/character-return-relay-on.png).
+- **최종 SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke`를 각 결과 폴더에 기본 모드와 `--charge-return`으로 실행했다. 두 경로 모두 출력 점등과 재시작을 통과했다. 전하 경로는 상층에서 한 칸 떨어진 뒤 재상승도 확인했다. 별도로 `.local-tools/verify-distribution-entry.py`의 출력 경로를 바꿔 게임 Python으로 타이틀, New Game, 낙뢰와 조작 인계를 확인했다. [점프 경로](../../art/levels/power-supply/return-loop/sdl/) · [전하 경로](../../art/levels/power-supply/return-loop/sdl-charge/).
+- **정적 미리보기** 복구 상태의 배치를 `build_scene_preview.py --strict`로 생성했다. 설치된 헤드리스 Chromium에서 키 이동, 이미지 로드 12개, `window.__scene.traverseAll()`의 목표 3곳을 확인했다. 정적 미리보기는 배치 확인용이며 실제 점프와 복구 전환은 SDL 검사에 포함한다. [미리보기](../../art/levels/power-supply/return-loop/preview-final/preview.html) · [브라우저 스냅샷](../../art/levels/power-supply/return-loop/preview-final/scene-snapshot.json).
+
+기존 카메라 초기화와 스킬 전하 생성의 관련 자동 검사 2개를 통과했다. 게임 설계, 진행 상태, 아트, 기술 구조와 조작 문서를 대조했다. 전체 회귀와 초회 플레이어의 동선 인지는 확인 범위에 포함하지 않았다.
+
+## 변압실의 두 경로
+
+- **블록아웃 실제 SDL** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke`의 기본 경로와 `--charge-route`를 실행했다. 하부에서 버스바 접촉 피해, 적의 반대편으로 순간이동, 검 적중과 두 번째 전하 이탈을 확인했다. 상부에서는 전하 두 개가 이어지고 적과 접촉하지 않고 선반을 통과했다. 두 경로에서 릴레이 복구, 귀환교, 출력과 R을 확인했다.
+- **최종 실제 SDL** 같은 명령으로 `art/levels/power-supply/transformer-hall/lower`와 `upper`에 두 경로를 각각 다시 실행했다. 상부는 전하 연쇄 뒤 워든과 적의 체력이 유지됐다. 하부는 버스바 피격 뒤 대시로 건너고, 적 돌진 예고 중 등 뒤로 이동해 검격한 뒤 다른 전하로 이탈했다. 복구 후 같은 버스바를 걸어서 지나갈 수 있었다. R 뒤 버스바 접촉 피해가 돌아왔다. 셔터, 귀환교, 출력과 F6도 확인했다. 별도 실행으로 `main`의 New Game, 낙뢰와 조작 인계를 확인했다. [상부](../../art/levels/power-supply/transformer-hall/upper/) · [하부](../../art/levels/power-supply/transformer-hall/lower/).
+- **에셋** 내장 ImageGen으로 흡기실, 변압실, 배전실의 원경과 소재별 지형 시트를 만들었다. 도구 Python에서 `scripts/bake-power-supply-art/build_transformer_hall.py`를 실행해 2월드 단위당 논리 1픽셀로 가공했다. 생성 배치와 충돌 상단을 대조했다. 화면 검토 뒤 버스바에 상태별 아크를 추가하고, 차가운 반사광으로 적의 실루엣을 분리했으며 복구 상태의 급전선과 기판을 점등했다. [이전·현재 실제 화면](../../art/levels/power-supply/transformer-hall/comparison.png) · [원화와 프롬프트](../../art/levels/power-supply/transformer-hall/source/) · [제작 정보](../../assets/levels/power-supply/transformer-hall/provenance.json).
+- **맵** `map_bundle.py validate`를 실행해 오류·경고 없이 통과했다. `map_nav.py check`의 정적 배치에서 목표가 모두 연결됐다. `build_scene_preview.py --strict`로 생성한 복구 상태를 헤드리스 Chromium에서 열어 키 이동, 이미지 로드, 경로를 확인했다. 실제 발판, 점프, 전하와 상태 전환은 SDL에서 판정했다. [정적 미리보기](../../art/levels/power-supply/transformer-hall/preview/preview.html) · [브라우저 기록](../../art/levels/power-supply/transformer-hall/preview/scene-snapshot.json).
+- **관련 회귀** `.\.venv\Scripts\python.exe -m unittest tests.unit.test_collision tests.unit.test_basic_enemy tests.integration.test_basic_enemy tests.integration.test_charge_scene`로 68개를 확인했다. 원화·런타임 해시, 지형 이진 알파, 이미지 배치와 충돌 치수, 최종 화면 및 새 문서 링크도 대조했다.
+
+게임 설계, 아트 기준, 진행 상태, 기술 구조와 조작 문서를 실제 레벨에 맞췄다. 전체 회귀는 실행하지 않았다. 사람의 초회 플레이에서 분기 발견과 난도는 미확인이다.
+
+## 상하 회로와 중앙 접속부
+
+- **블록아웃** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke` 기본 및 `--hatch` 실행에서 첫 출력 접근, 보이는 착지면, 서쪽 우회, 하층 검격과 버스바, 복구와 접속부 상층 귀환을 실제 키·마우스로 확인했다. 두 번째 실행은 복구 전에 아래에서 덮개를 열고 이전 갤러리로 돌아갔다. [첫 접속부](../../art/levels/power-supply/service-circuit/graybox/character-junction-output-and-shaft.png) · [열린 덮개](../../art/levels/power-supply/service-circuit/graybox/character-hatch-gallery-reconnection.png).
+- **충돌·캐릭터** 실제 캐릭터의 헤드리스 블록아웃에서 기존 점프만 사용하는 상승, 격벽·닫힌 장치를 가로지르는 순간이동 거절, 복구 전후 전하 변형 51곳의 배치 여유를 확인했다. `.\.venv\Scripts\python.exe -m unittest tests.unit.test_character tests.integration.test_charge_scene tests.integration.test_character_scene` 60개를 통과했다.
+- **최종 SDL** 기본과 `--hatch`의 두 입력 경로에서 각각 검격과 버스바 피해, 릴레이, 전하 3회 상승, 귀환교, 출력과 R을 통과했다. 덮개 전후의 지역 연결을 확인했으며, New Game의 낙뢰와 조작 인계도 실제 창에서 확인했다. [기본 완주 녹화](../../art/levels/power-supply/service-circuit/playthrough.mp4) · [첫 방문과 같은 접속부의 귀환](../../art/levels/power-supply/service-circuit/junction-return.png) · [선택 덮개로 갤러리 복귀](../../art/levels/power-supply/service-circuit/hatch/character-hatch-gallery-reconnection.png).
+- **환경** 내장 ImageGen으로 접속부 케이블 원화를 생성했다. `scripts/bake-power-supply-art/build_service_circuit.py`로 기존 원경·전자 부품을 층에 맞춰 재배치하고 새 접속부·덮개·귀환교와 재료별 표면을 hi-bit로 가공했다. 화면 검토에서 덮개가 일반 바닥으로 보일 수 있어 주황색 띠를 넣었다. [출처와 해시](../../assets/levels/power-supply/service-circuit/provenance.json) · [닫힌 덮개](../../art/levels/power-supply/service-circuit/main/character-gallery-over-closed-hatch.png).
+- **정적 검사** 최종 `map_bundle.py validate`는 오류와 경고가 없었다. 복구 상태의 평면 미리보기에서 Chromium이 키 이동, 이미지 로드와 세 목표의 경로를 확인했다. `map_nav.py check`의 `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 이 도구는 평면 격자에 있는 분리 영역을 보고한다. 실제 발판 착지, 상태 전환과 덮개로의 복귀는 SDL에서 확인했다. [평면 검사 원본](../../art/levels/power-supply/service-circuit/nav-final/nav-report.json) · [Chromium 기록](../../art/levels/power-supply/service-circuit/preview-final/scene-snapshot.json).
+
+현재 게임 설계, 아트, 조작, 기술 구조와 진행 상태를 갱신했다. 전체 회귀는 실행하지 않았다. 처음 보는 사람이 힌트 없이 어떤 길을 택하는지는 사용자 플레이에서 확인할 항목이다.
+
+## 서로 연결된 여덟 공간
+
+- **블록아웃** 실제 `Level`과 `Character`를 사용한 고정 간격 헤드리스 실행에서 하층 열교환실·콘덴서실·필터실, 배전탑, 상층 세 방과 출력을 연결했다. 배전탑의 점프·전하 상승, 낙하 지점 세 곳의 복귀, 복구 전 상층 셔터 차단을 확인했다.
+- **런타임** SDL 오프스크린에서 방 경계 좌표, 건너는 프레임의 X/Y 카메라 위치, 짧은 방의 검은 가림, 방 사이 순간이동 차단과 R 복귀를 확인했다. 파워 맵에서 적 리소스를 요청하지 않는다. `BasicEnemySceneTests`의 적 렌더링·재시작·검격 세 검사가 통과했다.
+- **실제 창** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --output-dir <경로>` 기본과 `--hatch`를 실행했다. 여덟 방, 첫 문턱 역방향 이동, 카메라의 출입구 전 정지와 첫 프레임 전환, 짧은 방 위·아래의 검은 픽셀, 방 건너 전하 차단, 버스바, 배전탑, 출력, F6와 R을 확인했다. 최초 화면 검토에서 다음 방의 전하 잔광이 가장자리에 들어왔고, 렌더링에서 방 소속을 확인하도록 수정했다. 최종 기본 경로를 다시 녹화해 출입구의 전하 표시와 입력 차단, 재시작 후 적이 없는 상태, 기본 New Game 진입을 확인했다. [SDL 왕복 녹화](../../art/levels/power-supply/annex/doorway.mp4) · [최종 기본 경로](../../art/levels/power-supply/annex/main/) · [덮개 경로](../../art/levels/power-supply/annex/hatch/).
+- **아트** 내장 ImageGen으로 방열기, 콘덴서, 필터와 상층 배선 원화를 생성했다. 도구 Python으로 `scripts/bake-power-supply-art/build_annex.py`를 실행해 2×2 픽셀용 원경과 발판을 구성했다. [전체 방 연결](../../art/levels/power-supply/annex/room-flow.png) · [제작 정보](../../assets/levels/power-supply/annex/provenance.json).
+- **관련 회귀** 게임 Python으로 `tests.integration.test_charge_scene`, `tests.integration.test_character_scene` 및 `tests.integration.test_basic_enemy.BasicEnemySceneTests`의 적 렌더링·재시작·검격 지정 메서드 세 개를 실행해 검사 37개를 통과했다.
+- **맵** 최종 `map_bundle.py validate`의 오류와 경고는 없었다. 복구 상태를 펼친 정적 Chromium 미리보기는 키 이동과 배치 목표 3곳을 통과했다. 평면 `map_nav.py check`의 `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 실제 방 연결과 이동은 SDL에서 판정했다. [평면 검사](../../art/levels/power-supply/annex/nav/nav-report.json) · [Chromium 기록](../../art/levels/power-supply/annex/preview/scene-snapshot.json).
+
+현재 설계·아트·기술 구조·전하 규칙·진행 상태를 갱신했다. 전체 회귀와 사용자 초회 플레이는 미실행이다.
+
+## 복구 전 상하 탐색
+
+- **레퍼런스 화면** Team Cherry의 잊혀진 교차로 초입 플레이 캡처에서 우물 사슬과 넓은 첫 착지 지점을, 하부 장면에서 높이가 다른 발판과 그 사이의 열린 시야를 확인했다. 출시판 가짜 기사 화면에서는 연속된 바닥과 어두운 원경이 강한 공격 동작과 분리된다. 콘덴서 샤프트의 지지대·착지면과 부하 시험실의 전투 여백에 반영했다. [교차로 플레이 화면](https://www.teamcherry.com.au/blog/the-forgotten-crossroads-a-hollow-knight-tour) · [가짜 기사 출시판 캡처](https://hollowknight.wiki/w/File:Screenshot_HK_False_Knight_03.png).
+- **초기 실제 입력** `.\.venv\Scripts\python.exe -m tests.smoke.power_supply_smoke --upper --output-dir .local-tools/psu-network-upper`와 같은 명령의 `--hatch --output-dir .local-tools/psu-network-lower` 실행이 통과했다. 상층은 전하 두 번·점검실 순환·필터 하강, 하층은 덮개·버스바·콘덴서 양방향을 확인했다. 두 실행에서 복구·귀환교·출력·R·F6도 확인했다. 이후 점검실 시야 경계와 동쪽 닫힌 셔터를 조정하고 최하층 방을 추가했다. 사용자 요청에 따라 마지막 버전의 추가 입력 플레이를 중단했다.
+- **최종 배치** `map_bundle.py validate --bundle assets/levels/power-supply/map.json --require-sha256`는 오류·경고 0개다. 10개 방의 영역은 겹치지 않는다. 부하 시험실의 중앙 x7550~8920과 y1920~2470은 비어 있다. 양쪽 입구와 복귀 발판의 충돌 여유를 워든 몸통 및 현재 점프 궤적과 대조했다. 두 입구는 릴레이 상태와 독립적이고 필수 릴레이 경로의 상단 주행면은 연결되어 있다. 점프 높이와 대시 거리를 조정할 필요가 없어 기존 수치를 사용했다. `py_compile`과 `git diff --check`가 통과했다.
+- **최종 화면** `.\.venv\Scripts\python.exe .local-tools/render-power-network.py`로 실제 Pico2D 장면을 오프스크린에서 구성했다. 점검실 바닥·동쪽 셔터가 방 경계에서 잘리지 않고, 콘덴서·필터 지지대와 최하층 전투면이 각 방 시야에서 보인다. 시작 방 중앙이 맵 y960에 유지됨을 검사했다. 원화 세 장은 내장 ImageGen으로 제작하고 `build_network.py`로 2×2 hi-bit 변환했다. [보스 공간](../../art/levels/power-supply/network/surge-view.png) · [콘덴서 접합부](../../art/levels/power-supply/network/capacitor-view.png) · [아트 출처](../../assets/levels/power-supply/network/provenance.json).
+- **배치 미리보기** 복구 상태 복제본의 `build_scene_preview.py --strict`는 오류·경고 0개다. 헤드리스 Chromium은 이미지 5개 로드, 이동 입력, 목표 3곳을 확인했다. 같은 사본의 `map_nav.py check`는 목표 3곳 도달, 좁은 틈 0개다. `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":2,"cells":114}`, 기준은 `reported`다. 이전 여덟 방 버전과 동일한 평면 격자 경고다. [정적 미리보기](../../art/levels/power-supply/network/review/preview.html) · [Chromium 기록](../../art/levels/power-supply/network/review/scene-snapshot.json) · [평면 검사](../../art/levels/power-supply/network/nav-final/nav-report.json).
+
+설계·아트·기술 구조와 진행 상태를 갱신했다. 마지막 버전에서 실제 키·마우스로 보스 공간을 오가는 조작감과 초회 길 찾기는 확인 전이다. 보스의 행동과 전투 진행 규칙은 기획 범위에 남는다.
+
+## 수직으로 엮은 설비와 다음 맵의 관문
+
+- **설계** 팀 체리의 방 연결 초안, 진행 관문, 블록아웃 순서를 적용했다. 잊혀진 교차로의 구간별 착지와 높이가 다른 출입구가 탐색을 나누는 모습, 가짜 기사 방의 연속된 전투면을 실제 게임 캡처에서 확인했다. 맵 폭의 중심에 갈림을 놓고, 냉각 경로는 아래로 돌아 왼쪽 샤프트를 오르게 했다. 콘덴서 경로는 곧바로 오른쪽에서 높이를 올린다. 최상부 시험실은 출력으로 가는 공통 관문이다. [전체 방 연결](../../art/levels/power-supply/vertical/room-flow.png) · [교차로 화면](https://www.teamcherry.com.au/blog/the-forgotten-crossroads-a-hollow-knight-tour) · [출시판 전투 캡처](https://hollowknight.wiki/w/File:Screenshot_HK_False_Knight_03.png).
+- **실제 입력** `./.venv/Scripts/python.exe -X utf8 -B -m tests.smoke.power_supply_smoke --output-dir .local-tools/psu-vertical-sdl`을 SDL dummy 드라이버와 60Hz 고정 간격으로 실행했다. 하층은 냉각 하부·열교환실·굴뚝·필터실, 동쪽은 콘덴서실·점검실을 거쳐 각각 복구 전 배전실에 도착했다. 하층에서 복구 해치를 왕복했고 두 실행 모두 시험실을 가로질러 출력 상태와 R 초기화에 도달했다. 복구 전 닫힌 관문과 방 건너 전하 클릭의 거절을 검사했다. 동쪽 경로에서는 전하를 실제 소비했고 별도 W로 점검실 덮개를 먼저 열어 콘덴서실 복귀와 재상승을 확인했다. 높이 경계 세 곳을 조정해 직전 발판으로 점프할 때 방 화면이 왕복하지 않게 했다.
+- **별도 물리 검사** 냉각 굴뚝의 전하 지름길 두 지점 착지와 하부에서 중앙까지 되오르는 계단을 비표시 SDL에서 검사했다. 전하 변형 39곳의 충돌 여유는 복구·덮개 상태가 바뀌어도 확보됐다. 점프와 대시 수치는 현재 스프라이트·조작 규격에 맞췄다.
+- **최종 화면과 자산** 내장 ImageGen으로 중앙 원경, 수직 냉각실, 출력 단자와 프레임 원화 네 장을 제작했다. `build_vertical.py`는 충돌과 개구부 치수에 맞춰 원경·받침·표면·전경을 합성하고 2×2 hi-bit로 변환했다. 오프스크린 Pico2D로 흡기실, 중앙, 냉각 굴뚝, 콘덴서, 필터, 보스 접근·전투면·출력 여덟 장을 직접 확인했다. [수직 냉각실](../../art/levels/power-supply/vertical/chimney.png) · [시험실](../../art/levels/power-supply/vertical/arena.png) · [출력](../../art/levels/power-supply/vertical/output.png) · [출처와 해시](../../assets/levels/power-supply/vertical/provenance.json).
+- **맵과 평면 미리보기** `map_bundle.py validate --bundle assets/levels/power-supply/map.json --require-sha256` 오류·경고 0개, `build_scene_preview.py --strict`의 오류·경고 0개다. 헤드리스 Chromium에서 키 이동, 이미지 4개, 세 상호작용 목표를 확인했다. `map_nav.py check`는 상호작용 목표 3곳 도달과 좁은 틈 0개다. `unreachable_walkable_area`는 `WARN`, 값은 `{"pockets":1,"cells":75}`, 기준은 `reported`이며 필터 서쪽 평면 격자 영역이다. [미리보기](../../art/levels/power-supply/vertical/final-preview/preview.html) · [Chromium 기록](../../art/levels/power-supply/vertical/final-preview/scene-snapshot.json) · [내비게이션 보고서](../../art/levels/power-supply/vertical/nav/nav-report.json).
+- **공유 카메라 확인** 오프스크린으로 새 흡기실 경계에서 시작하는 컷신과 조작 인계를 확인했다. `tests.integration.test_character_scene.CharacterSceneTests` 중 카메라 감쇠·재시작 및 낮은 벽 정지 검사 2개가 통과했다.
+
+설계·기술 구조·아트 기준과 진행 상태를 갱신했다. 사용자 직접 플레이와 전체 회귀는 실행하지 않았다. 보스 행동·전투 봉쇄·다음 맵의 실제 전환은 기획 범위에 남는다.

@@ -8,6 +8,8 @@ from game_framework import GameMode
 from .charge import CLICK_RADIUS
 from .teleport_link import DURATION, TeleportLink
 
+MIN_TELEPORT_DISTANCE = 1e-6
+
 
 class GameplayMode(GameMode):
     def on_start(self):
@@ -29,11 +31,10 @@ class GameplayMode(GameMode):
 
     def _teleport(self, charge, origin):
         player = self.level.player
-        if (charge.level is not self.level or not charge.in_range(origin)
-                or not player.can_teleport(charge.position)):
+        if charge.level is not self.level or not charge.can_activate(origin):
             return
         x, y = player.center
-        if hypot(x - charge.position[0], y - charge.position[1]) <= 1e-6:
+        if hypot(x - charge.position[0], y - charge.position[1]) <= MIN_TELEPORT_DISTANCE:
             return
         start = player.visual_center
         if not player.teleport(charge.position):
@@ -44,7 +45,7 @@ class GameplayMode(GameMode):
             start, player.center, self.level.link_art, self.level.combat_clips['charge_spent']))
         player.arrival_link = self.teleport_link
         for candidate in self.level.charges:
-            candidate.active = candidate.in_range(self.activation_origin)
+            candidate.active = candidate.can_activate(self.activation_origin)
 
     def after_update(self):
         if self.level.player.hp == 0:
@@ -66,7 +67,7 @@ class GameplayMode(GameMode):
                     # 갱신 후 생성한 효과는 다음 프레임부터 경과 시간을 모두 소비한다.
                     self.teleport_link.update(0)
         for candidate in self.level.charges:
-            candidate.active = candidate.in_range(self.activation_origin)
+            candidate.active = candidate.can_activate(self.activation_origin)
 
     def on_end(self):
         self.level.charge_art = None
@@ -75,6 +76,9 @@ class GameplayMode(GameMode):
         self.pending_charge = self.teleport_link = None
 
     def on_event(self, event):
+        if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_w and self.level.power_supply:
+            self.level.layout.interact(self.level.player)
+            return
         if event.type == pico.SDL_KEYDOWN and event.key == pico.SDLK_r:
             if not self.reset_held:
                 self.level.reset_combat()
@@ -102,19 +106,21 @@ class GameplayMode(GameMode):
                     and event.button in (pico.SDL_BUTTON_LEFT, pico.SDL_BUTTON_RIGHT)
                     and player.view_bounds is not None):
                 automatic = event.button == pico.SDL_BUTTON_RIGHT
-                point = self.activation_origin if automatic else (
+                origin = self.activation_origin
+                point = origin if automatic else (
                     self.event_to_world(event) if self.event_to_world is not None else None)
                 if point is not None:
-                    candidates = [(hypot(point[0] - charge.position[0], point[1] - charge.position[1]),
+                    candidates = ((hypot(point[0] - charge.position[0], point[1] - charge.position[1]),
                                    index, charge) for index, charge in enumerate(self.level.charges)
-                                  if charge.level is self.level and charge.in_range(self.activation_origin)
-                                  and player.can_teleport(charge.position)]
-                    if candidates:
-                        distance, _, charge = min(candidates)
+                                  if charge.level is self.level and charge.can_activate(origin))
+                    nearest = min((candidate for candidate in candidates
+                                   if not automatic or candidate[0] > MIN_TELEPORT_DISTANCE), default=None)
+                    if nearest is not None:
+                        distance, _, charge = nearest
                         if automatic or distance <= CLICK_RADIUS:
                             if self.teleport_link is not None and self.teleport_link.level is self.level:
                                 self.pending_charge = charge
                             else:
-                                self._teleport(charge, self.activation_origin)
+                                self._teleport(charge, origin)
                             return
             player.control(event)
