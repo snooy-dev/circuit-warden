@@ -8,8 +8,8 @@
 | run_left.png | art/warden/provisional-approved/run-v4/run_left/sheet.png | 618ef3377b2682ee6d15ab4052a208f041562adcaed406a0361977ca7460940e |
 | run_right.png | art/warden/provisional-approved/run-v4/run_right/sheet.png | c29d16562b7df8a8ec927b031ef1589bdf6252467afb648f1537af60977fc3aa |
 | attack.png | `art/warden/ground-step-slash-v1` 몸체 위에 `art/warden/ground-crescent-discharge-refined/slash.png`의 Pixelfx 분기 방전 초승달을 합성 | 0fc07afb21d30d24d5b37127a44baa3bc838225107085329f30bf53f2f110073 |
-| air_attack.png | `attack-source/grip_rig.py`의 전신 자세 시트에 지상 검격과 같은 여섯 pixelfx 프레임을 같은 크기로 합성 | 5f123b55f8ee1de188ac3095eaf0200a61a5e5b1c393ce85a5a80421113894bf |
-| downstrike.png | 전신 자세 시트에 `attack-source/down-sweep.mjs`의 발밑 pixelfx 잔상을 합성. [출처](downstrike-source/provenance.json) | bce209819f56669e7257dacbe09a1887f74e30bea1961d2e5a2b1e8d2384e258 |
+| air_attack.png | `attack-source/grip_rig.py`의 전신 자세 시트에 지상 검격과 같은 여섯 pixelfx 프레임을 같은 크기로 합성 | 254f57ca35cac95def2a2f1f1ea99ce2dbfb20f13ae39bde04e2f07055c26693 |
+| downstrike.png | 전신 자세 시트에 `attack-source/down-sweep.mjs`의 발밑 pixelfx 잔상을 합성. [출처](downstrike-source/provenance.json) | 4bed7b210c454a5cde80c3e7f6cfc7ac28496c0aa53d90cd43ed8b28db7d164b |
 | prepare_idle_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_left/sheet.png | efb9df7c2c976ace57b8a0d2448dac120bf4616e414edaa58bac91e12ae1ce1e |
 | prepare_idle_right.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_idle_right/sheet.png | 3ba433a4573f4cf45a085579ab10bf5a355c72e528446974023bc0fff342c3d0 |
 | prepare_run_left.png | art/warden/provisional-approved/dash-eye-cape-v1/prepare_run_left/sheet.png | f4db13401e9771a363a726689ad5ab573b1e519955e07a8eba3e757c5023f4f5 |

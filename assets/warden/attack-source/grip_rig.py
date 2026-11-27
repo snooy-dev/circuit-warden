@@ -6,7 +6,7 @@ import json
 import subprocess
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 from scipy.ndimage import map_coordinates
 from scipy.spatial import Delaunay
 
@@ -88,10 +88,11 @@ class Mesh:
                                (self.points[1]-side_pivot)*side_scale))
         self.faces = Delaunay((self.local[0] + self.local[1])/2).simplices
 
-    def render(self, yaw, angle, anchor, size, look_down=0):
+    def render(self, yaw, angle, anchor, size, *, offset=None):
         blend = np.clip(abs(yaw)/72, 0, 1)
         local = (1-blend)*self.local[0] + blend*self.local[1]
-        local[25:, 1] += look_down
+        if offset is not None:
+            local += offset
         c, s = np.cos(angle), np.sin(angle)
         dst = (local @ np.array(((c, s), (-s, c))) + anchor)*SS
         layers = np.zeros((size[1]*SS, size[0]*SS, 4), dtype=np.uint8)
@@ -123,18 +124,29 @@ class Mesh:
 
 HEAD = Mesh(FRONT_HEAD, SIDE_HEAD, FRONT_HEAD_POINTS, SIDE_HEAD_POINTS,
             (237,258),(273,267),.183,.214)
-SIDE_COAT = cut(SIDE_ART, [(209,258),(273,257),(335,263),(337,315),(320,337),
-                           (318,361),(303,380),(267,383),(230,365),(222,337),(207,330)])
-FRONT_COAT = cut(FRONT_ART, [(173,248),(253,245),(310,252),(326,272),(342,331),(320,335),
-                             (314,350),(300,350),(290,382),(197,383),(186,349),(171,347),
-                             (160,332),(149,327),(154,285)])
+
+# The profile master has a hand painted over the coat. Replace that paint with
+# adjacent fabric before adding the animated arm to the same shoulder.
+arm_mask = Image.new('L', SIDE_ART.size)
+ImageDraw.Draw(arm_mask).polygon([(231,324),(251,321),(263,331),(261,350),
+                                 (250,361),(235,360),(229,347)], fill=255)
+side_fabric = SIDE_ART.transform(SIDE_ART.size, Image.Transform.AFFINE, (1,0,26,0,1,2))
+side_body = Image.composite(side_fabric, SIDE_ART, arm_mask.filter(ImageFilter.GaussianBlur(2)))
+SIDE_COAT = cut(side_body, [(209,258),(273,257),(335,263),(337,315),(320,337),
+                           (318,370),(302,438),(229,438),(226,407),(229,375),
+                           (226,357),(222,337),(207,330)])
+FRONT_COAT = cut(FRONT_ART, [(173,248),(253,245),(310,252),(326,272),(342,331),(316,335),
+                             (298,336),(290,353),(303,451),(179,451),(188,366),(190,337),
+                             (159,333),(149,327),(154,285)])
 COAT = Mesh(
     FRONT_COAT, SIDE_COAT,
-    [(145,245),(340,245),(145,388),(340,388),(181,257),(240,251),(298,254),(160,292),
-     (325,287),(159,325),(234,326),(332,325),(185,346),(301,346),(213,376),(275,377)],
-    [(200,255),(345,255),(200,388),(345,388),(219,265),(267,260),(313,265),(215,294),
-     (326,288),(211,325),(268,326),(331,323),(226,346),(314,345),(248,375),(303,375)],
-    (241,367),(272,369),.181,.207)
+    [(145,245),(345,245),(145,455),(345,455),(181,257),(240,251),(298,254),(160,292),
+     (325,287),(159,325),(234,326),(332,325),(190,346),(293,346),(210,371),(273,371),
+     (183,401),(300,401),(209,438),(269,439),(237,409)],
+    [(200,255),(345,255),(200,447),(345,447),(219,265),(267,260),(313,265),(215,294),
+     (326,288),(211,325),(268,326),(331,323),(226,346),(314,345),(248,373),(299,373),
+     (230,397),(313,392),(251,427),(287,422),(275,410)],
+    (241,360),(272,362),.181,.207)
 
 SCARF = cut(SIDE_ART, [(89,345),(95,320),(114,299),(139,292),(171,294),(197,279),
                       (222,269),(243,270),(239,291),(214,308),(185,326),(144,331),
@@ -142,9 +154,6 @@ SCARF = cut(SIDE_ART, [(89,345),(95,320),(114,299),(139,292),(171,294),(197,279)
 TAIL = cut(SIDE_ART, [(104,382),(126,368),(155,362),(184,363),(208,354),(235,335),
                      (251,341),(245,367),(224,397),(198,418),(149,432),(119,422),
                      (105,407)]).crop((99,331,253,437))
-BOOT = cut(SIDE_ART, [(229,361),(245,354),(272,351),(285,368),(282,394),
-                     (266,419),(255,429),(243,431),(232,411),(228,388)])
-BOOT = BOOT.crop((224,349,286,433))
 ARM = cut(SIDE_ART, [(234,324),(245,325),(255,331),(259,343),(252,354),
                     (246,358),(239,355),(234,348)]).crop((231,322,262,360))
 HAND = ARM.crop((4,18,26,35))
@@ -175,11 +184,17 @@ def render(rig, time, size, anchor):
     layers = []
     layers.append((-32, part(TAIL,(140,24),(20,70),q['hip'],q['tail'],.215,size)))
     layers.append((-31, part(SCARF,(143,15),(15,72),q['chest'],q['scarf'],.213,size)))
-    for hip, knee, foot in [('near_hip','knee','foot'),('far_hip','other_knee','other_foot')]:
-        layers.append((p[hip][1] - 5, part(BOOT,(27,7),(27,57),q[hip],q[knee],.215,size)))
-        layers.append((p[foot][1] - 3, part(BOOT,(29,17),(28,72),q[knee],q[foot],.205,size)))
     angle = atan2(q['neck'][0]-q['hip'][0], q['hip'][1]-q['neck'][1])
-    layers.append((0, COAT.render(p['yaw'],angle,q['hip'],size)))
+    legs = np.zeros_like(COAT.local[0])
+    for knee, foot, knee_edge, toe, rest_x in (
+        ('knee', 'foot', 16, 18, -4), ('other_knee', 'other_foot', 17, 19, 4),
+    ):
+        leg_x, leg_y = np.subtract(q[foot], q['hip'])
+        legs[toe] = (.33 * (leg_x - rest_x), .65 * (leg_y - 20))
+        legs[knee_edge] = (.22 * (q[knee][0] - q['hip'][0] - rest_x),
+                           .40 * (q[knee][1] - q['hip'][1] - 10))
+    legs[20] = (legs[16] + legs[17]) / 2
+    layers.append((0, COAT.render(p['yaw'],angle,q['hip'],size,offset=legs)))
     for shoulder, elbow, hand in [('shoulder','elbow','hand'),
                                   ('other_shoulder','other_elbow','other_hand')]:
         if hand == 'hand':
@@ -195,8 +210,11 @@ def render(rig, time, size, anchor):
         layers.append((depth,place(HAND,(11,6),q[hand],heading-pi/2,.31,size)))
     for _, image in sorted(layers, key=lambda item:item[0]):
         frame.alpha_composite(image)
-    frame.alpha_composite(HEAD.render(p['head_yaw'],angle*.55,(q['neck'][0], q['neck'][1] + 3),size,
-                                     np.clip(1-abs(p['head_yaw'])/35,0,1)*2.5))
+    look_down = np.clip(1-abs(p['head_yaw'])/35,0,1)
+    eyes = np.zeros_like(HEAD.local[0])
+    eyes[25:, 1] = look_down*2.5
+    neck = (q['neck'][0], q['neck'][1] + 3.8 + .7*look_down)
+    frame.alpha_composite(HEAD.render(p['head_yaw'],angle*.55,neck,size,offset=eyes))
     reduced = frame.resize(size, Image.Resampling.LANCZOS)
     alpha = reduced.getchannel('A').point(lambda a: 255 if a >= 158 else 0)
     reduced = reduced.convert('RGB').quantize(palette=PALETTE,dither=Image.Dither.NONE).convert('RGBA')
