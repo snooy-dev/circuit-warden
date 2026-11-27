@@ -375,7 +375,7 @@ class CharacterTests(unittest.TestCase):
         self.assertEqual((actor.state, actor.jump_phase), ('jump', 'fall'))
         self.assertIs(actor.player.clip, actor.clips['jump_fall_left'])
 
-    def test_air_attack_applies_jump_release_and_ground_attack_buffers_jump(self):
+    def test_air_attack_applies_jump_release_and_ground_attack_allows_takeoff(self):
         actor = self.character
         click = SimpleNamespace(type=pico.SDL_MOUSEBUTTONDOWN, button=pico.SDL_BUTTON_LEFT)
         actor.control(click)
@@ -401,9 +401,8 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_SPACE))
         actor.update(.05)
         self.assertEqual(actor.state, 'attack')
-        self.assertTrue(actor.grounded)
-        actor.update(.05)
-        self.assertEqual(actor.jump_phase, 'start')
+        self.assertFalse(actor.grounded)
+        self.assertEqual(actor.jump_phase, 'rise')
 
     def test_focus_loss_clears_pending_jump_but_airborne_character_lands(self):
         actor = self.character
@@ -477,7 +476,7 @@ class CharacterTests(unittest.TestCase):
                 self.assertIs(actor.player.clip, self.clips['idle'])
                 self.assertEqual(actor.facing, -1)
 
-    def test_same_clip_advances_direction_change_starts_first_frame(self):
+    def test_same_clip_advances_and_direction_change_keeps_stride_time(self):
         actor = self.character
         actor.update(.041)
         self.assertIs(actor.player.frame, self.clips['idle'].frames[1])
@@ -489,7 +488,8 @@ class CharacterTests(unittest.TestCase):
         actor.control(key(pico.SDLK_d, pico.SDL_KEYUP))
         actor.control(key(pico.SDLK_a))
         actor.update(.04)
-        self.assertIs(actor.player.frame, self.clips['run_left'].frames[0])
+        self.assertIs(actor.player.clip, self.clips['run_left'])
+        self.assertAlmostEqual(actor.player.elapsed, .07)
 
     def test_bounds_include_idle_and_run_extents_and_center_when_narrow(self):
         actor = self.character

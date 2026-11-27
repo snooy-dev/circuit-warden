@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
-from game.character import GRAVITY, GROUND_Y, JUMP_HEIGHT, JUMP_SPEED, SPEED
+from game.character import GRAVITY, GROUND_Y, JUMP_HEIGHT, JUMP_RELEASE_FACTOR, JUMP_SPEED, SPEED
 from game.scene import CharacterScene
 from game.training_map import PLATFORMS
 from tests.integration import test_character_scene
@@ -346,6 +346,49 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertTrue(actor.grounded)
         self.assertEqual(actor.state, 'run')
         self.assertAlmostEqual(actor.x, SPEED * .06)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(scene.transform, 1)
+            self.assertIs(draw.call_args.args[0], actor.clips['jump_land_right'].frames[7])
+            scene.update(.05)
+            actor._draw(scene.transform, 1)
+            self.assertIs(draw.call_args.args[0], actor.player.frame)
+        self.assertAlmostEqual(actor.x, SPEED * .11)
+
+    def test_releasing_jump_preserves_the_current_rise_frame(self):
+        scene = self.scene()
+        actor = scene.character
+        self.key(scene, pico.SDLK_SPACE)
+        scene.update(.10)
+        frame, elapsed, speed = actor.player.frame, actor.player.elapsed, actor.velocity_y
+        self.key(scene, pico.SDLK_SPACE, pico.SDL_KEYUP)
+        scene.update(0)
+        self.assertAlmostEqual(actor.velocity_y, speed * JUMP_RELEASE_FACTOR)
+        self.assertAlmostEqual(actor.player.elapsed, elapsed)
+        self.assertIs(actor.player.frame, frame)
+        scene.update(.03)
+        self.assertGreater(actor.player.elapsed, elapsed)
+
+    def test_air_dash_and_hurt_return_to_the_live_air_pose(self):
+        for action in ('dash', 'hurt'):
+            with self.subTest(action=action):
+                scene = self.scene()
+                scene.level.enemy.destroy()
+                actor = scene.character
+                if action == 'dash':
+                    self.key(scene, pico.SDLK_SPACE)
+                    scene.update(.10)
+                    self.key(scene, pico.SDLK_LSHIFT)
+                    scene.update(.435)
+                else:
+                    actor.take_hit(-1)
+                    scene.update(.09)
+                self.assertEqual((actor.state, actor.jump_phase), (action, 'rise'))
+                self.assertFalse(actor.grounded)
+                with patch('game.character.draw_sprite') as draw:
+                    actor._draw(scene.transform, 1)
+                    frames = actor.clips['jump_rise_right'].frames
+                    self.assertIn(draw.call_args.args[0], frames[1:])
+                    self.assertFalse(draw.call_args.kwargs['flip_x'])
 
     def test_landing_allows_ground_attack_or_dash(self):
         for symbol, expected in ((pico.SDLK_j, 'attack'), (pico.SDLK_LSHIFT, 'dash')):

@@ -249,7 +249,7 @@ class GameplayLevel(Level):
             struck.last_hit_attack = attack_id
             struck.take_hit()
             self.player.rebound_from_downstrike(feet_y)
-            self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, self.player.facing, 1,
+            self.spawn(SpriteEffect(self.combat_clips['hit_spark'], point, self.player.attack_facing, 1,
                                     draw_order=1))
             self._sword_stop_remaining = SWORD_HIT_STOP
         self._resolve_enemy_contact(dt, player_position, protected_until, struck)

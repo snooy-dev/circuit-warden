@@ -2,14 +2,14 @@
   "body": {
     "route": "authored_full_body_raster_rig",
     "file": "poses.png",
-    "sha256": "05bd95e31a9fc05cf1769fc53111502e99ab6ae58ef7992af707e1746a086336",
+    "sha256": "77b1d20258434a1efa7100977a92a44cffca7c69770923f00a8186f352a3eb57",
     "references": [
       "../../../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png",
       "../../../art/warden/reference/master-source.png",
       "../../../art/warden/reference/energy-sword-master-v2.png"
     ],
     "build": "../attack-source/grip_rig.py",
-    "intent": "공중 측면 자세에서 정면으로 돌아 검 끝이 발밑을 가로지르고, 같은 손으로 반대편까지 회수하는 10프레임",
+    "intent": "공중 측면에서 정면으로 돌아 무릎과 자유 팔로 균형을 잡고, 같은 손으로 발밑을 벤 뒤 반대편으로 회수하는 10프레임",
     "frameScale": "기준 워든 높이 80px, 워든 16색, 이진 알파",
     "footPivot": [
       104,
@@ -21,12 +21,12 @@
     "revision": "a84159688af3ca37a4be05a0d422b94451b2e24e",
     "source": "../attack-source/down-sweep.mjs",
     "file": "sweep.png",
-    "sha256": "4bd88fbf1267357bdb2d755b6e300fae80e3e739dc860377ca49855a7116fbde",
+    "sha256": "08deef153d93f84a2b3f73cfc3eb3701220b875039c847a679dd8b3016e6f264",
     "impact": "../../combat/source/provenance.json"
   },
   "runtime": {
     "file": "../downstrike.png",
-    "sha256": "4bed7b210c454a5cde80c3e7f6cfc7ac28496c0aa53d90cd43ed8b28db7d164b",
+    "sha256": "7d67f29d187a42c22a2f3a7c18bd34c6b9dab5f8dd1369f73fc4cb007f9c23b2",
     "frameSize": [
       208,
       208

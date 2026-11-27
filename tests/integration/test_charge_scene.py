@@ -394,7 +394,10 @@ class ChargeSceneTests(unittest.TestCase):
             frames = actor.clips['jump_land_right'].frames
             self.assertIs(draw.call_args.args[0], frames[len(frames) // 3])
             scene.update(0)
-            scene.update(ARRIVAL_BLEND_SECONDS)
+            scene.update(ARRIVAL_BLEND_SECONDS / 2)
+            actor._draw(scene.transform, 1)
+            self.assertIn(draw.call_args.args[0], frames[len(frames) // 3 + 1:])
+            scene.update(ARRIVAL_BLEND_SECONDS / 2)
             actor._draw(scene.transform, 1)
             self.assertIs(draw.call_args.args[0], actor.player.frame)
 

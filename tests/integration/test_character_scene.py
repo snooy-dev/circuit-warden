@@ -45,11 +45,11 @@ class CharacterSceneTests(unittest.TestCase):
                 try:
                     actor = scene.character
                     idle, left, right = (actor.clips[name] for name in ('idle', 'run_left', 'run_right'))
-                    self.assertEqual(tuple(len(clip.frames) for clip in (idle, left, right)), (48, 16, 16))
-                    self.assertEqual(idle.durations[:3], (.041, .042, .042))
+                    self.assertEqual(tuple(len(clip.frames) for clip in (idle, left, right)), (96, 16, 16))
+                    self.assertAlmostEqual(sum(idle.durations), 4)
                     self.assertEqual(left.durations, (.03,) * 16)
                     self.assertEqual(right.durations, (.03,) * 16)
-                    self.assertEqual(idle.frames[-1].rect, (896, 520, 128, 104))
+                    self.assertEqual(idle.frames[-1].rect, (896, 1144, 128, 104))
                     self.assertEqual(tuple(clip.frames[0].pivot for clip in (idle, left, right)),
                                      tuple((x / 128, 92 / 104) for x in (64, 63, 64)))
                     image = idle.frames[0].image
@@ -63,11 +63,11 @@ class CharacterSceneTests(unittest.TestCase):
                     self.assertNotEqual(self.pixels(), before)
                     attack = actor.clips['attack']
                     self.assertFalse(attack.loop)
-                    self.assertEqual(attack.durations, (.02,) * 17)
+                    self.assertEqual(attack.durations, (.012, .028) + (.02,) * 15)
                     self.assertNotIn('sword_trail', actor.clips)
                     air_attack = actor.clips['air_attack']
                     self.assertFalse(air_attack.loop)
-                    self.assertEqual(air_attack.durations, (.017, .016, .017) * 6)
+                    self.assertEqual(air_attack.durations, (.012, .034, .038, .016) + (.02,) * 6 + (.036, .044))
                     for clip in (attack, air_attack):
                         for frame in clip.frames:
                             x, y, width, height = frame.rect
@@ -300,8 +300,8 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual(actor.player.elapsed, 0)
         self.assertIs(actor.player.frame, actor.clips['attack'].frames[0])
         scene.update(.05)
-        self.assertAlmostEqual(actor.player.elapsed, .035)
-        self.assertIs(actor.player.frame, actor.clips['attack'].frames[1])
+        self.assertAlmostEqual(actor.player.elapsed, .04)
+        self.assertIs(actor.player.frame, actor.clips['attack'].frames[2])
 
     def test_ground_attack_moves_then_runs_in_latest_direction(self):
         scene = CharacterScene()
@@ -324,13 +324,13 @@ class CharacterSceneTests(unittest.TestCase):
                 self.assertEqual(scene.level.objects, objects)
                 with patch('game.character.draw_sprite') as draw:
                     actor.render_items()[0].drawable(scene.transform, 1)
-                draw.assert_called_once_with(attack.frames[6], scene.transform, position,
-                                             attack.frames[6].rect[2:], 1, flip_x=facing < 0)
-                scene.update(.30)
-                self.assertAlmostEqual(actor.x, -facing * SPEED * .48)
+                draw.assert_called_once_with(attack.frames[7], scene.transform, position,
+                                             attack.frames[7].rect[2:], 1, flip_x=facing < 0)
+                scene.update(.244)
+                self.assertAlmostEqual(actor.x, -facing * SPEED * .424)
                 self.assertEqual(actor.state, 'attack')
-                scene.update(.031)
-                self.assertAlmostEqual(actor.x, -facing * SPEED * .511)
+                scene.update(.002)
+                self.assertAlmostEqual(actor.x, -facing * SPEED * .426)
                 self.assertEqual((actor.state, actor.facing), ('run', -facing))
                 scene.handle_event(SimpleNamespace(type=pico.SDL_KEYUP, key=key))
                 scene.update(0)

@@ -2,6 +2,7 @@
 
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pico2d.pico2d as pico
 
@@ -43,11 +44,17 @@ class DownstrikeTests(unittest.TestCase):
         self.scene.level.enemies.append(high)
         high.state, high.state_remaining = 'recover', 2
         actor.air_dash_used = True
+        actor.facing = -1
         self.press_downstrike()
         self.scene.update(.02)
         self.assertEqual((actor.state, high.hp, low.hp), ('downstrike', 3, 3))
+        self.scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_d))
         self.scene.update(.03)
         self.assertEqual((actor.state, actor.jump_phase, actor.velocity_y), ('jump', 'rise', BOUNCE_SPEED))
+        self.assertEqual(actor.facing, 1)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(self.scene.transform, 1)
+            self.assertTrue(draw.call_args.kwargs['flip_x'])
         self.assertFalse(actor.air_dash_used)
         self.assertEqual((actor.hp, high.hp, low.hp), (actor.MAX_HP, 2, 3))
         self.assertTrue(any(isinstance(obj, SpriteEffect) for obj in self.scene.level.objects))

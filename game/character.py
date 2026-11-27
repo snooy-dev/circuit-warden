@@ -34,10 +34,12 @@ JUMP_APEX_SECONDS = .4
 GRAVITY = 2 * JUMP_HEIGHT / JUMP_APEX_SECONDS ** 2
 JUMP_SPEED = GRAVITY * JUMP_APEX_SECONDS
 JUMP_RELEASE_FACTOR = .65
+MOVING_LAND_SECONDS = .075
 TELEPORT_RISE_SECONDS = .24
 ARRIVAL_BLEND_SECONDS = .045
 DASH_DISTANCE = BODY_HEIGHT * 2
 DASH_SECONDS = .2
+AIR_DASH_POSE_RETURN_SECONDS = .05
 ATTACK_PLAYBACK_RATE = .8
 ATTACK_ACTIVE_START = .10
 ATTACK_ACTIVE_END = .20
@@ -135,6 +137,7 @@ class Character(GameObject):
         super().__init__()
         self.clips = clips
         self.player = SpritePlayer(clips['idle'])
+        self.pose_player = SpritePlayer(clips['idle'])
         self.x = 0.0
         self.y = float(GROUND_Y)
         self.velocity_y = 0.0
@@ -160,9 +163,10 @@ class Character(GameObject):
         self.attack_sweeps = []
         self.jump_phase = None
         self.jump_elapsed = 0.0
+        self.moving_land_elapsed = None
         self.jump_held = None  # 직접 시작한 점프만 Space 해제에 반응한다.
         self.ledge_jump_remaining = 0.0
-        self.rise_start_speed = JUMP_SPEED
+        self.rise_pose_speed = JUMP_SPEED
         self.dash_remaining = 0.0
         self.dash_phase = None
         self.dash_effect = None
@@ -286,7 +290,7 @@ class Character(GameObject):
         self.jump_held = None
         self.ledge_jump_remaining = 0.0
         self.jump_phase, self.jump_elapsed = 'rise', 0.0
-        self.velocity_y = self.rise_start_speed = speed
+        self.velocity_y = self.rise_pose_speed = speed
 
     def bounce_from_enemy(self, direction, speed, elapsed):
         if self.state == 'dash':
@@ -358,7 +362,7 @@ class Character(GameObject):
         if link is None or link.level is None or link.elapsed >= ARRIVAL_BLEND_SECONDS:
             return x, y
         dx, dy = link.end
-        blend = link.elapsed / ARRIVAL_BLEND_SECONDS
+        blend = 1 - (1 - link.elapsed / ARRIVAL_BLEND_SECONDS) ** 2
         return dx + (x - dx) * blend, dy + (y - dy) * blend
 
     def can_teleport(self, position):
@@ -403,6 +407,7 @@ class Character(GameObject):
         self.pushback_remaining = 0.0
         self.air_recoil_velocity = 0.0
         self.jump_phase, self.jump_elapsed = None, 0.0
+        self.moving_land_elapsed = None
         if self.grounded:
             self.air_dash_used = False
             self.player.play(self.clips['idle'])
@@ -411,7 +416,7 @@ class Character(GameObject):
             headroom = max(0, self.view_bounds[3] - self.y - BODY_HEIGHT)
             self.velocity_y = min(GRAVITY * TELEPORT_RISE_SECONDS, sqrt(2 * GRAVITY * headroom))
             self.jump_phase = 'rise' if self.velocity_y > 0 else 'fall'
-            self.rise_start_speed = self.velocity_y
+            self.rise_pose_speed = self.velocity_y
             self._show_jump()
         return True
 
@@ -498,6 +503,11 @@ class Character(GameObject):
 
     def _update(self, dt, action=None, offset=0):
         self.ledge_jump_remaining = max(0.0, self.ledge_jump_remaining - dt)
+        if self.moving_land_elapsed is not None:
+            self.moving_land_elapsed += dt
+            if (self.moving_land_elapsed >= MOVING_LAND_SECONDS or not self.move_direction
+                    or action is not None or self.state not in ('idle', 'run')):
+                self.moving_land_elapsed = None
         if self.state == 'hurt':
             step = self._update_hurt(dt)
             if self.state == 'hurt':
@@ -528,6 +538,7 @@ class Character(GameObject):
             self._machine.downstrike()
             self.downstrike_elapsed = 0.0
             self.attack_id += 1
+            self.attack_facing = direction or self.facing
             self.player.play(self.clips['downstrike'], restart=True)
             started = False
         if self.state == 'downstrike':
@@ -601,6 +612,7 @@ class Character(GameObject):
         if self.state == 'jump':
             self._show_jump()
             return
+        turning = self.state == 'run' and clip is not self.clips['idle']
         if clip is self.clips['idle']:
             if self.state == 'run':
                 self._machine.stop()
@@ -611,6 +623,7 @@ class Character(GameObject):
             if not finished_dash:
                 self.player.update(dt)
         else:
+            stride_time = self.player.elapsed
             self.player.play(clip)
             if finished_dash:
                 # 복귀 마지막 자세 다음 프레임으로 이어간다. 반대 방향 전환은 첫 프레임이다.
@@ -619,6 +632,8 @@ class Character(GameObject):
                 elif (self.dash_phase == 'recover_run' and self.facing == self.dash_facing
                       and clip is not self.clips['idle']):
                     self.player.update(sum(clip.durations[:15]))
+            elif turning:
+                self.player.update(stride_time + dt)
 
     def _begin_fall(self):
         if self.state in ('idle', 'run') and not self.grounded:
@@ -709,6 +724,9 @@ class Character(GameObject):
                     self._take_off()
                     continue
                 if self.jump_phase == 'land' and self.move_direction and self.view_bounds is not None:
+                    side = 'right' if self.facing > 0 else 'left'
+                    duration = sum(self.clips[f'jump_land_{side}'].durations)
+                    self.moving_land_elapsed = self.jump_elapsed / duration * MOVING_LAND_SECONDS + remaining
                     self._finish_landing()
                     return airborne_time + remaining
                 direction = 'right' if self.facing > 0 else 'left'
@@ -738,24 +756,27 @@ class Character(GameObject):
 
     def _take_off(self):
         self.jump_phase, self.jump_elapsed = 'rise', 0.0
-        self.velocity_y = JUMP_SPEED
+        self.velocity_y = self.rise_pose_speed = JUMP_SPEED
         self._apply_jump_release()
-        self.rise_start_speed = self.velocity_y
 
-    def _show_jump(self):
+    def _show_jump(self, player=None):
+        if player is None:
+            player = self.player
         direction = 'right' if self.facing > 0 else 'left'
         clip = self.clips[f'jump_{self.jump_phase}_{direction}']
         elapsed = self.jump_elapsed
         if self.jump_phase == 'rise':
-            elapsed = (1 - self.velocity_y / self.rise_start_speed) * sum(clip.durations)
+            elapsed = (1 - self.velocity_y / self.rise_pose_speed) * sum(clip.durations)
         elif self.jump_phase == 'fall':
             elapsed = max(0.0, -self.velocity_y / GRAVITY)
-        self.player.play(clip, restart=True)
-        self.player.update(elapsed)
+        player.play(clip, restart=True)
+        player.update(elapsed)
 
     def _apply_jump_release(self):
         if self.jump_held is False and self.jump_phase == 'rise':
             self.velocity_y *= JUMP_RELEASE_FACTOR
+            # 속도를 줄이는 순간의 자세를 유지하고, 남은 상승에서 정점 자세에 도달한다.
+            self.rise_pose_speed *= JUMP_RELEASE_FACTOR
             self.jump_held = None
 
     def _advance_vertical(self, dt):
@@ -858,29 +879,41 @@ class Character(GameObject):
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
+        direction = 'right' if self.facing > 0 else 'left'
         flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
-        if self.state == 'attack':
+        if self.state in ('attack', 'downstrike'):
             flip_x = self.attack_facing < 0
         link = self.arrival_link
         if self.downstrike_impact:
             # 레벨의 히트스톱이 끝나고 다음 갱신이 시작될 때까지 베는 자세를 유지한다.
             frame = self.clips['downstrike'].frames[downstrike.IMPACT_FRAME]
-            flip_x = self.facing < 0
+            flip_x = self.attack_facing < 0
         elif (self.state == 'idle' and link is not None and link.level is not None
               and link.elapsed < ARRIVAL_BLEND_SECONDS):
-            direction = 'right' if self.facing > 0 else 'left'
-            frames = self.clips[f'jump_land_{direction}'].frames
-            frame, flip_x = frames[len(frames) // 3], False
+            clip = self.clips[f'jump_land_{direction}']
+            brace = sum(clip.durations[:len(clip.frames) // 3])
+            progress = link.elapsed / ARRIVAL_BLEND_SECONDS
+            self.pose_player.play(clip, restart=True)
+            self.pose_player.update(brace + (sum(clip.durations) - brace) * progress)
+            frame, flip_x = self.pose_player.frame, False
         elif self.state == 'jump' and self.jump_phase == 'rise' and link is not None and link.elapsed == 0:
-            direction = 'right' if self.facing > 0 else 'left'
             frame = self.clips[f'jump_rise_{direction}'].frames[0]
-        elif (self.state in ('idle', 'run', 'jump') and self.pushback_remaining > 0
+        elif (self.state == 'dash' and self.dash_phase.startswith('recover_')
+              and self.dash_remaining <= AIR_DASH_POSE_RETURN_SECONDS and self.jump_phase in ('rise', 'fall')
               or self.state == 'hurt' and self.hp > 0 and self.hurt_remaining <= .04):
-            direction = 'right' if self.facing > 0 else 'left'
+            self._show_jump(self.pose_player)
+            frame, flip_x = self.pose_player.frame, False
+        elif self.state in ('idle', 'run', 'jump') and self.pushback_remaining > 0:
             grounded = self.grounded
             phase = 'land' if grounded else 'rise'
             frames = self.clips[f'jump_{phase}_{direction}'].frames
             frame, flip_x = frames[len(frames) // 3 if grounded else 0], False
+        elif (self.state in ('idle', 'run') and self.moving_land_elapsed is not None
+              and self.moving_land_elapsed < MOVING_LAND_SECONDS):
+            clip = self.clips[f'jump_land_{direction}']
+            self.pose_player.play(clip, restart=True)
+            self.pose_player.update(self.moving_land_elapsed / MOVING_LAND_SECONDS * sum(clip.durations))
+            frame, flip_x = self.pose_player.frame, False
         width, height = frame.rect[2:]
         if self.hp == 0 or (self.state != 'hurt' and self.invulnerability_remaining > 0
                             and int(self.invulnerability_remaining / .0625) % 2 == 0):
