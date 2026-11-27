@@ -183,49 +183,40 @@
       "name": "지상 베기",
       "sheet": "combat/ground-attack.png",
       "durationsMs": [
-        44,
-        38,
-        30,
-        25,
-        32,
-        30,
-        46,
-        85
+        22,
+        59,
+        59,
+        72,
+        118
       ],
       "loop": false,
-      "columns": 8
+      "columns": 5
     },
     "air-attack": {
       "name": "공중 베기",
       "sheet": "combat/air-attack.png",
       "durationsMs": [
-        44,
-        38,
-        30,
-        25,
-        32,
-        30,
-        46,
-        85
+        22,
+        59,
+        59,
+        72,
+        118
       ],
       "loop": false,
-      "columns": 8
+      "columns": 5
     },
     "downstrike": {
       "name": "아래 베기",
       "sheet": "combat/downstrike.png",
       "durationsMs": [
-        26,
-        23,
-        22,
-        20,
-        20,
-        25,
-        32,
-        46
+        18,
+        42,
+        42,
+        52,
+        60
       ],
       "loop": false,
-      "columns": 8
+      "columns": 5
     },
     "rebound": {
       "name": "반동",
@@ -258,7 +249,7 @@
       "columns": 6
     },
     "charge-arrival": {
-      "name": "전하 도착",
+      "name": "대시 종료",
       "sheet": "special/charge-arrival.png",
       "durationsMs": [
         32,

@@ -341,114 +341,78 @@
     ],
     "ground-attack": [
       {
-        "sheet": "combat.png",
+        "sheet": "start.png",
         "cell": 1
-      },
-      {
-        "sheet": "combat.png",
-        "cell": 2
-      },
-      {
-        "sheet": "combat.png",
-        "cell": 3
       },
       {
         "sheet": "combat.png",
         "cell": 4
       },
       {
-        "sheet": "combat.png",
-        "cell": 5
+        "sheet": "finish.png",
+        "cell": 1
       },
       {
-        "sheet": "combat.png",
-        "cell": 6
+        "sheet": "finish.png",
+        "cell": 2
       },
       {
-        "sheet": "combat.png",
-        "cell": 7
-      },
-      {
-        "sheet": "combat.png",
-        "cell": 8
+        "sheet": "finish.png",
+        "cell": 2
       }
     ],
     "air-attack": [
       {
-        "sheet": "combat.png",
-        "cell": 9
-      },
-      {
-        "sheet": "combat.png",
-        "cell": 10
-      },
-      {
-        "sheet": "combat.png",
-        "cell": 11
+        "sheet": "jump.png",
+        "cell": 8
       },
       {
         "sheet": "combat.png",
         "cell": 12
       },
       {
-        "sheet": "combat.png",
-        "cell": 13
+        "sheet": "finish.png",
+        "cell": 3
       },
       {
-        "sheet": "combat.png",
-        "cell": 14
+        "sheet": "finish.png",
+        "cell": 4
       },
       {
-        "sheet": "combat.png",
-        "cell": 15
-      },
-      {
-        "sheet": "combat.png",
-        "cell": 16
+        "sheet": "finish.png",
+        "cell": 4
       }
     ],
     "downstrike": [
       {
-        "sheet": "repair.png",
-        "cell": 5
-      },
-      {
-        "sheet": "repair.png",
-        "cell": 6
-      },
-      {
-        "sheet": "repair.png",
-        "cell": 7
-      },
-      {
-        "sheet": "repair.png",
+        "sheet": "jump.png",
         "cell": 8
       },
       {
-        "sheet": "vertical.png",
-        "cell": 5
+        "sheet": "low.png",
+        "cell": 1
       },
       {
-        "sheet": "vertical.png",
-        "cell": 6
+        "sheet": "low.png",
+        "cell": 2
       },
       {
-        "sheet": "vertical.png",
-        "cell": 7
+        "sheet": "low.png",
+        "cell": 3
       },
       {
-        "sheet": "vertical.png",
-        "cell": 8
+        "sheet": "low.png",
+        "cell": 3
       }
     ],
     "rebound": [
       {
-        "sheet": "vertical.png",
-        "cell": 7
+        "sheet": "low.png",
+        "cell": 1
       },
       {
-        "sheet": "vertical.png",
-        "cell": 9
+        "sheet": "low.png",
+        "cell": 4
       },
       {
         "sheet": "vertical.png",
