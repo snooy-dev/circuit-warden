@@ -26,14 +26,14 @@ class JumpAnimationTests(unittest.TestCase):
     def test_real_assets_and_start_air_land_locks(self):
         scene = self.scene()
         actor = scene.character
-        for direction, x in (('left', 63), ('right', 64)):
-            for phase, count, duration in (('start', 12, .03), ('rise', 18, .3),
-                                            ('fall', 36, .6), ('land', 18, .18)):
+        for direction in ('left', 'right'):
+            for phase, count, duration in (('start', 4, .03), ('rise', 5, .298),
+                                            ('fall', 6, .32), ('land', 5, .18)):
                 clip = actor.clips[f'jump_{phase}_{direction}']
                 self.assertEqual(len(clip.frames), count)
                 self.assertAlmostEqual(sum(clip.durations), duration)
                 self.assertEqual(clip.loop, phase == 'fall')
-                self.assertEqual(clip.frames[0].pivot, (x / 128, 92 / 104))
+                self.assertEqual(clip.frames[0].pivot, (.5, 136 / 224))
         self.key(scene, pico.SDLK_d)
         self.key(scene, pico.SDLK_SPACE)
         scene.update(.02)
@@ -60,7 +60,7 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertIs(actor.player.clip, actor.clips['jump_fall_left'])
         with patch('game.character.draw_sprite') as draw:
             actor._draw(scene.transform, 1)
-            self.assertFalse(draw.call_args.kwargs['flip_x'])
+            self.assertTrue(draw.call_args.kwargs['flip_x'])
         self.key(scene, pico.SDLK_a, pico.SDL_KEYUP)
         scene.update(.10)
         self.assertTrue(actor.grounded)
@@ -348,10 +348,10 @@ class JumpAnimationTests(unittest.TestCase):
         self.assertAlmostEqual(actor.x, SPEED * .06)
         with patch('game.character.draw_sprite') as draw:
             actor._draw(scene.transform, 1)
-            self.assertIs(draw.call_args.args[0], actor.clips['jump_land_right'].frames[7])
+            self.assertIs(draw.call_args.args[0], actor.clips['jump_land_right'].frames[2])
             scene.update(.05)
             actor._draw(scene.transform, 1)
-            self.assertIs(draw.call_args.args[0], actor.player.frame)
+            self.assertIn(draw.call_args.args[0], actor.clips['walk'].frames)
         self.assertAlmostEqual(actor.x, SPEED * .11)
 
     def test_releasing_jump_preserves_the_current_rise_frame(self):
@@ -368,7 +368,7 @@ class JumpAnimationTests(unittest.TestCase):
         scene.update(.03)
         self.assertGreater(actor.player.elapsed, elapsed)
 
-    def test_air_dash_and_hurt_return_to_the_live_air_pose(self):
+    def test_air_dash_returns_to_the_live_air_pose_and_hurt_displays_its_sheet(self):
         for action in ('dash', 'hurt'):
             with self.subTest(action=action):
                 scene = self.scene()
@@ -386,7 +386,8 @@ class JumpAnimationTests(unittest.TestCase):
                 self.assertFalse(actor.grounded)
                 with patch('game.character.draw_sprite') as draw:
                     actor._draw(scene.transform, 1)
-                    frames = actor.clips['jump_rise_right'].frames
+                    clip = 'jump_rise_right' if action == 'dash' else 'hurt'
+                    frames = actor.clips[clip].frames
                     self.assertIn(draw.call_args.args[0], frames[1:])
                     self.assertFalse(draw.call_args.kwargs['flip_x'])
 

@@ -27,10 +27,13 @@ class CharacterTests(unittest.TestCase):
                 self.clips[name] = SpriteClip(frames, durations)
             self.clips['attack'] = SpriteClip(self.clips['idle'].frames, (.05, .05), loop=False)
             self.clips['air_attack'] = SpriteClip(self.clips['idle'].frames, (.15, .15), loop=False)
+            for name in ('walk', 'run-start', 'sprint', 'rebound', 'teleport-front'):
+                self.clips[name] = self.clips['idle']
             for direction in ('left', 'right'):
                 frames = self.clips[f'run_{direction}'].frames
                 self.clips[f'run_{direction}'] = SpriteClip(frames * 8, (.03,) * 16)
                 for phase, times in (('prepare_idle', (.05, .05)), ('prepare_run', (.05, .05)),
+                                     ('air_prepare', (.05, .05)), ('air_dash', (.1, .1)),
                                      ('dash', (.1, .1)), ('recover_idle', (.08, .087)),
                                      ('recover_run', (.08, .087))):
                     self.clips[f'{phase}_{direction}'] = SpriteClip(frames, times, loop=False)
@@ -54,7 +57,6 @@ class CharacterTests(unittest.TestCase):
         wall.colliders = (Collider((80, GROUND_Y, 81, 20), 'terrain', blocks={'player'}),)
         level.spawn(wall)
         actor = level.spawn(self.character)
-        actor.clips['dash_fx_right'] = actor.clips['dash_right']
         actor.control(key(pico.SDLK_d))
         level.update(.5)
         self.assertEqual(actor.x, 56)
@@ -197,7 +199,7 @@ class CharacterTests(unittest.TestCase):
         self.assertEqual(actor.player.elapsed, 0)
         self.assertAlmostEqual(actor.x, -DASH_DISTANCE)
 
-    def test_dash_run_recovery_continues_at_frame_fifteen(self):
+    def test_dash_run_recovery_starts_the_current_run_clip(self):
         for facing, symbol, direction in ((1, pico.SDLK_d, 'right'), (-1, pico.SDLK_a, 'left')):
             actor = self.make_character()
             actor.control(key(symbol))
@@ -212,7 +214,7 @@ class CharacterTests(unittest.TestCase):
             self.assertAlmostEqual(actor.x, start + facing * DASH_DISTANCE)
             self.assertEqual(actor.state, 'run')
             self.assertIs(actor.player.clip, self.clips[f'run_{direction}'])
-            self.assertAlmostEqual(actor.player.elapsed, .45)
+            self.assertEqual(actor.player.elapsed, 0)
 
     def test_dash_end_selects_idle_when_keys_cancel_or_boundary_blocks(self):
         for at_boundary in (False, True):
@@ -257,10 +259,10 @@ class CharacterTests(unittest.TestCase):
         actor.x = 320
         actor.control(key(pico.SDLK_LSHIFT))
         actor.update(.15)
-        self.assertEqual(actor.x, 330)
+        self.assertEqual(actor.x, 335)
         actor.control(focus)
         actor.update(.317)
-        self.assertEqual(actor.x, 330)
+        self.assertEqual(actor.x, 335)
         self.assertEqual(actor.state, 'idle')
         actor.view_bounds = (-20, -300, 20, 300)
         actor.control(key(pico.SDLK_LSHIFT))
@@ -491,36 +493,35 @@ class CharacterTests(unittest.TestCase):
         self.assertIs(actor.player.clip, self.clips['run_left'])
         self.assertAlmostEqual(actor.player.elapsed, .07)
 
-    def test_bounds_include_idle_and_run_extents_and_center_when_narrow(self):
+    def test_movement_respects_view_bounds_and_centers_when_narrow(self):
         actor = self.character
         actor.control(key(pico.SDLK_d))
         for _ in range(20):
             actor.update(.1)
-        self.assertEqual(actor.x, 330)
+        self.assertEqual(actor.x, 335)
         self.assertIs(actor.player.clip, self.clips['idle'])
         actor.view_bounds = (-220, -300, 220, 300)
         actor.update(.1)
-        self.assertEqual(actor.x, 150)
+        self.assertEqual(actor.x, 155)
         self.assertIs(actor.player.clip, self.clips['idle'])
         actor.view_bounds = (-67.5, -300, 67.5, 300)
         actor.update(.1)
-        self.assertEqual(actor.x, -2.5)
+        self.assertEqual(actor.x, 2.5)
         self.assertIs(actor.player.clip, self.clips['idle'])
         actor.view_bounds = (-37.5, -300, 62.5, 300)
         actor.update(.1)
         self.assertEqual(actor.x, 12.5)
         self.assertIs(actor.player.clip, self.clips['idle'])
 
-    def test_draw_flips_idle_left_and_uses_dedicated_run_frames(self):
+    def test_draw_mirrors_left_facing_poses(self):
         actor = self.character
         transform = WorldTransform((0, 0, 800, 600), view_height=600)
         actor.control(key(pico.SDLK_a))
         actor.update(.05)
         with patch('game.character.draw_sprite') as draw:
             actor.render_items()[0].drawable(transform, .8)
-            self.assertIs(draw.call_args.args[0], self.clips['run_left'].frames[0])
             self.assertEqual(draw.call_args.args[3:5], ((128, 104), .8))
-            self.assertFalse(draw.call_args.kwargs['flip_x'])
+            self.assertTrue(draw.call_args.kwargs['flip_x'])
             actor.control(key(pico.SDLK_a, pico.SDL_KEYUP))
             actor.update(.05)
             actor.render_items()[0].drawable(transform, 1)

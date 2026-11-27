@@ -8,7 +8,7 @@ import pico2d.pico2d as pico
 
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.mode import GameplayMode
-from game.character import GROUND_Y, SPEED
+from game.character import GROUND_Y, SPEED, WARDEN_ART
 from game.training_map import LOW_WALL, PLATFORMS, WALLS, WORLD_BOUNDS
 from game_framework import GameObject
 
@@ -45,13 +45,14 @@ class CharacterSceneTests(unittest.TestCase):
                 try:
                     actor = scene.character
                     idle, left, right = (actor.clips[name] for name in ('idle', 'run_left', 'run_right'))
-                    self.assertEqual(tuple(len(clip.frames) for clip in (idle, left, right)), (96, 16, 16))
-                    self.assertAlmostEqual(sum(idle.durations), 4)
-                    self.assertEqual(left.durations, (.03,) * 16)
-                    self.assertEqual(right.durations, (.03,) * 16)
-                    self.assertEqual(idle.frames[-1].rect, (896, 1144, 128, 104))
+                    self.assertEqual(tuple(len(clip.frames) for clip in (idle, left, right)), (16, 8, 8))
+                    self.assertAlmostEqual(sum(idle.durations), 1.23)
+                    self.assertEqual(left.durations, (.062, .048, .060, .065) * 2)
+                    self.assertEqual(right.durations, left.durations)
+                    self.assertEqual(idle.frames[-1].rect, (1792, 224, 256, 224))
                     self.assertEqual(tuple(clip.frames[0].pivot for clip in (idle, left, right)),
-                                     tuple((x / 128, 92 / 104) for x in (64, 63, 64)))
+                                     ((.5, 136 / 224),) * 3)
+                    self.assertIs(left.frames[0].image, right.frames[0].image)
                     image = idle.frames[0].image
                     self.assertIsNot(image, previous)
                     self.assertTrue(all(frame.image is image for frame in idle.frames))
@@ -63,19 +64,19 @@ class CharacterSceneTests(unittest.TestCase):
                     self.assertNotEqual(self.pixels(), before)
                     attack = actor.clips['attack']
                     self.assertFalse(attack.loop)
-                    self.assertEqual(attack.durations, (.012, .028) + (.02,) * 15)
+                    self.assertAlmostEqual(sum(attack.durations), .34)
                     self.assertNotIn('sword_trail', actor.clips)
                     air_attack = actor.clips['air_attack']
                     self.assertFalse(air_attack.loop)
-                    self.assertEqual(air_attack.durations, (.012, .034, .038, .016) + (.02,) * 6 + (.036, .044))
+                    self.assertAlmostEqual(sum(air_attack.durations), .30)
                     for clip in (attack, air_attack):
+                        self.assertEqual(len(clip.frames), 5)
                         for frame in clip.frames:
                             x, y, width, height = frame.rect
                             self.assertGreaterEqual(min(x, y), 0)
                             self.assertLessEqual(x + width, frame.image.width)
                             self.assertLessEqual(y + height, frame.image.height)
-                            self.assertEqual(frame.pivot[0], .5)
-                            self.assertGreater(frame.pivot[1], .5)
+                            self.assertEqual(frame.pivot, (.5, 136 / 224))
                     refs = tuple(clip.frames[0].image for clip in actor.clips.values())
                 finally:
                     scene.exit()
@@ -97,12 +98,28 @@ class CharacterSceneTests(unittest.TestCase):
             return image
 
         with patch.object(scene.images, 'load', side_effect=fail_on_second):
-            with self.assertRaisesRegex(OSError, r'run_left\.png'):
+            with self.assertRaisesRegex(OSError, r'walk\.png'):
                 scene.enter(self.app)
         self.assertTrue(loaded[0].closed)
         self.assertTrue(scene.images.closed)
         self.assertIsNone(scene.engine)
         self.assertEqual(scene.level.objects, ())
+
+    def test_ground_movement_draws_walk_run_start_and_run_at_the_same_speed(self):
+        scene = CharacterScene()
+        scene.enter(self.app)
+        self.addCleanup(scene.exit)
+        scene.level.enemy.destroy()
+        actor = scene.character
+        scene.update(0)
+        scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_a))
+        with patch('game.character.draw_sprite') as draw:
+            for step, name in ((.01, 'walk'), (.23, 'run-start'), (.19, 'run')):
+                scene.update(step)
+                actor._draw(scene.transform, 1)
+                self.assertIn(draw.call_args.args[0], actor.clips[name].frames)
+                self.assertTrue(draw.call_args.kwargs['flip_x'])
+        self.assertAlmostEqual(actor.x, -SPEED * .43)
 
     def test_window_commands_and_resize_bounds(self):
         scene = CharacterScene()
@@ -221,13 +238,13 @@ class CharacterSceneTests(unittest.TestCase):
         scene.update(.1)
         self.assertEqual(actor.x, SPEED * .1)
 
-    def test_malformed_pivot_reports_clip_and_closes_scene(self):
+    def test_malformed_pivot_reports_manifest_and_closes_scene(self):
         scene = CharacterScene()
-        metadata = json.loads((scene.images.root / 'animations.json').read_text(encoding='utf-8'))
-        metadata['run_left']['pivot'][0] = True
+        metadata = json.loads((WARDEN_ART / 'animations.json').read_text(encoding='utf-8'))
+        metadata['pivot'][0] = True
         self.addCleanup(scene.exit)
         with patch('game.character.json.loads', return_value=metadata):
-            with self.assertRaisesRegex(ValueError, r'animations\.json.*run_left.*pivot'):
+            with self.assertRaisesRegex(ValueError, r'animations\.json.*pivot'):
                 scene.enter(self.app)
         self.assertTrue(scene.images.closed)
         self.assertIsNone(scene.engine)
@@ -237,8 +254,8 @@ class CharacterSceneTests(unittest.TestCase):
         for loop in ('false', 0, True):
             with self.subTest(loop=loop):
                 scene = CharacterScene()
-                metadata = json.loads((scene.images.root / 'animations.json').read_text(encoding='utf-8'))
-                metadata['attack']['loop'] = loop
+                metadata = json.loads((WARDEN_ART / 'animations.json').read_text(encoding='utf-8'))
+                metadata['clips']['ground-attack']['loop'] = loop
                 with patch('game.character.json.loads', return_value=metadata):
                     with self.assertRaisesRegex(ValueError, r'animations\.json.*attack.*loop'):
                         scene.enter(self.app)
@@ -251,31 +268,26 @@ class CharacterSceneTests(unittest.TestCase):
         scene.enter(self.app)
         self.addCleanup(scene.exit)
         clips = scene.character.clips
-        for direction, pivot in (('left', 63), ('right', 64)):
-            for phase, count, duration in (('prepare_idle', 6, .1), ('prepare_run', 6, .1),
-                                            ('dash', 11, .2), ('recover_idle', 10, .167),
-                                            ('recover_run', 10, .167)):
+        for direction in ('left', 'right'):
+            for phase, count, duration in (('prepare_idle', 2, .1), ('prepare_run', 2, .1),
+                                            ('dash', 5, .2), ('recover_idle', 5, .167),
+                                            ('recover_run', 5, .167)):
                 clip = clips[f'{phase}_{direction}']
                 self.assertFalse(clip.loop)
                 self.assertEqual(len(clip.frames), count)
                 self.assertAlmostEqual(sum(clip.durations), duration)
-                self.assertEqual(clip.frames[0].pivot, (pivot / 128, 92 / 104))
+                self.assertEqual(clip.frames[0].pivot, (.5, 136 / 224))
             dash = clips[f'dash_{direction}']
-            self.assertEqual(dash.frames[6].rect, (384, 104, 128, 104))
-            self.assertEqual(dash.durations[5], .034)
-            effect = clips[f'dash_fx_{direction}']
-            self.assertEqual(len(effect.frames), 22)
-            self.assertAlmostEqual(sum(effect.durations), .367)
-            self.assertEqual(effect.frames[0].pivot,
-                             ((287 if direction == 'left' else 96) / 384, 112 / 128))
+            self.assertEqual(dash.frames[0].rect, (512, 0, 256, 224))
+            self.assertEqual(dash.frames[-1].rect, (1536, 0, 256, 224))
 
-    def test_invalid_dash_frame_indices_release_images(self):
-        for indices in ([0], [True] * 11, [-1] * 11, [1000] * 11):
+    def test_invalid_dash_frame_layout_releases_images(self):
+        for columns in (False, 0, -1, 1):
             scene = CharacterScene()
-            metadata = json.loads((scene.images.root / 'animations.json').read_text(encoding='utf-8'))
-            metadata['dash_right']['frameIndices'] = indices
+            metadata = json.loads((WARDEN_ART / 'animations.json').read_text(encoding='utf-8'))
+            metadata['clips']['ground-dash']['columns'] = columns
             with patch('game.character.json.loads', return_value=metadata):
-                with self.assertRaisesRegex(ValueError, r'animations\.json.*dash_right'):
+                with self.assertRaisesRegex(ValueError, r'animations\.json.*ground-dash'):
                     scene.enter(self.app)
             self.assertTrue(scene.images.closed)
             self.assertEqual(scene.level.objects, ())
@@ -301,7 +313,7 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertIs(actor.player.frame, actor.clips['attack'].frames[0])
         scene.update(.05)
         self.assertAlmostEqual(actor.player.elapsed, .04)
-        self.assertIs(actor.player.frame, actor.clips['attack'].frames[2])
+        self.assertIs(actor.player.frame, actor.clips['attack'].frames[1])
 
     def test_ground_attack_moves_then_runs_in_latest_direction(self):
         scene = CharacterScene()
@@ -324,8 +336,8 @@ class CharacterSceneTests(unittest.TestCase):
                 self.assertEqual(scene.level.objects, objects)
                 with patch('game.character.draw_sprite') as draw:
                     actor.render_items()[0].drawable(scene.transform, 1)
-                draw.assert_called_once_with(attack.frames[7], scene.transform, position,
-                                             attack.frames[7].rect[2:], 1, flip_x=facing < 0)
+                draw.assert_called_once_with(attack.frames[2], scene.transform, position,
+                                             attack.frames[2].rect[2:], 1, flip_x=facing < 0)
                 scene.update(.244)
                 self.assertAlmostEqual(actor.x, -facing * SPEED * .424)
                 self.assertEqual(actor.state, 'attack')

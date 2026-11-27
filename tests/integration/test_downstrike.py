@@ -54,6 +54,7 @@ class DownstrikeTests(unittest.TestCase):
         self.assertEqual(actor.facing, 1)
         with patch('game.character.draw_sprite') as draw:
             actor._draw(self.scene.transform, 1)
+            self.assertIs(draw.call_args.args[0], actor.clips['downstrike'].frames[1])
             self.assertTrue(draw.call_args.kwargs['flip_x'])
         self.assertFalse(actor.air_dash_used)
         self.assertEqual((actor.hp, high.hp, low.hp), (actor.MAX_HP, 2, 3))
@@ -122,3 +123,7 @@ class PowerSupplyDownstrikeTests(PowerSupplyFixture):
         self.assertEqual((boss.hp, actor.hp), (boss.MAX_HP - 1, actor.MAX_HP))
         self.assertEqual(actor.velocity_y, BOUNCE_SPEED)
         self.assertFalse(self.level.layout.boss_defeated)
+        self.scene.update(.06)
+        with patch('game.character.draw_sprite') as draw:
+            actor._draw(self.scene.transform, 1)
+            self.assertIn(draw.call_args.args[0], actor.clips['rebound'].frames)

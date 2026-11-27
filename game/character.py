@@ -13,7 +13,7 @@ from game_framework import (Collider, CollisionResponse, GameObject, RenderItem,
 from game_framework.collision import CONTACT_EPSILON
 
 from . import downstrike
-from .effects import SpriteEffect
+from .teleport_link import DURATION as LINK_SECONDS
 
 
 GROUND_Y = -180
@@ -27,7 +27,7 @@ AIR_HURT_SPEED = 420
 AIR_HURT_DRIFT_SPEED = 200
 BODY_BOUNCE_SPEED = 245
 DISPLAY_SCALE = 1
-# idle 최대 알파 높이 × 표시 배율로 얻은 월드 키(귀 포함, 투명 여백 제외).
+# 이동·점프·충돌에서 사용하는 월드 키.
 BODY_HEIGHT = 83 * DISPLAY_SCALE
 JUMP_HEIGHT = BODY_HEIGHT * 2
 JUMP_APEX_SECONDS = .4
@@ -90,36 +90,57 @@ def _load_clip(images, animation, root=None):
     return SpriteClip(frames, tuple(ms / 1000 for ms in durations), loop=animation['loop'])
 
 
+WARDEN_ART = Path(__file__).resolve().parents[1] / 'art/game-ready/warden'
+WARDEN_MOTIONS = (
+    'idle', 'walk', 'run-start', 'run', 'sprint', 'jump-start', 'jump-rise', 'jump-fall',
+    'jump-land', 'ground-dash', 'air-dash', 'ground-attack', 'air-attack', 'downstrike',
+    'rebound', 'hurt', 'dash-end', 'teleport-front',
+)
+
+
+def _timed_clip(clip, seconds, selection=slice(None)):
+    frames, times = clip.frames[selection], clip.durations[selection]
+    scale = seconds / sum(times)
+    return SpriteClip(frames, tuple(t * scale for t in times), loop=clip.loop)
+
+
 def load_clips(images):
-    path = images.root / 'animations.json'
-    try:
-        animations = json.loads(path.read_text(encoding='utf-8'))
-    except ValueError as error:
-        raise ValueError(f'애니메이션 설정 읽기 실패: {path}: {error}') from error
+    path = WARDEN_ART / 'animations.json'
     clips = {}
-    names = ('idle', 'run_left', 'run_right', 'attack', 'air_attack', 'downstrike', 'hurt') + tuple(
-        f'{phase}_{direction}' for phase in (
-            'prepare_idle', 'prepare_run', 'dash', 'recover_idle', 'recover_run', 'dash_fx',
-            'jump_start', 'jump_rise', 'jump_fall', 'jump_land')
-        for direction in ('left', 'right'))
-    for name in names:
-        try:
-            clips[name] = _load_clip(images, animations[name])
-            if clips[name].loop != (name in ('idle', 'run_left', 'run_right',
-                                            'jump_fall_left', 'jump_fall_right')):
-                raise ValueError('loop는 idle/Run/점프 낙하에서만 true여야 합니다.')
-        except (KeyError, TypeError, ValueError, OverflowError) as error:
-            raise ValueError(f'애니메이션 설정 오류: {path} ({name}): {error}') from error
+    name = 'manifest'
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+        for name in WARDEN_MOTIONS:
+            entry = data['clips'][name]
+            sheet = Path(entry['sheet'])
+            if sheet.anchor or '..' in sheet.parts:
+                raise ValueError('sheet는 워든 폴더 안의 상대 경로여야 합니다.')
+            animation = dict(entry, file=sheet.name, frameSize=data['frameSize'],
+                             pivot=data['pivot'], count=len(entry['durationsMs']))
+            clip = _load_clip(images, animation, WARDEN_ART / sheet.parent)
+            if clip.loop != (name in ('idle', 'walk', 'run', 'sprint', 'jump-fall')):
+                raise ValueError('동작의 loop 설정을 확인하세요.')
+            clips[name] = clip
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        raise ValueError(f'애니메이션 설정 오류: {path} ({name}): {error}') from error
+
+    # 조작을 잠그는 구간은 기존 게임 시간에 맞춰 원본 프레임의 비율을 유지한다.
+    clips['attack'] = _timed_clip(clips['ground-attack'], .340)
+    clips['air_attack'] = _timed_clip(clips['air-attack'], .300)
+    clips['downstrike'] = _timed_clip(clips['downstrike'], downstrike.DURATION)
+    clips['hurt'] = _timed_clip(clips['hurt'], HURT_SECONDS)
+    phases = {'run': clips['run'], 'jump_start': _timed_clip(clips['jump-start'], .030),
+              'jump_land': _timed_clip(clips['jump-land'], .180),
+              'jump_rise': clips['jump-rise'], 'jump_fall': clips['jump-fall']}
+    for source, prepare, dash in (('ground-dash', 'prepare_idle', 'dash'),
+                                  ('air-dash', 'air_prepare', 'air_dash')):
+        phases[prepare] = _timed_clip(clips[source], .100, slice(0, 2))
+        phases[dash] = _timed_clip(clips[source], DASH_SECONDS, slice(2, None))
+    phases['prepare_run'] = phases['prepare_idle']
+    phases['recover_idle'] = phases['recover_run'] = _timed_clip(clips['dash-end'], .167)
+    for side in ('left', 'right'):
+        clips.update({f'{phase}_{side}': clip for phase, clip in phases.items()})
     return clips
-
-
-def _margins(clip):
-    left = right = 0
-    for frame in clip.frames:
-        width = frame.rect[2] * DISPLAY_SCALE
-        pivot = frame.pivot[0]
-        left, right = max(left, pivot * width), max(right, (1 - pivot) * width)
-    return left, right
 
 
 class Character(GameObject):
@@ -169,7 +190,7 @@ class Character(GameObject):
         self.rise_pose_speed = JUMP_SPEED
         self.dash_remaining = 0.0
         self.dash_phase = None
-        self.dash_effect = None
+        self.dash_airborne = False
         self.air_dash_used = False
         self._machine = Machine(
             states=('idle', 'run', 'attack', 'downstrike', 'dash', 'jump', 'hurt'),
@@ -184,12 +205,11 @@ class Character(GameObject):
         )
         self.view_bounds = None
         self.world_bounds = None
-        self._idle_margins = _margins(clips['idle'])
-        # shortcut: 공격 끝부분은 화면에서 잘릴 수 있음, 검 전체 보존이 필요하면 경계 정책을 바꾼다.
-        margins = (*(_margins(clips[name]) for name in ('run_left', 'run_right')),
-                   self._idle_margins, self._idle_margins[::-1])
-        self._left_margin = max(left for left, _ in margins)
-        self._right_margin = max(right for _, right in margins)
+        # 화면 가장자리 이동·전하 도착 한계는 시트의 투명 여백과 독립적이다.
+        self._left_margin, self._right_margin = 64, 65
+        self.ground_motion_elapsed = 0.0
+        self.sprint_exit = False
+        self.rebounding = False
 
     @property
     def state(self):
@@ -273,9 +293,6 @@ class Character(GameObject):
             self._advance_pushback(elapsed)
 
     def _cancel_dash(self):
-        if self.dash_effect is not None:
-            self.dash_effect.destroy()
-            self.dash_effect = None
         self.dash_phase, self.dash_remaining = None, 0.0
 
     def _advance_pushback(self, dt):
@@ -287,6 +304,7 @@ class Character(GameObject):
         return step
 
     def _start_rebound(self, speed):
+        self.rebounding = True
         self.jump_held = None
         self.ledge_jump_remaining = 0.0
         self.jump_phase, self.jump_elapsed = 'rise', 0.0
@@ -400,6 +418,7 @@ class Character(GameObject):
         self.jump_held = None
         self.ledge_jump_remaining = 0.0
         self._machine.teleport()
+        self.rebounding = False
         self.x, self.y = position[0], position[1] - BODY_HEIGHT / 2
         self.velocity_y = 0.0
         self.buffered_action, self.buffer_remaining = None, 0.0
@@ -523,9 +542,9 @@ class Character(GameObject):
             if direction:
                 self.facing = direction
             self._machine.dash()
-            self.dash_effect = None
+            self.dash_airborne = not self.grounded
             self._play_dash_phase(entry)
-            self.air_dash_used = not self.grounded
+            self.air_dash_used = self.dash_airborne
         elif action == 'jump':
             self.jump_held = pico.SDLK_SPACE in self.pressed
             if self.state in ('jump', 'attack'):
@@ -601,38 +620,32 @@ class Character(GameObject):
                     clip = self.clips['run_right' if direction > 0 else 'run_left']
             else:
                 self.x = (left + right) / 2
-                idle_left, idle_right = self._idle_margins
-                if self.facing < 0:
-                    idle_left, idle_right = idle_right, idle_left
-                # 전환할 여유가 없어도 현재 idle 한 장이 들어가면 화면 안에 둔다.
-                if right - left >= idle_left + idle_right:
-                    self.x = min(max(self.x, left + idle_left), right - idle_right)
 
         self._begin_fall()
         if self.state == 'jump':
             self._show_jump()
             return
-        turning = self.state == 'run' and clip is not self.clips['idle']
+        continuing = self.state == 'run'
         if clip is self.clips['idle']:
-            if self.state == 'run':
+            if continuing:
                 self._machine.stop()
         elif self.state == 'idle':
             self._machine.move()
 
+        if self.state == 'run':
+            if continuing:
+                self.ground_motion_elapsed += dt
+            else:
+                self.ground_motion_elapsed = 0.0 if finished_dash else dt
+                self.sprint_exit = (finished_dash and not self.dash_airborne
+                                    and self.dash_phase == 'recover_run' and self.facing == self.dash_facing)
         if clip is self.player.clip:
             if not finished_dash:
                 self.player.update(dt)
         else:
             stride_time = self.player.elapsed
             self.player.play(clip)
-            if finished_dash:
-                # 복귀 마지막 자세 다음 프레임으로 이어간다. 반대 방향 전환은 첫 프레임이다.
-                if self.dash_phase == 'recover_idle' and clip is self.clips['idle']:
-                    self.player.update(clip.durations[0])
-                elif (self.dash_phase == 'recover_run' and self.facing == self.dash_facing
-                      and clip is not self.clips['idle']):
-                    self.player.update(sum(clip.durations[:15]))
-            elif turning:
+            if continuing and self.state == 'run':
                 self.player.update(stride_time + dt)
 
     def _begin_fall(self):
@@ -755,6 +768,7 @@ class Character(GameObject):
         self._machine.end_jump()
 
     def _take_off(self):
+        self.rebounding = False
         self.jump_phase, self.jump_elapsed = 'rise', 0.0
         self.velocity_y = self.rise_pose_speed = JUMP_SPEED
         self._apply_jump_release()
@@ -804,6 +818,7 @@ class Character(GameObject):
                 if self.level is None:
                     self.y = float(GROUND_Y)
                 self.air_dash_used = False
+                self.rebounding = False
                 self.jump_held = None
                 self.ledge_jump_remaining = 0.0
                 break
@@ -823,11 +838,16 @@ class Character(GameObject):
         self.dash_phase = phase
         self.dash_facing = self.facing
         direction = 'right' if self.facing > 0 else 'left'
-        self.player.play(self.clips[f'{phase}_{direction}'], restart=True)
+        motion = phase
+        if self.dash_airborne:
+            if phase.startswith('prepare_'):
+                motion = 'air_prepare'
+            elif phase == 'dash':
+                motion = 'air_dash'
+        self.player.play(self.clips[f'{motion}_{direction}'], restart=True)
         self.dash_remaining = sum(self.player.clip.durations)
 
     def _update_dash(self, dt):
-        effect = None
         remaining = dt
         while self.state == 'dash':
             step = min(remaining, self.dash_remaining)
@@ -848,20 +868,12 @@ class Character(GameObject):
                 else:
                     self.x = (left + right) / 2
             self.player.update(step)
-            if effect is not None:
-                effect.update(step)
             remaining = max(0.0, remaining - step)
             self.dash_remaining = max(0.0, self.dash_remaining - step)
             if self.dash_remaining > 1e-9:
                 return
             if self.dash_phase.startswith('prepare_'):
                 self._play_dash_phase('dash')
-                if self.level is not None and can_continue:
-                    direction = 'right' if self.facing > 0 else 'left'
-                    # shortcut: 고정 직선 잔상, 공중 궤적/벽 추종이 필요하면 효과 제작 방식을 바꾼다.
-                    effect = self.level.spawn(SpriteEffect(self.clips[f'dash_fx_{direction}'],
-                                                          (self.x, self.y), 1, DISPLAY_SCALE))
-                    self.dash_effect = effect
             elif self.dash_phase == 'dash':
                 self._play_dash_phase('recover_run' if self.move_direction == self.facing and can_continue
                                       else 'recover_idle')
@@ -871,56 +883,56 @@ class Character(GameObject):
                 # 수평 일반 이동은 다음 갱신부터지만 중력 시간은 버리지 않는다.
                 if self.jump_phase is None:
                     self._advance_vertical(remaining)
-                if effect is not None:
-                    effect.update(remaining)
                 return remaining
             if remaining <= 1e-9:
                 return
 
     def _draw(self, transform, opacity):
         frame = self.player.frame
-        direction = 'right' if self.facing > 0 else 'left'
-        flip_x = self.state not in ('run', 'dash', 'jump') and self.facing < 0
-        if self.state in ('attack', 'downstrike'):
-            flip_x = self.attack_facing < 0
+        flip_x = (self.attack_facing if self.state in ('attack', 'downstrike') else self.facing) < 0
         link = self.arrival_link
+        pose = None
         if self.downstrike_impact:
-            # 레벨의 히트스톱이 끝나고 다음 갱신이 시작될 때까지 베는 자세를 유지한다.
             frame = self.clips['downstrike'].frames[downstrike.IMPACT_FRAME]
             flip_x = self.attack_facing < 0
-        elif (self.state == 'idle' and link is not None and link.level is not None
-              and link.elapsed < ARRIVAL_BLEND_SECONDS):
-            clip = self.clips[f'jump_land_{direction}']
-            brace = sum(clip.durations[:len(clip.frames) // 3])
-            progress = link.elapsed / ARRIVAL_BLEND_SECONDS
-            self.pose_player.play(clip, restart=True)
-            self.pose_player.update(brace + (sum(clip.durations) - brace) * progress)
-            frame, flip_x = self.pose_player.frame, False
-        elif self.state == 'jump' and self.jump_phase == 'rise' and link is not None and link.elapsed == 0:
-            frame = self.clips[f'jump_rise_{direction}'].frames[0]
+        elif self.state in ('idle', 'run', 'jump') and link is not None and link.level is not None:
+            pose = self.clips['teleport-front']
+            elapsed = link.elapsed / LINK_SECONDS * sum(pose.durations)
+            flip_x = False
+        elif self.state == 'jump' and self.jump_phase == 'rise' and self.rebounding:
+            pose = self.clips['rebound']
+            elapsed = (1 - self.velocity_y / self.rise_pose_speed) * sum(pose.durations)
         elif (self.state == 'dash' and self.dash_phase.startswith('recover_')
-              and self.dash_remaining <= AIR_DASH_POSE_RETURN_SECONDS and self.jump_phase in ('rise', 'fall')
-              or self.state == 'hurt' and self.hp > 0 and self.hurt_remaining <= .04):
+              and self.dash_remaining <= AIR_DASH_POSE_RETURN_SECONDS and self.jump_phase in ('rise', 'fall')):
             self._show_jump(self.pose_player)
-            frame, flip_x = self.pose_player.frame, False
-        elif self.state in ('idle', 'run', 'jump') and self.pushback_remaining > 0:
-            grounded = self.grounded
-            phase = 'land' if grounded else 'rise'
-            frames = self.clips[f'jump_{phase}_{direction}'].frames
-            frame, flip_x = frames[len(frames) // 3 if grounded else 0], False
+            frame = self.pose_player.frame
         elif (self.state in ('idle', 'run') and self.moving_land_elapsed is not None
               and self.moving_land_elapsed < MOVING_LAND_SECONDS):
-            clip = self.clips[f'jump_land_{direction}']
-            self.pose_player.play(clip, restart=True)
-            self.pose_player.update(self.moving_land_elapsed / MOVING_LAND_SECONDS * sum(clip.durations))
-            frame, flip_x = self.pose_player.frame, False
+            pose = self.clips['jump_land_right']
+            elapsed = self.moving_land_elapsed / MOVING_LAND_SECONDS * sum(pose.durations)
+        elif self.state == 'run':
+            elapsed = self.ground_motion_elapsed
+            if self.sprint_exit:
+                pose = self.clips['sprint']
+            else:
+                pose = self.clips['walk']
+                first_step = sum(pose.durations[:2])
+                if elapsed >= first_step:
+                    elapsed -= first_step
+                    pose = self.clips['run-start']
+            if elapsed >= sum(pose.durations):
+                elapsed -= sum(pose.durations)
+                pose = self.player.clip
+        if pose is not None:
+            self.pose_player.play(pose, restart=True)
+            self.pose_player.update(max(0.0, elapsed))
+            frame = self.pose_player.frame
         width, height = frame.rect[2:]
         if self.hp == 0 or (self.state != 'hurt' and self.invulnerability_remaining > 0
                             and int(self.invulnerability_remaining / .0625) % 2 == 0):
             opacity *= .35
-        # 공중 공격 시트는 몸 중심, 지상·점프 시트는 발 위치를 기준으로 그린다.
         x, y = self.visual_center
-        position = (x, y) if self.state == 'attack' and self.airborne_swing else (x, y - BODY_HEIGHT / 2)
+        position = (x, y - BODY_HEIGHT / 2)
         draw_sprite(frame, transform, position,
                     (width * DISPLAY_SCALE, height * DISPLAY_SCALE), opacity, flip_x=flip_x)
 

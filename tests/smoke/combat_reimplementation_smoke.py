@@ -8,7 +8,7 @@ import pico2d.pico2d as pico
 
 from engine import Engine
 from game.character import GROUND_Y, JUMP_HEIGHT
-from game.downstrike import WINDUP
+from game.downstrike import REACH, WINDUP
 from game.effects import SpriteEffect
 from game.scene import CharacterScene, DEFAULT_SIZE
 from game.training_map import LOW_WALL, PLATFORMS
@@ -173,7 +173,7 @@ class CombatSmoke(CharacterScene):
     def downstrike_exercise(self):
         actor, enemy = self.character, self.level.enemies[0]
         enemy.state, enemy.state_remaining = 'recover', 2
-        actor.x, actor.y, actor.velocity_y = enemy.x, enemy.y - GROUND_Y, -90
+        actor.x, actor.y, actor.velocity_y = enemy.x, enemy.hurt_box[3] + REACH + 12, -90
         actor.air_dash_used = True
         push_key(pico.SDLK_s)
         push_key(pico.SDLK_j)

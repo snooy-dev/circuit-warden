@@ -132,14 +132,13 @@ class BasicEnemySceneTests(unittest.TestCase):
                     scene.update(0)
                     scene.update(.11)
                     self.assertEqual(actor.state, action)
-                    effects = [obj for obj in scene.level.objects if isinstance(obj, SpriteEffect)]
-                    self.assertEqual(len(effects), int(action == 'dash'))
+                    motion_image = actor.player.frame.image
                     actor.take_hit()
                     enemy.take_hit()
                     charges = tuple(scene.level.charges)
                     scene.handle_event(SimpleNamespace(type=pico.SDL_KEYDOWN, key=pico.SDLK_r, repeat=0))
                     scene.update(0)
-                    self.assertTrue(all(obj.level is None for obj in (actor, enemy, *effects)))
+                    self.assertTrue(all(obj.level is None for obj in (actor, enemy)))
                     self.assertTrue(all(charge.level is None for charge in charges))
                     self.assertTrue(all(charge.level is scene.level for charge in scene.level.charges))
                     self.assertEqual((scene.character.hp, scene.level.enemy.hp), (5, 3))
@@ -152,10 +151,12 @@ class BasicEnemySceneTests(unittest.TestCase):
                     self.assertIs(scene.level.enemy.frame, enemy.clips['idle'].frames[0])
                     self.assertEqual(scene.level.enemy.animation.elapsed, 0)
                     self.assertFalse(image.closed)
+                    self.assertFalse(motion_image.closed)
                     scene.draw()
                 finally:
                     scene.exit()
                 self.assertTrue(image.closed)
+                self.assertTrue(motion_image.closed)
 
     def test_teleport_cancels_active_sword_without_resetting_health(self):
         scene = CharacterScene()

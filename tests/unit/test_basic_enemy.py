@@ -22,13 +22,16 @@ class CombatFixture(unittest.TestCase):
         idle = SpriteClip((frame,), (.5,))
         attack = SpriteClip((frame,) * 7, (.05,) * 7, loop=False)
         clips = dict(idle=idle, run_left=idle, run_right=idle, attack=attack,
-                     air_attack=attack, hurt=SpriteClip((frame,), (HURT_SECONDS,), loop=False))
+                     air_attack=attack, hurt=SpriteClip((frame,), (HURT_SECONDS,), loop=False),
+                     walk=idle, sprint=idle, rebound=idle)
+        clips['run-start'] = clips['teleport-front'] = idle
         for direction in ('left', 'right'):
             for phase in ('start', 'rise', 'fall', 'land'):
                 clips[f'jump_{phase}_{direction}'] = idle
         clips.update(prepare_idle_right=SpriteClip((frame,), (.1,), loop=False),
-                     dash_right=SpriteClip((frame,), (.2,), loop=False),
-                     dash_fx_right=attack)
+                     dash_right=SpriteClip((frame,), (.2,), loop=False))
+        clips['air_prepare_right'] = clips['prepare_idle_right']
+        clips['air_dash_right'] = clips['dash_right']
         enemy_clips = {
             'idle': SpriteClip((frame,), (.6,)),
             'approach': SpriteClip((frame, frame), (.2, .2)),

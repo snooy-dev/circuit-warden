@@ -172,8 +172,8 @@ GameDesign 20쪽의 기울어진 청록 콘덴서, 갈라진 십자 벤트, 구�
 | 기준 | 참조 | 적용 범위·상태 |
 |---|---|---|
 | 기본 원화 | [master-source.png](../art/warden/reference/master-source.png) | 2026-11-09 사용자가 지정한 원화. 전기 생명체의 기본 외형·신체 표현 |
-| 현재 게임 크기의 비교 기준 | [측면 idle 오른쪽 0번 프레임](../art/warden/provisional-approved/idle-side-wind-v2/idle_right/frame_00.png) · [전체 재생](../art/warden/provisional-approved/idle-side-wind-v2/review.html) | 잠정 승인된 망토 바람 v2. 얼굴·신체 비율·색 면적·명암·픽셀 밀도의 비교 기준. 실제 게임은 [idle.png](../assets/warden/idle.png)를 사용 |
-| 측면 제작용 고해상도 신체 참조 | [warden-proportion-restored.png](../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png) | 현재 idle과 Run의 제작 입력. [idle 출처](../art/warden/provisional-approved/idle-side-wind-v2/provenance.json)로 연결되는 파생본이며, 기본 원화를 대체하는 별도 최종 승인 원화로 취급하지 않음 |
+| 기존 게임 크기의 비교 기준 | [측면 idle 오른쪽 0번 프레임](../art/warden/provisional-approved/idle-side-wind-v2/idle_right/frame_00.png) · [전체 재생](../art/warden/provisional-approved/idle-side-wind-v2/review.html) | 잠정 승인된 망토 바람 v2. 얼굴·신체 비율·색 면적·명암·픽셀 밀도의 비교 기준. 현재 게임용 대기는 [새 idle 시트](../art/game-ready/warden/ground/idle.png)를 사용 |
+| 측면 제작용 고해상도 신체 참조 | [warden-proportion-restored.png](../art/warden/shading-restore/proportion-fix-v1/warden-proportion-restored.png) | 이전 idle과 Run의 제작 입력. [idle 출처](../art/warden/provisional-approved/idle-side-wind-v2/provenance.json)로 연결되는 파생본이며, 기본 원화를 대체하는 별도 최종 승인 원화로 취급하지 않음 |
 | 검 원화 | [energy-sword-master-v2.png](../art/warden/reference/energy-sword-master-v2.png) | 2026-11-11 사용자가 이후 검 디자인으로 채택. 가늘고 길게 뾰족해지는 청록 칼날·불꽃형 기부·흰 중심 전류와 분기·가는 에너지 손잡이 |
 | 이전 무장 원화 | [energe-sword-grip.png](../art/warden/reference/energe-sword-grip.png) | 최초 첨부명은 energy-sword-grip-fixed-v12.png. 보존용이며 검 외형은 위 최신 검 원화를 우선 |
 
@@ -271,23 +271,15 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 ## 리소스 보관 구분
 
-- `art/`: 리소스 생성·원본·후보·확정 제작본을 보관하는 로컬 작업 공간. `.git/info/exclude`의 `/art/`로 Git 추적에서 제외한다. 이 안의 확정본도 게임에 포함된 파일을 뜻하지 않는다.
+- `art/`: 리소스 생성·원본·후보·확정 제작본을 보관하는 로컬 작업 공간. `.git/info/exclude`의 `/art/`로 일반 제작 파일을 Git 추적에서 제외한다. 게임이 읽는 `art/game-ready/warden/`의 시트와 메타데이터는 Git에서 관리한다.
 - `assets/`: 실제 게임에서 사용할 리소스를 복사해 보관하는 폴더. 사용자가 2026-11-08 폴더명을 확정했다. 게임 사용 파일과 필요한 규격·출처 정보를 함께 Git으로 관리한다.
-- 사용자 지시에 따른 현재 잠정 승인 범위는 위 목록과 approval.json을 따른다. 과거 폴더 이름에 `approved`가 있다는 이유만으로 현재 승인으로 승계하지 않는다. 기존 자료는 삭제하지 않으며 게임 연결은 별도 승인이다. `art/`의 파일은 Git으로 복원할 수 없으므로 별도 백업이 필요하다.
+- 사용자 지시에 따른 현재 잠정 승인 범위는 위 목록과 approval.json을 따른다. 과거 폴더 이름에 `approved`가 있다는 이유만으로 현재 승인으로 승계하지 않는다. 기존 자료는 삭제하지 않으며 게임 연결은 별도 승인이다. Git 추적에서 제외한 `art/` 파일은 별도 백업이 필요하다.
 
 ## 게임에서 사용하는 캐릭터 자산
 
-2026-11-27 게임은 발을 고정한 채 머리가 2px 범위로 오르내리는 대기 96프레임·4초 시트를 사용한다. 달리기는 Run v4 리그의 보폭·발 들림과 함께 골반 위 상체 기울기·팔 스윙·천과 꼬리의 관성을 표현하는 16프레임·480ms 파생본을 사용한다. 루프 양끝은 대시와 연결하는 기존 자세를 쓴다. 현재 점프 시트는 측면 대기를 기준으로 얼굴을 보정한 `face-color-v4`와 일치한다. 공중 일반 검격과 아래 베기는 준비와 타격에서 상체, 자유 팔, 양다리의 각도를 조정한 전신 자세를 사용한다. [자산 규격과 출처](../assets/warden/README.md).
+게임은 [워든 게임용 메타데이터](../art/game-ready/warden/animations.json)에 있는 18종을 읽는다. 셀은 256×224이며 공통 발 기준점은 이미지 왼쪽 위 기준 (128,136)이다. 측면 우측 원본을 좌측으로 반전하고, 정면 순간이동 자세는 좌우에서 같은 방향으로 사용한다. 원본 프레임 시간과 반복 여부를 메타데이터에 보관하며 게임 행동에 따른 전환은 [기본 게임플레이](systems/basic-gameplay.md)를 따른다.
 
-2026-11-11 사용자 요청에 따라 idle v7·Run v4의 PNG 시트 3장을 `assets/warden/idle.png`, `run_left.png`, `run_right.png`로 복사했다. 이름의 버전을 제거했으며 원본 PNG 바이트와 프레임별 시간·기준점을 보존했다. [게임 자산 출처](../assets/warden/README.md)에 원본 경로·SHA-256을, animations.json에 런타임 규격을 기록한다. .gitattributes는 PNG를 일반 Git 바이너리로 관리한다. 걷기는 포함하지 않는다.
-
-지상 기본 공격의 `assets/warden/attack.png`는 HK v6·팔 보정 v3의 준비와 타격, 로컬 ComfyUI LTX 회복 세 자세, 대기 연결을 사용한다. 2026-11-24 사용자가 선택한 pixelfx 분기 방전 초승달을 몸체 위에 1.2배로 합성했다. 타격 정점의 굵은 방전은 짙은 청색 테두리와 흰 중심선을 쓰고 회복에 들어서기 전에 사라진다. 공중 일반 검격은 몸통과 양팔이 함께 도는 자세 위에 지상 검격과 같은 pixelfx 6프레임을 같은 크기와 발 기준점으로 합성한다. 아래 베기는 화면을 향해 돌아 같은 손으로 발밑을 훑고 반대편으로 검을 올려 회수한다. 전용 pixelfx 잔상은 검 끝의 궤적을 따라 짙은 청색 테두리와 밝은 청록·흰색 중심선으로 표현한다. 좌측은 수평 반전한다. [자산 규격과 출처](../assets/warden/README.md) · [기본 게임플레이](systems/basic-gameplay.md).
-
-이전 지상 v6 아웃라인 있음과 별도 전기 베기 v4의 규격·검증은 [011 당시 검증](../specs/011-basic-gameplay/verification.md)에 보존했다.
-
-2026-11-13 측면 idle 교체 요청으로 idle.png를 망토 바람 v2/idle_right/sheet.png로 대체했다. 48프레임·2초와 기준점 (64,92)을 사용한다. 좌측 원본은 우측의 정확한 수평 반전이므로 런타임 반전을 재사용한다. 기존 idle v7 원본은 보존한다.
-
-승인 대시 눈·망토 보정 v1의 캐릭터10개 시트와 전류 VFX v1 좌우2개 시트를 게임에 바이트 보존 복사했다. 준비100ms·이동200ms·복귀167ms 전체를 행동 잠금에 포함한다는 사용자 답변에 따라 연결했다. 별도 연결용 idle/Run128프레임은 이번 교체에 포함하지 않는다. 좌우 실제 출력과 단계·효과 동기화를 확인했으며 공중/경계의 효과는 원본 직선 잔상을 그대로 사용한다.
+이전 몸체 시트와 별도 효과의 원본 및 규격은 [기존 게임 자산 출처](../assets/warden/README.md)에 보관한다.
 
 ## 전하 런타임 자산
 
@@ -301,4 +293,4 @@ idle은 비무장이다. 각 동작의 채택본·연결 프레임·제작 규�
 
 ## 워든 피격 자세
 
-실제 피해에는 상체가 뒤로 크게 젖혀지고 팔과 발이 벌어지는 키 자세와 접촉 섬광을 사용한다. 이전 손을 모은 자세는 사용자 재테스트에서 동작이 불분명했다. 화면 좌우는 수평 반전으로 공유하고, 128×104 셀·발 기준점 (64,92)·기존 idle의 16색·이진 알파를 사용한다. 피격 후반 40ms는 반동 속도에 맞는 상승·낙하·착지 자세로 돌아온다. [현재 피격 자세](../assets/warden/hurt-impact.png) · [원본과 출처](../assets/warden/source/hurt-impact.provenance.json).
+실제 피해에는 접촉 섬광과 워든 게임용 피격 자세를 사용한다. 좌우는 수평 반전으로 공유한다. [현재 피격 시트](../art/game-ready/warden/combat/hurt.png) · [기본 게임플레이](systems/basic-gameplay.md).
