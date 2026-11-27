@@ -190,10 +190,16 @@
       "image": "references/ground-attack.png",
       "frames": [
         0,
+        0,
+        1,
+        1,
         1,
         2,
         2,
+        2,
         3,
+        3,
+        4,
         4
       ],
       "label": "기사 일반 베기",
@@ -205,10 +211,16 @@
       "image": "references/air-attack.png",
       "frames": [
         0,
+        0,
+        1,
+        1,
         1,
         2,
         2,
+        2,
         3,
+        3,
+        4,
         4
       ],
       "label": "기사 일반 베기",
@@ -220,8 +232,10 @@
       "image": "references/downstrike.png",
       "frames": [
         0,
+        0,
         1,
         1,
+        2,
         2,
         3,
         4,
@@ -237,10 +251,12 @@
       "frames": [
         0,
         1,
+        1,
+        2,
         2,
         3,
+        3,
         4,
-        5,
         5
       ],
       "label": "기사 아래 베기 → 상승 대체 비교",
