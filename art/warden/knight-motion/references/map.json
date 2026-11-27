@@ -12,14 +12,9 @@
       "image": "references/idle.png",
       "frames": [
         0,
-        1,
         2,
         3,
-        4,
-        5,
-        6,
-        7,
-        8
+        6
       ],
       "label": "기사 대기",
       "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
@@ -46,6 +41,7 @@
     "run-start": {
       "image": "references/run-start.png",
       "frames": [
+        0,
         0,
         1,
         2,
@@ -95,8 +91,8 @@
       "frames": [
         0,
         1,
-        2,
-        3
+        1,
+        2
       ],
       "label": "기사 대기 → 점프 초반",
       "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
@@ -109,7 +105,6 @@
         0,
         1,
         2,
-        3,
         4,
         5
       ],
@@ -122,11 +117,11 @@
       "image": "references/jump-fall.png",
       "frames": [
         0,
-        1,
+        0,
         2,
         3,
-        4,
-        5
+        5,
+        2
       ],
       "label": "기사 낙하",
       "source": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
@@ -137,7 +132,6 @@
       "image": "references/jump-land.png",
       "frames": [
         0,
-        1,
         1,
         2,
         3,
@@ -152,13 +146,10 @@
       "image": "references/ground-dash.png",
       "frames": [
         0,
+        0,
         1,
         2,
-        3,
-        3,
         4,
-        5,
-        5,
         6,
         6
       ],
@@ -171,13 +162,10 @@
       "image": "references/air-dash.png",
       "frames": [
         0,
+        0,
         1,
         2,
-        3,
-        3,
         4,
-        5,
-        5,
         6,
         6
       ],
@@ -193,13 +181,9 @@
         0,
         1,
         1,
-        1,
-        2,
         2,
         2,
         3,
-        3,
-        4,
         4
       ],
       "label": "기사 일반 베기",
@@ -214,13 +198,9 @@
         0,
         1,
         1,
-        1,
-        2,
         2,
         2,
         3,
-        3,
-        4,
         4
       ],
       "label": "기사 일반 베기",
@@ -238,7 +218,6 @@
         2,
         2,
         3,
-        4,
         4
       ],
       "label": "기사 아래 베기",
@@ -255,7 +234,6 @@
         2,
         2,
         3,
-        3,
         4,
         5
       ],
@@ -268,10 +246,10 @@
       "image": "references/hurt.png",
       "frames": [
         0,
-        2,
-        5,
+        1,
+        3,
         6,
-        7,
+        8,
         9
       ],
       "label": "기사 저체력 대기 · 피격 대체 비교",
@@ -283,12 +261,9 @@
       "image": "references/charge-arrival.png",
       "frames": [
         0,
-        0,
         1,
-        1,
-        2,
-        2,
         3,
+        4,
         4
       ],
       "label": "기사 대시 종료 · 전하 도착 대체 비교",
@@ -302,17 +277,15 @@
         0,
         1,
         2,
+        2,
         3,
         4,
-        6,
-        7,
-        7,
-        6,
         5,
         4,
         3,
         2,
-        1
+        1,
+        0
       ],
       "label": "기사 Dreamgate 발동 · 귀환 배치",
       "source": "https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png",

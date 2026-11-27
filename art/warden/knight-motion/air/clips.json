@@ -13,23 +13,22 @@
       "sheet": "jump-start.png",
       "frameCount": 4,
       "durationsMs": [
-        28,
-        24,
-        24,
-        34
+        26,
+        26,
+        27,
+        31
       ],
       "loop": false
     },
     "jump-rise": {
       "sheet": "jump-rise.png",
-      "frameCount": 6,
+      "frameCount": 5,
       "durationsMs": [
-        35,
-        45,
-        48,
-        52,
-        55,
-        63
+        40,
+        50,
+        65,
+        68,
+        75
       ],
       "loop": false
     },
@@ -48,48 +47,41 @@
     },
     "jump-land": {
       "sheet": "jump-land.png",
-      "frameCount": 6,
+      "frameCount": 5,
       "durationsMs": [
         25,
-        24,
         38,
         42,
-        40,
-        40
+        50,
+        54
       ],
       "loop": false
     },
     "air-dash": {
       "sheet": "air-dash.png",
-      "frameCount": 10,
+      "frameCount": 7,
       "durationsMs": [
         20,
-        20,
         25,
-        30,
-        28,
-        24,
-        23,
-        25,
-        25,
-        30
+        31,
+        46,
+        48,
+        45,
+        35
       ],
       "loop": false
     },
     "ground-dash": {
       "sheet": "ground-dash.png",
-      "frameCount": 10,
+      "frameCount": 7,
       "durationsMs": [
         20,
-        20,
         25,
-        30,
-        28,
-        24,
-        23,
-        25,
-        25,
-        30
+        31,
+        46,
+        48,
+        45,
+        35
       ],
       "loop": false
     }

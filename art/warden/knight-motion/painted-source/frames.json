@@ -1,0 +1,526 @@
+{
+  "description": "사용한 전신 원화와 셀 번호. 원화 시트의 왼쪽 위부터 행 우선으로 1부터 센다. null은 소실 프레임이다.",
+  "clips": {
+    "idle": [
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
+      {
+        "sheet": "start.png",
+        "cell": 2
+      },
+      {
+        "sheet": "start.png",
+        "cell": 3
+      },
+      {
+        "sheet": "start.png",
+        "cell": 4
+      }
+    ],
+    "walk": [
+      {
+        "sheet": "walk.png",
+        "cell": 1
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 2
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 3
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 4
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 5
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 6
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 7
+      },
+      {
+        "sheet": "walk.png",
+        "cell": 8
+      }
+    ],
+    "run-start": [
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
+      {
+        "sheet": "start.png",
+        "cell": 5
+      },
+      {
+        "sheet": "start.png",
+        "cell": 6
+      },
+      {
+        "sheet": "start.png",
+        "cell": 7
+      },
+      {
+        "sheet": "start.png",
+        "cell": 8
+      }
+    ],
+    "run": [
+      {
+        "sheet": "run.png",
+        "cell": 1
+      },
+      {
+        "sheet": "run.png",
+        "cell": 2
+      },
+      {
+        "sheet": "run.png",
+        "cell": 3
+      },
+      {
+        "sheet": "run.png",
+        "cell": 4
+      },
+      {
+        "sheet": "run.png",
+        "cell": 5
+      },
+      {
+        "sheet": "run.png",
+        "cell": 6
+      },
+      {
+        "sheet": "run.png",
+        "cell": 7
+      },
+      {
+        "sheet": "run.png",
+        "cell": 8
+      }
+    ],
+    "sprint": [
+      {
+        "sheet": "sprint.png",
+        "cell": 1
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 2
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 3
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 4
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 5
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 6
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 7
+      },
+      {
+        "sheet": "sprint.png",
+        "cell": 8
+      }
+    ],
+    "jump-start": [
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 10
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 11
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 2
+      }
+    ],
+    "jump-rise": [
+      {
+        "sheet": "jump.png",
+        "cell": 2
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 5
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 6
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 7
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 8
+      }
+    ],
+    "jump-fall": [
+      {
+        "sheet": "jump.png",
+        "cell": 8
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 9
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 10
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 11
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 12
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 10
+      }
+    ],
+    "jump-land": [
+      {
+        "sheet": "repair.png",
+        "cell": 9
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 10
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 11
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 12
+      },
+      {
+        "sheet": "start.png",
+        "cell": 1
+      }
+    ],
+    "ground-dash": [
+      {
+        "sheet": "start.png",
+        "cell": 5
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 6
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 7
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 8
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 9
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 10
+      },
+      {
+        "sheet": "start.png",
+        "cell": 1
+      }
+    ],
+    "air-dash": [
+      {
+        "sheet": "jump.png",
+        "cell": 2
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 6
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 7
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 8
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 9
+      },
+      {
+        "sheet": "dash.png",
+        "cell": 10
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 8
+      }
+    ],
+    "ground-attack": [
+      {
+        "sheet": "combat.png",
+        "cell": 1
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 2
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 3
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 4
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 5
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 6
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 7
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 8
+      }
+    ],
+    "air-attack": [
+      {
+        "sheet": "combat.png",
+        "cell": 9
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 10
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 11
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 12
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 13
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 14
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 15
+      },
+      {
+        "sheet": "combat.png",
+        "cell": 16
+      }
+    ],
+    "downstrike": [
+      {
+        "sheet": "repair.png",
+        "cell": 5
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 6
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 7
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 8
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 5
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 6
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 7
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 8
+      }
+    ],
+    "rebound": [
+      {
+        "sheet": "vertical.png",
+        "cell": 7
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 9
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 10
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 11
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 12
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 13
+      },
+      {
+        "sheet": "vertical.png",
+        "cell": 14
+      },
+      {
+        "sheet": "jump.png",
+        "cell": 2
+      }
+    ],
+    "hurt": [
+      {
+        "sheet": "start.png",
+        "cell": 1
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 1
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 2
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 3
+      },
+      {
+        "sheet": "repair.png",
+        "cell": 4
+      },
+      {
+        "sheet": "start.png",
+        "cell": 1
+      }
+    ],
+    "charge-arrival": [
+      {
+        "sheet": "special.png",
+        "cell": 5
+      },
+      {
+        "sheet": "special.png",
+        "cell": 6
+      },
+      {
+        "sheet": "special.png",
+        "cell": 7
+      },
+      {
+        "sheet": "special.png",
+        "cell": 8
+      },
+      {
+        "sheet": "start.png",
+        "cell": 1
+      }
+    ],
+    "teleport-front": [
+      {
+        "sheet": "special.png",
+        "cell": 9
+      },
+      {
+        "sheet": "special.png",
+        "cell": 10
+      },
+      {
+        "sheet": "special.png",
+        "cell": 11
+      },
+      {
+        "sheet": "special.png",
+        "cell": 12
+      },
+      {
+        "sheet": "special.png",
+        "cell": 13
+      },
+      {
+        "sheet": "special.png",
+        "cell": 14
+      },
+      null,
+      {
+        "sheet": "special.png",
+        "cell": 15
+      },
+      {
+        "sheet": "special.png",
+        "cell": 13
+      },
+      {
+        "sheet": "special.png",
+        "cell": 11
+      },
+      {
+        "sheet": "special.png",
+        "cell": 10
+      },
+      {
+        "sheet": "special.png",
+        "cell": 9
+      }
+    ]
+  }
+}

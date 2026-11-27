@@ -7,197 +7,137 @@
     128,
     136
   ],
-  "restBodyHeight": 80,
   "alpha": "binary",
-  "palette": "assets/warden/idle.png",
-  "artSource": "existing Warden art",
+  "palette": "art/warden/ground-slash-rig-v2/source/sampling.json",
+  "artSource": "painted-source/frames.json",
   "status": "review",
   "clips": {
     "rebound": {
       "sheet": "rebound.png",
-      "frameCount": 9,
-      "columns": 9,
+      "frameCount": 8,
+      "columns": 8,
       "rows": 1,
       "durationsMs": [
-        22,
-        21,
-        22,
-        24,
-        26,
-        27,
+        23,
+        23,
+        25,
+        28,
         30,
+        32,
         36,
-        42
+        45
       ],
       "loop": false,
       "facing": "right",
-      "phases": [
-        "contact",
-        "load",
-        "push",
-        "release",
-        "fold",
-        "retract",
-        "fade",
-        "rise",
-        "handoff"
-      ],
       "source": {
-        "warden": [
-          "../combat/downstrike.png",
-          "../air/jump-rise.png"
-        ],
-        "poseReference": [
-          "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash",
-          "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites"
-        ]
+        "poseReference": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash",
+        "art": "ImageGen 전신 원화"
       },
       "alphaBounds": [
         [
-          99,
-          58,
-          158,
-          155
+          80,
+          43,
+          157,
+          136
+        ],
+        [
+          68,
+          35,
+          153,
+          119
+        ],
+        [
+          72,
+          43,
+          148,
+          131
         ],
         [
           78,
-          55,
+          47,
           150,
-          135
+          137
         ],
         [
           81,
-          49,
-          139,
-          135
-        ],
-        [
-          91,
-          45,
-          139,
-          132
-        ],
-        [
-          93,
-          47,
-          143,
-          125
-        ],
-        [
-          96,
-          49,
+          46,
           148,
-          126
+          140
         ],
         [
-          97,
-          51,
-          152,
-          127
+          81,
+          48,
+          150,
+          145
         ],
         [
-          99,
-          53,
-          157,
-          129
+          84,
+          56,
+          151,
+          148
         ],
         [
-          89,
-          51,
-          160,
-          135
+          95,
+          56,
+          155,
+          136
         ]
       ]
     },
     "charge-arrival": {
       "sheet": "charge-arrival.png",
-      "frameCount": 8,
-      "columns": 8,
+      "frameCount": 5,
+      "columns": 5,
       "rows": 1,
       "durationsMs": [
-        24,
-        30,
-        28,
-        24,
-        22,
-        25,
-        31,
-        36
+        32,
+        37,
+        39,
+        53,
+        59
       ],
       "loop": false,
       "facing": "right",
-      "phases": [
-        "brace",
-        "load",
-        "absorb",
-        "recover",
-        "rise",
-        "overshoot",
-        "relax",
-        "rest"
-      ],
       "source": {
-        "warden": [
-          "../../motion-audit-v4/source/side-rgba.png"
-        ],
-        "poseReference": [
-          "https://github.com/DaxMakinGames/HollowKnightGodot/blob/main/Player/Sprites/knight_dash.png"
-        ]
+        "poseReference": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
+        "art": "ImageGen 전신 원화"
       },
       "alphaBounds": [
         [
-          69,
-          65,
-          164,
+          52,
+          64,
+          166,
           136
         ],
         [
+          44,
           66,
-          64,
+          165,
+          136
+        ],
+        [
+          86,
+          58,
           159,
           136
         ],
         [
-          79,
-          59,
-          157,
-          136
-        ],
-        [
-          77,
-          62,
-          149,
-          136
-        ],
-        [
-          76,
-          62,
-          137,
-          136
-        ],
-        [
-          82,
-          57,
-          142,
-          136
-        ],
-        [
-          87,
+          88,
           54,
-          149,
+          144,
           136
         ],
         [
           87,
           55,
-          148,
+          149,
           136
         ]
       ]
     },
     "teleport-front": {
       "sheet": "teleport-front.png",
-      "frameCount": 14,
+      "frameCount": 12,
       "columns": 8,
       "rows": 2,
       "durationsMs": [
@@ -209,114 +149,83 @@
         14,
         16,
         14,
-        18,
-        24,
-        28,
-        32,
-        38,
-        45
+        31,
+        39,
+        45,
+        70
       ],
       "loop": false,
       "facing": "front",
-      "phases": [
-        "rest",
-        "anticipate",
-        "brace",
-        "load",
-        "release",
-        "flash",
-        "absent",
-        "reappear",
-        "materialize",
-        "absorb",
-        "recover",
-        "relax",
-        "settle",
-        "rest"
-      ],
       "source": {
-        "warden": [
-          "../../motion-audit-v4/source/front.png"
-        ]
+        "poseReference": "https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png",
+        "art": "ImageGen 전신 원화"
       },
       "alphaBounds": [
         [
-          95,
-          56,
-          147,
+          92,
+          54,
+          148,
           136
         ],
         [
-          93,
+          83,
           61,
-          148,
+          156,
           136
         ],
         [
-          91,
-          69,
-          151,
-          137
+          88,
+          78,
+          159,
+          136
         ],
         [
-          89,
-          75,
-          153,
-          139
+          86,
+          80,
+          162,
+          136
         ],
         [
-          91,
-          58,
-          148,
-          138
+          88,
+          54,
+          161,
+          136
         ],
         [
-          116,
-          51,
-          141,
-          150
+          88,
+          49,
+          168,
+          143
         ],
         null,
         [
-          120,
-          61,
-          137,
-          140
+          98,
+          57,
+          159,
+          135
         ],
         [
-          90,
-          51,
-          149,
-          140
-        ],
-        [
-          91,
-          71,
-          152,
-          137
-        ],
-        [
-          92,
-          68,
-          150,
-          137
-        ],
-        [
-          93,
-          61,
-          148,
+          88,
+          54,
+          161,
           136
         ],
         [
-          94,
-          55,
-          147,
-          137
+          88,
+          78,
+          159,
+          136
         ],
         [
-          95,
-          56,
-          147,
+          83,
+          61,
+          156,
+          136
+        ],
+        [
+          92,
+          54,
+          148,
           136
         ]
       ]
