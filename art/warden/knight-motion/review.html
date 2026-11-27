@@ -1,325 +1,75 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>워든 동작 검토</title>
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>워든 모션 · 프레임 감사</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#151d28;color:#eff5fa;font:16px/1.45 system-ui,sans-serif}main{max-width:950px;margin:35px auto;padding:0 20px}h1{font-size:28px}section{background:#273445;border-radius:10px;padding:18px;margin:20px 0}canvas{display:block;width:min(100%,580px);height:auto;margin:auto;image-rendering:pixelated}select,button{font:inherit;color:inherit;background:#304155;padding:7px 12px;border:1px solid #708395;border-radius:5px}button{cursor:pointer}nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}output{font-variant-numeric:tabular-nums}a{color:#86e4ff}summary{cursor:pointer}img{max-width:100%;margin:12px 0}label{display:inline-flex;gap:6px;align-items:center}</style><main><h1>워든 동작 검토</h1><nav><label>동작 <select id="clip"></select></label><label>배속 <select id="speed"><option>1</option><option>0.5</option><option>0.25</option></select></label><label><input id="mirror" type="checkbox">왼쪽 보기</label></nav>
-<section><canvas id="stage" width="290" height="168" aria-label="워든 스프라이트 재생 화면"></canvas></section><nav><button id="play">일시정지</button><button id="prev">이전 프레임</button><button id="next">다음 프레임</button><output id="info"></output></nav>
-<details open><summary style="margin-top:28px">기사 원본과 워든의 달리기 비교</summary><img src="run-comparison.gif" alt="기사와 워든이 몸을 낮춰 출발한 뒤 반복 보폭으로 달리는 모습"><p>두 캐릭터를 워든의 재생 시간에 맞춰 표시했습니다. <a href="https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites">이동 원본</a> · <a href="https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight">베기 원본</a></p></details></main>
+:root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#eef3f6;background:#17202b}*{box-sizing:border-box}main{max-width:1040px;margin:auto;padding:24px 20px 48px}h1{margin:0;font-size:clamp(24px,4vw,38px)}h2{font-size:20px}p{margin:8px 0}header,nav,.panels,.controls,#strip{display:flex;gap:12px;flex-wrap:wrap;align-items:center}header{justify-content:space-between}header p,small,.muted{color:#b6c6d3}button,select{font:inherit;border:1px solid #59697a;border-radius:6px;background:#273644;color:inherit;padding:6px 10px;cursor:pointer}button:hover,select:hover{border-color:#9fb4c6}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #8ce9ec}a{color:#9de9f7}nav,.controls{margin:15px 0}label{display:inline-flex;align-items:center;gap:6px}.panels{flex-wrap:nowrap;gap:8px}.panel{flex:1;min-width:0;background:#263442;border:1px solid #405061;border-radius:8px;overflow:hidden}.panel h2,.caption{margin:0;padding:9px 12px}.panel canvas{width:min(100%,var(--canvas-width,416px));margin:auto;display:block;image-rendering:pixelated}.caption{font-size:14px;color:#c6d2de;min-height:2.8em}.note{border-left:3px solid #74cdd6;padding:4px 12px;margin:14px 0}.issue{color:#ffd397}.intent{color:#a9dbff}#strip{gap:6px;margin:8px 0 14px}#strip button{display:grid;min-width:38px;justify-items:center;padding:4px 8px;font-size:14px}#strip button[aria-current=true]{border-color:#8dedf5;background:#304e57}#strip button[data-flag=true]{color:#ffd397}details{border-top:1px solid #526273;padding:12px 0;margin-top:12px}summary{cursor:pointer}#index button{font-size:14px;margin:3px}#frameNote{min-height:3em}#error{color:#ffbd98}@media(max-width:560px){main{padding:15px 10px}.caption{font-size:12px}.panel h2{font-size:15px}.panels{gap:4px}}
+</style>
+<main>
+<header><h1>워든 모션 · 프레임 감사</h1><p>18개 동작 / 133프레임</p></header>
+<nav><label>동작 <select id="clip"></select></label><label>속도 <select id="speed"><option value="1">1배</option><option value=".5">½배</option><option value=".25">¼배</option></select></label><label>표시 크기 <select id="zoom"><option value="2">2배</option><option value="1">원래 크기</option></select></label><label><input type="checkbox" id="mirror"> 좌우 반전</label></nav>
+<div class="panels"><section class="panel"><h2>할로우 나이트 · 기사</h2><canvas id="hk" width="208" height="154"></canvas><div id="refInfo" class="caption"></div></section><section class="panel"><h2>서킷 워든</h2><canvas id="cw" width="208" height="154"></canvas><div id="frameInfo" class="caption"></div></section></div>
+<p id="error" role="alert"></p>
+<div class="controls"><button id="play"></button><button id="prev">이전</button><button id="next">다음</button><small>← → 한 프레임 이동</small></div>
+<div id="strip" aria-label="워든 프레임 선택"></div>
+<p id="comparison"></p><small>워든의 프레임 시간에 맞춰 기사의 대응 자세를 표시합니다. 가로선은 두 판의 공통 발 기준점입니다.</small>
+<section><h2 id="subject"></h2><p id="summary"></p><div class="note"><strong id="verdict"></strong><p id="frameNote"></p><small id="metrics"></small></div></section>
+<details open><summary>검토 지점으로 이동</summary><div id="index"></div></details>
+</main>
 <script>
-const manifest={
-  "frameSize": [
-    256,
-    224
-  ],
-  "pivot": [
-    128,
-    136
-  ],
-  "facing": "right",
-  "frontFacing": [
-    "teleport-front"
-  ],
-  "clips": {
-    "idle": {
-      "name": "대기",
-      "sheet": "ground/idle.png",
-      "durationsMs": [
-        130,
-        110,
-        115,
-        160,
-        130,
-        115,
-        155,
-        170,
-        145
-      ],
-      "loop": true,
-      "columns": 9
-    },
-    "walk": {
-      "name": "걷기",
-      "sheet": "ground/walk.png",
-      "durationsMs": [
-        110,
-        110,
-        110,
-        110,
-        110,
-        110,
-        110,
-        110
-      ],
-      "loop": true,
-      "columns": 8
-    },
-    "run-start": {
-      "name": "달리기 출발",
-      "sheet": "ground/run-start.png",
-      "durationsMs": [
-        48,
-        45,
-        48,
-        40
-      ],
-      "loop": false,
-      "columns": 4
-    },
-    "run": {
-      "name": "달리기",
-      "sheet": "ground/run.png",
-      "durationsMs": [
-        62,
-        48,
-        60,
-        65,
-        62,
-        48,
-        60,
-        65
-      ],
-      "loop": true,
-      "columns": 8
-    },
-    "sprint": {
-      "name": "전력 질주",
-      "sheet": "ground/sprint.png",
-      "durationsMs": [
-        48,
-        40,
-        46,
-        48,
-        48,
-        40,
-        46,
-        48
-      ],
-      "loop": true,
-      "columns": 8
-    },
-    "jump-start": {
-      "name": "발구름",
-      "sheet": "air/jump-start.png",
-      "durationsMs": [
-        28,
-        24,
-        24,
-        34
-      ],
-      "loop": false,
-      "columns": 4
-    },
-    "jump-rise": {
-      "name": "상승",
-      "sheet": "air/jump-rise.png",
-      "durationsMs": [
-        35,
-        45,
-        48,
-        52,
-        55,
-        63
-      ],
-      "loop": false,
-      "columns": 6
-    },
-    "jump-fall": {
-      "name": "낙하",
-      "sheet": "air/jump-fall.png",
-      "durationsMs": [
-        52,
-        50,
-        52,
-        62,
-        54,
-        50
-      ],
-      "loop": true,
-      "columns": 6
-    },
-    "jump-land": {
-      "name": "착지",
-      "sheet": "air/jump-land.png",
-      "durationsMs": [
-        25,
-        24,
-        38,
-        42,
-        40,
-        40
-      ],
-      "loop": false,
-      "columns": 6
-    },
-    "ground-dash": {
-      "name": "지상 대시",
-      "sheet": "air/ground-dash.png",
-      "durationsMs": [
-        20,
-        20,
-        25,
-        30,
-        28,
-        24,
-        23,
-        25,
-        25,
-        30
-      ],
-      "loop": false,
-      "columns": 10
-    },
-    "air-dash": {
-      "name": "공중 대시",
-      "sheet": "air/air-dash.png",
-      "durationsMs": [
-        20,
-        20,
-        25,
-        30,
-        28,
-        24,
-        23,
-        25,
-        25,
-        30
-      ],
-      "loop": false,
-      "columns": 10
-    },
-    "ground-attack": {
-      "name": "지상 베기",
-      "sheet": "combat/ground-attack.png",
-      "durationsMs": [
-        35,
-        32,
-        28,
-        49,
-        54,
-        52
-      ],
-      "loop": false,
-      "columns": 6
-    },
-    "air-attack": {
-      "name": "공중 베기",
-      "sheet": "combat/air-attack.png",
-      "durationsMs": [
-        32,
-        30,
-        32,
-        53,
-        50,
-        45
-      ],
-      "loop": false,
-      "columns": 6
-    },
-    "downstrike": {
-      "name": "아래 베기",
-      "sheet": "combat/downstrike.png",
-      "durationsMs": [
-        30,
-        25,
-        28,
-        48,
-        49,
-        36,
-        38
-      ],
-      "loop": false,
-      "columns": 7
-    },
-    "rebound": {
-      "name": "반동",
-      "sheet": "special/rebound.png",
-      "durationsMs": [
-        22,
-        26,
-        28,
-        32,
-        40,
-        48,
-        54
-      ],
-      "loop": false,
-      "columns": 7
-    },
-    "hurt": {
-      "name": "피격",
-      "sheet": "combat/hurt.png",
-      "durationsMs": [
-        18,
-        45,
-        47,
-        45,
-        40,
-        45
-      ],
-      "loop": false,
-      "columns": 6
-    },
-    "charge-arrival": {
-      "name": "전하 도착",
-      "sheet": "special/charge-arrival.png",
-      "durationsMs": [
-        24,
-        30,
-        28,
-        24,
-        22,
-        25,
-        31,
-        36
-      ],
-      "loop": false,
-      "columns": 8
-    },
-    "teleport-front": {
-      "name": "정면 순간이동",
-      "sheet": "special/teleport-front.png",
-      "durationsMs": [
-        28,
-        26,
-        25,
-        24,
-        18,
-        14,
-        16,
-        14,
-        18,
-        24,
-        28,
-        32,
-        38,
-        45
-      ],
-      "loop": false,
-      "columns": 8
-    }
-  },
-  "poseReferences": {
-    "movement": "https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites",
-    "slash": "https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight",
-    "downSlash": "https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash"
-  },
-  "art": "워든 측면·정면 원화와 검 원화",
-  "timing": "워든 검토용 재생 시간"
-};
-const ctx=stage.getContext('2d');ctx.imageSmoothingEnabled=false;
-let index=0,time=0,playing=true,last=performance.now(),sheet=new Image();
-for(const [key,entry] of Object.entries(manifest.clips))clip.add(new Option(entry.name,key));
-function config(){return manifest.clips[clip.value]}
-function total(){return config().durationsMs.length}
-function display(){
- const c=config(), flipped=mirror.checked && clip.value!=='teleport-front';
- ctx.clearRect(0,0,290,168);ctx.fillStyle='#58697a';ctx.fillRect(0,123,290,1);
- if(sheet.complete && sheet.naturalWidth){
- ctx.save();ctx.translate(145,123);ctx.scale(flipped?-1:1,1);
- ctx.drawImage(sheet,index%c.columns*256,Math.floor(index/c.columns)*224,256,224,-128,-136,256,224);ctx.restore()}
- info.value=(index+1)+' / '+total()+' 프레임 · '+c.durationsMs[index]+' ms';
+const DATA = {"frameSize":[256,224],"pivot":[128,136],"facing":"right","frontFacing":["teleport-front"],"clips":{"idle":{"name":"대기","sheet":"ground/idle.png","durationsMs":[130,110,115,160,130,115,155,170,145],"loop":true,"columns":9,"ref":{"image":"references/idle.png","frames":[0,1,2,3,4,5,6,7,8],"label":"기사 대기","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":""},"audit":{"summary":"발 위치와 두 눈의 배치가 유지되고 천 끝과 몸 높이가 조금씩 변한다.","observations":[{"start":1,"end":9,"level":"판독 주의","text":"귀·이마·꼬리의 밝은 무늬가 몸과 함께 움직인다. 전류의 밝은 선두와 잔상이 각 부위 위를 따로 흐르는 동작은 읽히지 않는다."}]},"metrics":[{"pixels":2597,"parts":[2597],"bounds":[87,55,148,136]},{"pixels":2593,"parts":[2593],"bounds":[87,55,148,136]},{"pixels":2587,"parts":[2587],"bounds":[87,55,148,136]},{"pixels":2582,"parts":[2582],"bounds":[87,56,148,136]},{"pixels":2588,"parts":[2588],"bounds":[87,55,148,136]},{"pixels":2599,"parts":[2599],"bounds":[87,55,148,136]},{"pixels":2596,"parts":[2596],"bounds":[87,55,148,136]},{"pixels":2600,"parts":[2600],"bounds":[87,55,148,136]},{"pixels":2601,"parts":[2601],"bounds":[87,55,148,136]}]},"walk":{"name":"걷기","sheet":"ground/walk.png","durationsMs":[110,110,110,110,110,110,110,110],"loop":true,"columns":8,"ref":{"image":"references/walk.png","frames":[0,1,2,3,4,5,6,7],"label":"기사 달리기 · 걷기 대체 비교","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":true,"note":"공개 원본 목록의 Walk는 확인했으나 파일 다운로드가 차단되어, 워든의 보폭과 대조할 수 있도록 기사 달리기 8프레임을 표시합니다."},"audit":{"summary":"보폭이 작아 두 발이 교차할 때 지지하는 발을 구분하기 어렵다.","observations":[{"start":5,"end":8,"level":"판독 주의","text":"가까운 발이 먼 발과 포개져 발끝이 한 덩어리처럼 보인다."}]},"metrics":[{"pixels":2576,"parts":[2576],"bounds":[89,55,150,136]},{"pixels":2578,"parts":[2578],"bounds":[89,56,150,136]},{"pixels":2580,"parts":[2580],"bounds":[89,55,150,136]},{"pixels":2549,"parts":[2549],"bounds":[89,56,150,136]},{"pixels":2546,"parts":[2546],"bounds":[89,56,150,136]},{"pixels":2515,"parts":[2515],"bounds":[89,56,150,136]},{"pixels":2509,"parts":[2509],"bounds":[89,55,150,136]},{"pixels":2503,"parts":[2503],"bounds":[89,56,150,136]}]},"run-start":{"name":"달리기 출발","sheet":"ground/run-start.png","durationsMs":[48,45,48,40],"loop":false,"columns":4,"ref":{"image":"references/run-start.png","frames":[0,1,2,3],"label":"기사 달리기 출발","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":""},"audit":{"summary":"머리가 낮아졌다가 올라오고 두 발이 벌어지면서 반복 보폭으로 넘어간다.","observations":[]},"metrics":[{"pixels":2467,"parts":[2467],"bounds":[90,62,155,136]},{"pixels":2438,"parts":[2438],"bounds":[90,63,157,136]},{"pixels":2531,"parts":[2531],"bounds":[90,57,155,136]},{"pixels":2558,"parts":[2558],"bounds":[89,55,153,136]}]},"run":{"name":"달리기","sheet":"ground/run.png","durationsMs":[62,48,60,65,62,48,60,65],"loop":true,"columns":8,"ref":{"image":"references/run.png","frames":[0,1,2,3,4,5,6,7],"label":"기사 달리기","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":""},"audit":{"summary":"앞쪽으로 내민 발은 보이지만 반대쪽 발이 통과하는 순간은 약하다.","observations":[{"start":5,"end":8,"level":"판독 주의","text":"다리가 포개질 때 뒤로 빠지는 발의 윤곽이 짧아 좌우 교대를 놓치기 쉽다."}]},"metrics":[{"pixels":2563,"parts":[2563],"bounds":[89,55,152,136]},{"pixels":2547,"parts":[2547],"bounds":[89,54,152,133]},{"pixels":2554,"parts":[2554],"bounds":[89,55,152,136]},{"pixels":2537,"parts":[2537],"bounds":[89,56,152,136]},{"pixels":2518,"parts":[2518],"bounds":[89,55,152,136]},{"pixels":2482,"parts":[2482],"bounds":[89,54,152,133]},{"pixels":2491,"parts":[2491],"bounds":[89,55,152,136]},{"pixels":2490,"parts":[2490],"bounds":[89,56,152,136]}]},"sprint":{"name":"전력 질주","sheet":"ground/sprint.png","durationsMs":[48,40,46,48,48,40,46,48],"loop":true,"columns":8,"ref":{"image":"references/sprint.png","frames":[0,1,2,3,4,5,6,7],"label":"기사 Sprintmaster","source":"https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png","surrogate":false,"note":"Sprintmaster 아틀라스의 원본 스프라이트입니다. 표시 순서는 프레임 자세를 보고 짝지었습니다."},"audit":{"summary":"상체가 앞으로 기울고 천이 뒤로 들린다. 교차 구간을 지나 발이 다시 벌어진다.","observations":[]},"metrics":[{"pixels":2543,"parts":[2543],"bounds":[88,54,157,136]},{"pixels":2534,"parts":[2534],"bounds":[88,54,157,132]},{"pixels":2550,"parts":[2550],"bounds":[88,53,157,136]},{"pixels":2531,"parts":[2531],"bounds":[88,55,157,136]},{"pixels":2503,"parts":[2503],"bounds":[88,55,157,136]},{"pixels":2452,"parts":[2452],"bounds":[88,55,157,132]},{"pixels":2493,"parts":[2493],"bounds":[88,54,157,136]},{"pixels":2461,"parts":[2461],"bounds":[88,56,157,136]}]},"jump-start":{"name":"발구름","sheet":"air/jump-start.png","durationsMs":[28,24,24,34],"loop":false,"columns":4,"ref":{"image":"references/jump-start.png","frames":[0,1,2,3],"label":"기사 대기 → 점프 초반","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":"대기 자세와 기사 점프 초반을 이어서 표시합니다."},"audit":{"summary":"발구름 전에 골반이 낮아지고 마지막 셀에서 몸이 펴진다.","observations":[]},"metrics":[{"pixels":2593,"parts":[2593],"bounds":[87,55,148,136]},{"pixels":2498,"parts":[2498],"bounds":[88,60,150,137]},{"pixels":2429,"parts":[2429],"bounds":[88,63,151,137]},{"pixels":2580,"parts":[2580],"bounds":[87,53,147,136]}]},"jump-rise":{"name":"상승","sheet":"air/jump-rise.png","durationsMs":[35,45,48,52,55,63],"loop":false,"columns":6,"ref":{"image":"references/jump-rise.png","frames":[0,1,2,3,4,5],"label":"기사 점프 상승","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":""},"audit":{"summary":"이륙 후 다리가 접히지만 머리와 몸통의 기울기는 작게 변한다.","observations":[{"start":2,"end":5,"level":"판독 주의","text":"머리와 가슴의 축이 서로 비슷해 상승하는 방향이 실루엣에 약하게 나타난다."}]},"metrics":[{"pixels":2580,"parts":[2580],"bounds":[87,53,147,136]},{"pixels":2557,"parts":[2557],"bounds":[86,54,144,138]},{"pixels":2531,"parts":[2531],"bounds":[86,53,144,139]},{"pixels":2512,"parts":[2512],"bounds":[86,53,145,137]},{"pixels":2494,"parts":[2494],"bounds":[87,53,147,135]},{"pixels":2489,"parts":[2489],"bounds":[88,53,149,133]}]},"jump-fall":{"name":"낙하","sheet":"air/jump-fall.png","durationsMs":[52,50,52,62,54,50],"loop":true,"columns":6,"ref":{"image":"references/jump-fall.png","frames":[0,1,2,3,4,5],"label":"기사 낙하","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":""},"audit":{"summary":"바람을 받는 천이 움직임의 대부분을 차지한다.","observations":[{"start":1,"end":6,"level":"판독 주의","text":"머리와 몸통이 거의 같은 자세를 유지해 캐릭터만 보면 낙하와 체공을 구별하기 어렵다."}]},"metrics":[{"pixels":2495,"parts":[2495],"bounds":[87,53,149,131]},{"pixels":2505,"parts":[2505],"bounds":[88,53,149,131]},{"pixels":2528,"parts":[2528],"bounds":[88,53,150,131]},{"pixels":2544,"parts":[2544],"bounds":[88,53,150,132]},{"pixels":2544,"parts":[2544],"bounds":[88,53,150,132]},{"pixels":2524,"parts":[2524],"bounds":[88,53,150,131]}]},"jump-land":{"name":"착지","sheet":"air/jump-land.png","durationsMs":[25,24,38,42,40,40],"loop":false,"columns":6,"ref":{"image":"references/jump-land.png","frames":[0,1,1,2,3,4],"label":"기사 낙하 → 지상 복귀 대체 비교","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":true,"note":"공개 원본 목록의 Land는 확인했으나 파일 다운로드가 차단되어, 기사 낙하 마지막과 지상 자세를 표시합니다."},"audit":{"summary":"발이 먼저 바닥에 닿고 몸이 낮아졌다가 정지 높이로 돌아온다.","observations":[]},"metrics":[{"pixels":2579,"parts":[2579],"bounds":[88,56,150,136]},{"pixels":2487,"parts":[2487],"bounds":[88,60,152,136]},{"pixels":2431,"parts":[2431],"bounds":[87,63,154,136]},{"pixels":2512,"parts":[2512],"bounds":[88,59,151,136]},{"pixels":2562,"parts":[2562],"bounds":[87,56,148,137]},{"pixels":2593,"parts":[2593],"bounds":[87,55,148,136]}]},"ground-dash":{"name":"지상 대시","sheet":"air/ground-dash.png","durationsMs":[20,20,25,30,28,24,23,25,25,30],"loop":false,"columns":10,"ref":{"image":"references/ground-dash.png","frames":[0,1,2,3,3,4,5,5,6,6],"label":"기사 Mothwing Cloak 대시","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":"지상·공중 비교에 같은 기사 대시 몸체를 사용합니다."},"audit":{"summary":"접지선에 발끝이 닿아도 중간 자세는 공중 대시처럼 보인다.","observations":[{"start":2,"end":8,"level":"판독 주의","text":"두 다리가 뒤를 향하고 지지하는 발의 면적이 좁아 땅을 미는 자세가 약하다."}]},"metrics":[{"pixels":2547,"parts":[2547],"bounds":[88,57,151,136]},{"pixels":2504,"parts":[2504],"bounds":[86,60,155,136]},{"pixels":2471,"parts":[2471],"bounds":[86,64,159,136]},{"pixels":2469,"parts":[2469],"bounds":[87,66,160,136]},{"pixels":2466,"parts":[2466],"bounds":[86,66,160,136]},{"pixels":2479,"parts":[2479],"bounds":[86,63,159,136]},{"pixels":2502,"parts":[2502],"bounds":[86,60,156,136]},{"pixels":2544,"parts":[2544],"bounds":[87,57,152,136]},{"pixels":2580,"parts":[2580],"bounds":[88,56,149,136]},{"pixels":2593,"parts":[2593],"bounds":[87,55,148,136]}]},"air-dash":{"name":"공중 대시","sheet":"air/air-dash.png","durationsMs":[20,20,25,30,28,24,23,25,25,30],"loop":false,"columns":10,"ref":{"image":"references/air-dash.png","frames":[0,1,2,3,3,4,5,5,6,6],"label":"기사 Mothwing Cloak 대시","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":false,"note":"지상·공중 비교에 같은 기사 대시 몸체를 사용합니다."},"audit":{"summary":"머리가 앞으로 나가고 다리가 뒤로 접히면서 공중 대시 방향이 드러난다.","observations":[{"start":3,"end":6,"level":"판독 주의","text":"최대 속도 구간에서 천이 짧게 모여 있어 꼬리와 천이 만드는 뒤쪽 실루엣 차이가 작다."}]},"metrics":[{"pixels":2549,"parts":[2549],"bounds":[88,55,152,134]},{"pixels":2435,"parts":[2435],"bounds":[85,56,157,128]},{"pixels":2347,"parts":[2347],"bounds":[85,59,161,122]},{"pixels":2340,"parts":[2340],"bounds":[86,59,161,122]},{"pixels":2334,"parts":[2334],"bounds":[85,59,161,122]},{"pixels":2363,"parts":[2363],"bounds":[85,58,160,124]},{"pixels":2435,"parts":[2435],"bounds":[85,56,156,128]},{"pixels":2519,"parts":[2519],"bounds":[87,55,152,132]},{"pixels":2551,"parts":[2551],"bounds":[88,55,149,134]},{"pixels":2593,"parts":[2593],"bounds":[87,55,148,136]}]},"ground-attack":{"name":"지상 베기","sheet":"combat/ground-attack.png","durationsMs":[35,32,28,49,54,52],"loop":false,"columns":6,"ref":{"image":"references/ground-attack.png","frames":[0,1,2,2,3,4],"label":"기사 일반 베기","source":"https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight","surrogate":false,"note":"몸체 스프라이트의 프레임입니다. 게임의 별도 검격 이펙트는 생략했습니다."},"audit":{"summary":"준비에서 타격으로 넘어갈 때 얼굴 방향과 검의 각도가 동시에 크게 바뀐다.","observations":[{"start":2,"end":3,"level":"수정 권장","text":"2번에서 두 눈이 사라지고 귀가 겹친 뒤 3번에서 옆얼굴이 곧바로 돌아온다. 실제 기사도 고개를 돌리지만 워든은 정면을 통과하는 자세가 읽히지 않는다."},{"start":3,"end":5,"level":"판독 주의","text":"검을 뻗는 동안 지상·공중판의 다리와 몸통 윤곽이 비슷해 두 동작의 차이가 작다."},{"start":5,"end":6,"level":"기준 불일치","text":"오른쪽을 보는 워든의 손과 검이 몸 앞에 남는다. 오른손이 뒤쪽 골반을 지나야 하는 일반 베기 마무리가 빠졌다."}]},"metrics":[{"pixels":2694,"parts":[2694],"bounds":[92,56,151,136]},{"pixels":2087,"parts":[2087],"bounds":[89,60,139,136]},{"pixels":2403,"parts":[2403],"bounds":[104,60,194,136]},{"pixels":2498,"parts":[2498],"bounds":[107,61,198,136]},{"pixels":2594,"parts":[2594],"bounds":[100,57,188,136]},{"pixels":2691,"parts":[2691],"bounds":[95,55,186,136]}]},"air-attack":{"name":"공중 베기","sheet":"combat/air-attack.png","durationsMs":[32,30,32,53,50,45],"loop":false,"columns":6,"ref":{"image":"references/air-attack.png","frames":[0,1,2,2,3,4],"label":"기사 일반 베기","source":"https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight","surrogate":false,"note":"지상·공중 비교에 같은 기사 베기 몸체를 사용합니다."},"audit":{"summary":"준비에서 타격으로 넘어갈 때 얼굴 방향과 검의 각도가 동시에 크게 바뀐다.","observations":[{"start":2,"end":3,"level":"수정 권장","text":"2번에서 두 눈이 사라지고 귀가 겹친 뒤 3번에서 옆얼굴이 곧바로 돌아온다. 실제 기사도 고개를 돌리지만 워든은 정면을 통과하는 자세가 읽히지 않는다."},{"start":3,"end":5,"level":"판독 주의","text":"검을 뻗는 동안 지상·공중판의 다리와 몸통 윤곽이 비슷해 두 동작의 차이가 작다."},{"start":5,"end":6,"level":"기준 불일치","text":"오른쪽을 보는 워든의 손과 검이 몸 앞에 남는다. 오른손이 뒤쪽 골반을 지나야 하는 일반 베기 마무리가 빠졌다."}]},"metrics":[{"pixels":2754,"parts":[2754],"bounds":[98,54,175,133]},{"pixels":2142,"parts":[2142],"bounds":[92,56,145,131]},{"pixels":2370,"parts":[2370],"bounds":[105,56,196,128]},{"pixels":2506,"parts":[2506],"bounds":[106,57,196,129]},{"pixels":2598,"parts":[2598],"bounds":[101,56,185,134]},{"pixels":2653,"parts":[2653],"bounds":[97,55,184,134]}]},"downstrike":{"name":"아래 베기","sheet":"combat/downstrike.png","durationsMs":[30,25,28,48,49,36,38],"loop":false,"columns":7,"ref":{"image":"references/downstrike.png","frames":[0,1,1,2,3,4,4],"label":"기사 아래 베기","source":"https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash","surrogate":false,"note":""},"audit":{"summary":"검이 비스듬한 궤적에서 수직으로 내려간다.","observations":[{"start":4,"end":5,"level":"판독 주의","text":"칼날이 가느다란 수직선으로 보여 검의 폭과 손잡이를 구분하기 어렵다. 픽셀은 몸체에 연결돼 있다."},{"start":5,"end":7,"level":"기준 불일치","text":"검 끝이 양발 아래를 지나 화면 왼쪽으로 빠져야 하는데, 수직 자세에서 다시 화면 오른쪽으로 돌아간다."}]},"metrics":[{"pixels":2655,"parts":[2655],"bounds":[97,55,183,133]},{"pixels":2652,"parts":[2652],"bounds":[93,54,152,130]},{"pixels":2683,"parts":[2683],"bounds":[101,55,174,148]},{"pixels":2608,"parts":[2608],"bounds":[104,57,164,167]},{"pixels":2635,"parts":[2635],"bounds":[102,57,160,167]},{"pixels":2686,"parts":[2686],"bounds":[99,54,171,150]},{"pixels":2660,"parts":[2660],"bounds":[97,54,186,132]}]},"rebound":{"name":"반동","sheet":"special/rebound.png","durationsMs":[22,26,28,32,40,48,54],"loop":false,"columns":7,"ref":{"image":"references/rebound.png","frames":[0,1,2,3,4,5,5],"label":"기사 아래 베기 → 상승 대체 비교","source":"https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash","surrogate":true,"note":"아래 베기의 접촉 자세와 기사 점프 상승을 표시합니다. 실제 적중 반동의 별도 캡처는 미포함입니다."},"audit":{"summary":"아래 베기 적중 자세에서 맨손 상승 자세로 전환한다.","observations":[{"start":1,"end":2,"level":"판독 주의","text":"수직 검날이 얇고 손잡이가 손에 가려져 잡은 위치가 불명확하다."},{"start":4,"end":5,"level":"수정 권장","text":"4번의 검은 오른쪽으로 완전히 뻗어 있는데 5번에서 검 전체가 사라진다. 회수 또는 소멸을 보여 주는 시각 단서가 없다."}]},"metrics":[{"pixels":2608,"parts":[2608],"bounds":[104,57,164,167]},{"pixels":2635,"parts":[2635],"bounds":[100,56,158,165]},{"pixels":2697,"parts":[2697],"bounds":[97,51,180,137]},{"pixels":2653,"parts":[2653],"bounds":[97,50,186,129]},{"pixels":2569,"parts":[2569],"bounds":[89,51,145,136]},{"pixels":2543,"parts":[2543],"bounds":[87,52,143,138]},{"pixels":2531,"parts":[2531],"bounds":[86,53,144,139]}]},"hurt":{"name":"피격","sheet":"combat/hurt.png","durationsMs":[18,45,47,45,40,45],"loop":false,"columns":6,"ref":{"image":"references/hurt.png","frames":[0,2,5,6,7,9],"label":"기사 저체력 대기 · 피격 대체 비교","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":true,"note":"실제 피격 순간의 원본 프레임은 확인하지 못했습니다. 이 스트립은 저체력 대기의 몸체 자세입니다."},"audit":{"summary":"충격을 받은 뒤 상체가 뒤로 젖혀지고 마지막에 맨손 대기로 돌아간다.","observations":[{"start":1,"end":2,"level":"판독 주의","text":"첫 충격에서 머리 방향이 크게 바뀐다. 즉시 반응은 분명하지만 회전보다 얼굴이 바뀐 것으로 보일 수 있다."}]},"metrics":[{"pixels":2597,"parts":[2597],"bounds":[87,55,148,136]},{"pixels":2130,"parts":[2130],"bounds":[77,62,135,129]},{"pixels":2197,"parts":[2197],"bounds":[81,60,136,130]},{"pixels":2324,"parts":[2324],"bounds":[86,61,138,134]},{"pixels":2413,"parts":[2413],"bounds":[92,58,143,135]},{"pixels":2597,"parts":[2597],"bounds":[87,55,148,136]}]},"charge-arrival":{"name":"전하 도착","sheet":"special/charge-arrival.png","durationsMs":[24,30,28,24,22,25,31,36],"loop":false,"columns":8,"ref":{"image":"references/charge-arrival.png","frames":[0,0,1,1,2,2,3,4],"label":"기사 대시 종료 · 전하 도착 대체 비교","source":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","surrogate":true,"note":"워든 고유 전하 도착과 비교할 수평 이동에서 정지로 이어지는 기사 자세입니다."},"audit":{"summary":"접지와 압축은 보이지만 전하 도착 특유의 감속은 약하다.","observations":[{"start":2,"end":6,"level":"판독 주의","text":"상하 압축이 중심이라 전진 관성과 뒤따라오는 천의 방향을 몸체만으로 읽기 어렵다."}]},"metrics":[{"pixels":2332,"parts":[2332],"bounds":[104,63,165,136]},{"pixels":2275,"parts":[2275],"bounds":[103,65,164,136]},{"pixels":2327,"parts":[2327],"bounds":[102,63,162,136]},{"pixels":2413,"parts":[2413],"bounds":[102,60,161,136]},{"pixels":2510,"parts":[2510],"bounds":[102,57,161,136]},{"pixels":2620,"parts":[2620],"bounds":[102,54,162,136]},{"pixels":2577,"parts":[2577],"bounds":[102,55,162,136]},{"pixels":2539,"parts":[2539],"bounds":[102,56,162,136]}]},"teleport-front":{"name":"정면 순간이동","sheet":"special/teleport-front.png","durationsMs":[28,26,25,24,18,14,16,14,18,24,28,32,38,45],"loop":false,"columns":8,"ref":{"image":"references/teleport-front.png","frames":[0,1,2,3,4,6,7,7,6,5,4,3,2,1],"label":"기사 Dreamgate 발동 · 귀환 배치","source":"https://git.coon.myds.me/cooney/Knight_Hollow/src/commit/ef8c35530201844dff948477d6004d256fc8876f/Assets/Art/Sprites/The%20Knight/The%20Knight%20Dreamgate%2C%20Sprintmaster%20-%20atlas0%20%2300000395.png","surrogate":false,"note":"Dreamgate 아틀라스의 원본 스프라이트를 사용해 소실과 귀환 구간을 배치했습니다. 중간 투명 칸은 소실을 표시하며 귀환 순서는 워든 검토용입니다."},"audit":{"summary":"정면 실루엣이 점멸 후 같은 자리에 돌아온다.","observations":[{"start":6,"end":8,"level":"의도된 연출","text":"청록 섬광 → 완전 투명 → 청록 재등장의 순서다. 7번은 설계된 소멸 셀이다."},{"start":9,"end":14,"level":"판독 주의","text":"재등장 뒤 세로 압축 변화가 작아 후반의 여러 자세가 비슷하게 보인다."}]},"metrics":[{"pixels":2539,"parts":[2539],"bounds":[95,56,147,136]},{"pixels":2429,"parts":[2429],"bounds":[95,59,147,136]},{"pixels":2304,"parts":[2304],"bounds":[95,63,147,136]},{"pixels":2250,"parts":[2250],"bounds":[95,65,147,136]},{"pixels":2368,"parts":[2368],"bounds":[95,61,147,136]},{"pixels":2557,"parts":[2557],"bounds":[95,55,147,136]},{"pixels":0,"parts":[],"bounds":null},{"pixels":2582,"parts":[2582],"bounds":[95,54,147,136]},{"pixels":2417,"parts":[2417],"bounds":[95,59,147,136]},{"pixels":2332,"parts":[2332],"bounds":[95,62,147,136]},{"pixels":2395,"parts":[2395],"bounds":[95,60,147,136]},{"pixels":2461,"parts":[2461],"bounds":[95,58,147,136]},{"pixels":2493,"parts":[2493],"bounds":[95,57,147,136]},{"pixels":2539,"parts":[2539],"bounds":[95,56,147,136]}]}},"poseReferences":{"movement":"https://github.com/DaxMakinGames/HollowKnightGodot/tree/main/Player/Sprites","slash":"https://github.com/mrsoltani/HollowKnight/tree/main/assets/sprites/knight","downSlash":"https://github.com/AHY8507/Hollow-Knight/tree/main/assets/game/player/DownSlash"},"art":"워든 측면·정면 원화와 검 원화","timing":"워든 검토용 재생 시간"};
+const byId=id=>document.getElementById(id);
+const clip=byId('clip'),speed=byId('speed'),mirror=byId('mirror');
+let key='rebound', frame=3, elapsed=0, last=performance.now(), playing=false;
+const cache=new Map();
+function image(url){
+ if(!cache.has(url)){const img=new Image();cache.set(url,img);img.onload=render;img.onerror=render;img.src=url}
+ return cache.get(url)
 }
-function load(){index=0;time=0;sheet=new Image();sheet.onload=display;sheet.src=config().sheet;display()}
-function toggle(value){playing=value;play.textContent=value?'일시정지':'재생'}
-function step(delta){toggle(false);index=(index+total()+delta)%total();time=0;display()}
-function tick(now){if(playing){time+=Math.min(now-last,100)*Number(speed.value);const c=config();while(time>=c.durationsMs[index]+(!c.loop&&index===total()-1?300:0)){time-=c.durationsMs[index]+(!c.loop&&index===total()-1?300:0);index=(index+1)%total()}}last=now;display();requestAnimationFrame(tick)}
-clip.value='run';clip.onchange=load;prev.onclick=()=>step(-1);next.onclick=()=>step(1);play.onclick=()=>toggle(!playing);load();requestAnimationFrame(tick)
+function plate(id,img,index,columns,flip){
+ const canvas=byId(id),ctx=canvas.getContext('2d');
+ ctx.fillStyle='#263442';ctx.fillRect(0,0,208,154);
+ ctx.fillStyle='#617385';ctx.fillRect(0,117,208,1);
+ if(!img.complete||!img.naturalWidth)return;
+ ctx.imageSmoothingEnabled=false;ctx.save();ctx.translate(104,117);
+ ctx.scale(flip?-1:1,1);ctx.drawImage(img,(index%columns)*256,Math.floor(index/columns)*224,256,224,-128,-136,256,224);ctx.restore()
+}
+const selected=()=>DATA.clips[key];
+function notes(c,i){return c.audit.observations.filter(n=>n.start<=i+1&&i+1<=n.end)}
+function render(){
+ const c=selected(),r=c.ref, rid=r.frames[frame], src=image(r.image), sheet=image(c.sheet);
+ plate('hk',src,rid,src.naturalWidth/256||1,mirror.checked);
+ plate('cw',sheet,frame,c.columns,mirror.checked);
+ byId('error').textContent=[src,sheet].some(im=>im.complete&&!im.naturalWidth)?'시트를 읽을 수 없습니다. ZIP 전체를 압축 해제한 뒤 다시 열어 주세요.':'';
+ byId('refInfo').textContent=r.label+' · 비교 셀 '+(rid+1);
+ byId('frameInfo').textContent=c.name+' · '+(frame+1)+' / '+c.durationsMs.length+' · '+c.durationsMs[frame]+' ms';
+ byId('play').textContent=playing?'일시정지':'비교 재생';
+ for(const [i,b] of [...byId('strip').children].entries())b.setAttribute('aria-current',String(i===frame));
+ const a=notes(c,frame),m=c.metrics[frame];
+ byId('verdict').textContent=a.length?a.map(v=>v.level).join(' · '):'개별 결함 미발견';
+ byId('verdict').className=a.some(v=>v.level!=='의도된 연출')?'issue':'';
+ byId('frameNote').textContent=a.length?a.map(v=>v.text).join(' '):c.audit.summary;
+ byId('metrics').textContent='불투명 픽셀 '+m.pixels+'개 · 연결 영역 '+m.parts.length+'개 · '+(m.bounds?'셀 경계 잘림 없음':'완전 투명');
+}
+function choose(k,i=0){
+ key=k;clip.value=k;frame=i;elapsed=0;const c=selected(),r=c.ref;
+ byId('subject').textContent=c.name+' 감사 결과';byId('summary').textContent=c.audit.summary;
+ const source=document.createElement('a');source.textContent='기사 원본 출처';source.href=r.source;source.target='_blank';source.rel='noopener';
+ byId('comparison').replaceChildren((r.surrogate?'유사 자세 비교 · ':'대응 동작 비교 · ')+r.label+'　',source,r.note?'　'+r.note:' ');
+ byId('strip').replaceChildren(...c.durationsMs.map((_,n)=>{const b=document.createElement('button');b.textContent=n+1;b.dataset.flag=notes(c,n).some(v=>v.level!=='의도된 연출');b.onclick=()=>seek(n);return b}));render()
+}
+function seek(i){playing=false;frame=(i+selected().durationsMs.length)%selected().durationsMs.length;elapsed=0;render()}
+for(const [k,c] of Object.entries(DATA.clips)){
+ clip.add(new Option(c.name,k));
+ for(const n of c.audit.observations){const b=document.createElement('button');b.textContent=c.name+' '+n.start+'–'+n.end;b.title=n.text;b.onclick=()=>{playing=false;choose(k,n.start-1)};byId('index').append(b)}
+}
+byId("zoom").onchange=()=>document.documentElement.style.setProperty("--canvas-width",208*Number(byId("zoom").value)+"px");clip.onchange=()=>choose(clip.value);mirror.onchange=render;
+byId('prev').onclick=()=>seek(frame-1);byId('next').onclick=()=>seek(frame+1);
+byId('play').onclick=()=>{playing=!playing;last=performance.now();render()};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();seek(frame+(e.key==='ArrowLeft'?-1:1))}});
+function tick(now){if(playing){const c=selected();elapsed+=Math.min(now-last,150)*Number(speed.value);let changed=false;
+ const duration=()=>c.durationsMs[frame]+(!c.loop&&frame===c.durationsMs.length-1?300:0);
+ while(elapsed>=duration()){elapsed-=duration();frame=(frame+1)%c.durationsMs.length;changed=true}if(changed)render()}last=now;requestAnimationFrame(tick)}
+choose(key,frame);requestAnimationFrame(tick);
 </script></html>
